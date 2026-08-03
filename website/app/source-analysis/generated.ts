@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-03T22:34:20Z",
+  "generatedAt": "2026-08-04T07:37:37+09:00",
   "branch": "main",
-  "head": "6aeb622a3df36d8c641aeb14c66624bd7e38e02a",
-  "shortHead": "6aeb622",
+  "head": "c6c4704f3bae36130bd4c7585cc6920b395b5fc7",
+  "shortHead": "c6c4704",
   "totalFiles": 523,
   "byExt": [
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "c6c4704",
+      "date": "2026-08-04",
+      "subject": "docs: refresh reports after Cloudflare deploy"
+    },
+    {
       "hash": "6aeb622",
       "date": "2026-08-03",
       "subject": "docs: refresh generated site reports"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "617c4fb",
       "date": "2026-08-03",
       "subject": "Add OpenWorker Chinese website"
-    },
-    {
-      "hash": "80098ae",
-      "date": "2026-08-03",
-      "subject": "Merge remote-tracking branch 'origin/main'"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "c6c4704",
+      "date": "2026-08-04",
+      "subject": "docs: refresh reports after Cloudflare deploy"
+    },
     {
       "hash": "6aeb622",
       "date": "2026-08-03",

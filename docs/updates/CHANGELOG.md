@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-03T22:34:20Z
+更新时间：2026-08-04T07:37:37+09:00
 
 ## 最近提交
 
+- 2026-08-04 c6c4704 docs: refresh reports after Cloudflare deploy
 - 2026-08-03 6aeb622 docs: refresh generated site reports
 - 2026-08-04 f4fabd1 sync: merge upstream OpenWorker 01b6f83 (#2)
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
@@ -15,4 +16,3 @@
 - 2026-08-03 0759ba3 Add Cloudflare deployment config for website
 - 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
-- 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'

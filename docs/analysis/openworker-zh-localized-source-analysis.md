@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-03T22:34:20Z
+更新时间：2026-08-04T07:37:37+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：6aeb622a3df36d8c641aeb14c66624bd7e38e02a
+当前提交：c6c4704f3bae36130bd4c7585cc6920b395b5fc7
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：523
-- 当前提交：6aeb622
+- 当前提交：c6c4704
 - 主要文件类型：
   - py: 221
   - ts: 105
@@ -159,6 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 c6c4704 docs: refresh reports after Cloudflare deploy
 - 2026-08-03 6aeb622 docs: refresh generated site reports
 - 2026-08-04 f4fabd1 sync: merge upstream OpenWorker 01b6f83 (#2)
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
@@ -170,4 +171,3 @@ flowchart LR
 - 2026-08-03 0759ba3 Add Cloudflare deployment config for website
 - 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
-- 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
