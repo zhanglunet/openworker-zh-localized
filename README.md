@@ -18,15 +18,16 @@
 - 网站源码：[website/](website/)
 - 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/](docs/analysis/)）
 - 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/](docs/updates/)）
+- 正式签名、公证与自动更新发布指南：[docs/release-signed-updates.md](docs/release-signed-updates.md)
 - 上游项目源码：[andrewyng/openworker](https://github.com/andrewyng/openworker)
 
 中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析、安全边界、交互式信息图、自动更新日志和每周周报。网站明确标注上游项目归属，并链接回本仓库。
 
 ![OpenWorker 中文站截图](docs/assets/oaosf-cn-home.png)
 
-> 当前 DMG 为未公证的本地化构建。首次打开如遇 macOS 安全提示，请右键 App 选择“打开”一次。
+> 当前公开 DMG 为未公证的本地化构建。正式签名、公证与 Tauri 自动更新发布链路已文档化，配置 Apple Developer 与 Tauri updater Secrets 后可通过 GitHub Actions 生成正式包。
 >
-> DMG SHA-256：`84ff535aca5679cf64eb9e917388a30cedbfa0c02372c1a110ec6cce3d75d9a2`
+> DMG SHA-256：`0ee522258294655556ce3e0cd04917386f6bdec34c2a5584debd8b84d22be50a`
 
 ---
 
@@ -59,6 +60,7 @@
     - [8.2 Tauri 桌面壳](#82-tauri-桌面壳)
   - [9. 仓库结构](#9-仓库结构)
   - [10. 已知问题与后续计划](#10-已知问题与后续计划)
+  - [10.1 正式签名、公证与自动更新](#101-正式签名公证与自动更新)
   - [11. 贡献与许可](#11-贡献与许可)
 
 ---
@@ -97,7 +99,7 @@
 2. **Tauri 桌面客户端（开发模式）** —— 真正的桌面应用，带系统托盘、快捷键、语音输入等。
 3. **macOS DMG 安装包** —— 适合 Apple Silicon Mac 用户直接下载体验中文版桌面 App。
 
-> 注意：当前 DMG 为未公证的本地化构建，适合个人本机试用；如需正式分发，应补充 Apple Developer 签名与公证流程。0.1.7 起中文版 App 的自动更新源已切换到本仓库，避免更新时安装官方英文包。
+> 注意：当前 DMG 为未公证的本地化构建，适合个人本机试用。0.1.7 起中文版 App 的自动更新源已切换到本仓库，避免更新时安装官方英文包；正式签名、公证与自动更新发布流程见 [docs/release-signed-updates.md](docs/release-signed-updates.md)。
 
 ---
 
@@ -454,20 +456,30 @@ openworker-zh-localized/
 
 ### 已知问题
 
-1. **前端单元测试中英文不一致**
-   - 现象：`npm test` 有部分测试用例失败
-   - 原因：测试断言还在期望英文文案，但组件已经渲染中文
-   - 应对：不影响正常使用，只是测试需要同步更新
+1. **GUI E2E 仍有上游英文选择器残留**
+   - 现象：上游 Playwright 端到端用例仍绑定部分英文 placeholder/label。
+   - 应对：CI 暂时以 Python 测试和 GUI 单元测试作为硬门禁；后续需要把 E2E 选择器迁移到中文界面或稳定的 `data-testid`。
 
-2. **mcp 版本需要手动锁定**
-   - 当前 `pip install -e .` 会拉下 mcp 2.x，与代码不兼容
-   - 需要手动执行 `.venv/bin/python -m pip install 'mcp>=1.1,<2.0'`
+2. **正式自动更新依赖私有签名材料**
+   - Apple Developer ID 证书、App Store Connect Notary API Key 和 Tauri updater 私钥不能提交到仓库。
+   - 配置方式见 [docs/release-signed-updates.md](docs/release-signed-updates.md)。
+
+### 10.1 正式签名、公证与自动更新
+
+本仓库已经准备好正式发布流水线：
+
+- tag 发布时会强制检查 Apple 签名、公证和 Tauri updater Secrets；
+- macOS `.app` / `.dmg` 会签名并公证；
+- Tauri `.app.tar.gz` 更新包会生成 `.sig`；
+- Release 会上传 `latest-zh.json`；
+- workflow 会把 `latest-zh.json` 回写到 `main` 分支的 `releases/latest-zh.json`，兼容已经安装的中文版客户端。
+
+详见：[docs/release-signed-updates.md](docs/release-signed-updates.md)。
 
 ### 后续计划
 
-- [ ] 同步更新前端单元测试断言为中文
-- [ ] 在 `pyproject.toml` 中锁定 mcp 版本
-- [ ] 补充 Apple Developer 签名与公证流程
+- [ ] 将 GUI E2E 从英文选择器迁移到中文界面或稳定测试 ID
+- [ ] 配置 GitHub Actions Secrets 并发布首个正式签名、公证版本
 - [ ] 补充 PyInstaller + Tauri build 打包教程
 - [ ] 提供 Windows 下的无需管理员环境安装教程
 
