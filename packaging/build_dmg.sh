@@ -40,7 +40,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PLATFORM="$(cd "$HERE/.." && pwd)"
 GUI="$PLATFORM/surfaces/gui"
-APP="OpenWorker"
+APP="$(node -p "require('$GUI/src-tauri/tauri.conf.json').productName")"
 # Single source of truth for the version: tauri.conf.json (also stamps the bundle).
 VERSION="$(node -p "require('$GUI/src-tauri/tauri.conf.json').version")"
 TRIPLE="$(rustc -vV | sed -n 's/host: //p')"   # e.g. aarch64-apple-darwin
