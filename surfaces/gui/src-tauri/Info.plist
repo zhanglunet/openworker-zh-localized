@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Merged into the bundle's Info.plist by Tauri. These usage strings appear inside the macOS
-     permission prompts (Desktop/Documents/Downloads/Photos), so a prompt the user didn't expect
-     at least explains itself — the agent's tool runs are what touch these folders, and only when
-     a task needs them. -->
+<!-- 合并到应用 bundle 的 Info.plist 中。这些用途说明会出现在 macOS 权限弹窗中（桌面/文档/下载/照片），让用户在意外看到弹窗时至少知道原因——是 AI 代理的工具运行触碰了这些文件夹，仅在任务需要时才会如此。 -->
 <plist version="1.0">
 <dict>
   <key>NSMicrophoneUsageDescription</key>
-  <string>OpenWorker records only while you use the composer microphone to turn your spoken prompt into editable text. Audio is transcribed locally and is not uploaded.</string>
+  <string>OpenWorker 仅在您点击编辑框麦克风进行语音输入时录音，将您的口述指令转换为可编辑文本。音频仅在本地转录，不会上传。</string>
   <key>NSDesktopFolderUsageDescription</key>
-  <string>A task you run may need to read or save files on your Desktop. OpenWorker never scans this folder on its own.</string>
+  <string>您运行的任务可能需要读取或保存桌面上的文件。OpenWorker 不会自主扫描此文件夹。</string>
   <key>NSDocumentsFolderUsageDescription</key>
-  <string>A task you run may need to read or save files in Documents. OpenWorker never scans this folder on its own.</string>
+  <string>您运行的任务可能需要读取或保存文档文件夹中的文件。OpenWorker 不会自主扫描此文件夹。</string>
   <key>NSDownloadsFolderUsageDescription</key>
-  <string>A task you run may need to read or save files in Downloads. OpenWorker never scans this folder on its own.</string>
+  <string>您运行的任务可能需要读取或保存下载文件夹中的文件。OpenWorker 不会自主扫描此文件夹。</string>
   <key>NSPhotoLibraryUsageDescription</key>
-  <string>A task you run may need to read an image from your photo library. OpenWorker never scans your photos on its own.</string>
+  <string>您运行的任务可能需要从相册中读取图像。OpenWorker 不会自主扫描您的照片。</string>
 </dict>
 </plist>

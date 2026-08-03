@@ -334,9 +334,9 @@ fn voice_input_compatibility() -> (bool, String, Option<String>) {
     };
     let summary = format!("macOS {version} · {architecture}");
     let reason = if !apple_silicon {
-        Some("Voice Input currently requires an Apple Silicon Mac (M1 or newer).".to_owned())
+        Some("语音输入当前需要 Apple Silicon Mac（M1 或更新机型）。".to_owned())
     } else if major < 12 {
-        Some("Voice Input requires macOS 12 or newer.".to_owned())
+        Some("语音输入需要 macOS 12 或更新版本。".to_owned())
     } else {
         None
     };
@@ -360,9 +360,9 @@ fn voice_input_compatibility() -> (bool, String, Option<String>) {
     let x64 = std::env::consts::ARCH == "x86_64";
     let supported = x64 && build >= 19_045;
     let reason = if !x64 {
-        Some("Voice Input currently requires a 64-bit x64 Windows PC.".to_owned())
+        Some("语音输入当前需要 64 位 x64 Windows PC。".to_owned())
     } else if build < 19_045 {
-        Some("Voice Input requires Windows 10 22H2 or Windows 11.".to_owned())
+        Some("语音输入需要 Windows 10 22H2 或 Windows 11。".to_owned())
     } else {
         None
     };
@@ -374,7 +374,7 @@ fn voice_input_compatibility() -> (bool, String, Option<String>) {
     (
         false,
         format!("{} · {}", std::env::consts::OS, std::env::consts::ARCH),
-        Some("Voice Input is currently supported on macOS and Windows.".to_owned()),
+        Some("语音输入当前仅支持 macOS 和 Windows。".to_owned()),
     )
 }
 
@@ -393,7 +393,7 @@ async fn start_dictation(
     let (supported, _, reason) = voice_input_compatibility();
     if !supported {
         return Err(
-            reason.unwrap_or_else(|| "Voice Input is not supported on this device.".to_owned())
+            reason.unwrap_or_else(|| "语音输入不支持此设备。".to_owned())
         );
     }
     let dictation = state.inner().clone();
@@ -410,7 +410,7 @@ async fn stop_dictation(state: tauri::State<'_, Arc<Dictation>>) -> Result<Strin
     let dictation = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || dictation.stop_and_transcribe())
         .await
-        .map_err(|e| format!("Dictation stopped unexpectedly: {e}"))?
+        .map_err(|e| format!("语音输入意外停止：{e}"))?
 }
 
 #[tauri::command]
@@ -431,7 +431,7 @@ async fn download_dictation_model(
         Ok::<VoiceInputStatus, String>(voice_input_status(&dictation))
     })
     .await
-    .map_err(|e| format!("Voice model download stopped unexpectedly: {e}"))?
+    .map_err(|e| format!("语音模型下载意外停止：{e}"))?
 }
 
 #[tauri::command]
@@ -449,7 +449,7 @@ async fn verify_dictation_model(
         Ok::<VoiceInputStatus, String>(voice_input_status(&dictation))
     })
     .await
-    .map_err(|e| format!("Voice model verification stopped unexpectedly: {e}"))?
+    .map_err(|e| format!("语音模型验证意外停止：{e}"))?
 }
 
 #[tauri::command]
@@ -519,7 +519,7 @@ async fn download_update(
     use tauri_plugin_updater::UpdaterExt;
     let updater = app.updater().map_err(|e| e.to_string())?;
     let Some(update) = updater.check().await.map_err(|e| e.to_string())? else {
-        return Err("no update available".into());
+        return Err("没有可用更新".into());
     };
     // Periodic re-checks re-invoke this for the same release — the cached bytes stand.
     // (Guard scope stays sync: a std MutexGuard must not live across an await.)
@@ -553,7 +553,7 @@ async fn install_update(
     use tauri_plugin_updater::UpdaterExt;
     let updater = app.updater().map_err(|e| e.to_string())?;
     let Some(update) = updater.check().await.map_err(|e| e.to_string())? else {
-        return Err("no update available".into());
+        return Err("没有可用更新".into());
     };
     // Pre-fetched bytes for this exact version install instantly; a stale or missing
     // cache falls back to the original blocking download-and-install.
@@ -668,7 +668,7 @@ pub fn run() {
             let child = match server_cmd.spawn() {
                 Ok(child) => Some(child),
                 Err(e) => {
-                    eprintln!("[coworker] failed to start server sidecar: {e}");
+                    eprintln!("[coworker] 启动服务器 sidecar 失败：{e}");
                     None
                 }
             };
@@ -722,9 +722,9 @@ pub fn run() {
             });
 
             // 3. System tray: Open / Settings / Quit.
-            let open_i = MenuItem::with_id(app, "open", "Open OpenWorker", true, None::<&str>)?;
-            let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let open_i = MenuItem::with_id(app, "open", "打开 OpenWorker", true, None::<&str>)?;
+            let settings_i = MenuItem::with_id(app, "settings", "设置", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open_i, &settings_i, &quit_i])?;
 
             // A monochrome template icon (black + alpha, raw RGBA 44×44) so the menu bar tints
