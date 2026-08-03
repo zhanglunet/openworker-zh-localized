@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T08:20:45+09:00",
+  "generatedAt": "2026-08-04T08:26:49+09:00",
   "branch": "main",
-  "head": "d0002c6770f7846d96f5766b9927f102dda5c046",
-  "shortHead": "d0002c6",
-  "totalFiles": 524,
+  "head": "6039c072855ba57091a59f1d27fcc5c7d4de3b86",
+  "shortHead": "6039c07",
+  "totalFiles": 525,
   "byExt": [
     {
       "name": "py",
@@ -26,11 +26,11 @@ export const repoReport = {
       "count": 22
     },
     {
-      "name": "json",
-      "count": 12
+      "name": "md",
+      "count": 13
     },
     {
-      "name": "md",
+      "name": "json",
       "count": 12
     },
     {
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 7
+      "count": 8
     },
     {
       "name": ".github",
@@ -284,6 +284,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "6039c07",
+      "date": "2026-08-04",
+      "subject": "docs: record deferred signing prerequisites"
+    },
+    {
+      "hash": "97ac065",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "d0002c6",
       "date": "2026-08-04",
       "subject": "release: prepare signed Chinese auto updates (#3)"
@@ -332,19 +342,19 @@ export const repoReport = {
       "hash": "6a46c2a",
       "date": "2026-08-04",
       "subject": "Distinguish Chinese macOS app bundle"
-    },
-    {
-      "hash": "96db0d2",
-      "date": "2026-08-03",
-      "subject": "Add OpenWorker architecture infographic page"
-    },
-    {
-      "hash": "0759ba3",
-      "date": "2026-08-03",
-      "subject": "Add Cloudflare deployment config for website"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "6039c07",
+      "date": "2026-08-04",
+      "subject": "docs: record deferred signing prerequisites"
+    },
+    {
+      "hash": "97ac065",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "d0002c6",
       "date": "2026-08-04",
