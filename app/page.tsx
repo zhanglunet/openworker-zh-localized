@@ -108,8 +108,8 @@ export default function Home() {
           <a href="#architecture">源码分析</a>
           <a href="#safety">安全边界</a>
         </nav>
-        <a className="nav-cta" href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">
-          查看源码 <span aria-hidden="true">↗</span>
+        <a className="nav-cta" href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">
+          中文仓库 <span aria-hidden="true">↗</span>
         </a>
       </header>
 
@@ -179,6 +179,17 @@ export default function Home() {
       <section className="ticker" aria-label="支持的模型和工具">
         <div className="ticker-track">
           {[...providers, ...providers].map((item, index) => <span key={`${item}-${index}`}>{item}</span>)}
+        </div>
+      </section>
+
+      <section className="source-credit section-shell" aria-label="项目来源说明">
+        <div>
+          <span className="source-credit-label">项目来源</span>
+          <p>本站介绍的 OpenWorker 项目源码来自 <a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">andrewyng/openworker ↗</a></p>
+        </div>
+        <div>
+          <span className="source-credit-label">中文本地化</span>
+          <p>中文资料与本站代码位于 <a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">zhanglunet/openworker-zh-localized ↗</a></p>
         </div>
       </section>
 
@@ -306,13 +317,13 @@ export default function Home() {
           <h2>想研究 Agent 架构？<br />它也是一份可运行的参考实现。</h2>
           <p>后端基于 Python 3.10+，前端需要 Node 20+；完整桌面壳还需要 Rust 工具链。</p>
           <div className="source-actions">
-            <a className="button button-primary" href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">打开 GitHub <span aria-hidden="true">↗</span></a>
-            <a className="text-link" href="https://github.com/andrewyng/openworker/issues" target="_blank" rel="noreferrer">查看 Issues</a>
+            <a className="button button-primary" href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">打开中文仓库 <span aria-hidden="true">↗</span></a>
+            <a className="text-link" href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">查看上游源码</a>
           </div>
         </div>
         <div className="code-panel" aria-label="从源码启动命令">
           <div className="code-bar"><span>快速启动</span><span>bash</span></div>
-          <pre><code><span className="code-muted"># 克隆与初始化</span>{"\n"}git clone https://github.com/andrewyng/openworker{"\n"}cd openworker{"\n"}bash packaging/setup_dev_env.sh{"\n\n"}<span className="code-muted"># 启动本地 Agent Server</span>{"\n"}.venv/bin/openworker-server --cwd ~/project --port 8765{"\n\n"}<span className="code-muted"># 另一个终端启动界面</span>{"\n"}cd surfaces/gui && npm install && npm run dev</code></pre>
+          <pre><code><span className="code-muted"># 克隆中文本地化仓库</span>{"\n"}git clone https://github.com/zhanglunet/openworker-zh-localized{"\n"}cd openworker-zh-localized{"\n"}bash packaging/setup_dev_env.sh{"\n\n"}<span className="code-muted"># 启动本地 Agent Server</span>{"\n"}.venv/bin/openworker-server --cwd ~/project --port 8765{"\n\n"}<span className="code-muted"># 另一个终端启动界面</span>{"\n"}cd surfaces/gui && npm install && npm run dev</code></pre>
         </div>
       </section>
 
@@ -337,15 +348,15 @@ export default function Home() {
           <h2>让 AI 从“会回答”<br />走到“能完成”。</h2>
           <div className="hero-actions centered-actions">
             <a className="button button-light" href="https://download.openworker.com" target="_blank" rel="noreferrer">下载 OpenWorker <span aria-hidden="true">→</span></a>
-            <a className="button button-outline-light" href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">查看源代码</a>
+            <a className="button button-outline-light" href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">查看中文仓库</a>
           </div>
         </div>
       </section>
 
       <footer className="site-footer section-shell">
         <div className="brand footer-brand"><span className="brand-mark">O</span><span>OpenWorker</span><span className="brand-tag">中文站</span></div>
-        <p>非官方中文介绍站 · 内容基于公开代码与文档整理</p>
-        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">GitHub</a></div>
+        <p>项目源码来自 andrewyng/openworker · 中文站由 zhanglunet/openworker-zh-localized 维护</p>
+        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">上游源码</a><a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">中文仓库</a></div>
       </footer>
     </main>
   );

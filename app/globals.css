@@ -141,6 +141,18 @@ button, summary { font: inherit; }
 @keyframes ticker { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .ticker-track { animation: none; } .button { transition: none; } }
 
+.source-credit {
+  padding: 28px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  border-bottom: 1px solid var(--line);
+}
+.source-credit > div { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: baseline; }
+.source-credit-label { color: var(--orange-dark); font-size: 10px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.source-credit p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.source-credit a { color: var(--ink); font-weight: 650; text-decoration: underline; text-decoration-color: rgba(23,23,20,.25); text-underline-offset: 3px; }
+
 .section-block { padding: 132px 0; }
 .section-heading h2, .analysis-title h2, .safety-copy h2, .source-copy h2, .final-cta h2 { font-size: clamp(46px, 5vw, 72px); }
 .split-heading { display: grid; grid-template-columns: 1.2fr .8fr; align-items: end; gap: 80px; }
@@ -272,6 +284,7 @@ button, summary { font: inherit; }
   .repo-metrics div { border: 0; padding: 0; }
   .site-footer { grid-template-columns: 1fr; padding-block: 30px; }
   .site-footer > div:last-child { justify-self: start; }
+  .source-credit { grid-template-columns: 1fr; gap: 18px; }
 }
 
 @media (max-width: 680px) {
@@ -302,4 +315,5 @@ button, summary { font: inherit; }
   .faq-section { padding-bottom: 90px; }
   .final-cta { padding: 86px 0; }
   .final-cta h2 { font-size: 54px; }
+  .source-credit > div { grid-template-columns: 1fr; gap: 5px; }
 }
