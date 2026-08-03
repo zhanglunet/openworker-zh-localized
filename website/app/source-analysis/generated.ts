@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-03T21:40:53Z",
+  "generatedAt": "2026-08-04T07:00:14+09:00",
   "branch": "codex/sync-upstream-20260804",
-  "head": "7df3ca08a4588ea34aa0d7d932a18626cd6d45da",
-  "shortHead": "7df3ca0",
-  "totalFiles": 546,
+  "head": "02e4172112f1a9ee48ca45e88c18bc40d6baa0ed",
+  "shortHead": "02e4172",
+  "totalFiles": 521,
   "byExt": [
     {
       "name": "py",
-      "count": 223
+      "count": 221
     },
     {
       "name": "ts",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "tsx",
-      "count": 95
+      "count": 77
     },
     {
       "name": "svg",
@@ -27,18 +27,22 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 13
+      "count": 11
     },
     {
       "name": "md",
-      "count": 13
+      "count": 11
     },
     {
       "name": "[none]",
-      "count": 9
+      "count": 7
     },
     {
       "name": "html",
+      "count": 5
+    },
+    {
+      "name": "yml",
       "count": 5
     },
     {
@@ -55,10 +59,6 @@ export const repoReport = {
     },
     {
       "name": "toml",
-      "count": 4
-    },
-    {
-      "name": "yml",
       "count": 4
     },
     {
@@ -81,11 +81,11 @@ export const repoReport = {
   "byTopDir": [
     {
       "name": "surfaces",
-      "count": 248
+      "count": 228
     },
     {
       "name": "coworker",
-      "count": 129
+      "count": 127
     },
     {
       "name": "tests",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": ".github",
-      "count": 4
+      "count": 5
     },
     {
       "name": "stt",
@@ -117,11 +117,7 @@ export const repoReport = {
     },
     {
       "name": ".gitignore",
-      "count": 3
-    },
-    {
-      "name": "README.md",
-      "count": 3
+      "count": 1
     },
     {
       "name": "BUILD_LOG.md",
@@ -137,6 +133,10 @@ export const repoReport = {
     },
     {
       "name": "pyproject.toml",
+      "count": 1
+    },
+    {
+      "name": "README.md",
       "count": 1
     },
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "02e4172",
+      "date": "2026-08-04",
+      "subject": "Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804"
+    },
+    {
       "hash": "7df3ca0",
       "date": "2026-08-03",
       "subject": "docs: refresh generated site reports"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "14833d9",
       "date": "2026-08-03",
       "subject": "chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案"
-    },
-    {
-      "hash": "a1912fc",
-      "date": "2026-08-03",
-      "subject": "docs: rewrite README with full install, usage, and localization guide"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "02e4172",
+      "date": "2026-08-04",
+      "subject": "Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804"
+    },
     {
       "hash": "7df3ca0",
       "date": "2026-08-03",
@@ -419,6 +424,216 @@ export const repoReport = {
       "hash": "4b19f8b",
       "date": "2026-08-03",
       "subject": "Initial commit"
+    },
+    {
+      "hash": "01b6f83",
+      "date": "2026-08-01",
+      "subject": "Merge pull request #393 from andrewyng/issue/ope-46"
+    },
+    {
+      "hash": "997b2a9",
+      "date": "2026-08-01",
+      "subject": "Merge branch 'main' into issue/ope-46"
+    },
+    {
+      "hash": "70e4610",
+      "date": "2026-08-01",
+      "subject": "Add support for Skills (#391)"
+    },
+    {
+      "hash": "e0cb129",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #356 from andrewyng/rpMacIntelBuild"
+    },
+    {
+      "hash": "bfabfaa",
+      "date": "2026-07-30",
+      "subject": "ci: build macOS Intel on macos-15-intel"
+    },
+    {
+      "hash": "ae7256f",
+      "date": "2026-07-30",
+      "subject": "Prepare app release 0.1.7: version bump"
+    },
+    {
+      "hash": "907752b",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #354 from andrewyng/rpArtifactWalkAndContextBar"
+    },
+    {
+      "hash": "25dc283",
+      "date": "2026-07-30",
+      "subject": "fix: stop artifact walk entering OS app-data dirs; context bar off by default"
+    },
+    {
+      "hash": "11d9f72",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #353 from andrewyng/rpSsrfFollowup"
+    },
+    {
+      "hash": "e5c5699",
+      "date": "2026-07-30",
+      "subject": "security: block CGNAT range and guard browser_open_url"
+    },
+    {
+      "hash": "7e69398",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #290 from Mr-Neutr0n/security/block-ssrf-in-url-tools"
+    },
+    {
+      "hash": "38e1f03",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #161 from psssnikhil/fix/inbox-reply-word-boundaries"
+    },
+    {
+      "hash": "98445fe",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #352 from andrewyng/rpMcpGlobalWins"
+    },
+    {
+      "hash": "6217dbc",
+      "date": "2026-07-30",
+      "subject": "mcp: global config wins on name clash with a trusted workspace"
+    },
+    {
+      "hash": "5071451",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #351 from andrewyng/rpCompactionPolish"
+    },
+    {
+      "hash": "cca0421",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #215 from HaoChiBao/security/workspace-mcp-trust-gate"
+    },
+    {
+      "hash": "fe034c8",
+      "date": "2026-07-30",
+      "subject": "models: Kimi K3 via Together (1M window, vision); right-align the more/less toggle"
+    },
+    {
+      "hash": "1e819e0",
+      "date": "2026-07-30",
+      "subject": "transcript: clamp long user messages with a more…/less… toggle"
+    },
+    {
+      "hash": "f9f51c9",
+      "date": "2026-07-30",
+      "subject": "compaction: live progress signal + user-message cap"
+    },
+    {
+      "hash": "b303823",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #347 from andrewyng/review/ope-27"
+    },
+    {
+      "hash": "330010c",
+      "date": "2026-07-29",
+      "subject": "compaction: harden the smoke against per-turn event loops (OPE-27)"
+    },
+    {
+      "hash": "0bf9b87",
+      "date": "2026-07-29",
+      "subject": "compaction: repeated-compaction smoke through the manager (OPE-27 4/4)"
+    },
+    {
+      "hash": "4fa8acf",
+      "date": "2026-07-29",
+      "subject": "compaction: Settings overrides + GUI divider (OPE-27 3/4)"
+    },
+    {
+      "hash": "f08a3c4",
+      "date": "2026-07-29",
+      "subject": "compaction: engine hook, failure policy, persistence (OPE-27 2/4)"
+    },
+    {
+      "hash": "028d42e",
+      "date": "2026-07-29",
+      "subject": "compaction: pure module + tests (OPE-27 1/4)"
+    },
+    {
+      "hash": "55362ab",
+      "date": "2026-07-29",
+      "subject": "Merge branch 'main' of https://github.com/andrewyng/openworker into issue/ope-46"
+    },
+    {
+      "hash": "ff86735",
+      "date": "2026-07-28",
+      "subject": "security: block loopback/private/metadata addresses in model-supplied URL fetches"
+    },
+    {
+      "hash": "f96ad4c",
+      "date": "2026-07-28",
+      "subject": "Merge pull request #304 from andrewyng/rpTokenMetering"
+    },
+    {
+      "hash": "8674e30",
+      "date": "2026-07-28",
+      "subject": "Pin mcp<2 — 2.0.0 removed streamablehttp_client"
+    },
+    {
+      "hash": "27311cd",
+      "date": "2026-07-28",
+      "subject": "Usage popover: 'Uncached input' when a cache split exists"
+    },
+    {
+      "hash": "d1524b3",
+      "date": "2026-07-28",
+      "subject": "Usage popover: label rows as session totals"
+    },
+    {
+      "hash": "a35b505",
+      "date": "2026-07-28",
+      "subject": "Usage popover: add cumulative Total input row"
+    },
+    {
+      "hash": "92c1833",
+      "date": "2026-07-28",
+      "subject": "Usage popover: one field per line"
+    },
+    {
+      "hash": "a7df344",
+      "date": "2026-07-28",
+      "subject": "Gitignore .env for local BYO-key smoke runs"
+    },
+    {
+      "hash": "0de0da1",
+      "date": "2026-07-28",
+      "subject": "Docs: reflect the Responses/Chat-Completions provider split"
+    },
+    {
+      "hash": "9d3f6d3",
+      "date": "2026-07-28",
+      "subject": "Route native OpenAI (blank endpoint) to the Responses provider"
+    },
+    {
+      "hash": "26b4c80",
+      "date": "2026-07-28",
+      "subject": "OpenAI Responses provider: reasoning + tools for native OpenAI models"
+    },
+    {
+      "hash": "8991d30",
+      "date": "2026-07-27",
+      "subject": "Enable prompt caching on the Anthropic provider"
+    },
+    {
+      "hash": "7a108b2",
+      "date": "2026-07-27",
+      "subject": "Show per-session token usage in the composer"
+    },
+    {
+      "hash": "979badb",
+      "date": "2026-07-27",
+      "subject": "Meter token usage across all model providers"
+    },
+    {
+      "hash": "3766805",
+      "date": "2026-07-27",
+      "subject": "Merge pull request #259 from andrewyng/rpModelProviders"
+    },
+    {
+      "hash": "d386396",
+      "date": "2026-07-27",
+      "subject": "Update README with badge from trendshift"
     }
   ]
 } as const;

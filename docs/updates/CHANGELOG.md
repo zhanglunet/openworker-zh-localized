@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-03T21:40:53Z
+更新时间：2026-08-04T07:00:14+09:00
 
 ## 最近提交
 
+- 2026-08-04 02e4172 Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
 - 2026-08-04 f36b220 Update README download and site preview
@@ -15,4 +16,3 @@
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
 - 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
 - 2026-08-03 14833d9 chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案
-- 2026-08-03 a1912fc docs: rewrite README with full install, usage, and localization guide

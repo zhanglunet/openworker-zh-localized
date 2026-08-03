@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-03T21:40:53Z
+更新时间：2026-08-04T07:00:14+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：codex/sync-upstream-20260804
 
-当前提交：7df3ca08a4588ea34aa0d7d932a18626cd6d45da
+当前提交：02e4172112f1a9ee48ca45e88c18bc40d6baa0ed
 
 ## 1. 总体判断
 
@@ -14,43 +14,43 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：546
-- 当前提交：7df3ca0
+- 跟踪文件总数：521
+- 当前提交：02e4172
 - 主要文件类型：
-  - py: 223
+  - py: 221
   - ts: 105
-  - tsx: 95
+  - tsx: 77
   - svg: 23
   - png: 22
-  - json: 13
-  - md: 13
-  - [none]: 9
+  - json: 11
+  - md: 11
+  - [none]: 7
   - html: 5
+  - yml: 5
   - mjs: 4
   - rs: 4
   - sh: 4
   - toml: 4
-  - yml: 4
   - css: 3
   - js: 2
 
 ## 3. 目录结构
 
-- surfaces: 248 个文件
-- coworker: 129 个文件
+- surfaces: 228 个文件
+- coworker: 127 个文件
 - tests: 93 个文件
 - website: 35 个文件
 - packaging: 10 个文件
 - docs: 6 个文件
-- .github: 4 个文件
+- .github: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
-- .gitignore: 3 个文件
-- README.md: 3 个文件
+- .gitignore: 1 个文件
 - BUILD_LOG.md: 1 个文件
 - LICENSE: 1 个文件
 - openworker-zh-test-report.md: 1 个文件
 - pyproject.toml: 1 个文件
+- README.md: 1 个文件
 - releases: 1 个文件
 - start-openworker-gui.sh: 1 个文件
 - start-openworker-server.sh: 1 个文件
@@ -159,6 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 02e4172 Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
 - 2026-08-04 f36b220 Update README download and site preview
@@ -170,4 +171,3 @@ flowchart LR
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
 - 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
 - 2026-08-03 14833d9 chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案
-- 2026-08-03 a1912fc docs: rewrite README with full install, usage, and localization guide
