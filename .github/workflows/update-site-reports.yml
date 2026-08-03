@@ -1,0 +1,44 @@
+name: Update site reports
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "15 1 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-reports:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install website dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Generate analysis, changelog and weekly report
+        working-directory: website
+        run: npm run generate:reports
+        env:
+          REPORT_GENERATED_AT: ${{ github.event.head_commit.timestamp || github.run_started_at }}
+
+      - name: Commit generated reports
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: refresh generated site reports"
+          file_pattern: docs/analysis/*.md docs/updates/*.md website/app/source-analysis/generated.ts website/app/updates/generated.ts

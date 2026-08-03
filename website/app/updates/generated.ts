@@ -1,0 +1,414 @@
+export const repoReport = {
+  "generatedAt": "2026-08-04T06:25:00+09:00",
+  "branch": "main",
+  "head": "f36b22099ca07314a4e077545457e5b6fde9cc3f",
+  "shortHead": "f36b220",
+  "totalFiles": 475,
+  "byExt": [
+    {
+      "name": "py",
+      "count": 202
+    },
+    {
+      "name": "ts",
+      "count": 94
+    },
+    {
+      "name": "tsx",
+      "count": 70
+    },
+    {
+      "name": "png",
+      "count": 22
+    },
+    {
+      "name": "svg",
+      "count": 20
+    },
+    {
+      "name": "json",
+      "count": 11
+    },
+    {
+      "name": "md",
+      "count": 8
+    },
+    {
+      "name": "[none]",
+      "count": 7
+    },
+    {
+      "name": "html",
+      "count": 5
+    },
+    {
+      "name": "rs",
+      "count": 4
+    },
+    {
+      "name": "sh",
+      "count": 4
+    },
+    {
+      "name": "toml",
+      "count": 4
+    },
+    {
+      "name": "css",
+      "count": 3
+    },
+    {
+      "name": "mjs",
+      "count": 3
+    },
+    {
+      "name": "yml",
+      "count": 3
+    },
+    {
+      "name": "js",
+      "count": 2
+    },
+    {
+      "name": "lock",
+      "count": 2
+    },
+    {
+      "name": "plist",
+      "count": 2
+    }
+  ],
+  "byTopDir": [
+    {
+      "name": "surfaces",
+      "count": 211
+    },
+    {
+      "name": "coworker",
+      "count": 121
+    },
+    {
+      "name": "tests",
+      "count": 80
+    },
+    {
+      "name": "website",
+      "count": 30
+    },
+    {
+      "name": "packaging",
+      "count": 10
+    },
+    {
+      "name": "stt",
+      "count": 4
+    },
+    {
+      "name": "ui-mocks",
+      "count": 4
+    },
+    {
+      "name": ".github",
+      "count": 3
+    },
+    {
+      "name": "docs",
+      "count": 3
+    },
+    {
+      "name": ".gitignore",
+      "count": 1
+    },
+    {
+      "name": "BUILD_LOG.md",
+      "count": 1
+    },
+    {
+      "name": "LICENSE",
+      "count": 1
+    },
+    {
+      "name": "openworker-zh-test-report.md",
+      "count": 1
+    },
+    {
+      "name": "pyproject.toml",
+      "count": 1
+    },
+    {
+      "name": "README.md",
+      "count": 1
+    },
+    {
+      "name": "releases",
+      "count": 1
+    },
+    {
+      "name": "start-openworker-gui.sh",
+      "count": 1
+    },
+    {
+      "name": "start-openworker-server.sh",
+      "count": 1
+    }
+  ],
+  "highlights": [
+    {
+      "title": "桌面壳",
+      "files": [
+        "surfaces/gui/src-tauri/src/lib.rs",
+        "surfaces/gui/src-tauri/tauri.conf.json"
+      ],
+      "summary": "Tauri 负责启动窗口、托盘、原生权限、语音输入、更新检查和 Python sidecar 生命周期。"
+    },
+    {
+      "title": "前端工作台",
+      "files": [
+        "surfaces/gui/src/App.tsx",
+        "surfaces/gui/src/api.ts",
+        "surfaces/gui/src/components"
+      ],
+      "summary": "React 工作台承载会话、审批、收件箱、连接器、模型配置、产物和实时事件流。"
+    },
+    {
+      "title": "本地服务",
+      "files": [
+        "coworker/server/app.py",
+        "coworker/server/manager.py"
+      ],
+      "summary": "FastAPI sidecar 暴露 REST 与 WebSocket，集中协调会话、任务、审计、自动化和持久化。"
+    },
+    {
+      "title": "Agent 运行核心",
+      "files": [
+        "coworker/engine.py",
+        "coworker/permissions.py",
+        "coworker/tools",
+        "coworker/providers"
+      ],
+      "summary": "TurnEngine、PermissionEngine、工具注册表和 ProviderRouter 组成 model-tool 循环。"
+    },
+    {
+      "title": "连接器与 MCP",
+      "files": [
+        "coworker/connectors",
+        "coworker/mcp",
+        "surfaces/gui/src/connectors"
+      ],
+      "summary": "内置连接器、MCP server 管理和 OAuth/账户视图把外部系统接入本地运行时。"
+    },
+    {
+      "title": "中文站与发布物",
+      "files": [
+        "website",
+        "docs",
+        "releases"
+      ],
+      "summary": "中文站、架构信息图、源码分析、日志周报和 macOS DMG 下载入口随仓库维护。"
+    }
+  ],
+  "architectureFlow": [
+    "用户目标",
+    "React/Tauri 工作台",
+    "FastAPI sidecar",
+    "SessionManager",
+    "TurnEngine",
+    "ProviderRouter",
+    "模型",
+    "工具/MCP/连接器",
+    "权限与审计",
+    "交付物"
+  ],
+  "runtimeFlow": [
+    "下载 DMG 或源码启动",
+    "Tauri/浏览器加载 GUI",
+    "sidecar 选择端口并生成 token",
+    "GUI 通过 REST/WebSocket 连接本地服务",
+    "用户发起目标与上下文",
+    "模型提出计划与工具调用",
+    "权限系统判断风险与批准策略",
+    "工具结果写入会话、审计、Inbox 或文件",
+    "最终结果返回用户"
+  ],
+  "apiGroups": [
+    {
+      "name": "健康与启动",
+      "examples": [
+        "/v1/health",
+        "WebSocket /ws/events"
+      ]
+    },
+    {
+      "name": "会话",
+      "examples": [
+        "/v1/sessions",
+        "/ws/session/{sessionId}"
+      ]
+    },
+    {
+      "name": "模型提供商",
+      "examples": [
+        "/v1/providers",
+        "/v1/providers/models"
+      ]
+    },
+    {
+      "name": "连接器",
+      "examples": [
+        "/v1/connectors/*",
+        "OAuth 状态轮询"
+      ]
+    },
+    {
+      "name": "MCP",
+      "examples": [
+        "/v1/mcp/*",
+        "stdio / streamable-http server"
+      ]
+    },
+    {
+      "name": "自动化与 Inbox",
+      "examples": [
+        "/v1/automations/*",
+        "/v1/inbox/*"
+      ]
+    },
+    {
+      "name": "本地文件与产物",
+      "examples": [
+        "文件工具",
+        "目录授权",
+        "产物预览"
+      ]
+    }
+  ],
+  "recentCommits": [
+    {
+      "hash": "f36b220",
+      "date": "2026-08-04",
+      "subject": "Update README download and site preview"
+    },
+    {
+      "hash": "11fd242",
+      "date": "2026-08-04",
+      "subject": "Add localized macOS app download"
+    },
+    {
+      "hash": "6a46c2a",
+      "date": "2026-08-04",
+      "subject": "Distinguish Chinese macOS app bundle"
+    },
+    {
+      "hash": "96db0d2",
+      "date": "2026-08-03",
+      "subject": "Add OpenWorker architecture infographic page"
+    },
+    {
+      "hash": "0759ba3",
+      "date": "2026-08-03",
+      "subject": "Add Cloudflare deployment config for website"
+    },
+    {
+      "hash": "cc6d867",
+      "date": "2026-08-03",
+      "subject": "Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site"
+    },
+    {
+      "hash": "617c4fb",
+      "date": "2026-08-03",
+      "subject": "Add OpenWorker Chinese website"
+    },
+    {
+      "hash": "80098ae",
+      "date": "2026-08-03",
+      "subject": "Merge remote-tracking branch 'origin/main'"
+    },
+    {
+      "hash": "14833d9",
+      "date": "2026-08-03",
+      "subject": "chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案"
+    },
+    {
+      "hash": "a1912fc",
+      "date": "2026-08-03",
+      "subject": "docs: rewrite README with full install, usage, and localization guide"
+    },
+    {
+      "hash": "3f50a54",
+      "date": "2026-08-03",
+      "subject": "docs: add BUILD_LOG.md with full localization setup notes"
+    },
+    {
+      "hash": "d0ccdc9",
+      "date": "2026-08-03",
+      "subject": "Initial commit: OpenWorker 全量汉化版"
+    }
+  ],
+  "weeklyCommits": [
+    {
+      "hash": "f36b220",
+      "date": "2026-08-04",
+      "subject": "Update README download and site preview"
+    },
+    {
+      "hash": "11fd242",
+      "date": "2026-08-04",
+      "subject": "Add localized macOS app download"
+    },
+    {
+      "hash": "6a46c2a",
+      "date": "2026-08-04",
+      "subject": "Distinguish Chinese macOS app bundle"
+    },
+    {
+      "hash": "96db0d2",
+      "date": "2026-08-03",
+      "subject": "Add OpenWorker architecture infographic page"
+    },
+    {
+      "hash": "0759ba3",
+      "date": "2026-08-03",
+      "subject": "Add Cloudflare deployment config for website"
+    },
+    {
+      "hash": "cc6d867",
+      "date": "2026-08-03",
+      "subject": "Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site"
+    },
+    {
+      "hash": "617c4fb",
+      "date": "2026-08-03",
+      "subject": "Add OpenWorker Chinese website"
+    },
+    {
+      "hash": "80098ae",
+      "date": "2026-08-03",
+      "subject": "Merge remote-tracking branch 'origin/main'"
+    },
+    {
+      "hash": "14833d9",
+      "date": "2026-08-03",
+      "subject": "chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案"
+    },
+    {
+      "hash": "a1912fc",
+      "date": "2026-08-03",
+      "subject": "docs: rewrite README with full install, usage, and localization guide"
+    },
+    {
+      "hash": "3f50a54",
+      "date": "2026-08-03",
+      "subject": "docs: add BUILD_LOG.md with full localization setup notes"
+    },
+    {
+      "hash": "d0ccdc9",
+      "date": "2026-08-03",
+      "subject": "Initial commit: OpenWorker 全量汉化版"
+    },
+    {
+      "hash": "4b19f8b",
+      "date": "2026-08-03",
+      "subject": "Initial commit"
+    }
+  ]
+} as const;

@@ -73,6 +73,8 @@ export default function InfographicPage() {
           <a href="#architecture">系统架构</a>
           <a href="#loop">Agent 循环</a>
           <a href="#safety">安全边界</a>
+          <a href="/source-analysis">深度分析</a>
+          <a href="/updates">日志</a>
           <a href="/">返回首页</a>
         </nav>
         <a className="nav-cta" href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">

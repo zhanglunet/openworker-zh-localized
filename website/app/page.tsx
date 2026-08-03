@@ -113,7 +113,9 @@ export default function Home() {
           <a href="#download">下载</a>
           <a href="#workflow">工作方式</a>
           <a href="#architecture">源码分析</a>
+          <a href="/source-analysis">深度分析</a>
           <a href="/infographic">信息图</a>
+          <a href="/updates">日志</a>
           <a href="#safety">安全边界</a>
         </nav>
         <a className="nav-cta" href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">
@@ -338,9 +340,12 @@ export default function Home() {
         <div className="analysis-link-panel">
           <div>
             <span>交互式信息图</span>
-            <p>查看最早仓库分析整理出的三视图网页：系统架构、Agent 循环与安全边界。</p>
+            <p>查看最早仓库分析整理出的三视图网页，或进入新页面阅读中文本地化仓库的源码、目录、接口、MCP、运行和维护机制深度分析。</p>
           </div>
-          <a className="text-link" href="/infographic">打开信息图页面</a>
+          <div className="analysis-link-actions">
+            <a className="text-link" href="/infographic">打开信息图页面</a>
+            <a className="text-link" href="/source-analysis">打开源码深度分析</a>
+          </div>
         </div>
       </section>
 
@@ -406,7 +411,7 @@ export default function Home() {
       <footer className="site-footer section-shell">
         <div className="brand footer-brand"><span className="brand-mark">O</span><span>OpenWorker</span><span className="brand-tag">中文站</span></div>
         <p>项目源码来自 andrewyng/openworker · 中文站由 zhanglunet/openworker-zh-localized 维护</p>
-        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">上游源码</a><a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">中文仓库</a><a href="/infographic">信息图</a></div>
+        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">上游源码</a><a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">中文仓库</a><a href="/infographic">信息图</a><a href="/source-analysis">深度分析</a><a href="/updates">日志</a></div>
       </footer>
     </main>
   );

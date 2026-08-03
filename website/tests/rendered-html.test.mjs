@@ -57,3 +57,24 @@ test("server-renders the OpenWorker infographic page", async () => {
   assert.match(html, /安全边界/);
   assert.match(html, /main@3766805/);
 });
+
+test("server-renders the source analysis page", async () => {
+  const response = await render("/source-analysis");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /源码全景分析/);
+  assert.match(html, /目录地图/);
+  assert.match(html, /接口、MCP 与能力面/);
+  assert.match(html, /docs\/analysis\/openworker-zh-localized-source-analysis\.md/);
+});
+
+test("server-renders the updates and weekly report page", async () => {
+  const response = await render("/updates");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /更新日志/);
+  assert.match(html, /本周周报/);
+  assert.match(html, /docs\/updates\/CHANGELOG\.md/);
+});

@@ -1,0 +1,20 @@
+# OpenWorker 中文站周报
+
+生成时间：2026-08-04T06:25:00+09:00
+
+## 本周概览
+
+- 2026-08-04 f36b220 Update README download and site preview
+- 2026-08-04 11fd242 Add localized macOS app download
+- 2026-08-04 6a46c2a Distinguish Chinese macOS app bundle
+- 2026-08-03 96db0d2 Add OpenWorker architecture infographic page
+- 2026-08-03 0759ba3 Add Cloudflare deployment config for website
+- 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
+- 2026-08-03 617c4fb Add OpenWorker Chinese website
+- 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
+
+## 维护建议
+
+- 每次发布前运行 `npm test`，确保首页、信息图、源码分析和日志页都能渲染。
+- DMG 更新后同步校验 README、网站下载入口和 Release 说明。
+- 上游同步前保持 PR 范围清晰，避免把中文站部署物和二进制文件混入不适合上游的改动。

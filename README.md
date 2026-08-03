@@ -12,9 +12,11 @@
 - macOS Apple Silicon DMG：[OpenWorker-CN-0.1.6-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.6-aarch64.dmg)
 - GitHub Release：[v0.1.6-zh](https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.6-zh)
 - 网站源码：[website/](website/)
+- 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/](docs/analysis/)）
+- 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/](docs/updates/)）
 - 上游项目源码：[andrewyng/openworker](https://github.com/andrewyng/openworker)
 
-中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析、安全边界和交互式信息图。网站明确标注上游项目归属，并链接回本仓库。
+中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析、安全边界、交互式信息图、自动更新日志和每周周报。网站明确标注上游项目归属，并链接回本仓库。
 
 ![OpenWorker 中文站截图](docs/assets/oaosf-cn-home.png)
 
