@@ -48,9 +48,6 @@ jobs:
       - name: npm ci
         working-directory: surfaces/gui
         run: npm ci
-      - name: Install Playwright browsers
-        working-directory: surfaces/gui
-        run: npx playwright install --with-deps chromium
       - name: e2e
         working-directory: surfaces/gui
         # The localized fork intentionally changes visible GUI copy to Chinese. The upstream
@@ -58,4 +55,5 @@ jobs:
         # spends ~30s per stale selector and can occupy CI for a long time. Keep Python and
         # GUI unit tests as blocking gates; restore e2e after the Playwright selectors are
         # made locale-aware.
-        run: echo "Skipped: upstream English-bound Playwright selectors need Chinese localization."
+        run: |
+          echo "Skipped: upstream English-bound Playwright selectors need Chinese localization."
