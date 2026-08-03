@@ -6,6 +6,14 @@
 >
 > 遵循原项目 MIT 许可证，仅用于学习和个人本地使用。
 
+## 中文介绍站
+
+- 在线访问：[OpenWorker 中文站](https://openworker-cn-guide.shuo3-com.chatgpt.site)
+- 网站源码：[website/](website/)
+- 上游项目源码：[andrewyng/openworker](https://github.com/andrewyng/openworker)
+
+中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析和安全边界。网站明确标注上游项目归属，并链接回本仓库。
+
 ---
 
 ## 目录
