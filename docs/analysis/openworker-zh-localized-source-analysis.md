@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T07:37:37+09:00
+更新时间：2026-08-03T22:38:13Z
 
 仓库：zhanglunet/openworker-zh-localized
 
-当前分支：main
+当前分支：
 
-当前提交：c6c4704f3bae36130bd4c7585cc6920b395b5fc7
+当前提交：d4c69856b3a3c12056321d28172e390cbd092826
 
 ## 1. 总体判断
 
@@ -14,16 +14,16 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：523
-- 当前提交：c6c4704
+- 跟踪文件总数：528
+- 当前提交：d4c6985
 - 主要文件类型：
   - py: 221
-  - ts: 105
+  - ts: 109
   - tsx: 77
   - svg: 23
   - png: 22
   - json: 12
-  - md: 11
+  - md: 12
   - [none]: 7
   - html: 5
   - yml: 5
@@ -39,9 +39,9 @@
 - surfaces: 228 个文件
 - coworker: 127 个文件
 - tests: 93 个文件
-- website: 35 个文件
+- website: 39 个文件
 - packaging: 10 个文件
-- docs: 6 个文件
+- docs: 7 个文件
 - .github: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
@@ -159,6 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-03 d4c6985 docs: refresh generated site reports
 - 2026-08-04 c6c4704 docs: refresh reports after Cloudflare deploy
 - 2026-08-03 6aeb622 docs: refresh generated site reports
 - 2026-08-04 f4fabd1 sync: merge upstream OpenWorker 01b6f83 (#2)
@@ -170,4 +171,3 @@ flowchart LR
 - 2026-08-03 96db0d2 Add OpenWorker architecture infographic page
 - 2026-08-03 0759ba3 Add Cloudflare deployment config for website
 - 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
-- 2026-08-03 617c4fb Add OpenWorker Chinese website

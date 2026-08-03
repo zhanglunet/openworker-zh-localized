@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T07:37:37+09:00",
-  "branch": "main",
-  "head": "c6c4704f3bae36130bd4c7585cc6920b395b5fc7",
-  "shortHead": "c6c4704",
-  "totalFiles": 523,
+  "generatedAt": "2026-08-03T22:38:13Z",
+  "branch": "",
+  "head": "d4c69856b3a3c12056321d28172e390cbd092826",
+  "shortHead": "d4c6985",
+  "totalFiles": 528,
   "byExt": [
     {
       "name": "py",
@@ -11,7 +11,7 @@ export const repoReport = {
     },
     {
       "name": "ts",
-      "count": 105
+      "count": 109
     },
     {
       "name": "tsx",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 11
+      "count": 12
     },
     {
       "name": "[none]",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "website",
-      "count": 35
+      "count": 39
     },
     {
       "name": "packaging",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 6
+      "count": 7
     },
     {
       "name": ".github",
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d4c6985",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "c6c4704",
       "date": "2026-08-04",
       "subject": "docs: refresh reports after Cloudflare deploy"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "cc6d867",
       "date": "2026-08-03",
       "subject": "Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site"
-    },
-    {
-      "hash": "617c4fb",
-      "date": "2026-08-03",
-      "subject": "Add OpenWorker Chinese website"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d4c6985",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "c6c4704",
       "date": "2026-08-04",

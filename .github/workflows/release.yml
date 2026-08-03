@@ -5,12 +5,12 @@
 # .venv with PyInstaller) and publishes the results.
 #
 # Triggers:
-#   - tag push `v*`  → builds all targets and attaches them to a DRAFT GitHub Release
-#                      (review, then publish by hand).
+#   - tag push `v*`  → builds all targets, publishes a GitHub Release, writes latest-zh.json,
+#                      and updates releases/latest-zh.json on main for already-installed apps.
 #   - manual run     → builds and uploads workflow artifacts only (no release).
 #
 # Each installer is uploaded twice: once with its versioned name (archive) and once with a
-# stable name (OpenWorker-macos-arm64.dmg, …) so the website can link to
+# stable name (OpenWorker-CN-macos-arm64.dmg, …) so the website can link to
 #   github.com/<repo>/releases/latest/download/<stable-name>
 # and never need updating.
 #
@@ -23,8 +23,8 @@
 #   APPLE_API_KEY_CONTENT        base64 App Store Connect API .p8 (notarytool)
 #   APPLE_API_KEY                the API key id
 #   APPLE_API_ISSUER             the API issuer id
-# When the secrets are absent (forks, scratch runs) the build degrades to unsigned —
-# installable via `xattr -cr`. Windows remains unsigned (Authenticode is a later step).
+# Tagged releases require these secrets and fail closed if any are missing; unsigned builds
+# are allowed only for manual workflow_dispatch smoke tests.
 
 name: Release
 
@@ -88,6 +88,27 @@ jobs:
         working-directory: surfaces/gui
         run: npm ci
 
+      - name: Require signed auto-update secrets for tagged macOS releases
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          missing=()
+          for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_API_KEY_CONTENT APPLE_API_KEY APPLE_API_ISSUER TAURI_SIGNING_PRIVATE_KEY; do
+            [ -n "$(eval echo "\${$v:-}")" ] || missing+=("$v")
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf '::error::missing required release secret: %s\n' "${missing[@]}"
+            exit 1
+          fi
+
       - name: Build .dmg (macOS)
         if: runner.os == 'macOS'
         env:
@@ -128,20 +149,21 @@ jobs:
           BUNDLE=surfaces/gui/src-tauri/target/release/bundle
           if [ "$RUNNER_OS" = "Windows" ]; then
             cp "$BUNDLE"/nsis/*.exe out/
-            cp "$BUNDLE"/nsis/*.exe out/OpenWorker-windows-setup.exe
+            cp "$BUNDLE"/nsis/*.exe out/OpenWorker-CN-windows-setup.exe
             cp "$BUNDLE"/msi/*.msi out/
-            cp "$BUNDLE"/msi/*.msi out/OpenWorker-windows.msi
+            cp "$BUNDLE"/msi/*.msi out/OpenWorker-CN-windows.msi
             # Updater signature for the NSIS installer (present only when the updater key
             # secret is configured). The .sig signs CONTENT, so the stable rename is safe.
             SIG=$(ls "$BUNDLE"/nsis/*.exe.sig 2>/dev/null | head -1 || true)
-            [ -n "$SIG" ] && cp "$SIG" out/OpenWorker-windows-setup.exe.sig
+            [ -n "$SIG" ] && cp "$SIG" out/OpenWorker-CN-windows-setup.exe.sig
           else
             cp "$BUNDLE"/dmg/*.dmg out/
-            cp "$BUNDLE"/dmg/*.dmg out/OpenWorker-${{ matrix.slug }}.dmg
+            cp "$BUNDLE"/dmg/*.dmg out/OpenWorker-CN-${{ matrix.slug }}.dmg
             # macOS updater artifact: the signed .app tarball the installed app swaps in.
-            if [ -f "$BUNDLE"/macos/OpenWorker.app.tar.gz ]; then
-              cp "$BUNDLE"/macos/OpenWorker.app.tar.gz out/OpenWorker-${{ matrix.slug }}.app.tar.gz
-              cp "$BUNDLE"/macos/OpenWorker.app.tar.gz.sig out/OpenWorker-${{ matrix.slug }}.app.tar.gz.sig
+            APP_TGZ=$(ls "$BUNDLE"/macos/*.app.tar.gz 2>/dev/null | head -1 || true)
+            if [ -n "$APP_TGZ" ]; then
+              cp "$APP_TGZ" out/OpenWorker-CN-${{ matrix.slug }}.app.tar.gz
+              cp "$APP_TGZ.sig" out/OpenWorker-CN-${{ matrix.slug }}.app.tar.gz.sig
             fi
           fi
           ls -la out
@@ -166,30 +188,43 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Compose the auto-update manifest (latest.json)
-        # Shipped apps poll releases/latest/download/latest.json (via the branded
-        # download.openworker.com redirect) — publishing this release IS pushing the
-        # update. The tag must match tauri.conf.json's version or installed apps would
-        # see a permanent phantom update; fail loudly on drift. Runs only when signed
-        # updater artifacts exist (i.e. the TAURI_SIGNING_PRIVATE_KEY secret is set).
+      - name: Compose the auto-update manifest (latest-zh.json)
+        # Chinese builds poll releases/latest-zh.json on main today; newer builds also
+        # poll releases/latest/download/latest-zh.json. Publishing this release plus
+        # updating main's manifest is pushing the update. The tag may be `v0.1.8` or
+        # `v0.1.8-zh`, but the version inside the manifest must match tauri.conf.json.
         run: |
           TAG="${GITHUB_REF_NAME}"
+          VERSION_FROM_TAG="${TAG#v}"
+          VERSION_FROM_TAG="${VERSION_FROM_TAG%-zh}"
           CONF_VERSION=$(python3 -c "import json; print(json.load(open('surfaces/gui/src-tauri/tauri.conf.json'))['version'])")
-          if [ "${TAG#v}" != "$CONF_VERSION" ]; then
+          if [ "$VERSION_FROM_TAG" != "$CONF_VERSION" ]; then
             echo "::error::tag $TAG != tauri.conf.json version $CONF_VERSION — bump the config before tagging"
             exit 1
           fi
           if ls dist/*.sig >/dev/null 2>&1; then
             python3 packaging/make_update_manifest.py \
-              --version "${TAG#v}" --tag "$TAG" --repo "$GITHUB_REPOSITORY" \
-              --dist dist --out dist/latest.json \
-              --notes "OpenWorker ${TAG#v}"
+              --version "$CONF_VERSION" --tag "$TAG" --repo "$GITHUB_REPOSITORY" \
+              --dist dist --out dist/latest-zh.json \
+              --notes "OpenWorker 中文版 ${CONF_VERSION}"
           else
-            echo "::warning::no updater signatures in dist/ — release ships WITHOUT auto-update manifest"
+            echo "::error::no updater signatures in dist/ — refusing to publish a release that cannot auto-update"
+            exit 1
           fi
 
       - uses: softprops/action-gh-release@v2
         with:
-          draft: true
+          draft: false
           files: dist/*
           generate_release_notes: true
+
+      - name: Update main fallback manifest for installed Chinese apps
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          cp dist/latest-zh.json releases/latest-zh.json
+          git add releases/latest-zh.json
+          git commit -m "release: publish latest Chinese updater manifest for ${GITHUB_REF_NAME}" || exit 0
+          git push origin HEAD:main
