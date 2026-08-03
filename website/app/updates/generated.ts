@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T07:00:14+09:00",
+  "generatedAt": "2026-08-04T07:00:26+09:00",
   "branch": "codex/sync-upstream-20260804",
-  "head": "02e4172112f1a9ee48ca45e88c18bc40d6baa0ed",
-  "shortHead": "02e4172",
+  "head": "26d9a4c944b03bd4467670983912355c6c161367",
+  "shortHead": "26d9a4c",
   "totalFiles": 521,
   "byExt": [
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "26d9a4c",
+      "date": "2026-08-04",
+      "subject": "docs: refresh reports after upstream sync"
+    },
+    {
       "hash": "02e4172",
       "date": "2026-08-04",
       "subject": "Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "80098ae",
       "date": "2026-08-03",
       "subject": "Merge remote-tracking branch 'origin/main'"
-    },
-    {
-      "hash": "14833d9",
-      "date": "2026-08-03",
-      "subject": "chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "26d9a4c",
+      "date": "2026-08-04",
+      "subject": "docs: refresh reports after upstream sync"
+    },
     {
       "hash": "02e4172",
       "date": "2026-08-04",

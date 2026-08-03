@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T07:00:14+09:00
+更新时间：2026-08-04T07:00:26+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：codex/sync-upstream-20260804
 
-当前提交：02e4172112f1a9ee48ca45e88c18bc40d6baa0ed
+当前提交：26d9a4c944b03bd4467670983912355c6c161367
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：521
-- 当前提交：02e4172
+- 当前提交：26d9a4c
 - 主要文件类型：
   - py: 221
   - ts: 105
@@ -159,6 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 26d9a4c docs: refresh reports after upstream sync
 - 2026-08-04 02e4172 Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
@@ -170,4 +171,3 @@ flowchart LR
 - 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
 - 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
-- 2026-08-03 14833d9 chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案
