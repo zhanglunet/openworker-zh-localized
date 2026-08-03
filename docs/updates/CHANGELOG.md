@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-04T07:33:48+09:00
+更新时间：2026-08-03T22:34:20Z
 
 ## 最近提交
 
+- 2026-08-03 6aeb622 docs: refresh generated site reports
 - 2026-08-04 f4fabd1 sync: merge upstream OpenWorker 01b6f83 (#2)
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
@@ -15,4 +16,3 @@
 - 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
 - 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
-- 2026-08-03 14833d9 chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案

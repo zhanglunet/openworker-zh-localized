@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T07:33:48+09:00",
+  "generatedAt": "2026-08-03T22:34:20Z",
   "branch": "main",
-  "head": "f4fabd1252ff08fda49c0ffc4bf5314e63b593fd",
-  "shortHead": "f4fabd1",
+  "head": "6aeb622a3df36d8c641aeb14c66624bd7e38e02a",
+  "shortHead": "6aeb622",
   "totalFiles": 523,
   "byExt": [
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "6aeb622",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "f4fabd1",
       "date": "2026-08-04",
       "subject": "sync: merge upstream OpenWorker 01b6f83 (#2)"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "80098ae",
       "date": "2026-08-03",
       "subject": "Merge remote-tracking branch 'origin/main'"
-    },
-    {
-      "hash": "14833d9",
-      "date": "2026-08-03",
-      "subject": "chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "6aeb622",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "f4fabd1",
       "date": "2026-08-04",
