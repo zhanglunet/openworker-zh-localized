@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-03T22:38:13Z",
-  "branch": "",
-  "head": "d4c69856b3a3c12056321d28172e390cbd092826",
-  "shortHead": "d4c6985",
-  "totalFiles": 528,
+  "generatedAt": "2026-08-04T08:20:45+09:00",
+  "branch": "main",
+  "head": "d0002c6770f7846d96f5766b9927f102dda5c046",
+  "shortHead": "d0002c6",
+  "totalFiles": 524,
   "byExt": [
     {
       "name": "py",
@@ -11,7 +11,7 @@ export const repoReport = {
     },
     {
       "name": "ts",
-      "count": 109
+      "count": 105
     },
     {
       "name": "tsx",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "website",
-      "count": 39
+      "count": 35
     },
     {
       "name": "packaging",
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d0002c6",
+      "date": "2026-08-04",
+      "subject": "release: prepare signed Chinese auto updates (#3)"
+    },
+    {
       "hash": "d4c6985",
       "date": "2026-08-03",
       "subject": "docs: refresh generated site reports"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "0759ba3",
       "date": "2026-08-03",
       "subject": "Add Cloudflare deployment config for website"
-    },
-    {
-      "hash": "cc6d867",
-      "date": "2026-08-03",
-      "subject": "Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d0002c6",
+      "date": "2026-08-04",
+      "subject": "release: prepare signed Chinese auto updates (#3)"
+    },
     {
       "hash": "d4c6985",
       "date": "2026-08-03",

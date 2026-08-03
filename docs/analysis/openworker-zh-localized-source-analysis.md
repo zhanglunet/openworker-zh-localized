@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-03T22:38:13Z
+更新时间：2026-08-04T08:20:45+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
-当前分支：
+当前分支：main
 
-当前提交：d4c69856b3a3c12056321d28172e390cbd092826
+当前提交：d0002c6770f7846d96f5766b9927f102dda5c046
 
 ## 1. 总体判断
 
@@ -14,11 +14,11 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：528
-- 当前提交：d4c6985
+- 跟踪文件总数：524
+- 当前提交：d0002c6
 - 主要文件类型：
   - py: 221
-  - ts: 109
+  - ts: 105
   - tsx: 77
   - svg: 23
   - png: 22
@@ -39,7 +39,7 @@
 - surfaces: 228 个文件
 - coworker: 127 个文件
 - tests: 93 个文件
-- website: 39 个文件
+- website: 35 个文件
 - packaging: 10 个文件
 - docs: 7 个文件
 - .github: 5 个文件
@@ -159,6 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 d0002c6 release: prepare signed Chinese auto updates (#3)
 - 2026-08-03 d4c6985 docs: refresh generated site reports
 - 2026-08-04 c6c4704 docs: refresh reports after Cloudflare deploy
 - 2026-08-03 6aeb622 docs: refresh generated site reports
@@ -170,4 +171,3 @@ flowchart LR
 - 2026-08-04 6a46c2a Distinguish Chinese macOS app bundle
 - 2026-08-03 96db0d2 Add OpenWorker architecture infographic page
 - 2026-08-03 0759ba3 Add Cloudflare deployment config for website
-- 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
