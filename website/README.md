@@ -24,6 +24,14 @@ npm run build
 
 站点基于 vinext 构建，可输出 Cloudflare Workers 兼容产物。
 
+## 部署到 Cloudflare
+
+```bash
+npm run deploy:cloudflare
+```
+
+部署脚本会先重新构建站点，再通过 `wrangler.jsonc` 发布到当前 Wrangler 登录的 Cloudflare 账号。
+
 ## 内容范围
 
 - OpenWorker 中文产品说明
