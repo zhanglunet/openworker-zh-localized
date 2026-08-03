@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T06:25:00+09:00",
+  "generatedAt": "2026-08-04T06:40:17+09:00",
   "branch": "main",
-  "head": "f36b22099ca07314a4e077545457e5b6fde9cc3f",
-  "shortHead": "f36b220",
-  "totalFiles": 475,
+  "head": "a6b533480c85b184e73c18147ed32691b57641b8",
+  "shortHead": "a6b5334",
+  "totalFiles": 484,
   "byExt": [
     {
       "name": "py",
@@ -11,11 +11,11 @@ export const repoReport = {
     },
     {
       "name": "ts",
-      "count": 94
+      "count": 96
     },
     {
       "name": "tsx",
-      "count": 70
+      "count": 72
     },
     {
       "name": "png",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 8
+      "count": 11
     },
     {
       "name": "[none]",
@@ -40,6 +40,10 @@ export const repoReport = {
     {
       "name": "html",
       "count": 5
+    },
+    {
+      "name": "mjs",
+      "count": 4
     },
     {
       "name": "rs",
@@ -54,15 +58,11 @@ export const repoReport = {
       "count": 4
     },
     {
-      "name": "css",
-      "count": 3
-    },
-    {
-      "name": "mjs",
-      "count": 3
-    },
-    {
       "name": "yml",
+      "count": 4
+    },
+    {
+      "name": "css",
       "count": 3
     },
     {
@@ -93,11 +93,19 @@ export const repoReport = {
     },
     {
       "name": "website",
-      "count": 30
+      "count": 35
     },
     {
       "name": "packaging",
       "count": 10
+    },
+    {
+      "name": "docs",
+      "count": 6
+    },
+    {
+      "name": ".github",
+      "count": 4
     },
     {
       "name": "stt",
@@ -106,14 +114,6 @@ export const repoReport = {
     {
       "name": "ui-mocks",
       "count": 4
-    },
-    {
-      "name": ".github",
-      "count": 3
-    },
-    {
-      "name": "docs",
-      "count": 3
     },
     {
       "name": ".gitignore",
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "a6b5334",
+      "date": "2026-08-04",
+      "subject": "docs: add source analysis and update reports pages"
+    },
+    {
       "hash": "f36b220",
       "date": "2026-08-04",
       "subject": "Update README download and site preview"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "3f50a54",
       "date": "2026-08-03",
       "subject": "docs: add BUILD_LOG.md with full localization setup notes"
-    },
-    {
-      "hash": "d0ccdc9",
-      "date": "2026-08-03",
-      "subject": "Initial commit: OpenWorker 全量汉化版"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "a6b5334",
+      "date": "2026-08-04",
+      "subject": "docs: add source analysis and update reports pages"
+    },
     {
       "hash": "f36b220",
       "date": "2026-08-04",

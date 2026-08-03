@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T06:25:00+09:00
+更新时间：2026-08-04T06:40:17+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：f36b22099ca07314a4e077545457e5b6fde9cc3f
+当前提交：a6b533480c85b184e73c18147ed32691b57641b8
 
 ## 1. 总体判断
 
@@ -14,24 +14,24 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：475
-- 当前提交：f36b220
+- 跟踪文件总数：484
+- 当前提交：a6b5334
 - 主要文件类型：
   - py: 202
-  - ts: 94
-  - tsx: 70
+  - ts: 96
+  - tsx: 72
   - png: 22
   - svg: 20
   - json: 11
-  - md: 8
+  - md: 11
   - [none]: 7
   - html: 5
+  - mjs: 4
   - rs: 4
   - sh: 4
   - toml: 4
+  - yml: 4
   - css: 3
-  - mjs: 3
-  - yml: 3
   - js: 2
 
 ## 3. 目录结构
@@ -39,12 +39,12 @@
 - surfaces: 211 个文件
 - coworker: 121 个文件
 - tests: 80 个文件
-- website: 30 个文件
+- website: 35 个文件
 - packaging: 10 个文件
+- docs: 6 个文件
+- .github: 4 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
-- .github: 3 个文件
-- docs: 3 个文件
 - .gitignore: 1 个文件
 - BUILD_LOG.md: 1 个文件
 - LICENSE: 1 个文件
@@ -159,6 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 a6b5334 docs: add source analysis and update reports pages
 - 2026-08-04 f36b220 Update README download and site preview
 - 2026-08-04 11fd242 Add localized macOS app download
 - 2026-08-04 6a46c2a Distinguish Chinese macOS app bundle
@@ -170,4 +171,3 @@ flowchart LR
 - 2026-08-03 14833d9 chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案
 - 2026-08-03 a1912fc docs: rewrite README with full install, usage, and localization guide
 - 2026-08-03 3f50a54 docs: add BUILD_LOG.md with full localization setup notes
-- 2026-08-03 d0ccdc9 Initial commit: OpenWorker 全量汉化版
