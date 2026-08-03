@@ -35,7 +35,7 @@ function renderList(provider: string) {
 }
 
 function addTyped(id: string) {
-  fireEvent.change(screen.getByPlaceholderText("Add another model…"), {
+  fireEvent.change(screen.getByPlaceholderText("添加其他模型…"), {
     target: { value: id },
   });
   fireEvent.click(screen.getByText("Add"));

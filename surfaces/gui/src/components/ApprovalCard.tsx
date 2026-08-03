@@ -36,8 +36,8 @@ type ApprovalItem = Extract<Item, { kind: "approval" }>;
 // parked Inbox card so both dialects match.
 export function approvalActionLabels(name?: string): { allow: string; deny: string } {
   return name === "save_skill"
-    ? { allow: "Add to my skills", deny: "Not now" }
-    : { allow: "Allow once", deny: "Deny" };
+    ? { allow: "添加到我的 Skills", deny: "暂不添加" }
+    : { allow: "仅允许一次", deny: "拒绝" };
 }
 
 // save_skill's review surface (SKILLS-SPEC §5.2): description, the full instructions
@@ -62,8 +62,7 @@ export function SaveSkillPreview({ args }: { args: any }) {
         </div>
       )}
       <div className="approval-with">
-        Approving adds it to your skills on this computer — usable in every conversation from
-        then on.
+        批准后会把它添加到本机 Skills 中，之后每个对话都可以使用。
       </div>
     </>
   );
@@ -138,7 +137,7 @@ export function PreviewBlock({ text, mono = true }: { text: string; mono?: boole
           {all
             ? "收起"
             : lines.length > PREVIEW_LINES
-              ? `展开全部 ${lines.length} 行`
+              ? `显示全部 ${lines.length} 行`
               : "显示完整消息"}
         </button>
       )}
@@ -164,7 +163,7 @@ function Buttons({
   onApprove,
   runTask,
   primaryLabel,
-  denyLabel = "Deny",
+  denyLabel = "拒绝",
 }: {
   item: ApprovalItem;
   onApprove: (decision: ApprovalDecision) => void;

@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T07:00:26+09:00",
+  "generatedAt": "2026-08-04T07:00:44+09:00",
   "branch": "codex/sync-upstream-20260804",
-  "head": "26d9a4c944b03bd4467670983912355c6c161367",
-  "shortHead": "26d9a4c",
+  "head": "e1942bd307a0e0fcb5428f4641b0f28066a4cbf0",
+  "shortHead": "e1942bd",
   "totalFiles": 521,
   "byExt": [
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "e1942bd",
+      "date": "2026-08-04",
+      "subject": "docs: refresh reports for sync branch head"
+    },
+    {
       "hash": "26d9a4c",
       "date": "2026-08-04",
       "subject": "docs: refresh reports after upstream sync"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "617c4fb",
       "date": "2026-08-03",
       "subject": "Add OpenWorker Chinese website"
-    },
-    {
-      "hash": "80098ae",
-      "date": "2026-08-03",
-      "subject": "Merge remote-tracking branch 'origin/main'"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "e1942bd",
+      "date": "2026-08-04",
+      "subject": "docs: refresh reports for sync branch head"
+    },
     {
       "hash": "26d9a4c",
       "date": "2026-08-04",
@@ -634,11 +639,6 @@ export const repoReport = {
       "hash": "3766805",
       "date": "2026-07-27",
       "subject": "Merge pull request #259 from andrewyng/rpModelProviders"
-    },
-    {
-      "hash": "d386396",
-      "date": "2026-07-27",
-      "subject": "Update README with badge from trendshift"
     }
   ]
 } as const;

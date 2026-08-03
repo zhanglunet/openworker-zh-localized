@@ -138,8 +138,8 @@ export function humanizeApprovalTitle(name: string, args: any): HumanLine {
     case "save_skill":
       // SKILLS-SPEC §5.2/§7: "Add", never "install"; destination is "your skills".
       return a.name
-        ? { pre: "Add skill ", obj: String(a.name), post: " to your skills" }
-        : { pre: "Add a skill to your skills" };
+        ? { pre: "添加 Skill ", obj: String(a.name), post: " 到你的 Skills" }
+        : { pre: "添加一个 Skill 到你的 Skills" };
     default:
       return { pre: `Use ${name}` };
   }

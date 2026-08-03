@@ -600,6 +600,7 @@ DESCRIPTORS: list[ProviderDescriptor] = [
         base_url="https://openrouter.ai/api/v1",
         recommended_model="z-ai/glm-5.2",
         env_key="OPENROUTER_API_KEY",
+    ),
     ProviderDescriptor(
         name="ollama",
         title="Ollama (local models)",

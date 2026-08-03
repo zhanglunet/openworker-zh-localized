@@ -69,10 +69,10 @@ describe("PersonaView", () => {
     expect(screen.getByText("A careful, methodical operations engineer.")).toBeTruthy();
     // tools rendered as chips
     expect(screen.getByText("shell")).toBeTruthy();
-    // a connected recommend shows "connected"; an unconnected one offers Connect/Add
-    expect(screen.getByText("connected")).toBeTruthy();
-    expect(screen.getByText("Connect")).toBeTruthy(); // datadog (core, not connected)
-    expect(screen.getByText("Add")).toBeTruthy(); // filesystem (mcp, not connected)
+    // a connected recommend shows "已连接"; an unconnected one offers 连接/添加
+    expect(screen.getByText("已连接")).toBeTruthy();
+    expect(screen.getByText("连接")).toBeTruthy(); // datadog (core, not connected)
+    expect(screen.getByText("添加")).toBeTruthy(); // filesystem (mcp, not connected)
     // defaults footer
     expect(screen.getByText("claude-opus-4-8")).toBeTruthy();
   });

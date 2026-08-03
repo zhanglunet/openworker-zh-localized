@@ -13,8 +13,8 @@
 ## 下载与中文介绍站
 
 - 中文站：[https://oaosf.cn](https://oaosf.cn)
-- macOS Apple Silicon DMG：[OpenWorker-CN-0.1.6-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.6-aarch64.dmg)
-- GitHub Release：[v0.1.6-zh](https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.6-zh)
+- macOS Apple Silicon DMG：[OpenWorker-CN-0.1.7-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.7-aarch64.dmg)
+- GitHub Release：[v0.1.7-zh](https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.7-zh)
 - 网站源码：[website/](website/)
 - 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/](docs/analysis/)）
 - 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/](docs/updates/)）
@@ -97,7 +97,7 @@
 2. **Tauri 桌面客户端（开发模式）** —— 真正的桌面应用，带系统托盘、快捷键、语音输入等。
 3. **macOS DMG 安装包** —— 适合 Apple Silicon Mac 用户直接下载体验中文版桌面 App。
 
-> 注意：当前 DMG 为未公证的本地化构建，适合个人本机试用；如需正式分发，应补充 Apple Developer 签名与公证流程。
+> 注意：当前 DMG 为未公证的本地化构建，适合个人本机试用；如需正式分发，应补充 Apple Developer 签名与公证流程。0.1.7 起中文版 App 的自动更新源已切换到本仓库，避免更新时安装官方英文包。
 
 ---
 
@@ -107,7 +107,7 @@
 
 适用于 Apple Silicon Mac：
 
-1. 下载：[OpenWorker-CN-0.1.6-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.6-aarch64.dmg)
+1. 下载：[OpenWorker-CN-0.1.7-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.7-aarch64.dmg)
 2. 打开 DMG，把 `OpenWorker 中文版.app` 拖入“应用程序”。
 3. 第一次打开如遇 macOS 安全提示，右键 App 选择“打开”一次。
 

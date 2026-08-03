@@ -22,8 +22,8 @@ describe("TurnGroup (Transcript §33)", () => {
   it("groups the whole turn; answer stays outside; narration and humanized steps inside", () => {
     const { container } = render(<Transcript items={TURN} onApprove={vi.fn()} />);
 
-    // Collapsed at rest: "2 steps", NO approval count, and no step/narration content visible.
-    expect(screen.getByText("2 steps")).toBeTruthy();
+    // Collapsed at rest: "2 步", NO approval count, and no step/narration content visible.
+    expect(screen.getByText("2 步")).toBeTruthy();
     expect(screen.queryByText(/approval/)).toBeNull();
     expect(screen.queryByTestId("turn-narration")).toBeNull();
     expect(screen.queryByText(/Sent a Slack message/)).toBeNull();
@@ -37,11 +37,11 @@ describe("TurnGroup (Transcript §33)", () => {
     expect(screen.getByTestId("turn-narration").textContent).toContain("Checking what merged");
     expect(screen.getByText("runbook.md")).toBeTruthy();
     expect(screen.getByText(/Sent a Slack message to/)).toBeTruthy();
-    expect(screen.getByText("✓ approved")).toBeTruthy();
+    expect(screen.getByText("✓ 已批准")).toBeTruthy();
     expect(screen.queryByText("send_message approval")).toBeNull();
 
     // Raw stays one click away: the row's raw toggle reveals args + result verbatim.
-    fireEvent.click(screen.getAllByText("raw")[1]);
+    fireEvent.click(screen.getAllByText("原始")[1]);
     expect(container.textContent).toContain('{"ok": true}');
   });
 
@@ -51,7 +51,7 @@ describe("TurnGroup (Transcript §33)", () => {
       { kind: "tool", id: "t1", name: "grep", args: { pattern: "TODO" }, status: "…" },
     ];
     const { container } = render(<Transcript items={items} onApprove={vi.fn()} />);
-    expect(screen.getByText(/Running 1 step…/)).toBeTruthy();
+    expect(screen.getByText(/正在运行 1 步…/)).toBeTruthy();
     expect(screen.queryByTestId("turn-narration")).toBeNull(); // collapsed by default
     expect(screen.getByTestId("turn-live-line").textContent).toContain("Looking at the repo");
     fireEvent.click(container.querySelector("summary.stepgroup-head")!);
@@ -64,12 +64,12 @@ describe("TurnGroup (Transcript §33)", () => {
       { kind: "approval", name: "run_shell", args: { command: "rm -rf build/" }, reason: "", resolved: "deny" },
     ];
     const { container } = render(<Transcript items={items} onApprove={vi.fn()} />);
-    expect(screen.getByTestId("stepgroup-declined").textContent).toBe("1 declined");
+    expect(screen.getByTestId("stepgroup-declined").textContent).toBe("1 个已拒绝");
     fireEvent.click(container.querySelector("summary.stepgroup-head")!);
     const ask = screen.getByTestId("turn-ask");
     expect(ask.textContent).toContain("Wanted to run");
     expect(ask.textContent).toContain("rm -rf build/");
-    expect(ask.textContent).toContain("✕ declined");
+    expect(ask.textContent).toContain("✕ 已拒绝");
   });
 
   it("assistant-only turns stay plain bubbles (no disclosure)", () => {
@@ -153,7 +153,7 @@ describe("bubble hover affordances (FB-005)", () => {
     { kind: "assistant", text: "Done — posted to #all-openworker." }, // pre-stamp history: no ts
   ];
 
-  it("copy button copies the bubble's raw text and flashes Copied", async () => {
+  it("copy button copies the bubble's raw text and flashes 已复制", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<Transcript items={ITEMS} onApprove={vi.fn()} />);
@@ -162,9 +162,9 @@ describe("bubble hover affordances (FB-005)", () => {
     expect(copies).toHaveLength(2); // user + assistant bubbles both get one
     fireEvent.click(copies[0]);
     expect(writeText).toHaveBeenCalledWith("post the digest");
-    // "Copied" lands only after the clipboard write RESOLVES (a rejected write must
+    // "已复制" lands only after the clipboard write RESOLVES (a rejected write must
     // not claim success), hence the await.
-    await waitFor(() => expect(copies[0].textContent).toBe("Copied"));
+    await waitFor(() => expect(copies[0].textContent).toBe("已复制"));
     fireEvent.click(copies[1]);
     expect(writeText).toHaveBeenCalledWith("Done — posted to #all-openworker.");
   });

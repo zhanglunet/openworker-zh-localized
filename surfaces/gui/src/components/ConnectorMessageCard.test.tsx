@@ -23,7 +23,7 @@ describe("ConnectorMessageCard", () => {
     expect(screen.getByText("#ocw-test")).toBeTruthy();
     expect(screen.getByText("Jordan Lee")).toBeTruthy();
     expect(screen.getByText(/staging deploy go out/)).toBeTruthy();
-    expect(screen.getByText("via Slack")).toBeTruthy();
+    expect(screen.getByText("通过 Slack")).toBeTruthy();
     // ids are not shown until hover.
     expect(screen.queryByText(/C0BD7KZ1AH5/)).toBeNull();
   });
