@@ -1,4 +1,4 @@
-# OpenWorker 全量汉化版（中文 GUI + 桌面客户端）
+# OpenWorker 全量汉化版（中文 GUI + macOS 桌面客户端）
 
 > 本仓库地址：**https://github.com/zhanglunet/openworker-zh-localized**
 >
@@ -6,26 +6,36 @@
 >
 > 遵循原项目 MIT 许可证，仅用于学习和个人本地使用。
 
-## 中文介绍站
+## 下载与中文介绍站
 
-- 在线访问：[OpenWorker 中文站](https://openworker-cn-guide.shuo3-com.chatgpt.site)
+- 中文站：[https://oaosf.cn](https://oaosf.cn)
+- macOS Apple Silicon DMG：[OpenWorker-CN-0.1.6-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.6-aarch64.dmg)
+- GitHub Release：[v0.1.6-zh](https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.6-zh)
 - 网站源码：[website/](website/)
 - 上游项目源码：[andrewyng/openworker](https://github.com/andrewyng/openworker)
 
-中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析和安全边界。网站明确标注上游项目归属，并链接回本仓库。
+中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析、安全边界和交互式信息图。网站明确标注上游项目归属，并链接回本仓库。
+
+![OpenWorker 中文站截图](docs/assets/oaosf-cn-home.png)
+
+> 当前 DMG 为未公证的本地化构建。首次打开如遇 macOS 安全提示，请右键 App 选择“打开”一次。
+>
+> DMG SHA-256：`84ff535aca5679cf64eb9e917388a30cedbfa0c02372c1a110ec6cce3d75d9a2`
 
 ---
 
 ## 目录
 
-- [OpenWorker 全量汉化版（中文 GUI + 桌面客户端）](#openworker-全量汉化版中文-gui--桌面客户端)
+- [OpenWorker 全量汉化版（中文 GUI + macOS 桌面客户端）](#openworker-全量汉化版中文-gui--macos-桌面客户端)
+  - [下载与中文介绍站](#下载与中文介绍站)
   - [目录](#目录)
   - [1. 为什么做这个汉化版](#1-为什么做这个汉化版)
   - [2. 与原版的主要区别](#2-与原版的主要区别)
   - [3. 支持的运行方式](#3-支持的运行方式)
   - [4. 快速开始（推荐）](#4-快速开始推荐)
-    - [4.1 克隆仓库](#41-克隆仓库)
-    - [4.2 一键启动（已经到过环境的情况）](#42-一键启动已经到过环境的情况)
+    - [4.1 直接下载 macOS 中文版](#41-直接下载-macos-中文版)
+    - [4.2 从源码运行](#42-从源码运行)
+    - [4.3 一键启动（已经安装过环境的情况）](#43-一键启动已经安装过环境的情况)
   - [5. 第一次安装环境](#5-第一次安装环境)
     - [5.1 macOS 用户无需 sudo 的方式](#51-macos-用户无需-sudo-的方式)
     - [5.2 安装 Python 依赖](#52-安装-python-依赖)
@@ -79,21 +89,30 @@
 
 1. **浏览器访问 GUI** —— 最简单，适合快速体验。
 2. **Tauri 桌面客户端（开发模式）** —— 真正的桌面应用，带系统托盘、快捷键、语音输入等。
+3. **macOS DMG 安装包** —— 适合 Apple Silicon Mac 用户直接下载体验中文版桌面 App。
 
-> 注意：本仓库目前仅提供源码运行。如需打包成可分发的 DMG / MSI 安装包，需要额外执行 PyInstaller + Tauri build，后续可补充。
+> 注意：当前 DMG 为未公证的本地化构建，适合个人本机试用；如需正式分发，应补充 Apple Developer 签名与公证流程。
 
 ---
 
 ## 4. 快速开始（推荐）
 
-### 4.1 克隆仓库
+### 4.1 直接下载 macOS 中文版
+
+适用于 Apple Silicon Mac：
+
+1. 下载：[OpenWorker-CN-0.1.6-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.6-aarch64.dmg)
+2. 打开 DMG，把 `OpenWorker 中文版.app` 拖入“应用程序”。
+3. 第一次打开如遇 macOS 安全提示，右键 App 选择“打开”一次。
+
+### 4.2 从源码运行
 
 ```bash
 git clone https://github.com/zhanglunet/openworker-zh-localized.git
 cd openworker-zh-localized
 ```
 
-### 4.2 一键启动（已经到过环境的情况）
+### 4.3 一键启动（已经安装过环境的情况）
 
 如果你已经是按第 5 节安装完环境，直接运行：
 
@@ -414,7 +433,9 @@ openworker-zh-localized/
 ├── stt/                   # 语音输入 Rust sidecar
 ├── tests/                 # Python 后端测试
 ├── packaging/             # 打包脚本（DMG/Windows）
-├── docs/                  # 设计文档
+├── releases/              # 已构建的下载产物
+├── website/               # 中文介绍站与信息图页面
+├── docs/                  # 设计文档与 README 图片素材
 ├── start-openworker-server.sh   # 后端一键启动
 ├── start-openworker-gui.sh      # 前端一键启动
 ├── BUILD_LOG.md           # 本次完整构建记录
@@ -432,11 +453,7 @@ openworker-zh-localized/
    - 原因：测试断言还在期望英文文案，但组件已经渲染中文
    - 应对：不影响正常使用，只是测试需要同步更新
 
-2. **生产构建需要打包 sidecar**
-   - 如需制作分发安装包，需要先用 PyInstaller 打包 Python 后端
-   - 打包好的二进制需要放置到 `surfaces/gui/src-tauri/binaries/sidecar`
-
-3. **mcp 版本需要手动锁定**
+2. **mcp 版本需要手动锁定**
    - 当前 `pip install -e .` 会拉下 mcp 2.x，与代码不兼容
    - 需要手动执行 `.venv/bin/python -m pip install 'mcp>=1.1,<2.0'`
 
@@ -444,7 +461,8 @@ openworker-zh-localized/
 
 - [ ] 同步更新前端单元测试断言为中文
 - [ ] 在 `pyproject.toml` 中锁定 mcp 版本
-- [ ] 補充 PyInstaller + Tauri build 打包教程
+- [ ] 补充 Apple Developer 签名与公证流程
+- [ ] 补充 PyInstaller + Tauri build 打包教程
 - [ ] 提供 Windows 下的无需管理员环境安装教程
 
 ---
@@ -457,4 +475,4 @@ openworker-zh-localized/
 
 ---
 
-**最后更新：** 2026-08-03
+**最后更新：** 2026-08-04
