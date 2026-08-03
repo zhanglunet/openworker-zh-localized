@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T06:40:17+09:00
+更新时间：2026-08-04T07:00:44+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
-当前分支：main
+当前分支：codex/sync-upstream-20260804
 
-当前提交：a6b533480c85b184e73c18147ed32691b57641b8
+当前提交：e1942bd307a0e0fcb5428f4641b0f28066a4cbf0
 
 ## 1. 总体判断
 
@@ -14,35 +14,35 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：484
-- 当前提交：a6b5334
+- 跟踪文件总数：521
+- 当前提交：e1942bd
 - 主要文件类型：
-  - py: 202
-  - ts: 96
-  - tsx: 72
+  - py: 221
+  - ts: 105
+  - tsx: 77
+  - svg: 23
   - png: 22
-  - svg: 20
   - json: 11
   - md: 11
   - [none]: 7
   - html: 5
+  - yml: 5
   - mjs: 4
   - rs: 4
   - sh: 4
   - toml: 4
-  - yml: 4
   - css: 3
   - js: 2
 
 ## 3. 目录结构
 
-- surfaces: 211 个文件
-- coworker: 121 个文件
-- tests: 80 个文件
+- surfaces: 228 个文件
+- coworker: 127 个文件
+- tests: 93 个文件
 - website: 35 个文件
 - packaging: 10 个文件
 - docs: 6 个文件
-- .github: 4 个文件
+- .github: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
 - .gitignore: 1 个文件
@@ -159,6 +159,10 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 e1942bd docs: refresh reports for sync branch head
+- 2026-08-04 26d9a4c docs: refresh reports after upstream sync
+- 2026-08-04 02e4172 Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804
+- 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
 - 2026-08-04 f36b220 Update README download and site preview
 - 2026-08-04 11fd242 Add localized macOS app download
@@ -167,7 +171,3 @@ flowchart LR
 - 2026-08-03 0759ba3 Add Cloudflare deployment config for website
 - 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
-- 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
-- 2026-08-03 14833d9 chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案
-- 2026-08-03 a1912fc docs: rewrite README with full install, usage, and localization guide
-- 2026-08-03 3f50a54 docs: add BUILD_LOG.md with full localization setup notes

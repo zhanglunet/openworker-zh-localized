@@ -1,0 +1,116 @@
+name: Sync upstream OpenWorker
+
+on:
+  schedule:
+    - cron: "35 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  sync-upstream:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout localized repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/andrewyng/openworker.git
+          git fetch upstream main --tags
+
+      - name: Check whether upstream has new commits
+        id: diff
+        run: |
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "upstream_sha=$(git rev-parse --short upstream/main)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stop when already synced
+        if: steps.diff.outputs.changed == 'false'
+        run: echo "Localized repository already contains upstream/main."
+
+      - name: Merge upstream into sync branch
+        if: steps.diff.outputs.changed == 'true'
+        id: merge
+        continue-on-error: true
+        run: |
+          git switch -c sync/upstream-main
+          git merge --no-edit upstream/main
+
+      - name: Create conflict issue
+        if: steps.diff.outputs.changed == 'true' && steps.merge.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "上游同步需要人工解决冲突";
+            const body = [
+              "自动同步 `andrewyng/openworker` 时发生冲突，未修改 `main`。",
+              "",
+              `- 上游提交：\`${{ steps.diff.outputs.upstream_sha }}\``,
+              `- 工作流：${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              "",
+              "建议本地执行：",
+              "",
+              "```bash",
+              "git fetch origin main",
+              "git fetch upstream main",
+              "git switch -c codex/sync-upstream-$(date +%Y%m%d) origin/main",
+              "git merge upstream/main",
+              "# 手动解决冲突，保留中文本地化和网站发布物",
+              "```",
+            ].join("\n");
+            const { owner, repo } = context.repo;
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: "open",
+            });
+            const issue = existing.find((item) => item.title === title);
+            if (issue) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+              });
+            }
+
+      - name: Generate site reports after successful merge
+        if: steps.diff.outputs.changed == 'true' && steps.merge.outcome == 'success'
+        working-directory: website
+        run: npm ci && npm run generate:reports
+        env:
+          REPORT_GENERATED_AT: ${{ github.run_started_at }}
+
+      - name: Create upstream sync pull request
+        if: steps.diff.outputs.changed == 'true' && steps.merge.outcome == 'success'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: sync/upstream-main
+          title: "sync: merge upstream OpenWorker ${{ steps.diff.outputs.upstream_sha }}"
+          commit-message: "sync: merge upstream OpenWorker ${{ steps.diff.outputs.upstream_sha }}"
+          body: |
+            自动同步上游 [andrewyng/openworker](https://github.com/andrewyng/openworker)。
+
+            - 上游提交：`${{ steps.diff.outputs.upstream_sha }}`
+            - 合并策略：先创建 PR，人工检查后再合并，避免覆盖中文本地化、中文站、下载产物和生成文档。
+            - 生成内容：刷新 `docs/analysis/`、`docs/updates/` 和网站数据文件。
+          delete-branch: true

@@ -12,10 +12,10 @@ const providers = [
 ];
 
 const localizedDownloadUrl =
-  "https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.6-aarch64.dmg";
+  "https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.7-aarch64.dmg";
 
 const releaseUrl =
-  "https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.6-zh";
+  "https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.7-zh";
 
 const connectors = [
   "Slack",
@@ -224,16 +224,16 @@ export default function Home() {
         <div className="download-card">
           <div className="download-card-header">
             <span>OpenWorker 中文版</span>
-            <b>0.1.6</b>
+            <b>0.1.7</b>
           </div>
           <dl>
             <div><dt>平台</dt><dd>macOS Apple Silicon / aarch64</dd></div>
-            <div><dt>文件</dt><dd>OpenWorker-CN-0.1.6-aarch64.dmg</dd></div>
+            <div><dt>文件</dt><dd>OpenWorker-CN-0.1.7-aarch64.dmg</dd></div>
             <div><dt>Bundle ID</dt><dd>com.openworker.desktop.zh</dd></div>
-            <div><dt>SHA-256</dt><dd>84ff535aca5679cf64eb9e917388a30cedbfa0c02372c1a110ec6cce3d75d9a2</dd></div>
+            <div><dt>SHA-256</dt><dd>0ee522258294655556ce3e0cd04917386f6bdec34c2a5584debd8b84d22be50a</dd></div>
           </dl>
           <p className="download-note">
-            说明：此版本为未公证的本地化构建。首次打开如遇 macOS 安全提示，请右键 App 选择“打开”一次。
+            说明：此版本为未公证的本地化构建。0.1.7 已把自动更新源切换到中文仓库，避免更新后变回英文版。首次打开如遇 macOS 安全提示，请右键 App 选择“打开”一次。
           </p>
         </div>
       </section>

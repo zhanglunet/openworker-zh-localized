@@ -22,7 +22,7 @@ test("server-renders the Chinese OpenWorker product page", async () => {
   assert.match(html, /OpenWorker 中文站/);
   assert.match(html, /把结果交给 AI/);
   assert.match(html, /中文版下载/);
-  assert.match(html, /OpenWorker-CN-0\.1\.6-aarch64\.dmg/);
+  assert.match(html, /OpenWorker-CN-0\.1\.7-aarch64\.dmg/);
   assert.match(html, /源码分析/);
   assert.match(html, /安全与隐私/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
@@ -40,10 +40,10 @@ test("links the localized macOS release download", async () => {
   const html = await (await render()).text();
   assert.match(
     html,
-    /https:\/\/github\.com\/zhanglunet\/openworker-zh-localized\/raw\/main\/releases\/OpenWorker-CN-0\.1\.6-aarch64\.dmg/,
+    /https:\/\/github\.com\/zhanglunet\/openworker-zh-localized\/raw\/main\/releases\/OpenWorker-CN-0\.1\.7-aarch64\.dmg/,
   );
   assert.match(html, /com\.openworker\.desktop\.zh/);
-  assert.match(html, /84ff535aca5679cf64eb9e917388a30cedbfa0c02372c1a110ec6cce3d75d9a2/);
+  assert.match(html, /0ee522258294655556ce3e0cd04917386f6bdec34c2a5584debd8b84d22be50a/);
 });
 
 test("server-renders the OpenWorker infographic page", async () => {

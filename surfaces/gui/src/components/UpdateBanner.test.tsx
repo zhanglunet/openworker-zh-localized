@@ -42,7 +42,7 @@ describe("UpdateBanner", () => {
     expect(screen.getByTestId("update-banner").textContent).toContain("v1.2.0");
     // Pre-download resolved immediately → the button is ready and enabled.
     const btn = screen.getByTestId("update-install") as HTMLButtonElement;
-    expect(btn.textContent).toBe("Restart to update");
+    expect(btn.textContent).toBe("重启以更新");
     expect(btn.disabled).toBe(false);
   });
 
@@ -67,18 +67,18 @@ describe("UpdateBanner", () => {
     expect(screen.getByTestId("update-banner").textContent).toContain("v1.3.0");
   });
 
-  it("button reads Downloading… (disabled) until the pre-download resolves", async () => {
+  it("button reads 下载中… (disabled) until the pre-download resolves", async () => {
     let finish!: () => void;
     download = () => new Promise((resolve) => (finish = resolve));
     render(<UpdateBanner />);
     await advance(FIRST_CHECK_MS);
 
     const btn = screen.getByTestId("update-install") as HTMLButtonElement;
-    expect(btn.textContent).toBe("Downloading…");
+    expect(btn.textContent).toBe("下载中…");
     expect(btn.disabled).toBe(true);
 
     await act(async () => finish());
-    expect(btn.textContent).toBe("Restart to update");
+    expect(btn.textContent).toBe("重启以更新");
     expect(btn.disabled).toBe(false);
   });
 
@@ -88,7 +88,7 @@ describe("UpdateBanner", () => {
     await advance(FIRST_CHECK_MS);
 
     const btn = screen.getByTestId("update-install") as HTMLButtonElement;
-    expect(btn.textContent).toBe("Restart to update");
+    expect(btn.textContent).toBe("重启以更新");
     expect(btn.disabled).toBe(false);
 
     fireEvent.click(btn);
