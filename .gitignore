@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.coverage
+
+# Tauri / Rust
+surfaces/gui/src-tauri/target/
+surfaces/gui/src-tauri/gen/
+surfaces/gui/src-tauri/binaries/
+
+# Node / build
+surfaces/gui/node_modules/
+surfaces/gui/dist/
+*.log
+
+# Local runtime state
+.openworker-state/
+local/
+
+# macOS
+.DS_Store

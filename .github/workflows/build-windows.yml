@@ -1,0 +1,77 @@
+name: Build Windows (zh + custom API)
+
+# 仅构建 Windows 桌面安装包（NSIS .exe + MSI），并发布为 GitHub Release。
+# 源码即 TouKenAI/openworker 的 main 分支（已含界面汉化 + 自定义 API 厂商）。
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "win-*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: surfaces/gui/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: surfaces/gui/src-tauri
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up sidecar venv (.venv)
+        shell: bash
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install --upgrade pip
+          .venv/Scripts/python -m pip install -e . pyinstaller typer tzdata
+          .venv/Scripts/python -c "import aisuite, coworker"
+
+      - name: npm ci
+        working-directory: surfaces/gui
+        run: npm ci
+
+      - name: Build Windows installers (NSIS .exe + MSI)
+        shell: pwsh
+        run: ./packaging/build_windows.ps1
+
+      - name: Publish GitHub Release (zh + custom API)
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUNDLE=surfaces/gui/src-tauri/target/release/bundle
+          mkdir -p out
+          cp "$BUNDLE"/nsis/*.exe out/OpenWorker-windows-setup.exe
+          cp "$BUNDLE"/msi/*.msi out/OpenWorker-windows.msi
+          ls -la out
+          cat > NOTES.md <<'EOF'
+          基于 TouKenAI/openworker 的 main 分支构建。
+
+          包含改动：
+          1. 界面全量汉化（设置 / 引导 / 侧边栏 / 审批 / 收件箱等核心界面）。
+          2. 新增「自定义 API (OpenAI 兼容)」厂商：可填任意 base_url、一键获取模型列表、测试连接。
+
+          其余功能与原版 Windows 客户端完全一致。
+          安装包未签名，首次运行 Windows SmartScreen 会提示，选择「仍要运行」即可。
+          EOF
+          TAG="zh-${GITHUB_SHA::7}"
+          gh release create "$TAG" \
+            out/OpenWorker-windows-setup.exe \
+            out/OpenWorker-windows.msi \
+            --title "OpenWorker 汉化版 + 自定义API (Windows)" \
+            --notes-file NOTES.md
