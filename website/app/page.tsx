@@ -106,6 +106,7 @@ export default function Home() {
           <a href="#capabilities">能力</a>
           <a href="#workflow">工作方式</a>
           <a href="#architecture">源码分析</a>
+          <a href="/infographic">信息图</a>
           <a href="#safety">安全边界</a>
         </nav>
         <a className="nav-cta" href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">
@@ -124,7 +125,7 @@ export default function Home() {
             <a className="button button-primary" href="https://download.openworker.com" target="_blank" rel="noreferrer">
               下载 macOS 版 <span aria-hidden="true">→</span>
             </a>
-            <a className="button button-secondary" href="#architecture">先看源码分析</a>
+            <a className="button button-secondary" href="/infographic">查看架构信息图</a>
           </div>
           <div className="trust-row" aria-label="产品特点">
             <span>MIT 开源</span>
@@ -292,6 +293,13 @@ export default function Home() {
           </article>
         </div>
         <p className="snapshot-note">统计来自 <a href="https://github.com/andrewyng/openworker/commit/01b6f83b3927e02912dda84bb392942c13ca70d1" target="_blank" rel="noreferrer">main@01b6f83</a>；测试数字代表代码资产数量，不代表本站运行了原项目测试。</p>
+        <div className="analysis-link-panel">
+          <div>
+            <span>交互式信息图</span>
+            <p>查看最早仓库分析整理出的三视图网页：系统架构、Agent 循环与安全边界。</p>
+          </div>
+          <a className="text-link" href="/infographic">打开信息图页面</a>
+        </div>
       </section>
 
       <section className="safety-section" id="safety">
@@ -356,7 +364,7 @@ export default function Home() {
       <footer className="site-footer section-shell">
         <div className="brand footer-brand"><span className="brand-mark">O</span><span>OpenWorker</span><span className="brand-tag">中文站</span></div>
         <p>项目源码来自 andrewyng/openworker · 中文站由 zhanglunet/openworker-zh-localized 维护</p>
-        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">上游源码</a><a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">中文仓库</a></div>
+        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">上游源码</a><a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">中文仓库</a><a href="/infographic">信息图</a></div>
       </footer>
     </main>
   );

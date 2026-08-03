@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-async function render() {
+async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    new Request(`http://localhost${path}`, { headers: { accept: "text/html" } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
@@ -32,4 +32,16 @@ test("links both the upstream source and localized repository", async () => {
   assert.match(html, /https:\/\/github\.com\/zhanglunet\/openworker-zh-localized/);
   assert.match(html, /项目源码来自/);
   assert.match(html, /中文本地化/);
+});
+
+test("server-renders the OpenWorker infographic page", async () => {
+  const response = await render("/infographic");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /OpenWorker.*运行架构地图/s);
+  assert.match(html, /系统架构/);
+  assert.match(html, /Agent 循环/);
+  assert.match(html, /安全边界/);
+  assert.match(html, /main@3766805/);
 });
