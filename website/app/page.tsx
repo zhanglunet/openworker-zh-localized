@@ -11,6 +11,12 @@ const providers = [
   "Ollama",
 ];
 
+const localizedDownloadUrl =
+  "https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.6-aarch64.dmg";
+
+const releaseUrl =
+  "https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.6-zh";
+
 const connectors = [
   "Slack",
   "Gmail",
@@ -104,6 +110,7 @@ export default function Home() {
         </a>
         <nav aria-label="主导航">
           <a href="#capabilities">能力</a>
+          <a href="#download">下载</a>
           <a href="#workflow">工作方式</a>
           <a href="#architecture">源码分析</a>
           <a href="/infographic">信息图</a>
@@ -122,8 +129,8 @@ export default function Home() {
             OpenWorker 是运行在桌面的开源 AI coworker。它能读取文件、连接日常工具、分解任务、请求批准，并把工作推进成真正可用的交付物。
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="https://download.openworker.com" target="_blank" rel="noreferrer">
-              下载 macOS 版 <span aria-hidden="true">→</span>
+            <a className="button button-primary" href={localizedDownloadUrl} target="_blank" rel="noreferrer">
+              下载中文版 macOS 版 <span aria-hidden="true">→</span>
             </a>
             <a className="button button-secondary" href="/infographic">查看架构信息图</a>
           </div>
@@ -191,6 +198,41 @@ export default function Home() {
         <div>
           <span className="source-credit-label">中文本地化</span>
           <p>中文资料与本站代码位于 <a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">zhanglunet/openworker-zh-localized ↗</a></p>
+        </div>
+      </section>
+
+      <section className="download-section section-shell" id="download" aria-label="下载 OpenWorker 中文版">
+        <div className="download-copy">
+          <p className="eyebrow">中文版下载</p>
+          <h2>像普通 App 一样，<br />把 OpenWorker 中文版装进“应用程序”。</h2>
+          <p>
+            当前提供 macOS Apple Silicon / aarch64 构建包。下载 DMG 后打开，把
+            <strong> OpenWorker 中文版.app </strong>
+            拖入“应用程序”，即可与英文版并存使用。
+          </p>
+          <div className="download-actions">
+            <a className="button button-primary" href={localizedDownloadUrl} target="_blank" rel="noreferrer">
+              下载 DMG 安装包 <span aria-hidden="true">↘</span>
+            </a>
+            <a className="text-link" href={releaseUrl} target="_blank" rel="noreferrer">
+              查看 GitHub Release
+            </a>
+          </div>
+        </div>
+        <div className="download-card">
+          <div className="download-card-header">
+            <span>OpenWorker 中文版</span>
+            <b>0.1.6</b>
+          </div>
+          <dl>
+            <div><dt>平台</dt><dd>macOS Apple Silicon / aarch64</dd></div>
+            <div><dt>文件</dt><dd>OpenWorker-CN-0.1.6-aarch64.dmg</dd></div>
+            <div><dt>Bundle ID</dt><dd>com.openworker.desktop.zh</dd></div>
+            <div><dt>SHA-256</dt><dd>84ff535aca5679cf64eb9e917388a30cedbfa0c02372c1a110ec6cce3d75d9a2</dd></div>
+          </dl>
+          <p className="download-note">
+            说明：此版本为未公证的本地化构建。首次打开如遇 macOS 安全提示，请右键 App 选择“打开”一次。
+          </p>
         </div>
       </section>
 
@@ -355,7 +397,7 @@ export default function Home() {
           <p className="eyebrow">准备好交付第一件工作了吗？</p>
           <h2>让 AI 从“会回答”<br />走到“能完成”。</h2>
           <div className="hero-actions centered-actions">
-            <a className="button button-light" href="https://download.openworker.com" target="_blank" rel="noreferrer">下载 OpenWorker <span aria-hidden="true">→</span></a>
+            <a className="button button-light" href={localizedDownloadUrl} target="_blank" rel="noreferrer">下载 OpenWorker 中文版 <span aria-hidden="true">→</span></a>
             <a className="button button-outline-light" href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">查看中文仓库</a>
           </div>
         </div>
