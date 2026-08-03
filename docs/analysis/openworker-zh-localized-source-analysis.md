@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T07:00:44+09:00
+更新时间：2026-08-04T07:33:48+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
-当前分支：codex/sync-upstream-20260804
+当前分支：main
 
-当前提交：e1942bd307a0e0fcb5428f4641b0f28066a4cbf0
+当前提交：f4fabd1252ff08fda49c0ffc4bf5314e63b593fd
 
 ## 1. 总体判断
 
@@ -14,15 +14,15 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：521
-- 当前提交：e1942bd
+- 跟踪文件总数：523
+- 当前提交：f4fabd1
 - 主要文件类型：
   - py: 221
   - ts: 105
   - tsx: 77
   - svg: 23
   - png: 22
-  - json: 11
+  - json: 12
   - md: 11
   - [none]: 7
   - html: 5
@@ -32,7 +32,7 @@
   - sh: 4
   - toml: 4
   - css: 3
-  - js: 2
+  - dmg: 2
 
 ## 3. 目录结构
 
@@ -45,13 +45,13 @@
 - .github: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
+- releases: 3 个文件
 - .gitignore: 1 个文件
 - BUILD_LOG.md: 1 个文件
 - LICENSE: 1 个文件
 - openworker-zh-test-report.md: 1 个文件
 - pyproject.toml: 1 个文件
 - README.md: 1 个文件
-- releases: 1 个文件
 - start-openworker-gui.sh: 1 个文件
 - start-openworker-server.sh: 1 个文件
 
@@ -159,9 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
-- 2026-08-04 e1942bd docs: refresh reports for sync branch head
-- 2026-08-04 26d9a4c docs: refresh reports after upstream sync
-- 2026-08-04 02e4172 Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20260804
+- 2026-08-04 f4fabd1 sync: merge upstream OpenWorker 01b6f83 (#2)
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
 - 2026-08-04 f36b220 Update README download and site preview
@@ -171,3 +169,5 @@ flowchart LR
 - 2026-08-03 0759ba3 Add Cloudflare deployment config for website
 - 2026-08-03 cc6d867 Merge pull request #1 from zhanglunet/agent/add-openworker-cn-site
 - 2026-08-03 617c4fb Add OpenWorker Chinese website
+- 2026-08-03 80098ae Merge remote-tracking branch 'origin/main'
+- 2026-08-03 14833d9 chore(gui): 汉化 macOS 权限弹窗说明、托盘菜单与语音输入提示文案
