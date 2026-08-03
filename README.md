@@ -19,6 +19,7 @@
 - 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/](docs/analysis/)）
 - 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/](docs/updates/)）
 - 正式签名、公证与自动更新发布指南：[docs/release-signed-updates.md](docs/release-signed-updates.md)
+- 签名材料暂缓申请记录：[docs/release-signing-deferred-plan.md](docs/release-signing-deferred-plan.md)
 - 上游项目源码：[andrewyng/openworker](https://github.com/andrewyng/openworker)
 
 中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析、安全边界、交互式信息图、自动更新日志和每周周报。网站明确标注上游项目归属，并链接回本仓库。
@@ -462,7 +463,7 @@ openworker-zh-localized/
 
 2. **正式自动更新依赖私有签名材料**
    - Apple Developer ID 证书、App Store Connect Notary API Key 和 Tauri updater 私钥不能提交到仓库。
-   - 配置方式见 [docs/release-signed-updates.md](docs/release-signed-updates.md)。
+   - 当前决定暂缓申请；记录见 [docs/release-signing-deferred-plan.md](docs/release-signing-deferred-plan.md)，配置方式见 [docs/release-signed-updates.md](docs/release-signed-updates.md)。
 
 ### 10.1 正式签名、公证与自动更新
 

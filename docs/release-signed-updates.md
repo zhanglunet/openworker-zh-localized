@@ -8,6 +8,8 @@
 
 缺少任意一项，都不应作为正式自动更新发布。
 
+当前暂缓申请 Apple Developer 和签名材料；后续继续办理时，先看 [正式签名、公证与自动更新材料暂缓申请记录](release-signing-deferred-plan.md)。
+
 ## GitHub Actions Secrets
 
 在 `zhanglunet/openworker-zh-localized` 仓库的 Settings → Secrets and variables → Actions 中配置：
