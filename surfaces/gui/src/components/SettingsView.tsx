@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import {
   getSettings,
   getTrustedWorkspaces,
+  setCompactionSettings,
+  setContextBar,
   setOnboarded,
   setPdfSettings,
   setScratchBase,
   setSessionsPeek,
   setWorkspaceTrusted,
+  type CompactionSettings,
   type ModelSettings,
   type PdfSettings,
   type WorkspaceCommandTrust,
@@ -38,6 +41,7 @@ import { PanelHead } from "./IntegrationsView";
 import { ModelsTab } from "./ManageTabs";
 import { GalleryModal } from "./GalleryModal";
 import { PersonasTab } from "./PersonasTab";
+import { SkillsTab } from "./SkillsTab";
 import { showPersonas } from "../flags";
 
 // Settings, restructured (Option 2) into a full-page surface that mirrors IntegrationsView's shell:
@@ -47,7 +51,7 @@ import { showPersonas } from "../flags";
 // Models + Personas host the existing tab components inside the page shell (field re-skin to follow).
 // "appearance" is the General tab's stable key — callers deep-link with it, so the
 // rename (UX-021) changed only the label. "files" folded into General as a card.
-type SetTab = "appearance" | "models" | "voice" | "personas";
+type SetTab = "appearance" | "models" | "skills" | "voice" | "personas";
 
 const CARD = "rounded-xl2 border border-line bg-panel";
 const FIELD_LABEL = "text-[12.5px] font-medium text-ink";
@@ -58,9 +62,10 @@ const BTN_ACCENT = "text-[12.5px] px-3 py-2 rounded-lg bg-accent text-white shri
 const BTN_BORDERED =
   "text-[12.5px] px-3 py-2 rounded-lg border border-line bg-paper hover:border-lineStrong shrink-0";
 
-const SET_TABS: { key: SetTab; label: string; icon: "sliders" | "code" | "mic" | "sparkle" }[] = [
+const SET_TABS: { key: SetTab; label: string; icon: "sliders" | "code" | "mic" | "sparkle" | "book" }[] = [
   { key: "appearance", label: "通用", icon: "sliders" },
   { key: "models", label: "模型", icon: "code" },
+  { key: "skills", label: "Skills", icon: "book" },
   { key: "voice", label: "语音输入", icon: "mic" },
   { key: "personas", label: "角色", icon: "sparkle" },
 ];
@@ -68,9 +73,13 @@ const SET_TABS: { key: SetTab; label: string; icon: "sliders" | "code" | "mic" |
 export function SettingsView({
   initialTab,
   onOpenPersona,
+  onCreateSkill,
 }: {
   initialTab?: SetTab;
   onOpenPersona?: (id: string) => void;
+  // Skills doorway (SKILLS-SPEC §5.2): start a new conversation with the description
+  // prefilled — the worker builds the skill and proposes it via save_skill.
+  onCreateSkill?: (description: string) => void;
 }) {
   // Personas is flag-gated (hidden for launch) — filter the tab AND coerce a stale
   // deep-link to it (openSettings("personas") callers) so the page never opens on a
@@ -118,8 +127,11 @@ export function SettingsView({
                   not under General. */}
               <div className="mt-6">
                 <TokenSavingsCard />
+                <CompactionCard />
               </div>
             </section>
+          ) : tab === "skills" ? (
+            <SkillsTab onCreateSkill={onCreateSkill} />
           ) : tab === "voice" ? (
             <VoiceInputSection />
           ) : (
@@ -423,9 +435,13 @@ function AppearanceSection() {
         <div className={FIELD_HELP}>自动跟随本机外观。</div>
       </div>
 
-      <侧边栏Card />
+      <SidebarCard />
 
-      <文件Card />
+      <SidebarCard />
+
+      <ContextBarCard />
+
+      <FilesCard />
 
       <TrustedWorkspacesCard />
 
@@ -584,9 +600,9 @@ function UpdateInline() {
 // -- 侧边栏 density -------------------------------------------------------------
 // -- 节省 Token (PDF attachments; owner ask, 2026-07-17) ---------------------
 // Attachments replay with EVERY turn, so a big PDF quietly multiplies token spend.
-// Auto-compaction of long histories is a planned follow-up (punchlist §7) — until
-// then this card is the user's dial: attach thresholds + the fallback for models
-// without native PDF support.
+// This card is the attachment dial: attach thresholds + the fallback for models
+// without native PDF support. (Long-history spend is handled by auto-compaction —
+// the CompactionCard below, OPE-27.)
 function TokenSavingsCard() {
   const [pdf, setPdf] = useState<PdfSettings | null>(null);
 
@@ -668,7 +684,158 @@ function TokenSavingsCard() {
   );
 }
 
-function 侧边栏Card() {
+// -- Context compaction (OPE-27) ------------------------------------------------
+// Long sessions are summarized automatically when they approach the model's context
+// limit, so work continues instead of hitting a raw provider error. Two spec'd
+// overrides (trigger % + token cap) and the summarizer-model pin — nothing more.
+function CompactionCard() {
+  const [cfg, setCfg] = useState<CompactionSettings | null>(null);
+  const [models, setModels] = useState<string[]>([]);
+  const [labels, setLabels] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getSettings()
+      .then((s) => {
+        setCfg({
+          compaction_threshold_pct: s.compaction_threshold_pct ?? 0.8,
+          compaction_cap_tokens: s.compaction_cap_tokens ?? 250_000,
+          compaction_model: s.compaction_model ?? "",
+        });
+        setModels(s.models || []);
+        setLabels(s.model_labels || {});
+      })
+      .catch(() =>
+        setCfg({
+          compaction_threshold_pct: 0.8,
+          compaction_cap_tokens: 250_000,
+          compaction_model: "",
+        }),
+      );
+  }, []);
+
+  const save = async (patch: Partial<CompactionSettings>) => {
+    setCfg((p) => (p ? { ...p, ...patch } : p));
+    await setCompactionSettings(patch);
+  };
+
+  if (!cfg) return null;
+  const modelLabel = (id: string) => labels[id]?.split(" · ")[0] || id;
+  return (
+    <div className={CARD + " p-4 mb-4"} data-testid="compaction-card">
+      <div className={FIELD_LABEL}>上下文压缩</div>
+      <div className={FIELD_HELP}>
+        长会话会自动压缩：较早的回合会被总结，让数字同事继续工作而不是耗尽上下文。可见对话不会被改写，系统只会显示一个压缩发生的位置标记。
+      </div>
+
+      <div className="mt-3 flex items-center gap-5 flex-wrap">
+        <label className="flex items-center gap-2.5">
+          <span className="text-[13px] text-ink">压缩阈值</span>
+          <input
+            type="number"
+            min={10}
+            max={95}
+            value={Math.round(cfg.compaction_threshold_pct * 100)}
+            data-testid="compaction-threshold"
+            className="w-16 px-2 py-1.5 rounded-lg border border-line bg-paper text-[13px] text-ink outline-none focus:border-accent"
+            onChange={(e) =>
+              save({
+                compaction_threshold_pct:
+                  Math.max(10, Math.min(Number(e.target.value) || 80, 95)) / 100,
+              })
+            }
+          />
+          <span className="text-[12.5px] text-muted">% 上下文窗口</span>
+        </label>
+        <label className="flex items-center gap-2.5">
+          <span className="text-[13px] text-ink">或达到</span>
+          <input
+            type="number"
+            min={10_000}
+            max={2_000_000}
+            step={10_000}
+            value={cfg.compaction_cap_tokens}
+            data-testid="compaction-cap"
+            className="w-28 px-2 py-1.5 rounded-lg border border-line bg-paper text-[13px] text-ink outline-none focus:border-accent"
+            onChange={(e) =>
+              save({
+                compaction_cap_tokens: Math.max(
+                  10_000,
+                  Math.min(Number(e.target.value) || 250_000, 2_000_000),
+                ),
+              })
+            }
+          />
+          <span className="text-[12.5px] text-muted">tokens，两者取较小值</span>
+        </label>
+      </div>
+      <div className={FIELD_HELP}>
+        上限会让超大上下文模型更早压缩——质量和速度通常会在标称极限前就开始下降。
+      </div>
+
+      <div className="mt-3 flex items-center gap-2.5">
+        <span className="text-[13px] text-ink">摘要模型</span>
+        <select
+          value={cfg.compaction_model}
+          data-testid="compaction-model"
+          className="px-2 py-1.5 rounded-lg border border-line bg-paper text-[13px] text-ink outline-none focus:border-accent"
+          onChange={(e) => save({ compaction_model: e.target.value })}
+        >
+          <option value="">使用当前会话模型（默认）</option>
+          {models.map((m) => (
+            <option key={m} value={m}>
+              {modelLabel(m)}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={FIELD_HELP}>
+        摘要由该模型生成。默认跟随当前会话使用的模型。
+      </div>
+    </div>
+  );
+}
+
+// -- Composer: context-window bar (owner ask 2026-07-30) ------------------------
+// The chip's bar is context-window occupancy; the session total (unbounded) lives in
+// the popover. Some people would rather not watch a meter at all, hence the toggle.
+function ContextBarCard() {
+  const [shown, setShown] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getSettings()
+      .then((s) => setShown(s.context_bar === true))
+      .catch(() => setShown(false));
+  }, []);
+
+  const save = async (next: boolean) => {
+    setShown(next);
+    await setContextBar(next);
+  };
+
+  if (shown === null) return null;
+  return (
+    <div className={CARD + " p-4 mb-4"} data-testid="context-bar-card">
+      <div className={FIELD_LABEL}>输入框</div>
+      <label className="flex items-start gap-3 py-2">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          data-testid="context-bar-toggle"
+          checked={shown}
+          onChange={(e) => save(e.target.checked)}
+        />
+        <span>
+          <span className="block text-[13px] text-ink">显示上下文窗口进度条</span>
+          <span className="block text-[12px] text-muted">
+            显示模型上下文窗口使用量的小进度条。关闭后会显示本会话 token 总数；两种方式都可以点击查看完整明细。
+          </span>
+        </span>
+      </label>
+    </div>
+  );
+}
+
+function SidebarCard() {
   const [peek, setPeek] = useState<number | null>(null);
 
   useEffect(() => {
@@ -707,7 +874,7 @@ function 侧边栏Card() {
 
 // -- 文件 (scratch location) — one card inside General (UX-021: a single option
 // doesn't earn its own tab) -----------------------------------------------------
-function 文件Card() {
+function FilesCard() {
   const [settings, setSettings] = useState<ModelSettings | null>(null);
   const [scratchDraft, setScratchDraft] = useState("");
   const [scratchMsg, setScratchMsg] = useState<string | null>(null);

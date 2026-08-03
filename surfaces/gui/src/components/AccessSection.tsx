@@ -221,7 +221,7 @@ export function AccessSection({
     : roots.length > 0
       ? `${roots.length} 个文件夹`
       : null;
-  const summary = folderPart ? `${sourcesPart} · ${folderPart}` : sourcesPart;
+  const summary = [sourcesPart, folderPart].filter(Boolean).join(" · ");
 
   return (
     <section className="rail-section" ref={rootEl} data-testid="access-section">
@@ -383,6 +383,14 @@ export function AccessSection({
                     添加来源…
                   </button>
                 )}
+                {/* Lives with its list (tester ask 2026-07-26): each group's manage link sits
+                    directly under that group, not pooled at the section's bottom. */}
+                <button
+                  className="mt-1.5 block text-[12px] text-accent font-medium hover:underline text-left"
+                  onClick={() => onOpenIntegrations?.()}
+                >
+                  Manage all connectors (global) →
+                </button>
               </div>
 
               {recommended.length > 0 && (

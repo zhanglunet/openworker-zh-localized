@@ -1,41 +1,41 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T06:40:17+09:00",
-  "branch": "main",
-  "head": "a6b533480c85b184e73c18147ed32691b57641b8",
-  "shortHead": "a6b5334",
-  "totalFiles": 484,
+  "generatedAt": "2026-08-03T21:40:53Z",
+  "branch": "codex/sync-upstream-20260804",
+  "head": "7df3ca08a4588ea34aa0d7d932a18626cd6d45da",
+  "shortHead": "7df3ca0",
+  "totalFiles": 546,
   "byExt": [
     {
       "name": "py",
-      "count": 202
+      "count": 223
     },
     {
       "name": "ts",
-      "count": 96
+      "count": 105
     },
     {
       "name": "tsx",
-      "count": 72
+      "count": 95
+    },
+    {
+      "name": "svg",
+      "count": 23
     },
     {
       "name": "png",
       "count": 22
     },
     {
-      "name": "svg",
-      "count": 20
-    },
-    {
       "name": "json",
-      "count": 11
+      "count": 13
     },
     {
       "name": "md",
-      "count": 11
+      "count": 13
     },
     {
       "name": "[none]",
-      "count": 7
+      "count": 9
     },
     {
       "name": "html",
@@ -81,15 +81,15 @@ export const repoReport = {
   "byTopDir": [
     {
       "name": "surfaces",
-      "count": 211
+      "count": 248
     },
     {
       "name": "coworker",
-      "count": 121
+      "count": 129
     },
     {
       "name": "tests",
-      "count": 80
+      "count": 93
     },
     {
       "name": "website",
@@ -117,7 +117,11 @@ export const repoReport = {
     },
     {
       "name": ".gitignore",
-      "count": 1
+      "count": 3
+    },
+    {
+      "name": "README.md",
+      "count": 3
     },
     {
       "name": "BUILD_LOG.md",
@@ -133,10 +137,6 @@ export const repoReport = {
     },
     {
       "name": "pyproject.toml",
-      "count": 1
-    },
-    {
-      "name": "README.md",
       "count": 1
     },
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "7df3ca0",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "a6b5334",
       "date": "2026-08-04",
       "subject": "docs: add source analysis and update reports pages"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "a1912fc",
       "date": "2026-08-03",
       "subject": "docs: rewrite README with full install, usage, and localization guide"
-    },
-    {
-      "hash": "3f50a54",
-      "date": "2026-08-03",
-      "subject": "docs: add BUILD_LOG.md with full localization setup notes"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "7df3ca0",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "a6b5334",
       "date": "2026-08-04",

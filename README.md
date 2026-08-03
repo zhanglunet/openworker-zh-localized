@@ -6,6 +6,10 @@
 >
 > 遵循原项目 MIT 许可证，仅用于学习和个人本地使用。
 
+<a href="https://trendshift.io/repositories/91434?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-91434" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/91434/daily?language=Python" alt="andrewyng%2Fopenworker | Trendshift" width="250" height="55"/></a>
+
+> **Beta** - OpenWorker 仍处于 open beta：功能可用、会持续自动更新，上游仍在快速打磨体验。
+
 ## 下载与中文介绍站
 
 - 中文站：[https://oaosf.cn](https://oaosf.cn)

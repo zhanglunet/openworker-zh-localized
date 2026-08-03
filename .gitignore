@@ -21,5 +21,8 @@ surfaces/gui/dist/
 .openworker-state/
 local/
 
+# Local secrets (live-smoke BYO keys) — never committed
+.env
+
 # macOS
 .DS_Store
