@@ -92,6 +92,11 @@ Tauri 壳 (src-tauri, Rust) ────────────┴─ tauri bui
                                              （sidecar 作为 resources 打入包内）
 ```
 
+企业注意两点：
+
+- **企业 Python 包进 sidecar**：若企业连接器/工具作为独立 Python 包实现，需在 `openworker-server.spec` 的 `collect_submodules` 列表追加包名（懒加载依赖仿 spec 中 websockets/pypdf 的 `collect_all` 写法显式收集，带数据文件的走 `datas`）。
+- **外接后端调试**：桌面壳按 `COWORKER_SERVER_BIN` 环境变量 → 打包内 sidecar → 开发 `.venv` 的顺序解析后端，设该变量可让壳直接启动企业版服务器二进制，不必每次重打包。
+
 本地构建命令：
 
 ```bash
@@ -121,6 +126,7 @@ powershell -ExecutionPolicy Bypass -File packaging/build_windows.ps1
 
 企业版改造（配置级）：
 
+0. **密钥切换断链提醒**：若企业版承接已安装的汉化版用户，更换 `pubkey` 后旧客户端无法验证新更新包——需要发布一个用户手动安装的"桥接版本"（详见 `docs/release-signed-updates.md`）。企业全新装机不受影响。
 1. endpoints 改为企业可达地址，二选一：
    - 私有 GitHub Release 直链（客户端可匿名访问不了私有仓——需在企业站放反代或用内网静态服务器托管 `latest-corp.json` 与更新包）；
    - **推荐**：企业内网/企业站静态托管 `https://apps.<corp>.com/openworker/latest-corp.json` + 更新包文件
