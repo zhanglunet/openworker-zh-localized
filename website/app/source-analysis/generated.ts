@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T09:30:42+09:00",
+  "generatedAt": "2026-08-04T00:31:16Z",
   "branch": "main",
-  "head": "141aae5bfe131cacd77296b090280fc8a2ac8441",
-  "shortHead": "141aae5",
+  "head": "a107546f63d32b42a657d8551568b2298cd87011",
+  "shortHead": "a107546",
   "totalFiles": 527,
   "byExt": [
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "a107546",
+      "date": "2026-08-04",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "141aae5",
       "date": "2026-08-04",
       "subject": "site: add OpenWorker recommendation article"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "a6b5334",
       "date": "2026-08-04",
       "subject": "docs: add source analysis and update reports pages"
-    },
-    {
-      "hash": "f36b220",
-      "date": "2026-08-04",
-      "subject": "Update README download and site preview"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "a107546",
+      "date": "2026-08-04",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "141aae5",
       "date": "2026-08-04",

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T09:30:42+09:00
+更新时间：2026-08-04T00:31:16Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：141aae5bfe131cacd77296b090280fc8a2ac8441
+当前提交：a107546f63d32b42a657d8551568b2298cd87011
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：527
-- 当前提交：141aae5
+- 当前提交：a107546
 - 主要文件类型：
   - py: 221
   - ts: 105
@@ -159,6 +159,7 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 a107546 docs: refresh generated site reports
 - 2026-08-04 141aae5 site: add OpenWorker recommendation article
 - 2026-08-03 14c394f docs: refresh generated site reports
 - 2026-08-04 6039c07 docs: record deferred signing prerequisites
@@ -170,4 +171,3 @@ flowchart LR
 - 2026-08-04 f4fabd1 sync: merge upstream OpenWorker 01b6f83 (#2)
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
-- 2026-08-04 f36b220 Update README download and site preview

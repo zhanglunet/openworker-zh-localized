@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-04T09:30:42+09:00
+更新时间：2026-08-04T00:31:16Z
 
 ## 最近提交
 
+- 2026-08-04 a107546 docs: refresh generated site reports
 - 2026-08-04 141aae5 site: add OpenWorker recommendation article
 - 2026-08-03 14c394f docs: refresh generated site reports
 - 2026-08-04 6039c07 docs: record deferred signing prerequisites
@@ -15,4 +16,3 @@
 - 2026-08-04 f4fabd1 sync: merge upstream OpenWorker 01b6f83 (#2)
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
-- 2026-08-04 f36b220 Update README download and site preview
