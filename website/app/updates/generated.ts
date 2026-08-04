@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T00:31:16Z",
+  "generatedAt": "2026-08-04T09:37:25+09:00",
   "branch": "main",
-  "head": "a107546f63d32b42a657d8551568b2298cd87011",
-  "shortHead": "a107546",
+  "head": "cf6d1d04217221d9712ac3f2a95d66aecacb5ead",
+  "shortHead": "cf6d1d0",
   "totalFiles": 527,
   "byExt": [
     {
@@ -284,6 +284,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "cf6d1d0",
+      "date": "2026-08-04",
+      "subject": "site: remove redundant Cloudflare compat flag"
+    },
+    {
       "hash": "a107546",
       "date": "2026-08-04",
       "subject": "docs: refresh generated site reports"
@@ -337,14 +342,14 @@ export const repoReport = {
       "hash": "7df3ca0",
       "date": "2026-08-03",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "a6b5334",
-      "date": "2026-08-04",
-      "subject": "docs: add source analysis and update reports pages"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "cf6d1d0",
+      "date": "2026-08-04",
+      "subject": "site: remove redundant Cloudflare compat flag"
+    },
     {
       "hash": "a107546",
       "date": "2026-08-04",
