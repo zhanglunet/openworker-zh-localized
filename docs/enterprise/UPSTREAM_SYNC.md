@@ -134,8 +134,11 @@ jobs:
 要点：
 
 - **永不直推 `main`**：同步永远走 PR，企业 CI（含企业冒烟用例，见 3.4）通过 + 人工确认后合并。"实时"由每日节拍 + 随时手动触发保障；比直推安全得多，延迟上限 24h，满足 G4。
+- **同步 PR 必须用 merge commit 合并，禁止 squash / rebase 合并**：squash 会把合并结果压成单亲提交，被同步方的 tip 从此不再是本仓祖先——下一次同步会把已解决过的冲突**全部重放**。这不是理论风险：汉化仓的上游同步 PR #2 就因 squash 导致 `upstream/main` 脱离祖先链，实测下次合并会在约 20 个文件重放冲突（registry.py、manager.py、tauri.conf.json、App.tsx 等）。企业仓应在 GitHub 仓库设置中对 `sync/*` 分支的 PR 仅允许 merge commit。
 - **冲突兜底**：merge 失败自动开 Issue，附带本地解决命令；`main` 不受影响。
 - 私有仓访问公开汉化仓无需额外凭据（公开仓可匿名 fetch；若汉化仓将来转私有，配一个只读 PAT 到 `secrets`）。
+
+> **汉化仓待办（影响企业链路的上游卫生）**：因上述 PR #2 squash，汉化仓需做一次性祖先链修复——在 `sync/upstream-main` 上 `git merge upstream/main`，人工把这批已知冲突再解一次，以 **merge commit** 合入 `main`；此后 `merge-base --is-ancestor` 判定恢复正常，企业链路拿到的将是干净的合并历史。
 
 ### 3.3 版本与标签策略
 

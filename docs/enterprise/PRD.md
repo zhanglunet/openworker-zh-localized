@@ -115,10 +115,12 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 
 企业版集成分三层，逐层加深：
 
+底座事实（决定集成设计）：后端 `coworker/tools/` 目前**没有任何表格处理工具**（能力目录仅 code_files/files/git/search/shell/todo 六项）；**聊天附件管线只接受 image/pdf/text（`coworker/attachments.py`），拖拽上传 xlsx 无法进入模型上下文**；GUI 仅把 .xlsx 产物归类为 sheet 做预览。因此大表哥的表格必须以**工作区文件**形态交给 agent（文件根/会话草稿目录），由技能指挥 shell/python 调 `excel_ai.py` 处理——这恰好也是数据不出本机的路径。
+
 | 层 | 内容 | 档位 |
 |----|------|------|
-| L1 技能层 | 预置 `excel-ai-analyst` 技能（SKILL.md + `excel_ai.py` 脚本资源），员工对话里说"分析这个表"即触发六步法 | 资产级 |
-| L2 入口层 | 前端新增「表格助手」入口/面板：上传表格 → 直接发起技能会话；或内嵌 anp.asia 的本地 Step 0 页面（零上传特性与 local-first 契合） | 代码级（中） |
+| L1 技能层 | 预置 `excel-ai-analyst` 技能（SKILL.md + `excel_ai.py` 脚本资源），员工对话里说"分析这个表"即触发六步法；表格文件放工作区或由技能引导指定路径 | 资产级 |
+| L2 入口层 | 前端新增「表格助手」入口/面板：选择表格文件（写入会话工作区）→ 预填提示词发起技能会话；或内嵌 anp.asia 的本地 Step 0 页面（零上传特性与 local-first 契合）。如需"拖拽上传即分析"，须同步扩展 `attachments.py` 接受表格类型（挂载点小改） | 代码级（中） |
 | L3 工具层 | 把 `excel_ai.py` 注册为内置工具：`coworker/tools/` 新增工厂模块（任意 Python callable 配 schema/metadata 三属性即成工具，参照 `tools/search.py`），再到 `coworker/catalog.py` 的 `_CAPS` 登记为 Capability（如 `enterprise_sheets`）——此后任何 persona 在 manifest 的 `tools:` 里按 id 引用即可 | 代码级（中） |
 
 验收：员工把一个 20MB 内多 Sheet 的 xlsx 拖入桌面端，得到结构探测 + 公式链 + 全量验证报告（MD/网页），全程数据不出本机/内网。
@@ -152,7 +154,7 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 |----|------|--------|------|---------|
 | F1 | 私有模型接入：Custom/Ollama Provider 预置企业端点、端口、模型版本 | P0 | 配置级 | 断网（仅内网）环境完成一次完整对话 + 工具调用 |
 | F2 | 企业配置预置：安装包首启写入默认 `config.toml`（模型、审批策略、命令白名单） | P0 | 资产级 | 全新机器安装后零配置可用 |
-| F3 | 企业技能包：≥5 个企业 SOP 技能 + excel-ai-analyst 预置到全局技能目录 | P0 | 资产级 | 技能目录出现在会话 catalog，`load_skill` 可用 |
+| F3 | 企业技能包：≥5 个企业 SOP 技能 + excel-ai-analyst 预置到全局技能目录。注意：技能**没有包内分发通道**（PyInstaller 只打代码包，仅 personas/builtin 有 package-data），预置必须靠安装器/首启动拷贝逻辑（代码级小改）或 REST 导入脚本 | P0 | 资产级+小改 | 技能目录出现在会话 catalog，`load_skill` 可用 |
 | F4 | 大表哥 L1+L2：技能 + 前端表格助手入口 | P0 | 代码级 | 3.5 节验收场景通过 |
 | F5 | 品牌换肤：企业主题色/logo/应用名/图标/DMG 背景 | P0 | 资产级 | 三平台安装包全部呈现企业品牌 |
 | F6 | 企业更新源：三平台自动更新指向企业发布清单，企业自持签名密钥 | P0 | 配置级 | 旧版安装包可自动升级到新版 |

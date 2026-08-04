@@ -64,6 +64,8 @@ html[data-theme="dark"] {
 > 已知汉化盲区：`surfaces/gui/src/humanize.ts`（工具步骤一行文案与审批标题）大部分仍是英文模板——企业验收会暴露中英混排，建议在品牌化的同一批改动中补译。
 
 > 文案层面：界面中文文案是直接写在组件里的（无 i18n 资源层）。企业只需替换品牌词（全局搜「OpenWorker」），不建议大面积改功能文案——那会放大与汉化版的同步冲突。
+>
+> 另需产品决策一项：侧栏含「OpenWorker Cloud」登录入口（`Sidebar.tsx`，对应 `config.toml` 的 `cloud_*` 键）——企业版通常应隐藏该入口并置空 `cloud_relay_ws_url`，或替换为企业自建云中转。
 
 ---
 
@@ -78,6 +80,8 @@ html[data-theme="dark"] {
 | macOS Apple Silicon | aarch64-apple-darwin | `OpenWorker-CN-macos-arm64.dmg` + `.app.tar.gz`(+`.sig`) | `packaging/build_dmg.sh`（macos-14/15 arm64 runner） |
 | macOS Intel | x86_64-apple-darwin | `OpenWorker-CN-macos-x64.dmg` + `.app.tar.gz`(+`.sig`) | 同上（macos-13 x86_64 runner，Actions 提供至 2027-08） |
 | Windows 10/11 x64 | x86_64-pc-windows-msvc | NSIS `…-setup.exe`（currentUser 装机）+ `.msi` | `packaging/build_windows.ps1` |
+
+> 注意：仓库里 Windows 构建有**两条并存路径**——`release.yml` 矩阵中的 windows-latest 项（tag `v*` 触发，随 mac 一起出正式包）与独立的 `build-windows.yml`（手动/`win-*` tag 触发的轻量版，无签名）。企业流水线应以 `release.yml` 为准，`build-windows.yml` 仅留作调试（其头部注释还有旧仓库名残留，企业副本可清理）。
 
 > 关于 macOS Universal（单包双芯片）：现方案为**双包分发**（网站按芯片给下载链接、更新清单按 target 分发），因为 PyInstaller 打包的 Python sidecar 难以做成 universal 二进制。维持双包是当前最稳做法。
 

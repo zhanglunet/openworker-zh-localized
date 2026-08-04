@@ -18,6 +18,7 @@
 | 企业域名 | 企业站（如 `ai.<corp>.com`）+ 更新托管（如 `apps.<corp>.com`），内网或公网按合规定 | IT |
 | 大表哥资产 | excel-ai-analyst 技能包（SKILL.md + excel_ai.py）；如需内嵌 Step 0 页面，取得 anp.asia 页面部署授权/文件 | 定制团队 |
 | 内网构建镜像 | `pyproject.toml` 中 aisuite 依赖钉在 git commit（`git+https://github.com/andrewyng/aisuite.git@…`）——内网 CI 构建需镜像该仓库（或私有 PyPI 缓存）；npm/crates 同理准备企业镜像源 | IT/定制团队 |
+| 语音输入模型 | 桌面端语音输入（`stt/` whisper 引擎）默认从 huggingface.co 下载 **英文** base 模型（`stt/src/lib.rs` 的 `DEFAULT_MODEL_URL`），内网环境必须预置模型文件到 `<state-dir>/models/` 或改内网镜像；中文企业版应换中文/多语言 whisper 模型（挂载点小改） | 定制团队 |
 
 ---
 
@@ -74,6 +75,12 @@ npm run deploy:cloudflare   # 构建并部署 Worker
 # Cloudflare 控制台：Workers 自定义域绑定企业域名（DNS 托管到 Cloudflare 或 CNAME 接入）
 ```
 
+两个已知配置缺口（部署时必须处理）：
+
+- **域名绑定不在代码里**：`wrangler.jsonc` 无 routes/custom_domain 配置，域名 → Worker 的映射只存在于 Cloudflare 控制台，必须手工绑定（deploy 成功 ≠ 域名可访问）。
+- **IMAGES 绑定缺失**：`worker/index.ts` 的 `/_vinext/image` 端点调用 `env.IMAGES`，但 `wrangler.jsonc` 未声明 images 绑定——照抄配置部署后图片优化端点会运行时报错；企业站需在 `wrangler.jsonc` 补 `"images": { "binding": "IMAGES" }`，或确认站内不用该端点。
+- 换品牌时**站点测试断言要同步改**：`tests/rendered-html.test.mjs` 硬编码了「OpenWorker 中文站」、DMG 文件名、SHA-256、Bundle ID 与双仓库链接。
+
 品牌化改动：站名/文案/Logo（`website/app/` 各页面）、下载链接指向企业托管产物、删除或替换 oaosf.cn 专属内容。企业站定制项集中记录在 `enterprise/site/`，正式文件按挂载点规则小改 `website/`。
 
 ### 形态 B：内网静态/Node 部署（数据合规要求高时）
@@ -107,7 +114,11 @@ GUI 设置 → 模型 → 添加 Provider：
 model = "custom:qwen3-72b-corp"  # 企业默认模型。⚠️ 必须带 provider 前缀（custom:/ollama:）——
                                  # 裸模型名会被路由到默认 openai provider，静默走错端点
 mode = "interactive"             # 审批策略：交互式（每步工具调用可控）
-max_iterations = 12
+max_iterations = 150             # 代码默认值即 150（docs/config.example.toml 中的 12 是过期值）
+
+# 云端服务（企业内网版建议显式关闭/替换）：
+# cloud_base_url = ""            # 默认 https://api.openworker.com，仅 OAuth 中转；企业可指向自建实例
+# cloud_relay_ws_url = ""        # 置空即关闭云 relay 通道
 
 allowed_commands = [
   "ls", "cat", "pwd", "grep", "find",
@@ -157,8 +168,10 @@ enterprise/skills/                 # 企业技能包源（随仓库版本管理�
 ### 5.2 知识库 v1（文件根挂载）
 
 1. 企业知识库目录通过同步盘/网盘挂载到员工机器（如 `~/CorpKB/`）
-2. 员工把该目录添加为工作区/文件根，agent 即可读取检索
+2. 员工把该目录添加为工作区/文件根，agent 即可读取检索；IT 脚本也可对运行中会话直接挂载：`POST /v1/sessions/{id}/roots`，body `{"path": "...", "writable": false}`（只读挂载）
 3. 敏感子库用目录权限控制（agent 以当前用户权限访问）
+
+> 相关目录速查：状态目录 `<state-dir>`（`$COWORKER_STATE_DIR` > `%APPDATA%\coworker` > `~/.config/coworker`）下有 `config.toml`、`secrets.json`、`mcp.json`、`skills/`、`AGENTS.md`、`models/`（whisper 语音模型）、`coworker.db`（记忆+审计）、`prefs.json` 等；会话草稿/产出默认落 `~/OpenWorker/<session_id>`（prefs 键 `scratch_base` 可改）——企业文件落盘规范应覆盖这两处。
 
 ### 5.3 企业 CLI / 知识库 MCP（v2）
 

@@ -36,7 +36,8 @@
 | 1.1 | 私有模型接入验证：Custom Provider 连企业 vLLM/网关（base_url + 端口 + 模型名），Ollama 备选路径验证 | F1 | 纯配置（`coworker/providers/registry.py` 的 `_build_custom`/`_build_ollama` 已支持） | 1d |
 | 1.2 | 模型能力登记：企业模型上下文窗口/工具调用能力入能力矩阵 | F1 | `coworker/providers/matrix.py`、`capabilities.py`（挂载点小改） | 1d |
 | 1.3 | 配置预置：首启复制 `enterprise/config/config.default.toml` → `~/.config/coworker/config.toml`；审批策略、命令白名单定稿 | F2 | 桌面壳首启逻辑（挂载点）+ 配置文件 | 2d |
-| 1.4 | 企业技能包 v1：excel-ai-analyst（大表哥 L1）+ ≥5 个企业 SOP 技能编写与评测 | F3, F4 | `enterprise/skills/`（SKILL.md 规范）+ 首启同步到 `state_dir()/skills` | 3d |
+| 1.4 | 企业技能包 v1：excel-ai-analyst（大表哥 L1）+ ≥5 个企业 SOP 技能编写与评测。含**首启拷贝逻辑开发**（技能无包内分发通道：PyInstaller 不带数据目录，需桌面壳/后端首启把打包资源拷入 `state_dir()/skills`） | F3, F4 | `enterprise/skills/`（SKILL.md 规范）+ 首启逻辑挂载点 | 3d |
+| 1.4b | 语音输入内网化：预置/镜像 whisper 模型（默认从 huggingface 拉英文 base 模型，`stt/src/lib.rs` DEFAULT_MODEL_URL），评估换中文模型 | F2 | `stt/` 挂载点小改 + 模型资产 | 1d |
 | 1.5 | 大表哥 L2：前端「表格助手」入口。快赢路径：`SessionIntro.tsx` 加一张任务卡（onPrefill 预填提示词触发技能，半天）；完整路径：App.tsx 的 surface 联合类型 + 渲染链加 `sheets` 分支 + `Sidebar.tsx` 回调（参照 IntegrationsView 模式）新整页面板 | F4 | `surfaces/gui/src/`（无路由库，surface 状态机挂载） | 3d |
 | 1.6 | 品牌换肤：`enterprise/branding/theme.css`（亮/暗）、图标全套（`tauri icon` 生成）、productName/identifier/publisher、DMG 背景、Info.plist/lib.rs 品牌词 | F5 | 见 BRANDING_PACKAGING.md 清单 | 2d |
 | 1.7 | 企业更新源：updater endpoints/pubkey 改企业值，`make_update_manifest.py` 出 `latest-corp.json`，托管打通 | F6 | `tauri.conf.json` + `release-corp.yml` | 2d |
