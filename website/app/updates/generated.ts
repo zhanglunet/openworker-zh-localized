@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T09:37:25+09:00",
+  "generatedAt": "2026-08-04T09:39:45+09:00",
   "branch": "main",
-  "head": "cf6d1d04217221d9712ac3f2a95d66aecacb5ead",
-  "shortHead": "cf6d1d0",
+  "head": "60c2e7613fbfe6af7e95161d7a0c2be1cbf04da1",
+  "shortHead": "60c2e76",
   "totalFiles": 527,
   "byExt": [
     {
@@ -284,6 +284,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "60c2e76",
+      "date": "2026-08-04",
+      "subject": "site: update Cloudflare compatibility date"
+    },
+    {
+      "hash": "826d5c3",
+      "date": "2026-08-04",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "cf6d1d0",
       "date": "2026-08-04",
       "subject": "site: remove redundant Cloudflare compat flag"
@@ -332,19 +342,19 @@ export const repoReport = {
       "hash": "6aeb622",
       "date": "2026-08-03",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "f4fabd1",
-      "date": "2026-08-04",
-      "subject": "sync: merge upstream OpenWorker 01b6f83 (#2)"
-    },
-    {
-      "hash": "7df3ca0",
-      "date": "2026-08-03",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "60c2e76",
+      "date": "2026-08-04",
+      "subject": "site: update Cloudflare compatibility date"
+    },
+    {
+      "hash": "826d5c3",
+      "date": "2026-08-04",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "cf6d1d0",
       "date": "2026-08-04",
