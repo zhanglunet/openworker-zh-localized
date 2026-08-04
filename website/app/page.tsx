@@ -115,6 +115,7 @@ export default function Home() {
           <a href="#architecture">源码分析</a>
           <a href="/source-analysis">深度分析</a>
           <a href="/infographic">信息图</a>
+          <a href="/recommendation">推荐文章</a>
           <a href="/updates">日志</a>
           <a href="#safety">安全边界</a>
         </nav>
@@ -218,6 +219,9 @@ export default function Home() {
             </a>
             <a className="text-link" href={releaseUrl} target="_blank" rel="noreferrer">
               查看 GitHub Release
+            </a>
+            <a className="text-link" href="/recommendation">
+              为什么推荐 OpenWorker
             </a>
           </div>
         </div>
@@ -403,6 +407,7 @@ export default function Home() {
           <h2>让 AI 从“会回答”<br />走到“能完成”。</h2>
           <div className="hero-actions centered-actions">
             <a className="button button-light" href={localizedDownloadUrl} target="_blank" rel="noreferrer">下载 OpenWorker 中文版 <span aria-hidden="true">→</span></a>
+            <a className="button button-outline-light" href="/recommendation">阅读推荐文章</a>
             <a className="button button-outline-light" href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">查看中文仓库</a>
           </div>
         </div>
@@ -411,7 +416,7 @@ export default function Home() {
       <footer className="site-footer section-shell">
         <div className="brand footer-brand"><span className="brand-mark">O</span><span>OpenWorker</span><span className="brand-tag">中文站</span></div>
         <p>项目源码来自 andrewyng/openworker · 中文站由 zhanglunet/openworker-zh-localized 维护</p>
-        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">上游源码</a><a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">中文仓库</a><a href="/infographic">信息图</a><a href="/source-analysis">深度分析</a><a href="/updates">日志</a></div>
+        <div><a href="https://openworker.com" target="_blank" rel="noreferrer">官方网站</a><a href="https://github.com/andrewyng/openworker" target="_blank" rel="noreferrer">上游源码</a><a href="https://github.com/zhanglunet/openworker-zh-localized" target="_blank" rel="noreferrer">中文仓库</a><a href="/infographic">信息图</a><a href="/source-analysis">深度分析</a><a href="/recommendation">推荐文章</a><a href="/updates">日志</a></div>
       </footer>
     </main>
   );

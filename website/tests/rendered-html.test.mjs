@@ -25,6 +25,7 @@ test("server-renders the Chinese OpenWorker product page", async () => {
   assert.match(html, /OpenWorker-CN-0\.1\.7-aarch64\.dmg/);
   assert.match(html, /源码分析/);
   assert.match(html, /安全与隐私/);
+  assert.match(html, /推荐文章/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -77,4 +78,18 @@ test("server-renders the updates and weekly report page", async () => {
   assert.match(html, /更新日志/);
   assert.match(html, /本周周报/);
   assert.match(html, /docs\/updates\/CHANGELOG\.md/);
+});
+
+test("server-renders the recommendation article page", async () => {
+  const response = await render("/recommendation");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /OpenWorker：/);
+  assert.match(html, /让 AI 从聊天走向交付/);
+  assert.match(html, /WorkBuddy/);
+  assert.match(html, /Codex/);
+  assert.match(html, /下载 macOS 中文版/);
+  assert.match(html, /https:\/\/github\.com\/andrewyng\/openworker/);
+  assert.match(html, /https:\/\/github\.com\/zhanglunet\/openworker-zh-localized/);
 });
