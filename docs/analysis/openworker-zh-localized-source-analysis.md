@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T08:26:49+09:00
+更新时间：2026-08-04T09:30:42+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：6039c072855ba57091a59f1d27fcc5c7d4de3b86
+当前提交：141aae5bfe131cacd77296b090280fc8a2ac8441
 
 ## 1. 总体判断
 
@@ -14,15 +14,15 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：525
-- 当前提交：6039c07
+- 跟踪文件总数：527
+- 当前提交：141aae5
 - 主要文件类型：
   - py: 221
   - ts: 105
-  - tsx: 77
+  - tsx: 78
   - svg: 23
   - png: 22
-  - md: 13
+  - md: 14
   - json: 12
   - [none]: 7
   - html: 5
@@ -39,9 +39,9 @@
 - surfaces: 228 个文件
 - coworker: 127 个文件
 - tests: 93 个文件
-- website: 35 个文件
+- website: 36 个文件
 - packaging: 10 个文件
-- docs: 8 个文件
+- docs: 9 个文件
 - .github: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
@@ -159,6 +159,8 @@ flowchart LR
 
 ## 8. 最近更新
 
+- 2026-08-04 141aae5 site: add OpenWorker recommendation article
+- 2026-08-03 14c394f docs: refresh generated site reports
 - 2026-08-04 6039c07 docs: record deferred signing prerequisites
 - 2026-08-03 97ac065 docs: refresh generated site reports
 - 2026-08-04 d0002c6 release: prepare signed Chinese auto updates (#3)
@@ -169,5 +171,3 @@ flowchart LR
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
 - 2026-08-04 f36b220 Update README download and site preview
-- 2026-08-04 11fd242 Add localized macOS app download
-- 2026-08-04 6a46c2a Distinguish Chinese macOS app bundle

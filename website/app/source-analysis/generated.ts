@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T08:26:49+09:00",
+  "generatedAt": "2026-08-04T09:30:42+09:00",
   "branch": "main",
-  "head": "6039c072855ba57091a59f1d27fcc5c7d4de3b86",
-  "shortHead": "6039c07",
-  "totalFiles": 525,
+  "head": "141aae5bfe131cacd77296b090280fc8a2ac8441",
+  "shortHead": "141aae5",
+  "totalFiles": 527,
   "byExt": [
     {
       "name": "py",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "tsx",
-      "count": 77
+      "count": 78
     },
     {
       "name": "svg",
@@ -27,7 +27,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 13
+      "count": 14
     },
     {
       "name": "json",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "website",
-      "count": 35
+      "count": 36
     },
     {
       "name": "packaging",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 8
+      "count": 9
     },
     {
       "name": ".github",
@@ -284,6 +284,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "141aae5",
+      "date": "2026-08-04",
+      "subject": "site: add OpenWorker recommendation article"
+    },
+    {
+      "hash": "14c394f",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "6039c07",
       "date": "2026-08-04",
       "subject": "docs: record deferred signing prerequisites"
@@ -332,19 +342,19 @@ export const repoReport = {
       "hash": "f36b220",
       "date": "2026-08-04",
       "subject": "Update README download and site preview"
-    },
-    {
-      "hash": "11fd242",
-      "date": "2026-08-04",
-      "subject": "Add localized macOS app download"
-    },
-    {
-      "hash": "6a46c2a",
-      "date": "2026-08-04",
-      "subject": "Distinguish Chinese macOS app bundle"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "141aae5",
+      "date": "2026-08-04",
+      "subject": "site: add OpenWorker recommendation article"
+    },
+    {
+      "hash": "14c394f",
+      "date": "2026-08-03",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "6039c07",
       "date": "2026-08-04",

@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-04T08:26:49+09:00
+更新时间：2026-08-04T09:30:42+09:00
 
 ## 最近提交
 
+- 2026-08-04 141aae5 site: add OpenWorker recommendation article
+- 2026-08-03 14c394f docs: refresh generated site reports
 - 2026-08-04 6039c07 docs: record deferred signing prerequisites
 - 2026-08-03 97ac065 docs: refresh generated site reports
 - 2026-08-04 d0002c6 release: prepare signed Chinese auto updates (#3)
@@ -14,5 +16,3 @@
 - 2026-08-03 7df3ca0 docs: refresh generated site reports
 - 2026-08-04 a6b5334 docs: add source analysis and update reports pages
 - 2026-08-04 f36b220 Update README download and site preview
-- 2026-08-04 11fd242 Add localized macOS app download
-- 2026-08-04 6a46c2a Distinguish Chinese macOS app bundle
