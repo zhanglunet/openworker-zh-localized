@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T09:39:45+09:00
+更新时间：2026-08-04T00:40:24+00:00
 
 仓库：zhanglunet/openworker-zh-localized
 
-当前分支：main
+当前分支：claude/openworker-enterprise-customization-2wqfat
 
-当前提交：60c2e7613fbfe6af7e95161d7a0c2be1cbf04da1
+当前提交：614f87ebd8846e46053a3301fc65f89652d79db4
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：527
-- 当前提交：60c2e76
+- 当前提交：614f87e
 - 主要文件类型：
   - py: 221
   - ts: 105
@@ -157,8 +157,81 @@ flowchart LR
 - 自动化与 Inbox: /v1/automations/*、/v1/inbox/*
 - 本地文件与产物: 文件工具、目录授权、产物预览
 
-## 8. 最近更新
+## 8. 企业定制扩展点
 
+企业定制版（私有仓）可以在不重写核心的前提下，按下列层次定制。完整方案见 `docs/enterprise/`（PRD、开发计划、三仓同步、部署、换肤打包）。
+
+### 模型层 · 私有模型（配置级）
+
+Provider 注册表内置 Custom（OpenAI 兼容 base_url）与 Ollama 构建器，企业 vLLM/网关的端点、端口与模型版本直接配置接入；模型能力在能力矩阵登记。
+
+关键路径：
+- `coworker/providers/registry.py`
+- `coworker/providers/matrix.py`
+- `docs/config.example.toml`
+
+### 技能层 · 企业技能包（资产级）
+
+SKILL.md 规范（YAML frontmatter + 渐进式加载），全局 state_dir()/skills 与工作区 .coworker/skills 双目录；企业 SOP 技能与大表哥 excel-ai-analyst 预置即用。
+
+关键路径：
+- `coworker/skills/base.py`
+- `coworker/skills/store.py`
+
+### 知识层 · 企业知识库（资产级起步）
+
+无内置向量 RAG；现实路径是文件根挂载 + 技能内置知识起步，中期把企业知识库封装成 MCP 检索服务，权限留在知识库侧。
+
+关键路径：
+- `coworker/roots.py`
+- `coworker/project.py`
+- `coworker/memory`
+
+### 工具层 · 企业 CLI 与内部系统（配置级 + 代码级）
+
+企业 CLI 首选封装为 MCP server 注册；内部系统按连接器 descriptor 模式扩展；allowed_commands 白名单与审批模式管控执行边界。
+
+关键路径：
+- `coworker/mcp`
+- `coworker/connectors/descriptors.py`
+- `coworker/cli.py`
+
+### 专属功能 · 大表哥表格助手（三层渐进）
+
+L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全量验证）→ L2 前端表格助手入口 → L3 excel_ai 注册为内置工具。
+
+关键路径：
+- `coworker/tools`
+- `surfaces/gui/src/App.tsx`
+
+### 品牌层 · 换肤与命名（资产级）
+
+颜色单一事实源是 styles.css 的 CSS 变量（Tailwind 仅映射 token），换肤=覆盖一个变量块；应用名/Bundle ID/图标/更新源集中在 tauri.conf.json。
+
+关键路径：
+- `surfaces/gui/src/styles.css`
+- `surfaces/gui/tailwind.config.js`
+- `surfaces/gui/src-tauri/tauri.conf.json`
+
+### 同步层 · 三仓不覆盖同步（流水线）
+
+上游→汉化版每日自动合并开 PR、冲突自动开 Issue；企业私有仓复制同款流水线单向对接汉化仓，配合 enterprise/ 目录隔离与挂载点纪律实现定制零覆盖。
+
+关键路径：
+- `.github/workflows/sync-upstream.yml`
+
+### 发布层 · 多平台打包与更新（流水线）
+
+发布矩阵覆盖 macOS Apple Silicon/Intel 双 DMG 与 Windows MSI/NSIS，latest-zh.json 驱动 Tauri 自动更新；企业版换名称、签名密钥与更新源即用。
+
+关键路径：
+- `.github/workflows/release.yml`
+- `packaging/build_dmg.sh`
+- `packaging/make_update_manifest.py`
+
+## 9. 最近更新
+
+- 2026-08-04 614f87e docs: refresh generated site reports
 - 2026-08-04 60c2e76 site: update Cloudflare compatibility date
 - 2026-08-04 826d5c3 docs: refresh generated site reports
 - 2026-08-04 cf6d1d0 site: remove redundant Cloudflare compat flag
@@ -170,4 +243,3 @@ flowchart LR
 - 2026-08-04 d0002c6 release: prepare signed Chinese auto updates (#3)
 - 2026-08-03 d4c6985 docs: refresh generated site reports
 - 2026-08-04 c6c4704 docs: refresh reports after Cloudflare deploy
-- 2026-08-03 6aeb622 docs: refresh generated site reports

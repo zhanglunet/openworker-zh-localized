@@ -128,6 +128,65 @@ const apiGroups = [
   { name: "本地文件与产物", examples: ["文件工具", "目录授权", "产物预览"] },
 ];
 
+const enterpriseLayers = [
+  {
+    layer: "模型层 · 私有模型",
+    grade: "配置级",
+    summary:
+      "Provider 注册表内置 Custom（OpenAI 兼容 base_url）与 Ollama 构建器，企业 vLLM/网关的端点、端口与模型版本直接配置接入；模型能力在能力矩阵登记。",
+    files: ["coworker/providers/registry.py", "coworker/providers/matrix.py", "docs/config.example.toml"],
+  },
+  {
+    layer: "技能层 · 企业技能包",
+    grade: "资产级",
+    summary:
+      "SKILL.md 规范（YAML frontmatter + 渐进式加载），全局 state_dir()/skills 与工作区 .coworker/skills 双目录；企业 SOP 技能与大表哥 excel-ai-analyst 预置即用。",
+    files: ["coworker/skills/base.py", "coworker/skills/store.py"],
+  },
+  {
+    layer: "知识层 · 企业知识库",
+    grade: "资产级起步",
+    summary:
+      "无内置向量 RAG；现实路径是文件根挂载 + 技能内置知识起步，中期把企业知识库封装成 MCP 检索服务，权限留在知识库侧。",
+    files: ["coworker/roots.py", "coworker/project.py", "coworker/memory"],
+  },
+  {
+    layer: "工具层 · 企业 CLI 与内部系统",
+    grade: "配置级 + 代码级",
+    summary:
+      "企业 CLI 首选封装为 MCP server 注册；内部系统按连接器 descriptor 模式扩展；allowed_commands 白名单与审批模式管控执行边界。",
+    files: ["coworker/mcp", "coworker/connectors/descriptors.py", "coworker/cli.py"],
+  },
+  {
+    layer: "专属功能 · 大表哥表格助手",
+    grade: "三层渐进",
+    summary:
+      "L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全量验证）→ L2 前端表格助手入口 → L3 excel_ai 注册为内置工具。",
+    files: ["coworker/tools", "surfaces/gui/src/App.tsx"],
+  },
+  {
+    layer: "品牌层 · 换肤与命名",
+    grade: "资产级",
+    summary:
+      "颜色单一事实源是 styles.css 的 CSS 变量（Tailwind 仅映射 token），换肤=覆盖一个变量块；应用名/Bundle ID/图标/更新源集中在 tauri.conf.json。",
+    files: ["surfaces/gui/src/styles.css", "surfaces/gui/tailwind.config.js", "surfaces/gui/src-tauri/tauri.conf.json"],
+  },
+  {
+    layer: "同步层 · 三仓不覆盖同步",
+    grade: "流水线",
+    summary:
+      "上游→汉化版每日自动合并开 PR、冲突自动开 Issue；企业私有仓复制同款流水线单向对接汉化仓，配合 enterprise/ 目录隔离与挂载点纪律实现定制零覆盖。",
+    files: [".github/workflows/sync-upstream.yml"],
+  },
+  {
+    layer: "发布层 · 多平台打包与更新",
+    grade: "流水线",
+    summary:
+      "发布矩阵覆盖 macOS Apple Silicon/Intel 双 DMG 与 Windows MSI/NSIS，latest-zh.json 驱动 Tauri 自动更新；企业版换名称、签名密钥与更新源即用。",
+    files: [".github/workflows/release.yml", "packaging/build_dmg.sh", "packaging/make_update_manifest.py"],
+  },
+];
+
 const weeklySummary =
   weeklyCommits.length > 0
     ? weeklyCommits
@@ -196,7 +255,22 @@ ${architectureFlow
 
 ${apiGroups.map((group) => `- ${group.name}: ${group.examples.join("、")}`).join("\n")}
 
-## 8. 最近更新
+## 8. 企业定制扩展点
+
+企业定制版（私有仓）可以在不重写核心的前提下，按下列层次定制。完整方案见 \`docs/enterprise/\`（PRD、开发计划、三仓同步、部署、换肤打包）。
+
+${enterpriseLayers
+  .map(
+    (item) => `### ${item.layer}（${item.grade}）
+
+${item.summary}
+
+关键路径：
+${item.files.map((file) => `- \`${file}\``).join("\n")}`,
+  )
+  .join("\n\n")}
+
+## 9. 最近更新
 
 ${recentCommits.map((commit) => `- ${commit.date} ${commit.hash} ${commit.subject}`).join("\n")}
 `;
@@ -238,6 +312,7 @@ const generatedTs = `export const repoReport = ${JSON.stringify(
     architectureFlow,
     runtimeFlow,
     apiGroups,
+    enterpriseLayers,
     recentCommits,
     weeklyCommits,
   },

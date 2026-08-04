@@ -16,6 +16,7 @@ export default function SourceAnalysisPage() {
           <a href="#map">目录地图</a>
           <a href="#runtime">运行流程</a>
           <a href="#api">接口 / MCP</a>
+          <a href="#enterprise">企业定制</a>
           <a href="/updates">日志周报</a>
         </nav>
         <a className="nav-cta" href={repoUrl} target="_blank" rel="noreferrer">
@@ -136,9 +137,32 @@ export default function SourceAnalysisPage() {
         </div>
       </section>
 
+      <section className="section-shell deep-section" id="enterprise">
+        <div className="deep-heading">
+          <p className="eyebrow">06 · 企业定制扩展点</p>
+          <h2>不重写核心，<br />八个层次做出企业版。</h2>
+          <p>
+            私有模型、企业技能包、知识库、企业 CLI、大表哥表格助手、品牌换肤、三仓同步与多平台发布——
+            大部分是配置级或资产级定制。完整 PRD、开发计划、同步与部署方案见仓库
+            <code> docs/enterprise/</code>。
+          </p>
+        </div>
+        <div className="module-grid">
+          {repoReport.enterpriseLayers.map((item) => (
+            <article key={item.layer}>
+              <h3>{item.layer} <small>（{item.grade}）</small></h3>
+              <p>{item.summary}</p>
+              <ul>
+                {item.files.map((file) => <li key={file}>{file}</li>)}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="section-shell deep-section">
         <div className="deep-heading">
-          <p className="eyebrow">06 · 持续维护</p>
+          <p className="eyebrow">07 · 持续维护</p>
           <h2>分析不是一次性页面，<br />它会随版本再生成。</h2>
           <p>构建前会运行报告生成脚本，刷新源码分析、更新日志和周报数据。最近提交如下：</p>
         </div>

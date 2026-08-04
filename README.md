@@ -18,6 +18,7 @@
 - 网站源码：[website/](website/)
 - 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/](docs/analysis/)）
 - 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/](docs/updates/)）
+- 企业定制版全套准备文档（PRD、开发计划、三仓同步、部署、换肤打包）：[docs/enterprise/](docs/enterprise/)
 - 正式签名、公证与自动更新发布指南：[docs/release-signed-updates.md](docs/release-signed-updates.md)
 - 签名材料暂缓申请记录：[docs/release-signing-deferred-plan.md](docs/release-signing-deferred-plan.md)
 - 上游项目源码：[andrewyng/openworker](https://github.com/andrewyng/openworker)
