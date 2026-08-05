@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-05T15:03:48Z",
+  "generatedAt": "2026-08-05T15:06:01Z",
   "branch": "main",
-  "head": "5f4e397d86f553fb7b310d9ac37f62e0f16bd1d0",
-  "shortHead": "5f4e397",
+  "head": "fc875a341c7bfa646992665a637ba3675d0247ff",
+  "shortHead": "fc875a3",
   "totalFiles": 535,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "fc875a3",
+      "date": "2026-08-05",
+      "subject": "ci: 测试版流水线支持手动触发发布并修正校验和生成"
+    },
+    {
+      "hash": "ab204cf",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "5f4e397",
       "date": "2026-08-05",
       "subject": "ci: 新增未签名测试版发布流水线"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "60c2e76",
       "date": "2026-08-04",
       "subject": "site: update Cloudflare compatibility date"
-    },
-    {
-      "hash": "826d5c3",
-      "date": "2026-08-04",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "cf6d1d0",
-      "date": "2026-08-04",
-      "subject": "site: remove redundant Cloudflare compat flag"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "fc875a3",
+      "date": "2026-08-05",
+      "subject": "ci: 测试版流水线支持手动触发发布并修正校验和生成"
+    },
+    {
+      "hash": "ab204cf",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "5f4e397",
       "date": "2026-08-05",

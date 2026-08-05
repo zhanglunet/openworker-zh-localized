@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-05T15:03:48Z
+更新时间：2026-08-05T15:06:01Z
 
 ## 最近提交
 
+- 2026-08-05 fc875a3 ci: 测试版流水线支持手动触发发布并修正校验和生成
+- 2026-08-05 ab204cf docs: refresh generated site reports
 - 2026-08-05 5f4e397 ci: 新增未签名测试版发布流水线
 - 2026-08-05 5279588 sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）
 - 2026-08-05 1dbebca docs: refresh generated site reports
@@ -14,5 +16,3 @@
 - 2026-08-04 726b11a docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节
 - 2026-08-04 614f87e docs: refresh generated site reports
 - 2026-08-04 60c2e76 site: update Cloudflare compatibility date
-- 2026-08-04 826d5c3 docs: refresh generated site reports
-- 2026-08-04 cf6d1d0 site: remove redundant Cloudflare compat flag
