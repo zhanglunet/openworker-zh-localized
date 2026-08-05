@@ -332,3 +332,33 @@ enterprise/
 | 品牌类断言"跳过"而不是比对 | 负向断言（不许等于旧值）永远跑；**正向**比对需要期望值。init 生成的 `branding.json` 只写了 `productName` / `identifier` / `publisher` / `updaterHost`，**有意不写** `providers` / `models` —— 这两项回落到 `enterprise/config/config.default.toml` 的 `model` 前缀与 `model` 本身，少一处要手工同步的重复配置。也可用 `OPENWORKER_ENTERPRISE_*` 环境变量覆盖 |
 | 推了 `v0.1.7` tag 却没有任何构建 | 企业发布只认 `corp-v*`；`release.yml` 已被 init 改名成 `.disabled`。预检也会直接报 `tag "v0.1.7" 不合法` |
 | Windows 更新装不上、提示签名不匹配 | Authenticode 签名后必须**重算** `.sig`（`.sig` 签的是内容）。流水线已处理并做了失败断言，别把那步删了 |
+
+---
+
+## skills/excel-ai-analyst —— 大表哥表格助手技能包
+
+企业员工最高频的表格场景：一张跑了多年的业务 Excel，没人说得清里面的公式怎么串的。
+本技能把它当作**没有文档的遗留代码**做逆向工程（PRD F4 的 L1 层）。
+
+```
+skills/excel-ai-analyst/
+├── SKILL.md              # 技能本体：五步法 + OpenWorker 适配（审批白名单、resources_path 等）
+├── scripts/excel_ai.py   # 配套脚本，四个子命令：tomd / verify / output / analyze
+├── references/           # spec-schema.md（spec.json 全字段）/ pitfalls.md（踩坑）/ walkthrough.md（完整演练）
+└── tests/                # 68 项基础用例 + 三套对抗套件（详见 tests/README.md）
+```
+
+**为什么值得随技能分发脚本**：原方法论只写"找不到 `excel_ai.py` 就现写一份"——
+每个员工每次得到的实现质量都不一样。企业版把它实现好、测透，一次到位。
+
+**装到哪**：`init-enterprise-repo.sh` 自动装到 `enterprise/skills/excel-ai-analyst`。
+要让它对员工生效，还需同步到运行时技能目录（初始化清单 E 步）：
+
+```bash
+cp -r enterprise/skills/excel-ai-analyst "${COWORKER_STATE_DIR:-$HOME/.config/coworker}/skills/"
+```
+
+**员工要做的一件事**：把 `python3` 加进 `~/.config/coworker/config.toml` 的
+`allowed_commands`，否则每一步脚本调用都会弹审批（SKILL.md 里有更保守的按脚本路径放行写法）。
+
+**企业采纳的关键点**：脚本纯本地、零网络调用，表格数据不出内网。

@@ -119,7 +119,7 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 
 | 层 | 内容 | 档位 |
 |----|------|------|
-| L1 技能层 | 预置 `excel-ai-analyst` 技能（SKILL.md + `excel_ai.py` 脚本资源），员工对话里说"分析这个表"即触发六步法；表格文件放工作区或由技能引导指定路径 | 资产级 |
+| L1 技能层 ✅**已交付** | 预置 `excel-ai-analyst` 技能（SKILL.md + `excel_ai.py` 脚本资源），员工对话里说"分析这个表"即触发五步法；表格文件放工作区或由技能引导指定路径。见 [templates/skills/excel-ai-analyst/](templates/skills/excel-ai-analyst/) | 资产级 |
 | L2 入口层 | 前端新增「表格助手」入口/面板：选择表格文件（写入会话工作区）→ 预填提示词发起技能会话；或内嵌 anp.asia 的本地 Step 0 页面（零上传特性与 local-first 契合）。如需"拖拽上传即分析"，须同步扩展 `attachments.py` 接受表格类型（挂载点小改） | 代码级（中） |
 | L3 工具层 | 把 `excel_ai.py` 注册为内置工具：`coworker/tools/` 新增工厂模块（任意 Python callable 配 schema/metadata 三属性即成工具，参照 `tools/search.py`），再到 `coworker/catalog.py` 的 `_CAPS` 登记为 Capability（如 `enterprise_sheets`）——此后任何 persona 在 manifest 的 `tools:` 里按 id 引用即可 | 代码级（中） |
 

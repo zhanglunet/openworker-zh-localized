@@ -531,6 +531,33 @@ copy_template() {
   ok "安装 ${rel}"
 }
 
+# copy_template_dir <模板目录名> <目标绝对目录>
+# 与 copy_template 同语义，只是整目录复制（技能包这类多文件模板要用它）。
+copy_template_dir() {
+  local src="${TEMPLATE_DIR%/}/$1"
+  local dest="$2"
+  local rel="${dest#"$TARGET_DIR"/}"
+
+  if [[ ! -d "$src" ]]; then
+    warn "模板目录缺失：${src}
+     → 请手工把 $1/ 复制到 ${rel}/（内容见企业模板包）。"
+    return 0
+  fi
+  if [[ -e "$dest" ]] && (( ! FORCE )); then
+    skip "${rel}/（已存在，用 --force 覆盖）"
+    return 0
+  fi
+  if (( DRY_RUN )); then
+    dry_note "复制目录 ${src}/ → ${rel}/"
+    return 0
+  fi
+  mkdir -p -- "$(dirname -- "$dest")"
+  # 尾部斜杠 + /. 保证复制的是目录内容而非嵌一层同名目录
+  cp -R -- "$src/." "$dest"
+  CREATED_PATHS+=("$dest")
+  ok "安装 ${rel}/"
+}
+
 # ---------------------------------------------------------------------------
 # 第 1 步：把汉化仓完整镜像到企业私有仓
 # ---------------------------------------------------------------------------
@@ -1417,6 +1444,12 @@ step_pipeline() {
   # 冒烟测试：断言所有挂载点定制还在。
   copy_template "test_enterprise_customization.py" \
     "$TARGET_DIR/enterprise/tests/test_enterprise_customization.py"
+
+  # 大表哥表格助手技能（excel-ai-analyst）：把含公式的业务 Excel 当遗留代码逆向工程。
+  # 随技能分发配套脚本 scripts/excel_ai.py（四子命令），员工无需每次让 AI 现写。
+  # 装到 enterprise/skills/ 后，还要再同步到运行时技能目录才会生效——见清单 E 步。
+  copy_template_dir "skills/excel-ai-analyst" \
+    "$TARGET_DIR/enterprise/skills/excel-ai-analyst"
 
   # 提示把 enterprise/tests 挂进现有 CI。企业仓继承的 .github/workflows/ci.yml
   # 里 pytest 这一步跑的是 `pytest tests -q`，不会覆盖 enterprise/tests。

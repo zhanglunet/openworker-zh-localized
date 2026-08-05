@@ -21,6 +21,7 @@
 | `sync-localized.yml` | 汉化版→企业版每日同步：有更新则开 PR（正文含禁止 squash 的醒目警告）、冲突自动开 Issue、PR 上跑定制存活冒烟并写 check run |
 | `test_enterprise_customization.py` | 17 项定制存活断言（企业技能、Provider、品牌字段、更新源、配置模板、主题包、挂载点形状），失败信息直指「哪项定制可能被同步覆盖」 |
 | `release-corp.yml` | 企业发布：preflight + 三平台构建 + publish；签名 Secrets 未配时自动产出未签名测试包 |
+| `skills/excel-ai-analyst/` | **大表哥表格助手技能包**（PRD F4 的 L1 层）：SKILL.md + 配套脚本 `scripts/excel_ai.py`（四子命令）+ 三份 references + 完整测试与对抗套件。建仓脚本自动装到 `enterprise/skills/` |
 
 用法：`bash templates/init-enterprise-repo.sh --help`，详见 [templates/README.md](templates/README.md)。
 
