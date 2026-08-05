@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-05T16:11:42Z
+更新时间：2026-08-05T23:30:02Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：6cbe8c2d94fa73af3d3405784cb13b7137841502
+当前提交：5f790dfa46993e7d490dd90c704d4bb2ddd4bf70
 
 ## 1. 总体判断
 
@@ -14,15 +14,15 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：540
-- 当前提交：6cbe8c2
+- 跟踪文件总数：558
+- 当前提交：5f790df
 - 主要文件类型：
-  - py: 222
+  - py: 235
   - ts: 105
   - tsx: 78
+  - md: 26
   - svg: 23
   - png: 22
-  - md: 21
   - json: 12
   - yml: 9
   - [none]: 7
@@ -39,8 +39,8 @@
 - surfaces: 228 个文件
 - coworker: 127 个文件
 - tests: 93 个文件
+- docs: 38 个文件
 - website: 36 个文件
-- docs: 20 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
 - stt: 4 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-05 5f790df feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）
+- 2026-08-05 661dfe9 docs: refresh generated site reports
 - 2026-08-05 6cbe8c2 docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）
 - 2026-08-05 1647e48 docs: refresh generated site reports
 - 2026-08-05 12a7c83 fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-05 ab204cf docs: refresh generated site reports
 - 2026-08-05 5f4e397 ci: 新增未签名测试版发布流水线
 - 2026-08-05 5279588 sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）
-- 2026-08-05 1dbebca docs: refresh generated site reports
-- 2026-08-05 41b32bd ci: 新增中文站 Cloudflare 自动部署流水线

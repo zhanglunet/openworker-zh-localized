@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-05T16:11:42Z",
+  "generatedAt": "2026-08-05T23:30:02Z",
   "branch": "main",
-  "head": "6cbe8c2d94fa73af3d3405784cb13b7137841502",
-  "shortHead": "6cbe8c2",
-  "totalFiles": 540,
+  "head": "5f790dfa46993e7d490dd90c704d4bb2ddd4bf70",
+  "shortHead": "5f790df",
+  "totalFiles": 558,
   "byExt": [
     {
       "name": "py",
-      "count": 222
+      "count": 235
     },
     {
       "name": "ts",
@@ -18,16 +18,16 @@ export const repoReport = {
       "count": 78
     },
     {
+      "name": "md",
+      "count": 26
+    },
+    {
       "name": "svg",
       "count": 23
     },
     {
       "name": "png",
       "count": 22
-    },
-    {
-      "name": "md",
-      "count": 21
     },
     {
       "name": "json",
@@ -92,12 +92,12 @@ export const repoReport = {
       "count": 93
     },
     {
-      "name": "website",
-      "count": 36
+      "name": "docs",
+      "count": 38
     },
     {
-      "name": "docs",
-      "count": 20
+      "name": "website",
+      "count": 36
     },
     {
       "name": "packaging",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "5f790df",
+      "date": "2026-08-05",
+      "subject": "feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）"
+    },
+    {
+      "hash": "661dfe9",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "6cbe8c2",
       "date": "2026-08-05",
       "subject": "docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "5279588",
       "date": "2026-08-05",
       "subject": "sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）"
-    },
-    {
-      "hash": "1dbebca",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "41b32bd",
-      "date": "2026-08-05",
-      "subject": "ci: 新增中文站 Cloudflare 自动部署流水线"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "5f790df",
+      "date": "2026-08-05",
+      "subject": "feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）"
+    },
+    {
+      "hash": "661dfe9",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "6cbe8c2",
       "date": "2026-08-05",
