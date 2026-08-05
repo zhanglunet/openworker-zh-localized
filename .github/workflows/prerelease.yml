@@ -14,14 +14,20 @@ name: Prerelease (未签名测试版)
 #   releases/latest-zh.json。GitHub 的 "latest" 按定义**跳过 prerelease**，而本流水线
 #   也从不写这两个文件 —— 因此测试包只能手工下载，绝不会被推送给现有用户。
 #
-# 用法：
-#   git tag beta-v0.1.7-beta.1 && git push origin beta-v0.1.7-beta.1
-#   手动运行（workflow_dispatch）只产出 workflow artifacts，不发布 Release。
+# 用法（二选一）：
+#   A. 推 tag：git tag beta-v0.1.7-beta.1 && git push origin beta-v0.1.7-beta.1
+#   B. 手动运行：Actions → 本工作流 → Run workflow，填入 tag_name（如 beta-v0.1.7-beta.1），
+#      tag 由发布步骤按当前提交创建。tag_name 留空则只产出 workflow artifacts，不发布 Release。
 
 on:
   push:
     tags: ["beta-v*"]
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "测试版 tag（如 beta-v0.1.7-beta.1）。留空则只构建不发布。"
+        required: false
+        default: ""
 
 defaults:
   run:
@@ -116,11 +122,14 @@ jobs:
           if-no-files-found: error
 
   prerelease:
-    if: startsWith(github.ref, 'refs/tags/beta-v')
+    if: startsWith(github.ref, 'refs/tags/beta-v') || inputs.tag_name != ''
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      # tag 触发时用 tag 名；手动触发时用输入的 tag_name（由发布步骤按当前提交创建该 tag）。
+      TAG_NAME: ${{ startsWith(github.ref, 'refs/tags/beta-v') && github.ref_name || inputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -139,12 +148,12 @@ jobs:
 
       - name: 生成校验和与说明
         run: |
-          cd dist
-          sha256sum * > SHA256SUMS.txt || shasum -a 256 * > SHA256SUMS.txt
-          cd ..
+          # 先写到 dist 外面再移回来，避免 * 把正在生成的 SHA256SUMS.txt 自己算进去
+          (cd dist && sha256sum -- *) > "$RUNNER_TEMP/SHA256SUMS.txt"
+          mv "$RUNNER_TEMP/SHA256SUMS.txt" dist/
           CONF_VERSION=$(python3 -c "import json; print(json.load(open('surfaces/gui/src-tauri/tauri.conf.json'))['version'])")
           {
-            echo "## OpenWorker 中文版 ${CONF_VERSION} · 未签名测试版（${GITHUB_REF_NAME}）"
+            echo "## OpenWorker 中文版 ${CONF_VERSION} · 未签名测试版（${TAG_NAME}）"
             echo
             echo "> ⚠️ **这是测试版**：尚未申请 Apple 开发者证书与 Windows 代码签名证书，安装包**未签名、未公证**。"
             echo "> 仅供内部测试试用；正式版发布后请改用正式包。"
@@ -193,6 +202,8 @@ jobs:
           draft: false
           prerelease: true
           make_latest: false
-          name: "OpenWorker 中文版 · 测试版 ${{ github.ref_name }}"
+          tag_name: ${{ env.TAG_NAME }}
+          name: "OpenWorker 中文版 · 测试版 ${{ env.TAG_NAME }}"
+          target_commitish: ${{ github.sha }}
           body_path: release-notes.md
           files: dist/*
