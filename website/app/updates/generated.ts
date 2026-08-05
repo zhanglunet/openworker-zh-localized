@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-05T14:30:50Z",
+  "generatedAt": "2026-08-05T15:03:48Z",
   "branch": "main",
-  "head": "41b32bd6749f1108c9f16ac845d55dbbee9a8170",
-  "shortHead": "41b32bd",
-  "totalFiles": 534,
+  "head": "5f4e397d86f553fb7b310d9ac37f62e0f16bd1d0",
+  "shortHead": "5f4e397",
+  "totalFiles": 535,
   "byExt": [
     {
       "name": "py",
@@ -39,7 +39,7 @@ export const repoReport = {
     },
     {
       "name": "yml",
-      "count": 6
+      "count": 7
     },
     {
       "name": "html",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": ".github",
-      "count": 6
+      "count": 7
     },
     {
       "name": "stt",
@@ -362,6 +362,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "5f4e397",
+      "date": "2026-08-05",
+      "subject": "ci: 新增未签名测试版发布流水线"
+    },
+    {
+      "hash": "5279588",
+      "date": "2026-08-05",
+      "subject": "sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）"
+    },
+    {
+      "hash": "1dbebca",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "41b32bd",
       "date": "2026-08-05",
       "subject": "ci: 新增中文站 Cloudflare 自动部署流水线"
@@ -405,24 +420,24 @@ export const repoReport = {
       "hash": "cf6d1d0",
       "date": "2026-08-04",
       "subject": "site: remove redundant Cloudflare compat flag"
-    },
-    {
-      "hash": "a107546",
-      "date": "2026-08-04",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "141aae5",
-      "date": "2026-08-04",
-      "subject": "site: add OpenWorker recommendation article"
-    },
-    {
-      "hash": "14c394f",
-      "date": "2026-08-03",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "5f4e397",
+      "date": "2026-08-05",
+      "subject": "ci: 新增未签名测试版发布流水线"
+    },
+    {
+      "hash": "5279588",
+      "date": "2026-08-05",
+      "subject": "sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）"
+    },
+    {
+      "hash": "1dbebca",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "41b32bd",
       "date": "2026-08-05",
@@ -592,6 +607,106 @@ export const repoReport = {
       "hash": "4b19f8b",
       "date": "2026-08-03",
       "subject": "Initial commit"
+    },
+    {
+      "hash": "01b6f83",
+      "date": "2026-08-01",
+      "subject": "Merge pull request #393 from andrewyng/issue/ope-46"
+    },
+    {
+      "hash": "997b2a9",
+      "date": "2026-08-01",
+      "subject": "Merge branch 'main' into issue/ope-46"
+    },
+    {
+      "hash": "70e4610",
+      "date": "2026-08-01",
+      "subject": "Add support for Skills (#391)"
+    },
+    {
+      "hash": "e0cb129",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #356 from andrewyng/rpMacIntelBuild"
+    },
+    {
+      "hash": "bfabfaa",
+      "date": "2026-07-30",
+      "subject": "ci: build macOS Intel on macos-15-intel"
+    },
+    {
+      "hash": "ae7256f",
+      "date": "2026-07-30",
+      "subject": "Prepare app release 0.1.7: version bump"
+    },
+    {
+      "hash": "907752b",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #354 from andrewyng/rpArtifactWalkAndContextBar"
+    },
+    {
+      "hash": "25dc283",
+      "date": "2026-07-30",
+      "subject": "fix: stop artifact walk entering OS app-data dirs; context bar off by default"
+    },
+    {
+      "hash": "11d9f72",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #353 from andrewyng/rpSsrfFollowup"
+    },
+    {
+      "hash": "e5c5699",
+      "date": "2026-07-30",
+      "subject": "security: block CGNAT range and guard browser_open_url"
+    },
+    {
+      "hash": "7e69398",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #290 from Mr-Neutr0n/security/block-ssrf-in-url-tools"
+    },
+    {
+      "hash": "38e1f03",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #161 from psssnikhil/fix/inbox-reply-word-boundaries"
+    },
+    {
+      "hash": "98445fe",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #352 from andrewyng/rpMcpGlobalWins"
+    },
+    {
+      "hash": "6217dbc",
+      "date": "2026-07-30",
+      "subject": "mcp: global config wins on name clash with a trusted workspace"
+    },
+    {
+      "hash": "5071451",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #351 from andrewyng/rpCompactionPolish"
+    },
+    {
+      "hash": "cca0421",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #215 from HaoChiBao/security/workspace-mcp-trust-gate"
+    },
+    {
+      "hash": "fe034c8",
+      "date": "2026-07-30",
+      "subject": "models: Kimi K3 via Together (1M window, vision); right-align the more/less toggle"
+    },
+    {
+      "hash": "1e819e0",
+      "date": "2026-07-30",
+      "subject": "transcript: clamp long user messages with a more…/less… toggle"
+    },
+    {
+      "hash": "f9f51c9",
+      "date": "2026-07-30",
+      "subject": "compaction: live progress signal + user-message cap"
+    },
+    {
+      "hash": "b303823",
+      "date": "2026-07-30",
+      "subject": "Merge pull request #347 from andrewyng/review/ope-27"
     }
   ]
 } as const;

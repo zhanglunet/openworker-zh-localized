@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-05T14:30:50Z
+更新时间：2026-08-05T15:03:48Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：41b32bd6749f1108c9f16ac845d55dbbee9a8170
+当前提交：5f4e397d86f553fb7b310d9ac37f62e0f16bd1d0
 
 ## 1. 总体判断
 
@@ -14,8 +14,8 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：534
-- 当前提交：41b32bd
+- 跟踪文件总数：535
+- 当前提交：5f4e397
 - 主要文件类型：
   - py: 221
   - ts: 105
@@ -25,7 +25,7 @@
   - md: 20
   - json: 12
   - [none]: 7
-  - yml: 6
+  - yml: 7
   - html: 5
   - mjs: 4
   - rs: 4
@@ -42,7 +42,7 @@
 - website: 36 个文件
 - docs: 15 个文件
 - packaging: 10 个文件
-- .github: 6 个文件
+- .github: 7 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
 - releases: 3 个文件
@@ -231,6 +231,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-05 5f4e397 ci: 新增未签名测试版发布流水线
+- 2026-08-05 5279588 sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）
+- 2026-08-05 1dbebca docs: refresh generated site reports
 - 2026-08-05 41b32bd ci: 新增中文站 Cloudflare 自动部署流水线
 - 2026-08-05 aaeec98 docs: refresh generated site reports
 - 2026-08-04 255da25 docs: 并入完整性检查发现的关键事实
@@ -240,6 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-04 60c2e76 site: update Cloudflare compatibility date
 - 2026-08-04 826d5c3 docs: refresh generated site reports
 - 2026-08-04 cf6d1d0 site: remove redundant Cloudflare compat flag
-- 2026-08-04 a107546 docs: refresh generated site reports
-- 2026-08-04 141aae5 site: add OpenWorker recommendation article
-- 2026-08-03 14c394f docs: refresh generated site reports
