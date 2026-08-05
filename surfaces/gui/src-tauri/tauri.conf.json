@@ -40,6 +40,9 @@
       },
       "nsis": {
         "installMode": "currentUser"
+      },
+      "wix": {
+        "language": ["zh-CN"]
       }
     }
   },

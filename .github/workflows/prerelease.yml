@@ -92,33 +92,12 @@ jobs:
         # 完全不设置才能得到干净的未签名构建。
         run: bash packaging/build_dmg.sh
 
-      - name: Build NSIS .exe (Windows, 未签名)
+      - name: Build .msi + NSIS .exe (Windows, 未签名)
         if: runner.os == 'Windows'
         shell: pwsh
-        # 只出 NSIS：MSI 打包（WiX light.exe）在产品名含中文时会失败，见下一步的诊断实验。
-        # NSIS setup.exe 本来就是推荐的 Windows 安装方式。
-        run: ./packaging/build_windows.ps1 -Bundles nsis
-
-      - name: 诊断实验 —— 尝试用 zh-CN 代码页产出 MSI（不阻塞）
-        if: runner.os == 'Windows'
-        shell: pwsh
-        continue-on-error: true
-        # 猜想：WiX 默认 en-US 文化（代码页 1252）无法表达产品名里的中文，导致 light.exe 失败。
-        # 指定 zh-CN 文化（代码页 936）应当可解。成功与否都不影响测试版发布，
-        # 结论用于决定正式版 release.yml 是否照此修复。
-        run: |
-          $overlay = Join-Path $env:RUNNER_TEMP "wix-zhcn.json"
-          Set-Content -Path $overlay -Encoding ascii `
-            -Value '{"bundle":{"windows":{"wix":{"language":["zh-CN"]}}}}'
-          Push-Location surfaces/gui
-          npm run tauri build -- --bundles msi --config $overlay
-          $code = $LASTEXITCODE
-          Pop-Location
-          if ($code -eq 0) {
-            Write-Host "::notice::MSI 用 zh-CN 代码页构建成功 —— 正式版可照此修复 tauri.conf.json"
-          } else {
-            Write-Host "::warning::MSI 用 zh-CN 代码页仍失败（exit $code），需要进一步排查"
-          }
+        # MSI 需要 tauri.conf.json 里的 bundle.windows.wix.language=["zh-CN"]：
+        # 产品名含中文，WiX 默认 en-US 文化（代码页 1252）表达不了，light.exe 会失败。
+        run: ./packaging/build_windows.ps1
 
       - name: Stage artifacts (versioned + stable names)
         run: |
@@ -127,11 +106,8 @@ jobs:
           if [ "$RUNNER_OS" = "Windows" ]; then
             cp "$BUNDLE"/nsis/*.exe out/
             cp "$BUNDLE"/nsis/*.exe out/OpenWorker-CN-beta-windows-setup.exe
-            # MSI 只在上一步的诊断实验成功时才存在，缺席不算失败
-            if ls "$BUNDLE"/msi/*.msi >/dev/null 2>&1; then
-              cp "$BUNDLE"/msi/*.msi out/
-              cp "$BUNDLE"/msi/*.msi out/OpenWorker-CN-beta-windows.msi
-            fi
+            cp "$BUNDLE"/msi/*.msi out/
+            cp "$BUNDLE"/msi/*.msi out/OpenWorker-CN-beta-windows.msi
           else
             cp "$BUNDLE"/dmg/*.dmg out/
             cp "$BUNDLE"/dmg/*.dmg out/OpenWorker-CN-beta-${{ matrix.slug }}.dmg
@@ -190,7 +166,7 @@ jobs:
             echo "|------|------|"
             echo "| macOS · Apple 芯片（M 系列） | \`OpenWorker-CN-beta-macos-arm64.dmg\` |"
             echo "| macOS · Intel 芯片 | \`OpenWorker-CN-beta-macos-x64.dmg\` |"
-            echo "| Windows 10/11 (x64) | \`OpenWorker-CN-beta-windows-setup.exe\` |"
+            echo "| Windows 10/11 (x64) | \`OpenWorker-CN-beta-windows-setup.exe\`（推荐）或 \`.msi\` |"
             echo
             echo "不确定自己 Mac 的芯片？点左上角  → 关于本机，「芯片」写 Apple M… 选 arm64，写 Intel 选 x64。"
             echo

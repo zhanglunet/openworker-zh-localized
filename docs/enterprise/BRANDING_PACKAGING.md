@@ -81,6 +81,14 @@ html[data-theme="dark"] {
 | macOS Intel | x86_64-apple-darwin | `OpenWorker-CN-macos-x64.dmg` + `.app.tar.gz`(+`.sig`) | 同上（macos-13 x86_64 runner，Actions 提供至 2027-08） |
 | Windows 10/11 x64 | x86_64-pc-windows-msvc | NSIS `…-setup.exe`（currentUser 装机）+ `.msi` | `packaging/build_windows.ps1` |
 
+> ⚠️ **中文产品名的 Windows MSI 陷阱（实测踩过）**：`productName` 含中文时，WiX 默认 en-US 文化（代码页 1252）表达不了产品名，`light.exe` 会失败、整个 Windows 构建挂掉（NSIS 不受影响，仍能出包）。修复是在 `tauri.conf.json` 加一行：
+>
+> ```json
+> "bundle": { "windows": { "wix": { "language": ["zh-CN"] } } }
+> ```
+>
+> 企业版产品名多半也是中文，**建包前先加上这行**，否则第一次打正式 tag 就会在 Windows 上失败。（本仓库已修复并实测通过。）
+
 > 注意：仓库里 Windows 构建有**两条并存路径**——`release.yml` 矩阵中的 windows-latest 项（tag `v*` 触发，随 mac 一起出正式包）与独立的 `build-windows.yml`（手动/`win-*` tag 触发的轻量版，无签名）。企业流水线应以 `release.yml` 为准，`build-windows.yml` 仅留作调试（其头部注释还有旧仓库名残留，企业副本可清理）。
 
 > 关于 macOS Universal（单包双芯片）：现方案为**双包分发**（网站按芯片给下载链接、更新清单按 target 分发），因为 PyInstaller 打包的 Python sidecar 难以做成 universal 二进制。维持双包是当前最稳做法。
