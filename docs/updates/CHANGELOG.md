@@ -1,9 +1,12 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-04T00:40:24+00:00
+更新时间：2026-08-04T03:06:23Z
 
 ## 最近提交
 
+- 2026-08-04 255da25 docs: 并入完整性检查发现的关键事实
+- 2026-08-04 ed541e8 docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明
+- 2026-08-04 726b11a docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节
 - 2026-08-04 614f87e docs: refresh generated site reports
 - 2026-08-04 60c2e76 site: update Cloudflare compatibility date
 - 2026-08-04 826d5c3 docs: refresh generated site reports
@@ -13,6 +16,3 @@
 - 2026-08-03 14c394f docs: refresh generated site reports
 - 2026-08-04 6039c07 docs: record deferred signing prerequisites
 - 2026-08-03 97ac065 docs: refresh generated site reports
-- 2026-08-04 d0002c6 release: prepare signed Chinese auto updates (#3)
-- 2026-08-03 d4c6985 docs: refresh generated site reports
-- 2026-08-04 c6c4704 docs: refresh reports after Cloudflare deploy

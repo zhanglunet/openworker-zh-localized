@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T00:40:24+00:00",
-  "branch": "claude/openworker-enterprise-customization-2wqfat",
-  "head": "614f87ebd8846e46053a3301fc65f89652d79db4",
-  "shortHead": "614f87e",
-  "totalFiles": 527,
+  "generatedAt": "2026-08-04T03:06:23Z",
+  "branch": "main",
+  "head": "255da259121aec3bc0032445be4811d4f0dec180",
+  "shortHead": "255da25",
+  "totalFiles": 533,
   "byExt": [
     {
       "name": "py",
@@ -27,7 +27,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 14
+      "count": 20
     },
     {
       "name": "json",
@@ -96,12 +96,12 @@ export const repoReport = {
       "count": 36
     },
     {
-      "name": "packaging",
-      "count": 10
+      "name": "docs",
+      "count": 15
     },
     {
-      "name": "docs",
-      "count": 9
+      "name": "packaging",
+      "count": 10
     },
     {
       "name": ".github",
@@ -362,6 +362,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "255da25",
+      "date": "2026-08-04",
+      "subject": "docs: 并入完整性检查发现的关键事实"
+    },
+    {
+      "hash": "ed541e8",
+      "date": "2026-08-04",
+      "subject": "docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明"
+    },
+    {
+      "hash": "726b11a",
+      "date": "2026-08-04",
+      "subject": "docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节"
+    },
+    {
       "hash": "614f87e",
       "date": "2026-08-04",
       "subject": "docs: refresh generated site reports"
@@ -405,24 +420,24 @@ export const repoReport = {
       "hash": "97ac065",
       "date": "2026-08-03",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d0002c6",
-      "date": "2026-08-04",
-      "subject": "release: prepare signed Chinese auto updates (#3)"
-    },
-    {
-      "hash": "d4c6985",
-      "date": "2026-08-03",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "c6c4704",
-      "date": "2026-08-04",
-      "subject": "docs: refresh reports after Cloudflare deploy"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "255da25",
+      "date": "2026-08-04",
+      "subject": "docs: 并入完整性检查发现的关键事实"
+    },
+    {
+      "hash": "ed541e8",
+      "date": "2026-08-04",
+      "subject": "docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明"
+    },
+    {
+      "hash": "726b11a",
+      "date": "2026-08-04",
+      "subject": "docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节"
+    },
     {
       "hash": "614f87e",
       "date": "2026-08-04",

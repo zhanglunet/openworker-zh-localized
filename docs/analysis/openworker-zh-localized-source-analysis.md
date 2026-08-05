@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T00:40:24+00:00
+更新时间：2026-08-04T03:06:23Z
 
 仓库：zhanglunet/openworker-zh-localized
 
-当前分支：claude/openworker-enterprise-customization-2wqfat
+当前分支：main
 
-当前提交：614f87ebd8846e46053a3301fc65f89652d79db4
+当前提交：255da259121aec3bc0032445be4811d4f0dec180
 
 ## 1. 总体判断
 
@@ -14,15 +14,15 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：527
-- 当前提交：614f87e
+- 跟踪文件总数：533
+- 当前提交：255da25
 - 主要文件类型：
   - py: 221
   - ts: 105
   - tsx: 78
   - svg: 23
   - png: 22
-  - md: 14
+  - md: 20
   - json: 12
   - [none]: 7
   - html: 5
@@ -40,8 +40,8 @@
 - coworker: 127 个文件
 - tests: 93 个文件
 - website: 36 个文件
+- docs: 15 个文件
 - packaging: 10 个文件
-- docs: 9 个文件
 - .github: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
@@ -231,6 +231,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-04 255da25 docs: 并入完整性检查发现的关键事实
+- 2026-08-04 ed541e8 docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明
+- 2026-08-04 726b11a docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节
 - 2026-08-04 614f87e docs: refresh generated site reports
 - 2026-08-04 60c2e76 site: update Cloudflare compatibility date
 - 2026-08-04 826d5c3 docs: refresh generated site reports
@@ -240,6 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-03 14c394f docs: refresh generated site reports
 - 2026-08-04 6039c07 docs: record deferred signing prerequisites
 - 2026-08-03 97ac065 docs: refresh generated site reports
-- 2026-08-04 d0002c6 release: prepare signed Chinese auto updates (#3)
-- 2026-08-03 d4c6985 docs: refresh generated site reports
-- 2026-08-04 c6c4704 docs: refresh reports after Cloudflare deploy
