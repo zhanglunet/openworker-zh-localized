@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-05T15:06:01Z
+更新时间：2026-08-05T15:27:05Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：fc875a341c7bfa646992665a637ba3675d0247ff
+当前提交：8546ba04015914e6e349244c191d4ad15dc3d2bb
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：535
-- 当前提交：fc875a3
+- 当前提交：8546ba0
 - 主要文件类型：
   - py: 221
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-05 8546ba0 ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验
+- 2026-08-05 fb1b810 docs: refresh generated site reports
 - 2026-08-05 fc875a3 ci: 测试版流水线支持手动触发发布并修正校验和生成
 - 2026-08-05 ab204cf docs: refresh generated site reports
 - 2026-08-05 5f4e397 ci: 新增未签名测试版发布流水线
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-04 255da25 docs: 并入完整性检查发现的关键事实
 - 2026-08-04 ed541e8 docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明
 - 2026-08-04 726b11a docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节
-- 2026-08-04 614f87e docs: refresh generated site reports
-- 2026-08-04 60c2e76 site: update Cloudflare compatibility date

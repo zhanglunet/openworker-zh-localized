@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-05T15:06:01Z",
+  "generatedAt": "2026-08-05T15:27:05Z",
   "branch": "main",
-  "head": "fc875a341c7bfa646992665a637ba3675d0247ff",
-  "shortHead": "fc875a3",
+  "head": "8546ba04015914e6e349244c191d4ad15dc3d2bb",
+  "shortHead": "8546ba0",
   "totalFiles": 535,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "8546ba0",
+      "date": "2026-08-05",
+      "subject": "ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验"
+    },
+    {
+      "hash": "fb1b810",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "fc875a3",
       "date": "2026-08-05",
       "subject": "ci: 测试版流水线支持手动触发发布并修正校验和生成"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "726b11a",
       "date": "2026-08-04",
       "subject": "docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节"
-    },
-    {
-      "hash": "614f87e",
-      "date": "2026-08-04",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "60c2e76",
-      "date": "2026-08-04",
-      "subject": "site: update Cloudflare compatibility date"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "8546ba0",
+      "date": "2026-08-05",
+      "subject": "ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验"
+    },
+    {
+      "hash": "fb1b810",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "fc875a3",
       "date": "2026-08-05",
