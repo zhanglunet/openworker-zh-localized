@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-05T15:56:17Z",
+  "generatedAt": "2026-08-05T16:11:42Z",
   "branch": "main",
-  "head": "12a7c8313e8560aa39aa36fa9984de7c05464c94",
-  "shortHead": "12a7c83",
-  "totalFiles": 535,
+  "head": "6cbe8c2d94fa73af3d3405784cb13b7137841502",
+  "shortHead": "6cbe8c2",
+  "totalFiles": 540,
   "byExt": [
     {
       "name": "py",
-      "count": 221
+      "count": 222
     },
     {
       "name": "ts",
@@ -27,22 +27,26 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 20
+      "count": 21
     },
     {
       "name": "json",
       "count": 12
     },
     {
+      "name": "yml",
+      "count": 9
+    },
+    {
       "name": "[none]",
       "count": 7
     },
     {
-      "name": "yml",
-      "count": 7
+      "name": "html",
+      "count": 5
     },
     {
-      "name": "html",
+      "name": "sh",
       "count": 5
     },
     {
@@ -51,10 +55,6 @@ export const repoReport = {
     },
     {
       "name": "rs",
-      "count": 4
-    },
-    {
-      "name": "sh",
       "count": 4
     },
     {
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 15
+      "count": 20
     },
     {
       "name": "packaging",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "6cbe8c2",
+      "date": "2026-08-05",
+      "subject": "docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）"
+    },
+    {
+      "hash": "1647e48",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "12a7c83",
       "date": "2026-08-05",
       "subject": "fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "41b32bd",
       "date": "2026-08-05",
       "subject": "ci: 新增中文站 Cloudflare 自动部署流水线"
-    },
-    {
-      "hash": "aaeec98",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "255da25",
-      "date": "2026-08-04",
-      "subject": "docs: 并入完整性检查发现的关键事实"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "6cbe8c2",
+      "date": "2026-08-05",
+      "subject": "docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）"
+    },
+    {
+      "hash": "1647e48",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "12a7c83",
       "date": "2026-08-05",

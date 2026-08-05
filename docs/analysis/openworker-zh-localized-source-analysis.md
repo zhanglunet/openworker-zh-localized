@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-05T15:56:17Z
+更新时间：2026-08-05T16:11:42Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：12a7c8313e8560aa39aa36fa9984de7c05464c94
+当前提交：6cbe8c2d94fa73af3d3405784cb13b7137841502
 
 ## 1. 总体判断
 
@@ -14,22 +14,22 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：535
-- 当前提交：12a7c83
+- 跟踪文件总数：540
+- 当前提交：6cbe8c2
 - 主要文件类型：
-  - py: 221
+  - py: 222
   - ts: 105
   - tsx: 78
   - svg: 23
   - png: 22
-  - md: 20
+  - md: 21
   - json: 12
+  - yml: 9
   - [none]: 7
-  - yml: 7
   - html: 5
+  - sh: 5
   - mjs: 4
   - rs: 4
-  - sh: 4
   - toml: 4
   - css: 3
   - dmg: 2
@@ -40,7 +40,7 @@
 - coworker: 127 个文件
 - tests: 93 个文件
 - website: 36 个文件
-- docs: 15 个文件
+- docs: 20 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
 - stt: 4 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-05 6cbe8c2 docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）
+- 2026-08-05 1647e48 docs: refresh generated site reports
 - 2026-08-05 12a7c83 fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败
 - 2026-08-05 0394aa2 docs: refresh generated site reports
 - 2026-08-05 8546ba0 ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-05 5279588 sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）
 - 2026-08-05 1dbebca docs: refresh generated site reports
 - 2026-08-05 41b32bd ci: 新增中文站 Cloudflare 自动部署流水线
-- 2026-08-05 aaeec98 docs: refresh generated site reports
-- 2026-08-04 255da25 docs: 并入完整性检查发现的关键事实
