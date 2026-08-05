@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-04T03:06:23Z
+更新时间：2026-08-05T14:30:50Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：255da259121aec3bc0032445be4811d4f0dec180
+当前提交：41b32bd6749f1108c9f16ac845d55dbbee9a8170
 
 ## 1. 总体判断
 
@@ -14,8 +14,8 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：533
-- 当前提交：255da25
+- 跟踪文件总数：534
+- 当前提交：41b32bd
 - 主要文件类型：
   - py: 221
   - ts: 105
@@ -25,8 +25,8 @@
   - md: 20
   - json: 12
   - [none]: 7
+  - yml: 6
   - html: 5
-  - yml: 5
   - mjs: 4
   - rs: 4
   - sh: 4
@@ -42,7 +42,7 @@
 - website: 36 个文件
 - docs: 15 个文件
 - packaging: 10 个文件
-- .github: 5 个文件
+- .github: 6 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
 - releases: 3 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-05 41b32bd ci: 新增中文站 Cloudflare 自动部署流水线
+- 2026-08-05 aaeec98 docs: refresh generated site reports
 - 2026-08-04 255da25 docs: 并入完整性检查发现的关键事实
 - 2026-08-04 ed541e8 docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明
 - 2026-08-04 726b11a docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-04 a107546 docs: refresh generated site reports
 - 2026-08-04 141aae5 site: add OpenWorker recommendation article
 - 2026-08-03 14c394f docs: refresh generated site reports
-- 2026-08-04 6039c07 docs: record deferred signing prerequisites
-- 2026-08-03 97ac065 docs: refresh generated site reports

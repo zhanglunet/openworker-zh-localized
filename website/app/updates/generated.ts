@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-04T03:06:23Z",
+  "generatedAt": "2026-08-05T14:30:50Z",
   "branch": "main",
-  "head": "255da259121aec3bc0032445be4811d4f0dec180",
-  "shortHead": "255da25",
-  "totalFiles": 533,
+  "head": "41b32bd6749f1108c9f16ac845d55dbbee9a8170",
+  "shortHead": "41b32bd",
+  "totalFiles": 534,
   "byExt": [
     {
       "name": "py",
@@ -38,11 +38,11 @@ export const repoReport = {
       "count": 7
     },
     {
-      "name": "html",
-      "count": 5
+      "name": "yml",
+      "count": 6
     },
     {
-      "name": "yml",
+      "name": "html",
       "count": 5
     },
     {
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": ".github",
-      "count": 5
+      "count": 6
     },
     {
       "name": "stt",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "41b32bd",
+      "date": "2026-08-05",
+      "subject": "ci: 新增中文站 Cloudflare 自动部署流水线"
+    },
+    {
+      "hash": "aaeec98",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "255da25",
       "date": "2026-08-04",
       "subject": "docs: 并入完整性检查发现的关键事实"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "14c394f",
       "date": "2026-08-03",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6039c07",
-      "date": "2026-08-04",
-      "subject": "docs: record deferred signing prerequisites"
-    },
-    {
-      "hash": "97ac065",
-      "date": "2026-08-03",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "41b32bd",
+      "date": "2026-08-05",
+      "subject": "ci: 新增中文站 Cloudflare 自动部署流水线"
+    },
+    {
+      "hash": "aaeec98",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "255da25",
       "date": "2026-08-04",
