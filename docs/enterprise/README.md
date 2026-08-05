@@ -9,6 +9,22 @@
 | [UPSTREAM_SYNC.md](UPSTREAM_SYNC.md) | 三仓同步方案：上游 → 汉化版 → 企业版单向链路、目录隔离 + 挂载点纪律、`sync-localized.yml` 流水线、防覆盖冒烟闸门 | 如何与上游/汉化版保持同步又不覆盖定制？ |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | 部署步骤：私有仓建立、企业站（公网/内网两形态）、私有模型接入、技能与知识库部署、桌面端分发与更新、验收清单 | 怎么从零搭到全员可用？ |
 | [BRANDING_PACKAGING.md](BRANDING_PACKAGING.md) | 换肤与打包：CSS 变量皮肤包、品牌项清单、macOS（Apple Silicon/Intel）与 Windows 构建矩阵、签名公证、企业自动更新源 | 怎么换皮肤？怎么打各平台的包？ |
+| [templates/](templates/) | **开箱即用的模板**：一键建仓脚本、同步流水线、定制存活冒烟测试、企业发布流水线 | 上面这些怎么真正跑起来？ |
+
+## 模板目录（可直接执行）
+
+`templates/` 里的四个文件已经过语法校验与端到端演练，可直接投产：
+
+| 文件 | 用途 |
+|------|------|
+| `init-enterprise-repo.sh` | 一键建企业私有仓：镜像汉化仓（保祖先链）→ 停用继承来的汉化仓流水线 → 建 `enterprise/` 骨架 → 生成配置/主题/MCP 模板 → 装流水线与冒烟测试 → 提交推送。支持 `--dry-run`、`--help`，凭据全程脱敏 |
+| `sync-localized.yml` | 汉化版→企业版每日同步：有更新则开 PR（正文含禁止 squash 的醒目警告）、冲突自动开 Issue、PR 上跑定制存活冒烟并写 check run |
+| `test_enterprise_customization.py` | 17 项定制存活断言（企业技能、Provider、品牌字段、更新源、配置模板、主题包、挂载点形状），失败信息直指「哪项定制可能被同步覆盖」 |
+| `release-corp.yml` | 企业发布：preflight + 三平台构建 + publish；签名 Secrets 未配时自动产出未签名测试包 |
+
+用法：`bash templates/init-enterprise-repo.sh --help`，详见 [templates/README.md](templates/README.md)。
+
+> ⚠️ 建仓时最容易踩的坑（脚本已自动处理）：`git push --mirror` 会把汉化仓的 `.github/workflows/` 一并带进企业私有仓，其中 `sync-upstream.yml` 会**每天绕过汉化层直接把上游合进企业仓**，与企业同步链路抢同一个 `main`；`deploy-site.yml`/`release.yml` 等也会误发汉化版品牌的站点与安装包。脚本第 3 步会把这些改名为 `*.yml.disabled`（用重命名而非删除，好让后续同步的 rename detection 仍能合入上游改动）。
 
 ## 快速导航（按角色）
 

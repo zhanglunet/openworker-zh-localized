@@ -1,0 +1,894 @@
+# ============================================================================
+# 汉化版 → 企业版：每日单向同步
+#
+# 放置位置：<corp>/openworker-enterprise 私有仓的 .github/workflows/sync-localized.yml
+#
+# 同步链路（严格单向、逐级）：
+#   andrewyng/openworker（上游，公开）
+#     └→ zhanglunet/openworker-zh-localized（汉化版，公开）   ← 由汉化仓的 sync-upstream.yml 消化
+#          └→ <corp>/openworker-enterprise（企业私有仓）      ← 本工作流消化
+#
+# 本工作流做四件事：
+#   1. 拉取汉化仓 main，用 `git merge-base --is-ancestor` 判断是否有新提交，没有就干净退出；
+#   2. 有新提交就在 sync/localized-main 分支上做真正的 merge（continue-on-error，不碰 main）；
+#   3. 合并成功 → 开同步 PR（PR 正文带汉化版 SHA、禁止 squash 的警告、企业定制存活清单）；
+#      合并冲突 → 开/追评固定标题 Issue，给出本地解决命令和"保留 enterprise/ 与挂载点"的原则；
+#   4. 在 PR 的 head commit 上跑企业定制存活冒烟测试（enterprise/tests/），失败时把 PR 标红。
+#
+# ★★★ 最重要的一条运维纪律（血泪教训）★★★
+#   同步 PR 必须用 **Merge commit** 合并，绝对不能 Squash / Rebase。
+#   squash 会把汉化版那一串提交压成一个全新提交，企业仓 main 就不再是 localized/main 的后代，
+#   下一次 `git merge-base --is-ancestor localized/main HEAD` 恒为 false，
+#   于是每天都要把汉化版**全部历史重放一遍**，冲突无限复发。
+#   建议在仓库 Settings → General → Pull Requests 里只勾选 "Allow merge commits"，
+#   并对 main 加分支保护，从机制上堵死 squash。
+#
+# ★ 关于本文件为什么"先在 sync 分支 merge、再 ff 回本地 main"（不要随手改回去）：
+#   peter-evans/create-pull-request 的分支逻辑是：
+#     · 它把当前 checkout 的分支当作 working base，并执行 `git reset --hard origin/<working base>`
+#       —— 所以 working base 必须是 origin 上**已存在**的分支（首次运行时 sync/localized-main
+#       还不存在，直接在 sync 分支上跑会因为 origin/sync/localized-main 不存在而报错）；
+#     · 如果 `base` 输入 ≠ working base，它会把提交**逐个 cherry-pick**到 base 上
+#       （--strategy-option=theirs），合并提交会被拍平成线性提交，祖先链同样断掉；
+#     · 只有 working base == base（都是 main）时，它才原样把 HEAD 的历史（含 merge commit）
+#       推到 branch 上：`git push --force-with-lease origin <branch>:refs/heads/<branch>`。
+#   因此：merge 在 sync/localized-main 上做（保证 merge commit 落在同步分支上），
+#   然后把结果 fast-forward 回**本地** main（只在 runner 上，永不推送），
+#   再让 action 以 main 为 working base 把这段历史发布成 sync/localized-main。
+#   同理，绝对不要打开 sign-commits: true —— 那条路径会用 GitHub API 重建提交，同样毁掉 merge commit。
+# ============================================================================
+
+name: 同步汉化版到企业版
+
+on:
+  schedule:
+    # cron 一律按 UTC 解释。汉化仓 sync-upstream.yml 用的是 "35 1 * * *"，
+    # 这里错开两小时（03:35 UTC = 北京时间 11:35），保证汉化仓当天先消化完上游，
+    # 企业仓再消化汉化仓，避免同步到一个"半截"的汉化版状态。
+    - cron: "35 3 * * *"
+  # 手动触发：上游/汉化版有紧急修复时不必等到第二天。
+  workflow_dispatch:
+
+permissions:
+  contents: write # 推送 sync/localized-main 分支
+  pull-requests: write # 创建/更新同步 PR
+  issues: write # 冲突 Issue；PR 评论也走 issues API
+  checks: write # 把冒烟测试结果写成 PR head commit 上的 check run（失败即标红）
+
+# 同一时刻只允许一条同步在跑；不取消进行中的那条，避免推分支推到一半被打断。
+concurrency:
+  group: sync-localized
+  cancel-in-progress: false
+
+env:
+  # 汉化版仓库（换成自己 fork 的汉化仓时只改这一行）。
+  LOCALIZED_REPO: zhanglunet/openworker-zh-localized
+  LOCALIZED_BRANCH: main
+  # 企业私有仓的默认分支（PR 的 base）。
+  DEFAULT_BRANCH: main
+  # 同步分支名，PR 从这个分支发起。
+  SYNC_BRANCH: sync/localized-main
+  # 冲突 Issue 的固定标题：同一标题只开一个 Issue，后续冲突追评在同一条下面。
+  CONFLICT_ISSUE_TITLE: "汉化版同步冲突：需要人工解决（sync/localized-main）"
+
+jobs:
+  # ==========================================================================
+  # Job 1：消化汉化版更新，产出同步 PR 或冲突 Issue
+  # ==========================================================================
+  sync:
+    name: 消化汉化版更新
+    # ★ 这里**故意不加** `if: github.actor != 'github-actions[bot]'`：
+    #   本工作流只有 schedule 和 workflow_dispatch 两个触发器，二者都不可能被自己产生的
+    #   push / PR 事件触发，所以那条判断防不了任何循环；反过来它有真实的自杀风险 ——
+    #   schedule 事件的 github.actor 由「最后改动工作流文件 / 最后推默认分支的人」推导，
+    #   一旦某次落地是 github-actions[bot] 干的（自动合并、bot 提交），
+    #   之后每天的定时运行都会被静默跳过，而且整条 run 显示为绿色成功，没人会发现同步停了。
+    #   将来若真的加了 push 触发器，请把防循环判断写成
+    #   `if: github.event_name != 'push' || github.actor != 'github-actions[bot]'`，
+    #   只作用在 push 上，不要连累 schedule。
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+      localized_sha: ${{ steps.diff.outputs.localized_sha }}
+      localized_sha_full: ${{ steps.diff.outputs.localized_sha_full }}
+      merge_outcome: ${{ steps.merge.outcome }}
+      pr_number: ${{ steps.pr.outputs.pull-request-number }}
+      pr_url: ${{ steps.pr.outputs.pull-request-url }}
+      pr_head_sha: ${{ steps.pr.outputs.pull-request-head-sha }}
+      pr_operation: ${{ steps.pr.outputs.pull-request-operation }}
+
+    steps:
+      - name: 检出企业私有仓（全历史，merge-base 需要）
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 必须保留：浅克隆下 merge-base / merge 都会失败。
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 配置 git 身份
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: 拉取汉化版仓库
+        env:
+          # 汉化仓现在是公开仓，匿名即可 clone，这个 secret 留空不影响。
+          #
+          # ★ 如果汉化仓将来转为私有：
+          #   1. 在汉化仓所属账号下签发一个**只读** PAT：
+          #      · Fine-grained token（推荐）：Repository access 只选 openworker-zh-localized，
+          #        Permissions → Repository permissions → Contents: Read-only（其余全部 No access）；
+          #      · 或 Classic token：只勾 repo（私有仓读取无法再细分，注意到期时间与轮换）。
+          #   2. 在企业私有仓 Settings → Secrets and variables → Actions → New repository secret，
+          #      名字填 LOCALIZED_REPO_TOKEN，值填该 PAT。
+          #      ★ 名字必须是 LOCALIZED_REPO_TOKEN：模板包 README「Secrets」表格和
+          #        init-enterprise-repo.sh 打印的待办清单用的都是这个名字，改名会导致
+          #        运维照文档配好了 secret、这里却读不到，静默退回匿名拉取 → 私有仓 404。
+          #   3. 无需改动本文件：下面的脚本检测到该 secret 非空就会自动改用带凭据的 URL，
+          #      并清空 actions/checkout 注入的 http.<github>.extraheader
+          #      （否则那个 Authorization 头会盖掉 URL 里的 PAT，导致 403）。
+          LOCALIZED_TOKEN: ${{ secrets.LOCALIZED_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          CLEAN_URL="https://github.com/${LOCALIZED_REPO}.git"
+
+          GIT_OPTS=()
+          if [ -n "${LOCALIZED_TOKEN:-}" ]; then
+            echo "使用 LOCALIZED_REPO_TOKEN 只读凭据拉取汉化仓（私有仓模式）。"
+            # 空值会重置 http.extraHeader 列表，避免与 URL 内凭据打架。
+            GIT_OPTS+=(-c "http.https://github.com/.extraheader=")
+            REMOTE_URL="https://x-access-token:${LOCALIZED_TOKEN}@github.com/${LOCALIZED_REPO}.git"
+          else
+            echo "匿名拉取汉化仓（公开仓模式）。"
+            REMOTE_URL="${CLEAN_URL}"
+          fi
+
+          # 幂等：self-hosted runner 上 remote 可能已存在。
+          git remote remove localized 2>/dev/null || true
+          git remote add localized "${REMOTE_URL}"
+
+          # --no-tags 是刻意的：汉化仓的 release tag 会和企业仓 release.yml 打的 tag 撞车，
+          # 同步代码不需要把它的 tag 也拖进来。
+          git "${GIT_OPTS[@]}" fetch --no-tags localized \
+            "${LOCALIZED_BRANCH}:refs/remotes/localized/${LOCALIZED_BRANCH}"
+
+          # 抓完立刻把 PAT 从 .git/config 里抹掉。Actions 会给 secret 打码，但
+          # .git/config 会被后面每一步（含 create-pull-request 自己的 git 调用）继承，
+          # 任何一次 `git remote -v` / 报错回显都可能把它带到别处；用完即弃最省心。
+          git remote set-url localized "${CLEAN_URL}"
+
+      - name: 判断汉化版是否有新提交
+        id: diff
+        run: |
+          set -euo pipefail
+
+          # localized/main 已经是 HEAD 的祖先 → 企业仓已经消化过，本轮无事可做。
+          if git merge-base --is-ancestor "localized/${LOCALIZED_BRANCH}" HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "企业仓已包含 localized/${LOCALIZED_BRANCH}，无需同步。"
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "localized_sha=$(git rev-parse --short "localized/${LOCALIZED_BRANCH}")" >> "$GITHUB_OUTPUT"
+          echo "localized_sha_full=$(git rev-parse "localized/${LOCALIZED_BRANCH}")" >> "$GITHUB_OUTPUT"
+          echo "ahead_count=$(git rev-list --count "HEAD..localized/${LOCALIZED_BRANCH}")" >> "$GITHUB_OUTPUT"
+
+          # 待消化提交清单（写进 PR 正文，方便 reviewer 快速扫一眼）。
+          # 用随机分隔符，防止提交标题里刚好出现固定分隔符导致 GITHUB_OUTPUT 被截断。
+          DELIM="EOF_$(date +%s%N)_${RANDOM}"
+          {
+            echo "commit_log<<${DELIM}"
+            git log --oneline --no-decorate -30 "HEAD..localized/${LOCALIZED_BRANCH}"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 已是最新，干净退出
+        if: steps.diff.outputs.changed == 'false'
+        run: echo "汉化版没有新提交，本轮同步结束（未创建分支、PR 或 Issue）。"
+
+      - name: 在 sync 分支上合并汉化版
+        # 冲突不算工作流失败：由后面的步骤开 Issue 提醒人工处理，所以 continue-on-error。
+        if: steps.diff.outputs.changed == 'true'
+        id: merge
+        continue-on-error: true
+        env:
+          # 走 env 而不是把 ${{ }} 直接拼进 shell 命令行：SHA 本身是安全的十六进制，
+          # 但模板要示范正确姿势，避免有人照抄去拼提交标题这类可控文本。
+          LOCALIZED_SHA: ${{ steps.diff.outputs.localized_sha }}
+        run: |
+          set -uo pipefail
+
+          # 注意：这一步刻意不开 set -e —— 冲突时要走下面的收集逻辑而不是直接退出。
+          # 代价是每个关键命令都必须自己判返回值，否则会"假成功"。
+          if ! git switch -c "${SYNC_BRANCH}"; then
+            echo "::error::无法创建同步分支 ${SYNC_BRANCH}。"
+            exit 1
+          fi
+
+          # --no-ff：强制产生 merge commit。即使这次可以快进，也留下一个明确的合并点，
+          # 让"企业仓 main 是 localized/main 的后代"这件事在历史里显式可见。
+          if git merge --no-ff --no-edit \
+               -m "sync: 合并汉化版 ${LOCALIZED_REPO}@${LOCALIZED_SHA}" \
+               "localized/${LOCALIZED_BRANCH}"; then
+            echo "合并成功。"
+            # 把合并结果快进回本地 main（仅 runner 本地，绝不推送）：
+            # create-pull-request 要求 working base 是 origin 上存在的分支，
+            # 且 base == working base 时才会原样保留 merge commit（见文件顶部说明）。
+            if ! git switch "${DEFAULT_BRANCH}" || ! git merge --ff-only "${SYNC_BRANCH}"; then
+              # 这两条几乎不会失败，但一旦失败必须炸掉：本地 main 没有拿到合并结果时，
+              # create-pull-request 会认为"与 base 无差异"，于是既不开 PR 也不报错 ——
+              # 整条 run 全绿、实际什么都没同步，是最难发现的故障形态。
+              echo "::error::无法把 ${SYNC_BRANCH} 快进回本地 ${DEFAULT_BRANCH}，放弃本轮同步。"
+              exit 1
+            fi
+            exit 0
+          fi
+
+          # ---- 走到这里说明有冲突：收集冲突文件，回滚，故意以非 0 退出 ----
+          echo "合并冲突，收集冲突文件清单。"
+          CONFLICTS="$(git diff --name-only --diff-filter=U || true)"
+
+          DELIM="EOF_$(date +%s%N)_${RANDOM}"
+          {
+            echo "conflicts<<${DELIM}"
+            printf '%s\n' "${CONFLICTS}"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
+
+          # 冲突里落在企业定制目录/挂载点上的部分，单独拎出来重点提示。
+          DELIM2="EOF_$(date +%s%N)_${RANDOM}"
+          {
+            echo "hot_conflicts<<${DELIM2}"
+            printf '%s\n' "${CONFLICTS}" | grep -E \
+              '^(enterprise/|coworker/providers/(registry|matrix)\.py|surfaces/gui/src-tauri/tauri\.conf\.json|\.github/workflows/)' \
+              || true
+            echo "${DELIM2}"
+          } >> "$GITHUB_OUTPUT"
+
+          # 中止合并并回到默认分支，保证 main 与 origin/main 完全一致。
+          git merge --abort || true
+          git switch "${DEFAULT_BRANCH}"
+          exit 1
+
+      # ----------------------------------------------------------------------
+      # 分支 A：合并成功 → 开同步 PR
+      # ----------------------------------------------------------------------
+      - name: 创建同步 PR
+        if: steps.diff.outputs.changed == 'true' && steps.merge.outcome == 'success'
+        id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # base 必须等于当前 checkout 的分支（DEFAULT_BRANCH），
+          # 否则 action 会 cherry-pick 拍平历史，毁掉 merge commit（见文件顶部说明）。
+          base: ${{ env.DEFAULT_BRANCH }}
+          branch: ${{ env.SYNC_BRANCH }}
+          # 不要开启 sign-commits：签名路径会用 API 重建提交，同样会拍平 merge commit。
+          sign-commits: false
+          # 本轮没有工作区改动，commit-message 只在 action 需要额外提交时才用得上。
+          commit-message: "sync: 合并汉化版 ${{ env.LOCALIZED_REPO }}@${{ steps.diff.outputs.localized_sha }}"
+          title: "sync: 合并汉化版 ${{ steps.diff.outputs.localized_sha }}（${{ steps.diff.outputs.ahead_count }} 个提交）"
+          labels: |
+            sync
+            localized-upstream
+          # 注意 delete-branch 的真实语义（peter-evans 官方描述）：
+          #   “Delete the `branch` if it doesn't have an active pull request associated with it.”
+          # 也就是说它只负责清理"这轮没差异、PR 被关掉/没开成"时留下的空分支，
+          # **不是**"PR 合并后自动删分支"——后者要在仓库 Settings → General →
+          # "Automatically delete head branches" 里开。
+          delete-branch: true
+          body: |
+            ## 汉化版 → 企业版 自动同步
+
+            本 PR 由 `.github/workflows/sync-localized.yml` 自动生成，把汉化版的更新合并进企业私有仓。
+
+            | 项目 | 值 |
+            | --- | --- |
+            | 汉化版仓库 | [`${{ env.LOCALIZED_REPO }}`](https://github.com/${{ env.LOCALIZED_REPO }}) |
+            | 消化到的汉化版 SHA | [`${{ steps.diff.outputs.localized_sha }}`](https://github.com/${{ env.LOCALIZED_REPO }}/commit/${{ steps.diff.outputs.localized_sha_full }}) （完整：`${{ steps.diff.outputs.localized_sha_full }}`） |
+            | 本次消化提交数 | `${{ steps.diff.outputs.ahead_count }}` |
+            | 同步分支 | `${{ env.SYNC_BRANCH }}` → `${{ env.DEFAULT_BRANCH }}` |
+            | 工作流运行 | ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} |
+
+            ---
+
+            ## 🚨 合并方式：必须用 Merge commit，禁止 Squash / Rebase 🚨
+
+            > **点绿色按钮前先确认它写的是 “Merge pull request”，不是 “Squash and merge”。**
+
+            **原因（真实踩过的坑）：**
+            本 PR 的分支里带着汉化版的原始提交和一个 merge commit。
+            用 **Merge commit** 合并后，企业仓 `main` 就成为 `localized/main` 的**后代**，
+            下次同步时 `git merge-base --is-ancestor localized/main HEAD` 判定为真，只需要处理增量。
+
+            一旦 **Squash**，这一串提交会被压成一个全新的、和汉化版毫无血缘关系的提交：
+            祖先链当场断裂 → 下次同步 `--is-ancestor` 永远为假 →
+            汉化版**全部历史被重放一遍** → 每天都在同一批文件上反复冲突，且越滚越大。
+            Rebase and merge 同理（提交被改写，SHA 全变），一样禁止。
+
+            修复断链的代价很高（需要人工构造一次 `-s ours` 之类的哑合并把血缘接回去），
+            所以请直接在仓库 Settings → General → Pull Requests 里
+            **只保留 “Allow merge commits”**，取消勾选 squash 与 rebase。
+
+            ---
+
+            ## ✅ 企业定制存活检查清单（合并前逐项确认）
+
+            自动冒烟测试（`enterprise/tests/`）的结果会以 **check run「企业定制存活冒烟测试」**
+            的形式挂在本 PR 的 head commit 上；它变红就**不要合并**。
+            以下几项请人工再确认一遍（自动检查覆盖不到语义层面的回退）：
+
+            - [ ] **企业定制目录完整**：`enterprise/{skills,branding,config,mcp,connectors,tools,tests,site}` 八个目录都还在，内容没有被汉化版改动覆盖。
+            - [ ] **Provider 注册挂载点**：`coworker/providers/registry.py` 的 `DESCRIPTORS` 中，
+                  企业新增的描述符仍在；其中 OpenAI 兼容的 `name="custom"` 条目及其
+                  `base_url` / `api_key` / `model` 三个字段没有被上游改动冲掉。
+            - [ ] **能力矩阵挂载点**：`coworker/providers/matrix.py` 的 `MATRIX` 里，
+                  企业模型的键仍是**完整路由 id**（形如 `"custom:xxx"`），没有被写回裸模型名。
+            - [ ] **桌面品牌挂载点**：`surfaces/gui/src-tauri/tauri.conf.json` 的
+                  `productName` / `identifier` / `bundle.publisher` /
+                  `plugins.updater.endpoints` / `plugins.updater.pubkey`
+                  仍是企业值，**没有**回退成 `OpenWorker` / `OpenWorker 中文版` /
+                  `com.openworker.desktop(.zh)`，更新源也没有指回汉化仓的 release 地址。
+            - [ ] **技能目录约定未被破坏**：全局技能仍读 `<state-dir>/skills/<name>/SKILL.md`
+                  （state_dir 解析顺序 `$COWORKER_STATE_DIR` > `%APPDATA%\coworker` > `~/.config/coworker`），
+                  项目级技能仍读 `<workspace>/.coworker/skills`；
+                  技能名仍受 ASCII 规则 `^[A-Za-z0-9][A-Za-z0-9._-]*$` 约束
+                  （企业技能目录名不要用中文，否则加载不到）。
+            - [ ] **企业自有流水线未被覆盖**：`.github/workflows/` 下企业新增/改写的 CI、发布、
+                  本同步工作流本身没有被汉化版版本覆盖。
+            - [ ] **无残留冲突标记**：全仓搜不到行首的 7 个 `<` / `>` / `|`（后者是 diff3 风格）。
+            - [ ] **品牌断言是硬门禁**：check run 报告里如果出现 “品牌项只告警未报错”，
+                  说明 `enterprise/config/branding.json` 还没写期望值 —— 换皮完成后必须补上，
+                  否则品牌被同步冲掉时只会告警、不会拦住合并。
+            - [ ] **合并按钮确认为 “Merge pull request”**（见上方红字）。
+
+            ---
+
+            <details>
+            <summary>本次消化的汉化版提交（最多列 30 条）</summary>
+
+            ```
+            ${{ steps.diff.outputs.commit_log }}
+            ```
+
+            </details>
+
+      - name: 输出 PR 结果
+        if: steps.diff.outputs.changed == 'true' && steps.merge.outcome == 'success'
+        run: |
+          set -euo pipefail
+          echo "PR 操作：${{ steps.pr.outputs.pull-request-operation }}"
+          echo "PR 编号：${{ steps.pr.outputs.pull-request-number }}"
+          echo "PR 地址：${{ steps.pr.outputs.pull-request-url }}"
+          echo "PR head：${{ steps.pr.outputs.pull-request-head-sha }}"
+
+      # ----------------------------------------------------------------------
+      # 分支 B：合并冲突 → 开（或追评）固定标题 Issue
+      # ----------------------------------------------------------------------
+      - name: 创建/追评冲突 Issue
+        if: steps.diff.outputs.changed == 'true' && steps.merge.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          # 所有外部数据一律走 env 再在 JS 里读，不要用 ${{ }} 直接拼进脚本体
+          # ——汉化版的提交标题/文件名是外部输入，内联会有脚本注入风险。
+          ISSUE_TITLE: ${{ env.CONFLICT_ISSUE_TITLE }}
+          LOCALIZED_REPO: ${{ env.LOCALIZED_REPO }}
+          LOCALIZED_BRANCH: ${{ env.LOCALIZED_BRANCH }}
+          DEFAULT_BRANCH: ${{ env.DEFAULT_BRANCH }}
+          SYNC_BRANCH: ${{ env.SYNC_BRANCH }}
+          LOCALIZED_SHA: ${{ steps.diff.outputs.localized_sha }}
+          LOCALIZED_SHA_FULL: ${{ steps.diff.outputs.localized_sha_full }}
+          CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+          HOT_CONFLICTS: ${{ steps.merge.outputs.hot_conflicts }}
+        with:
+          script: |
+            const {
+              ISSUE_TITLE, LOCALIZED_REPO, LOCALIZED_BRANCH, DEFAULT_BRANCH, SYNC_BRANCH,
+              LOCALIZED_SHA, LOCALIZED_SHA_FULL, CONFLICTS, HOT_CONFLICTS,
+            } = process.env;
+            const { owner, repo } = context.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const conflicts = (CONFLICTS || '').split('\n').map(s => s.trim()).filter(Boolean);
+            const hot = (HOT_CONFLICTS || '').split('\n').map(s => s.trim()).filter(Boolean);
+
+            // 正文里避免出现行首的冲突标记，否则会被存活冒烟测试的扫描误判。
+            const body = [
+              `## 汉化版同步冲突（${new Date().toISOString()}）`,
+              '',
+              `自动合并 [\`${LOCALIZED_REPO}\`](https://github.com/${LOCALIZED_REPO}) 失败，`,
+              `\`${DEFAULT_BRANCH}\` **没有被改动**，同步分支也没有推送。需要人工解决后再合并。`,
+              '',
+              `- 目标汉化版 SHA：[\`${LOCALIZED_SHA}\`](https://github.com/${LOCALIZED_REPO}/commit/${LOCALIZED_SHA_FULL})（完整 \`${LOCALIZED_SHA_FULL}\`）`,
+              `- 工作流运行：${runUrl}`,
+              '',
+              '### 冲突文件',
+              '',
+              conflicts.length ? ['```', ...conflicts, '```'].join('\n') : '_（未能取到冲突文件清单，请看工作流日志）_',
+              '',
+              hot.length
+                ? ['> ⚠️ 以下冲突落在**企业定制目录或挂载点**上，属于高危项，务必逐个手工确认：', '', '```', ...hot, '```'].join('\n')
+                : '> 本次冲突没有直接命中 `enterprise/` 与已知挂载点，但仍需按下面的原则处理。',
+              '',
+              '### 解决原则（重要）',
+              '',
+              '**冲突处优先保留 `enterprise/` 目录与挂载点定制，其余一律接受汉化版改动。**',
+              '',
+              '- 必须保企业侧的：',
+              '  - `enterprise/{skills,branding,config,mcp,connectors,tools,tests,site}` 全部内容；',
+              '  - `coworker/providers/registry.py` 的 `DESCRIPTORS` 中企业新增描述符，以及 `name="custom"` 条目的 `base_url` / `api_key` / `model` 字段；',
+              '  - `coworker/providers/matrix.py` 的 `MATRIX` 中企业模型键（必须是 `"custom:xxx"` 这类**完整路由 id**）；',
+              '  - `surfaces/gui/src-tauri/tauri.conf.json` 的 `productName` / `identifier` / `bundle.publisher` / `plugins.updater.endpoints` / `plugins.updater.pubkey`；',
+              '  - `.github/workflows/` 下企业自有的 CI / 发布 / 同步工作流。',
+              '- 其余文件（`coworker/` 主体逻辑、`surfaces/`、`docs/`、`website/` 等）**接受汉化版的改动**，',
+              '  不要为了少改几行就把汉化版的修复丢掉——否则下次同步还会在同一处冲突。',
+              '- 上游若改了挂载点周围的代码结构，正确做法是**把企业定制迁移到新结构上**，而不是回滚上游改动。',
+              '',
+              '### 本地解决命令',
+              '',
+              '```bash',
+              '# 1. 准备本地仓库',
+              'git fetch origin',
+              `git remote add localized https://github.com/${LOCALIZED_REPO}.git 2>/dev/null || true`,
+              `git fetch --no-tags localized ${LOCALIZED_BRANCH}`,
+              '',
+              '# 2. 从最新的默认分支切出同步分支（分支名要和工作流一致，PR 才能复用）',
+              `git switch -c ${SYNC_BRANCH} origin/${DEFAULT_BRANCH}`,
+              '',
+              '# 3. 复现合并（--no-ff 保证留下 merge commit）',
+              `git merge --no-ff localized/${LOCALIZED_BRANCH}`,
+              '',
+              '# 4. 查看冲突文件',
+              'git diff --name-only --diff-filter=U',
+              '',
+              '#    企业定制文件整块保留自己这边：',
+              '#      git checkout --ours  -- enterprise/ ',
+              '#    纯汉化版改动整块接受对方：',
+              '#      git checkout --theirs -- <path>',
+              '#    挂载点文件（registry.py / matrix.py / tauri.conf.json）必须手工逐段合并，',
+              '#    既要吃进汉化版的新代码，也要保住企业定制的字段。',
+              '',
+              '# 5. 收尾（确认没有残留冲突标记，含 diff3 风格的 7 个竖线）',
+              "git grep -nI -E '^([<>|]{7}) ' -- . || echo '无残留冲突标记'",
+              'git add -A',
+              'git commit           # 保留默认的 merge commit message',
+              '',
+              '# 6. 跑一遍企业定制存活冒烟测试',
+              'pytest enterprise/tests -q',
+              '',
+              '# 7. 推分支并开 PR（合并时务必选 Merge commit，禁止 Squash）',
+              `git push -u origin ${SYNC_BRANCH}`,
+              '```',
+              '',
+              '### 合并纪律',
+              '',
+              '解决完冲突开的 PR，**必须用 Merge commit 合并，禁止 Squash / Rebase**。',
+              'squash 会切断与汉化版的祖先链，下次同步会把汉化版全部历史重放一遍，冲突无限复发。',
+            ].join('\n');
+
+            // 固定标题：已存在同名 open Issue 就追评，否则新建，避免每天刷一堆重复 Issue。
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', per_page: 100,
+            });
+            const issue = existing.find(item => item.title === ISSUE_TITLE && !item.pull_request);
+
+            if (issue) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number, body,
+              });
+              core.notice(`已在 Issue #${issue.number} 追加冲突报告。`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner, repo, title: ISSUE_TITLE, body, labels: ['sync', 'conflict'],
+              });
+              core.notice(`已创建冲突 Issue #${created.data.number}。`);
+            }
+
+      - name: 冲突时让本次运行失败（便于告警）
+        if: steps.diff.outputs.changed == 'true' && steps.merge.outcome == 'failure'
+        run: |
+          echo "::error::汉化版同步存在合并冲突，已开/追评 Issue：${CONFLICT_ISSUE_TITLE}"
+          exit 1
+
+  # ==========================================================================
+  # Job 2：企业定制存活冒烟测试
+  #
+  # 为什么要单独跑而不是靠仓库自带的 ci.yml：
+  #   用 GITHUB_TOKEN 创建的 PR **不会**触发 on: pull_request 工作流（GitHub 的防递归设计），
+  #   所以同步 PR 上默认一个 check 都没有。这里显式在 PR 的 head commit 上创建一个 check run，
+  #   失败即在 PR 页面标红，配合分支保护可以直接拦住合并。
+  #   （若改用 PAT 作为 create-pull-request 的 token，ci.yml 会被正常触发，本 job 仍然有价值：
+  #    它专测"企业定制有没有被同步冲掉"，是 ci.yml 覆盖不到的维度。）
+  # ==========================================================================
+  enterprise-smoke:
+    name: 企业定制存活冒烟测试
+    needs: sync
+    # 只有真的开出/更新了 PR 才需要跑。
+    if: needs.sync.outputs.pr_number != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出同步 PR 的 head commit
+        uses: actions/checkout@v4
+        with:
+          # 精确检出 PR 的 head，保证测的就是 reviewer 将要合并的那个提交。
+          ref: ${{ needs.sync.outputs.pr_head_sha }}
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安装依赖
+        id: install
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          # extras 与仓库 ci.yml 保持一致，避免企业测试 import 到未安装的可选依赖。
+          pip install -e ".[messaging,dev,bedrock]"
+
+      - name: 运行企业定制存活检查
+        id: smoke
+        if: steps.install.outcome == 'success'
+        continue-on-error: true
+        run: |
+          # 故意不开 set -e：要把所有检查跑完再一次性汇报，而不是第一条失败就退出。
+          set -uo pipefail
+          FAIL=0
+          SUMMARY="${RUNNER_TEMP}/smoke-summary.md"
+          : > "${SUMMARY}"
+          note() { printf '%s\n' "$*" | tee -a "${SUMMARY}"; }
+
+          note "### 1. 残留冲突标记扫描"
+          # 只扫「行首 7 个标记字符 + 一个空格」（"<<<<<<< HEAD" 这种），避免把 Markdown
+          # 分隔线之类误判。字符类 [<>|] 一次覆盖全部三种标记：<<<<<<< 、>>>>>>> ，
+          # 以及 diff3 / zdiff3 冲突风格才会出现的 |||||||
+          # （企业里常有人全局设 merge.conflictStyle=zdiff3，只扫前两种会漏）。
+          # ★ 用字符类而不是写死 7 个尖括号，本文件里就不存在连续 7 个标记字符，
+          #   扫描不会自己命中自己 —— 所以这里**不排除任何路径**。
+          #   （不要再加 ':(exclude).github/workflows/sync-localized.yml'：
+          #    .github/workflows/ 恰好是本工作流自己列为「高危挂载点」的冲突多发区，
+          #    把它排掉等于在最该查的地方留了个盲区。）
+          CONFLICT_HITS="$(git grep -nI -E '^([<>|]{7}) ' -- . || true)"
+          if [ -n "${CONFLICT_HITS}" ]; then
+            note '- ❌ 发现残留冲突标记，合并没有收干净：'
+            {
+              echo '```'
+              printf '%s\n' "${CONFLICT_HITS}"
+              echo '```'
+            } | tee -a "${SUMMARY}"
+            FAIL=1
+          else
+            note '- ✅ 未发现残留冲突标记。'
+          fi
+
+          note ""
+          note "### 2. 企业定制挂载点存活检查"
+          cat > "${RUNNER_TEMP}/guard.py" <<'PY'
+          # -*- coding: utf-8 -*-
+          """检查同步是否把企业定制冲掉：目录、Provider 注册、能力矩阵、桌面品牌。
+
+          这是一道**独立于 enterprise/tests/ 的兜底闸**：pytest 那套要是被同步整个删掉，
+          它自己就不会报错了，所以这里重新查一遍最关键的挂载点。
+
+          品牌相关断言的取值口径与 enterprise/tests/test_enterprise_customization.py 保持一致：
+          期望值来自环境变量 OPENWORKER_ENTERPRISE_* > enterprise/config/branding.json。
+          **没声明期望值时只告警、不报错** —— init-enterprise-repo.sh 只建 enterprise/ 骨架和
+          config.default.toml，branding.json 要人工新建，企业刚初始化、还没换皮时
+          tauri.conf.json 里本来就是汉化版的值。若在这种状态下硬报错，第一个同步 PR 就会挂红，
+          人会立刻学会"这个红叉可以忽略"，闸门也就废了。
+          """
+          import json
+          import os
+          import pathlib
+          import re
+          import sys
+
+          ROOT = pathlib.Path.cwd()
+          errors: list[str] = []
+          warns: list[str] = []
+
+          # --- 2.0 企业品牌期望值（环境变量 > enterprise/config/branding.json）----
+          BRANDING_JSON = ROOT / "enterprise" / "config" / "branding.json"
+          BRANDING: object = {}
+          if BRANDING_JSON.is_file():
+              try:
+                  BRANDING = json.loads(BRANDING_JSON.read_text(encoding="utf-8"))
+              except json.JSONDecodeError as exc:
+                  # branding.json 本身也是挂载点，冲突标记留在里面会让它解析失败。
+                  errors.append(f"enterprise/config/branding.json 不是合法 JSON（多半是残留冲突标记）：{exc}")
+
+
+          def _find(node, aliases):
+              """在（可能嵌套的）JSON 里按别名找第一个非空字符串；键名大小写/下划线不敏感。"""
+              want = {a.replace("_", "").lower() for a in aliases}
+              if isinstance(node, dict):
+                  for k, v in node.items():
+                      if isinstance(v, str) and v.strip() and str(k).replace("_", "").lower() in want:
+                          return v.strip()
+                  for v in node.values():
+                      hit = _find(v, aliases)
+                      if hit:
+                          return hit
+              elif isinstance(node, list):
+                  for v in node:
+                      hit = _find(v, aliases)
+                      if hit:
+                          return hit
+              return None
+
+
+          def _expected(env_name, aliases):
+              return (os.environ.get(env_name) or "").strip() or _find(BRANDING, aliases)
+
+
+          EXP_NAME = _expected("OPENWORKER_ENTERPRISE_PRODUCT_NAME", ("productName", "product_name", "app_name"))
+          EXP_ID = _expected("OPENWORKER_ENTERPRISE_IDENTIFIER", ("identifier", "bundle_identifier", "bundleId", "bundle_id"))
+          EXP_PUB = _expected("OPENWORKER_ENTERPRISE_PUBLISHER", ("publisher", "bundle_publisher", "company"))
+          EXP_HOST = _expected("OPENWORKER_ENTERPRISE_UPDATER_HOST", ("updaterHost", "updater_host", "update_domain"))
+          # 只要企业声明过任意一项品牌期望值，就认为"已经换过皮"，整块品牌检查升级为硬门禁。
+          BRANDED = any((EXP_NAME, EXP_ID, EXP_PUB, EXP_HOST))
+
+
+          brand_warned = False
+
+
+          def brand_fail(msg):
+              """已换皮 → 错误（同步把定制冲掉了）；还没换皮 → 告警（属于正常初始状态）。"""
+              global brand_warned
+              if BRANDED:
+                  errors.append(msg)
+              else:
+                  warns.append(msg)
+                  brand_warned = True
+
+
+          # --- 2.1 企业定制目录 -------------------------------------------------
+          for name in ("skills", "branding", "config", "mcp", "connectors", "tools", "tests", "site"):
+              if not (ROOT / "enterprise" / name).is_dir():
+                  errors.append(f"enterprise/{name}/ 目录缺失（企业定制被同步覆盖或误删）")
+
+          # --- 2.2 Provider 注册：coworker/providers/registry.py 的 DESCRIPTORS ---
+          reg = ROOT / "coworker" / "providers" / "registry.py"
+          if not reg.is_file():
+              errors.append("coworker/providers/registry.py 缺失")
+          else:
+              text = reg.read_text(encoding="utf-8")
+              if "DESCRIPTORS" not in text:
+                  errors.append("registry.py 中找不到 DESCRIPTORS 列表（Provider 注册挂载点消失）")
+              idx = text.find('name="custom"')
+              if idx < 0:
+                  errors.append('registry.py DESCRIPTORS 缺少 name="custom" 的 OpenAI 兼容自定义端点，'
+                                "企业私有网关无法注册")
+              else:
+                  # 只截取 custom 这一个 ProviderDescriptor(...) 块再查字段，
+                  # 避免被别的 provider 里同名字段（如 api_key）蒙混过关。
+                  nxt = text.find("ProviderDescriptor(", idx)
+                  block = text[idx:] if nxt < 0 else text[idx:nxt]
+                  for field in ("base_url", "api_key", "model"):
+                      if f'"{field}"' not in block:
+                          errors.append(f'registry.py 的 custom 描述符缺少 {field} 字段')
+
+          # --- 2.3 能力矩阵：coworker/providers/matrix.py 的 MATRIX --------------
+          mx = ROOT / "coworker" / "providers" / "matrix.py"
+          if not mx.is_file():
+              errors.append("coworker/providers/matrix.py 缺失")
+          else:
+              text = mx.read_text(encoding="utf-8")
+              if not re.search(r"^MATRIX\s*[:=]", text, re.M):
+                  errors.append("matrix.py 中找不到 MATRIX 能力矩阵（模型路由挂载点消失）")
+              # 企业模型的键必须是完整路由 id，形如 "custom:xxx"。
+              # 同时认字典字面量写法（"custom:x": ModelEntry(...)）和下标赋值写法
+              # （MATRIX["custom:x"] = ModelEntry(...)）。
+              # 上游/汉化版本身没有这类键，所以这里只告警：企业若还没接私有网关属正常。
+              if not re.search(r'"custom:[^"]+"\s*[:\]]', text):
+                  warns.append('MATRIX 中没有任何 "custom:<model>" 完整路由 id 键；'
+                               "若企业已接入私有网关模型，说明定制被同步覆盖了")
+
+          # --- 2.4 桌面品牌：surfaces/gui/src-tauri/tauri.conf.json --------------
+          tauri = ROOT / "surfaces" / "gui" / "src-tauri" / "tauri.conf.json"
+          if not tauri.is_file():
+              errors.append("surfaces/gui/src-tauri/tauri.conf.json 缺失")
+          else:
+              conf = None
+              try:
+                  conf = json.loads(tauri.read_text(encoding="utf-8"))
+              except json.JSONDecodeError as exc:
+                  errors.append(f"tauri.conf.json 不是合法 JSON（多半是残留冲突标记）：{exc}")
+
+              if conf is not None:
+                  # 「禁止出现的值」是硬事实，可以写死（已逐个核对过两个上游仓的真实内容）：
+                  #   andrewyng/openworker         → productName "OpenWorker"、identifier "com.openworker.desktop"
+                  #   zhanglunet/openworker-zh-localized → "OpenWorker 中文版"、"com.openworker.desktop.zh"
+                  #   两边的 bundle.publisher 都是 "OpenWorker"
+                  UPSTREAM_NAMES = {"OpenWorker", "OpenWorker 中文版"}
+                  UPSTREAM_IDS = {"com.openworker.desktop", "com.openworker.desktop.zh"}
+                  UPSTREAM_PUBLISHERS = {"OpenWorker"}
+                  # 上游和汉化版的更新源域名/仓库路径（任一出现 = 企业更新源被冲回去了）。
+                  # 注意 download.openworker.com 是上游 endpoints 里的**第一条**，
+                  # 只匹配 GitHub 仓库路径会漏掉它。
+                  FOREIGN_UPDATE_HOSTS = (
+                      "andrewyng/openworker",
+                      "download.openworker.com",
+                      "zhanglunet/openworker-zh-localized",
+                  )
+                  # ★ 上游与汉化版共用同一把 minisign 公钥（key id 5B713F699935CA69，
+                  #   base64 载荷以 RWRpyjWZaT9x… 开头）——即汉化仓并没有换签名密钥。
+                  #   企业包必须换成自己的密钥，否则会信任上游/汉化仓签发的更新包。
+                  #   这里取公钥 base64 的一段特征子串做匹配。
+                  FOREIGN_PUBKEY_MARK = "UldScHlqV1phVDl4"
+
+                  def check_brand(label, actual, expect, forbidden):
+                      """声明了期望值 → 精确比对；没声明 → 只在回退到上游/汉化值时按 BRANDED 决定轻重。"""
+                      if not actual:
+                          errors.append(f"tauri.conf.json 缺少 {label}")
+                      elif expect:
+                          if actual != expect:
+                              errors.append(
+                                  f"tauri.conf.json {label} = {actual!r}，与期望值 {expect!r} 不一致"
+                                  "（企业定制被同步覆盖；期望值来自 enterprise/config/branding.json "
+                                  "或 OPENWORKER_ENTERPRISE_* 环境变量）"
+                              )
+                      elif actual in forbidden:
+                          brand_fail(f"tauri.conf.json {label} 仍是上游/汉化版的值 {actual!r}")
+
+                  check_brand("productName", conf.get("productName"), EXP_NAME, UPSTREAM_NAMES)
+                  check_brand("identifier", conf.get("identifier"), EXP_ID, UPSTREAM_IDS)
+                  check_brand(
+                      "bundle.publisher", (conf.get("bundle") or {}).get("publisher"), EXP_PUB, UPSTREAM_PUBLISHERS
+                  )
+
+                  updater = ((conf.get("plugins") or {}).get("updater") or {})
+                  if not updater:
+                      warns.append("tauri.conf.json 未配置 plugins.updater（企业若关闭自动更新可忽略）")
+                  else:
+                      endpoints = [str(e) for e in (updater.get("endpoints") or [])]
+                      if not endpoints:
+                          errors.append("plugins.updater.endpoints 为空（企业自建更新源丢失）")
+                      for ep in endpoints:
+                          low = ep.lower()
+                          if any(h in low for h in FOREIGN_UPDATE_HOSTS):
+                              brand_fail(f"plugins.updater.endpoints 指回了上游/汉化版更新源：{ep}")
+                      # 声明了企业更新域名，就要求 endpoints 里真的有它（防止只删不换）。
+                      if EXP_HOST and not any(EXP_HOST.lower() in ep.lower() for ep in endpoints):
+                          errors.append(
+                              f"plugins.updater.endpoints 里找不到企业更新域名 {EXP_HOST}（企业自建更新源被同步冲掉）"
+                          )
+                      pubkey = updater.get("pubkey") or ""
+                      if not pubkey:
+                          errors.append("plugins.updater.pubkey 为空（更新包签名校验会失效）")
+                      elif FOREIGN_PUBKEY_MARK in pubkey:
+                          brand_fail(
+                              "plugins.updater.pubkey 仍是上游/汉化版共用的公钥，"
+                              "必须换成企业自己的 minisign 公钥，否则会信任外部签发的更新包"
+                          )
+
+          if brand_warned:
+              warns.append(
+                  "上面的品牌项只告警未报错：还没检测到 enterprise/config/branding.json 里的品牌期望值"
+                  "（productName / identifier / publisher / updaterHost）。换皮完成后请把期望值写进去，"
+                  "这些检查会自动升级为硬门禁。"
+              )
+
+          for w in warns:
+              print(f"- ⚠️ {w}")
+          for e in errors:
+              print(f"- ❌ {e}")
+          if not errors:
+              print("- ✅ 挂载点检查全部通过"
+                    + ("（有告警，见上）" if warns else ""))
+          sys.exit(1 if errors else 0)
+          PY
+          python3 "${RUNNER_TEMP}/guard.py" 2>&1 | tee -a "${SUMMARY}"
+          if [ "${PIPESTATUS[0]}" -ne 0 ]; then FAIL=1; fi
+
+          note ""
+          note "### 3. enterprise/tests/ 用例"
+          if [ ! -d enterprise/tests ]; then
+            note '- ❌ `enterprise/tests/` 目录不存在，企业定制测试已丢失。'
+            FAIL=1
+          else
+            python -m pytest enterprise/tests -q 2>&1 | tee "${RUNNER_TEMP}/pytest.log"
+            RC="${PIPESTATUS[0]}"
+            if [ "${RC}" -eq 0 ]; then
+              note '- ✅ `enterprise/tests/` 全部通过。'
+            elif [ "${RC}" -eq 5 ]; then
+              note '- ❌ `enterprise/tests/` 未收集到任何用例（测试文件可能被同步覆盖/删除）。'
+              FAIL=1
+            else
+              note "- ❌ \`enterprise/tests/\` 失败（pytest 退出码 ${RC}），末尾输出："
+              {
+                echo '```'
+                tail -n 40 "${RUNNER_TEMP}/pytest.log"
+                echo '```'
+              } >> "${SUMMARY}"
+              FAIL=1
+            fi
+          fi
+
+          # 同时写进工作流 Job Summary，方便直接在 Actions 页面看。
+          cat "${SUMMARY}" >> "${GITHUB_STEP_SUMMARY}"
+          exit "${FAIL}"
+
+      - name: 把冒烟结果写成 PR 上的 check run
+        # always()：安装依赖失败也要出结论，否则 PR 上会没有任何检查、看起来"没问题"。
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          HEAD_SHA: ${{ needs.sync.outputs.pr_head_sha }}
+          PR_NUMBER: ${{ needs.sync.outputs.pr_number }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          SMOKE_OUTCOME: ${{ steps.smoke.outcome }}
+          SUMMARY_PATH: ${{ runner.temp }}/smoke-summary.md
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const headSha = process.env.HEAD_SHA;
+            const prNumber = Number(process.env.PR_NUMBER);
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const installOk = process.env.INSTALL_OUTCOME === 'success';
+            const smokeOk = process.env.SMOKE_OUTCOME === 'success';
+            const ok = installOk && smokeOk;
+
+            let detail = '';
+            try {
+              detail = fs.readFileSync(process.env.SUMMARY_PATH, 'utf8');
+            } catch {
+              detail = installOk
+                ? '_未生成检查报告（步骤可能被中断）_'
+                : '❌ 依赖安装失败，冒烟测试未执行——这本身通常意味着 `pyproject.toml` 被同步改坏了。';
+            }
+
+            const summary = [
+              ok
+                ? '✅ 企业定制在本次同步后全部存活。'
+                : '❌ 企业定制存活检查未通过，**不要合并本 PR**，先按下面的报告修复同步分支。',
+              '',
+              detail,
+              '',
+              `工作流运行：${runUrl}`,
+            ].join('\n').slice(0, 65000); // check run summary 上限 65535 字符
+
+            // check run 挂在 PR 的 head commit 上 → PR 页面直接标红/标绿。
+            await github.rest.checks.create({
+              owner, repo,
+              name: '企业定制存活冒烟测试',
+              head_sha: headSha,
+              status: 'completed',
+              conclusion: ok ? 'success' : 'failure',
+              details_url: runUrl,
+              output: {
+                title: ok ? '企业定制存活' : '企业定制存活检查失败',
+                summary,
+              },
+            });
+
+            if (!ok && prNumber) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: prNumber,
+                body: [
+                  '## ❌ 企业定制存活冒烟测试失败',
+                  '',
+                  '本次同步把企业定制冲掉了（或企业测试本身跑不过）。**请勿合并**，',
+                  '先在 `sync/localized-main` 分支上修复，再让本工作流（或 push 到该分支）重跑。',
+                  '',
+                  detail,
+                  '',
+                  `工作流运行：${runUrl}`,
+                ].join('\n').slice(0, 65000),
+              });
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: prNumber, labels: ['smoke-failed'],
+              });
+            }
+
+      - name: 冒烟失败则让本 job 变红
+        if: steps.install.outcome != 'success' || steps.smoke.outcome != 'success'
+        run: |
+          echo "::error::企业定制存活冒烟测试未通过，同步 PR #${{ needs.sync.outputs.pr_number }} 不可合并。"
+          exit 1

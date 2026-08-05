@@ -24,6 +24,17 @@
 
 ## 1. 建立私有仓（保留完整历史，一次做对）
 
+> **一键版**：本节全部步骤（含第 2 节的流水线安装）已封装成脚本，建议直接用：
+>
+> ```bash
+> bash docs/enterprise/templates/init-enterprise-repo.sh \
+>   --corp acme --name "艾克米科技" \
+>   --repo https://github.com/acme/openworker-enterprise.git \
+>   --dry-run          # 先看一遍要做什么，确认后去掉 --dry-run
+> ```
+>
+> 下面是脚本背后的手工步骤，供理解与排障。
+
 ```bash
 # 1) 镜像克隆汉化版（完整历史，同步的共同祖先就在这里）
 git clone --bare https://github.com/zhanglunet/openworker-zh-localized.git

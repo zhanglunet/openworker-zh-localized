@@ -80,6 +80,8 @@ enterprise/                      # 企业定制根目录（上游永远不会有
 
 ### 3.2 新增：汉化版 → 企业版 `sync-localized.yml`
 
+> **完整可用版本已备好**：[templates/sync-localized.yml](templates/sync-localized.yml)（894 行，含冲突开 Issue、PR 正文禁止 squash 警告、定制存活冒烟 check run、凭据卫生处理）。由 [templates/init-enterprise-repo.sh](templates/init-enterprise-repo.sh) 自动安装到企业仓。下面是机制骨架，便于理解原理：
+
 放在企业私有仓，机制与 3.1 同款，仅换 remote 与分支名：
 
 ```yaml

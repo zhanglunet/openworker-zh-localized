@@ -1,0 +1,740 @@
+# 放到企业私有仓的 .github/workflows/release-corp.yml
+#
+# 企业品牌桌面版发布流水线 —— macOS（Apple 芯片 arm64 + Intel x64）与 Windows。
+# 以汉化仓 .github/workflows/release.yml 为样板改造，改造点见下方"与样板的差异"。
+#
+# ============================ 与样板（release.yml）的差异 ============================
+#   1. 触发 tag 前缀：v* / app-v*  →  corp-v*
+#      （企业仓从汉化仓同步时会带进上游/汉化版的 v* tag，用独立前缀才不会误触发企业发布）
+#   2. 产物名前缀：OpenWorker-CN-*  →  <CORP_NAME>-*（仓库变量 vars.CORP_NAME）
+#   3. 更新清单：latest-zh.json  →  latest-<corp>.json（vars.CORP_ID）
+#      注意：不能复用 packaging/make_update_manifest.py —— 它的 ARTIFACTS 字典把
+#      OpenWorker-CN-macos-arm64.app.tar.gz 等名字写死了。本文件内联一份等价实现。
+#   4. 签名 Secrets 名称与样板保持一致（APPLE_* / TAURI_SIGNING_*），迁移文档可直接复用；
+#      Windows Authenticode 是企业版新增的可选环节（WINDOWS_CERTIFICATE*）。
+#   5. 更新包托管：支持"私有 Release"与"内网静态服务器"两种（见 publish job 注释）。
+#   6. 新增"未配置签名 Secrets → 构建未签名测试包"分支，方便企业先内测、后办证。
+#
+# ============================ 需要配置的 Secrets / Variables ============================
+# Variables（Settings → Secrets and variables → Actions → Variables，非机密）：
+#   CORP_NAME              产物名前缀，ASCII，例：AcmeWorker      默认 AcmeWorker
+#   CORP_ID                更新清单短名，小写 ASCII，例：acme     默认 acme
+#                          → 清单文件名 latest-acme.json，必须与 tauri.conf.json
+#                            plugins.updater.endpoints 里的文件名一致
+#   CORP_UPDATE_BASE_URL   可选。内网更新分发根 URL（留空 = 走私有 Release）
+#                          例：https://dl.corp.example.com/openworker
+#   CORP_UPDATE_UPLOAD_URL 可选。上传接口根 URL（HTTP PUT），常与上面同源
+#   CORP_WRITE_SITE_FALLBACK  可选，设为 "true" 时把清单回写到 enterprise/site/
+#
+# Secrets（macOS 签名 + 公证，名称与样板一致；缺任意一个即进入未签名测试包分支）：
+#   APPLE_CERTIFICATE            base64 的 .p12（Developer ID Application 证书 + 私钥）
+#   APPLE_CERTIFICATE_PASSWORD   .p12 导出密码
+#   APPLE_SIGNING_IDENTITY       形如 "Developer ID Application: 某某公司 (TEAMID)"
+#   APPLE_API_KEY_CONTENT        base64 的 App Store Connect API .p8（notarytool 公证用）
+#   APPLE_API_KEY                API Key ID
+#   APPLE_API_ISSUER             API Issuer ID
+# Secrets（自动更新签名，minisign，与 Apple 签名无关，同样必需）：
+#   TAURI_SIGNING_PRIVATE_KEY           私钥内容；其公钥即 tauri.conf.json 的 updater.pubkey
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  私钥密码（生成密钥时设了才需要）
+# Secrets（Windows 代码签名，可选；不配则 Windows 包未签名，会弹 SmartScreen）：
+#   WINDOWS_CERTIFICATE          base64 的 .pfx（代码签名证书 + 私钥）
+#   WINDOWS_CERTIFICATE_PASSWORD .pfx 密码
+# Secrets（内网上传，仅在配置了 CORP_UPDATE_UPLOAD_URL 时需要）：
+#   CORP_UPDATE_UPLOAD_TOKEN     上传凭据（Bearer Token）
+#
+# ============================ 用法 ============================
+#   正式发布：先确认 surfaces/gui/src-tauri/tauri.conf.json 的 version（模板仓当前是 0.1.7），
+#             再打同号 tag：git tag corp-v0.1.7 && git push origin corp-v0.1.7
+#             （要发新版就先把 version 改成 0.1.8，再打 corp-v0.1.8 —— 两者必须一致）
+#   内测发布：签名 Secrets 一个都不配，照样推 corp-v* tag → 自动发未签名 prerelease
+#   只构建不发布：Actions → 手动运行，tag_name 留空 → 只产出 workflow artifacts
+#
+# ============================ 与冒烟测试的一处已知冲突 ============================
+#   enterprise/tests/test_enterprise_customization.py 的 FORBIDDEN_UPDATER_MARKERS 把
+#   github.com / githubusercontent.com 也算作「非企业域」并直接判红。
+#   本文件的「方式 A · 私有 Release」必然命中它 —— 方式 A 只适合还没接自动更新的内测阶段；
+#   要让 enterprise/tests 全绿，必须走方式 B（vars.CORP_UPDATE_BASE_URL 指向企业自有域名）。
+#   下面的 preflight 会就这一点发 ::warning::，不拦截。
+
+name: Release (企业版)
+
+on:
+  push:
+    tags: ["corp-v*"]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "发布 tag（如 corp-v0.1.8）。留空则只构建、不发布。"
+        required: false
+        default: ""
+
+defaults:
+  run:
+    shell: bash
+
+# 默认只读：三平台构建 job 会把 token 暴露给 npm/cargo 依赖的构建脚本，没有理由给它写权限。
+# 需要写的只有 publish（建 Release、可选回写 main），它自己单独提权。
+permissions:
+  contents: read
+
+concurrency:
+  # 同一个 tag 只跑一条，避免两次发布互相覆盖 Release 资产
+  group: release-corp-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 预检：先花 30 秒把版本号、品牌配置、签名 Secrets 全部校验一遍，
+  # 再去跑 30 分钟的三平台构建。样板里版本校验放在发布阶段，构建完才发现 tag 写错，浪费一轮。
+  # ---------------------------------------------------------------------------
+  preflight:
+    runs-on: ubuntu-latest
+    env:
+      CORP_NAME: ${{ vars.CORP_NAME || 'AcmeWorker' }}
+      CORP_ID: ${{ vars.CORP_ID || 'acme' }}
+    outputs:
+      corp_name: ${{ steps.ident.outputs.corp_name }}
+      corp_id: ${{ steps.ident.outputs.corp_id }}
+      version: ${{ steps.ident.outputs.version }}
+      tag: ${{ steps.ident.outputs.tag }}
+      publish: ${{ steps.ident.outputs.publish }}
+      signed: ${{ steps.mode.outputs.signed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 解析企业标识与版本号
+        id: ident
+        env:
+          # tag：push 触发取 ref 名，手动触发取输入。
+          # ★ 绝不能把 ${{ inputs.tag_name }} 直接内联进脚本正文 —— 手动触发的输入是任意
+          #   字符串，内联展开等于把它当 shell 代码执行；带换行的输入还能往 $GITHUB_OUTPUT
+          #   里注入伪造的 signed=true 之类。经 env 传入 + 下面的格式白名单校验才是安全读法。
+          RAW_TAG: ${{ startsWith(github.ref, 'refs/tags/corp-v') && github.ref_name || inputs.tag_name }}
+        run: |
+          set -euo pipefail
+
+          # 企业短名必须是 ASCII，且与技能目录命名规则同一套正则
+          # （coworker 只接受 ^[A-Za-z0-9][A-Za-z0-9._-]*$ 的技能名，
+          #   企业短名沿用同一规则，可以直接当 enterprise/skills/<name> 的前缀用）
+          #
+          # ★ 必须用 bash 的 [[ =~ ]]，不能用 grep -E：grep 是按【行】匹配的，值里带换行时
+          #   只要有一行合法就整体放行；而这些值紧接着要写进 $GITHUB_OUTPUT（也是按行解析），
+          #   于是 "AcmeWorker\ncorp_name=…" 这种值能覆盖掉刚校验过的输出。
+          #   [[ =~ ]] 拿整串去匹配，^…$ 卡的是字符串首尾，换行直接判非法。（已实测）
+          NAME_RE='^[A-Za-z0-9][A-Za-z0-9._-]*$'
+          for pair in "CORP_NAME:$CORP_NAME" "CORP_ID:$CORP_ID"; do
+            key="${pair%%:*}"; val="${pair#*:}"
+            if [[ ! $val =~ $NAME_RE ]]; then
+              echo "::error::$key=\"$val\" 不合法，只允许 ASCII 且匹配 ^[A-Za-z0-9][A-Za-z0-9._-]*\$"
+              exit 1
+            fi
+          done
+          echo "corp_name=$CORP_NAME" >> "$GITHUB_OUTPUT"
+          echo "corp_id=$CORP_ID" >> "$GITHUB_OUTPUT"
+
+          TAG="${RAW_TAG:-}"
+          if [ -n "$TAG" ]; then
+            # 白名单校验：既挡住注入，也顺手把 `v0.1.7`（忘了 corp- 前缀）这种误操作拦在构建前
+            TAG_RE='^corp-v[0-9]+\.[0-9]+\.[0-9]+([.+-][0-9A-Za-z.+-]+)?$'
+            if [[ ! $TAG =~ $TAG_RE ]]; then
+              echo "::error::tag \"$TAG\" 不合法：必须形如 corp-v0.1.7 或 corp-v0.1.7-acme.1"
+              exit 1
+            fi
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          # 版本号唯一真源：tauri.conf.json（构建脚本也从这里取，见 packaging/build_dmg.sh）
+          CONF_VERSION=$(python3 -c "import json;print(json.load(open('surfaces/gui/src-tauri/tauri.conf.json'))['version'])")
+          echo "version=$CONF_VERSION" >> "$GITHUB_OUTPUT"
+
+          # tag 与配置版本必须对得上。允许 corp-v0.1.8 与 corp-v0.1.8-acme.1 两种写法：
+          # 去掉 corp-v 前缀后，再去掉第一个 '-' 之后的企业内部序号。
+          if [ -n "$TAG" ]; then
+            V="${TAG#corp-v}"
+            V="${V%%-*}"
+            if [ "$V" != "$CONF_VERSION" ]; then
+              echo "::error::tag $TAG 与 tauri.conf.json version $CONF_VERSION 不一致 —— 打 tag 前先改配置"
+              exit 1
+            fi
+          fi
+
+      - name: 判定签名模式（正式签名版 / 未签名测试版）
+        id: mode
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+        run: |
+          set -euo pipefail
+          # 样板的做法是"tag 触发就必须有全部 Secrets，缺一即 fail"。企业版改成分支：
+          #   全都有 → 正式签名版（公证 + 自动更新）
+          #   缺任意一个 → 未签名测试包（prerelease，不产出更新清单，不推给已安装用户）
+          # 这样企业可以先内测，等 Apple / 代码签名证书办下来再切正式版，无需改流水线。
+          missing=()
+          for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
+                   APPLE_API_KEY_CONTENT APPLE_API_KEY APPLE_API_ISSUER TAURI_SIGNING_PRIVATE_KEY; do
+            [ -n "${!v:-}" ] || missing+=("$v")
+          done
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "==> 正式签名版：Apple 签名 + 公证 + 自动更新清单"
+            [ -n "${WINDOWS_CERTIFICATE:-}" ] \
+              || echo "::warning::未配置 WINDOWS_CERTIFICATE —— Windows 安装包不做 Authenticode 签名，用户会看到 SmartScreen 警告"
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::缺少签名 Secrets（${missing[*]}）—— 按【未签名测试包】发布，不产出自动更新清单"
+          fi
+
+      - name: 校验企业品牌与更新端点配置
+        env:
+          CORP_ID: ${{ steps.ident.outputs.corp_id }}
+          SIGNED: ${{ steps.mode.outputs.signed }}
+        run: |
+          set -euo pipefail
+          # 桌面品牌的五个挂载点全在 surfaces/gui/src-tauri/tauri.conf.json：
+          #   productName / identifier / bundle.publisher /
+          #   plugins.updater.endpoints / plugins.updater.pubkey
+          # 正式签名版：改漏了直接 fail（发出去就是带着上游品牌的包，收不回来）。
+          # 未签名测试版：只告警，方便企业还没做完换肤时先出内测包。
+          python3 - <<'PY'
+          import json, os, sys
+
+          conf = json.load(open("surfaces/gui/src-tauri/tauri.conf.json"))
+          corp_id = os.environ["CORP_ID"]
+          strict = os.environ["SIGNED"] == "true"
+          problems = []
+
+          # 汉化版的默认值 —— 出现这些就说明品牌没换
+          ZH_PRODUCT = "OpenWorker 中文版"
+          ZH_IDENTIFIER = "com.openworker.desktop.zh"
+          ZH_PUBKEY_PREFIX = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVCNzEzRjY5OTkzNUNBNjk"
+
+          product = conf.get("productName", "")
+          if not product or product in (ZH_PRODUCT, "OpenWorker"):
+              problems.append(f"productName 仍是上游/汉化版默认值：{product!r}")
+
+          identifier = conf.get("identifier", "")
+          if not identifier or identifier == ZH_IDENTIFIER or identifier.startswith("com.openworker."):
+              problems.append(f"identifier 仍是上游/汉化版默认值：{identifier!r}（应改成企业自己的反域名，如 cn.corp.openworker）")
+
+          publisher = conf.get("bundle", {}).get("publisher", "")
+          if not publisher or publisher == "OpenWorker":
+              problems.append(f"bundle.publisher 仍是默认值：{publisher!r}（Windows 安装包的发布者显示名）")
+
+          updater = conf.get("plugins", {}).get("updater", {})
+          endpoints = updater.get("endpoints", [])
+          manifest = f"latest-{corp_id}.json"
+          if not any(manifest in e for e in endpoints):
+              problems.append(
+                  f"plugins.updater.endpoints 里没有一条指向 {manifest}；当前为 {endpoints}"
+              )
+          if any("zhanglunet" in e or "andrewyng" in e for e in endpoints):
+              problems.append("plugins.updater.endpoints 还指着上游/汉化仓 —— 企业包会去拉别人的更新")
+
+          # 与 enterprise/tests/test_enterprise_customization.py 的 FORBIDDEN_UPDATER_MARKERS
+          # 对齐：那份冒烟测试把 github.com / githubusercontent.com / openworker.com 也算
+          # 「非企业域」并直接判红。本流水线的「方式 A · 私有 Release 直链」必然命中它，
+          # 所以这里只告警不拦截 —— 但要让 enterprise/tests 全绿就得改用方式 B。
+          public = sorted(
+              {m for e in endpoints for m in ("github.com", "githubusercontent.com", "openworker.com")
+               if m in e.lower()}
+          )
+          if public:
+              print(
+                  f"::warning::plugins.updater.endpoints 使用了公共域 {public}（方式 A）——"
+                  " enterprise/tests 的 test_updater_endpoints_point_at_enterprise_host 会判红；"
+                  " 要全绿请改方式 B（vars.CORP_UPDATE_BASE_URL + 企业自有域名）"
+              )
+
+          pubkey = updater.get("pubkey", "")
+          if not pubkey:
+              problems.append("plugins.updater.pubkey 为空 —— 自动更新无法校验签名")
+          elif pubkey.startswith(ZH_PUBKEY_PREFIX):
+              problems.append("plugins.updater.pubkey 还是汉化版的公钥 —— 必须换成企业自己的 minisign 密钥对")
+
+          if problems:
+              level = "error" if strict else "warning"
+              for p in problems:
+                  print(f"::{level}::tauri.conf.json：{p}")
+              if strict:
+                  print("::error::品牌/更新端点未完成企业化改造，拒绝发布正式版")
+                  sys.exit(1)
+          else:
+              print(f"品牌配置校验通过：{product} / {identifier} / {manifest}")
+          PY
+
+  # ---------------------------------------------------------------------------
+  # 构建：三个目标各自原生编译（sidecar 是 PyInstaller 冻结产物，无法交叉编译）
+  # ---------------------------------------------------------------------------
+  build:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest # Apple 芯片
+            slug: macos-arm64
+          - os: macos-15-intel # Intel macOS（Actions 提供到 2027-08，最后一代 x86_64 镜像）
+            slug: macos-x64
+          - os: windows-latest
+            slug: windows
+    runs-on: ${{ matrix.os }}
+    env:
+      CORP_NAME: ${{ needs.preflight.outputs.corp_name }}
+      SIGNED: ${{ needs.preflight.outputs.signed }}
+      # step 的 if 条件里不能直接引用 secrets 上下文（会报 Unrecognized named-value: 'secrets'），
+      # 但 job 级 env 可以 —— 先在这里把"有没有配 Windows 证书"落成普通变量。
+      HAS_WIN_CERT: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: surfaces/gui/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: surfaces/gui/src-tauri
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 应用企业品牌资源（可选）
+        # 图标等品牌资源放在 enterprise/branding/，由企业自己的脚本覆盖到
+        # surfaces/gui/src-tauri/icons/ 这个"挂载点"。脚本不存在就跳过（例如只换了文案）。
+        run: |
+          if [ -f enterprise/branding/apply_branding.sh ]; then
+            echo "==> 应用 enterprise/branding/apply_branding.sh"
+            bash enterprise/branding/apply_branding.sh
+          else
+            echo "未提供 enterprise/branding/apply_branding.sh，沿用仓库内现有图标"
+          fi
+
+      - name: 准备 sidecar 虚拟环境 (.venv)
+        # 构建脚本约定：仓库根目录的 .venv 里装好本包和 PyInstaller。
+        # typer/tzdata 只在构建期需要（PyInstaller 走 mcp.cli 时缺 typer 会 sys.exit；
+        # Windows 需要 tzdata 提供 zoneinfo）。
+        run: |
+          python -m venv .venv
+          if [ "$RUNNER_OS" = "Windows" ]; then VPY=.venv/Scripts/python; else VPY=.venv/bin/python; fi
+          "$VPY" -m pip install --upgrade pip
+          "$VPY" -m pip install -e ".[bedrock]" pyinstaller typer tzdata
+          "$VPY" -c "import aisuite, coworker"  # 任一 import 挂了就早点失败
+
+      - name: npm ci
+        working-directory: surfaces/gui
+        run: npm ci
+
+      - name: 构建 .dmg (macOS)
+        if: runner.os == 'macOS'
+        env:
+          # 未签名分支下这些值都是空串，下面会 unset 掉 ——
+          # Tauri 见到"存在但为空"的变量会当成配置错误，必须彻底不设置才能得到干净的未签名包。
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          # 自动更新包签名（minisign，与 Apple 签名是两回事）。缺失时构建脚本会跳过更新产物并告警。
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_API_KEY APPLE_API_ISSUER; do
+            [ -n "${!v:-}" ] || unset "$v"
+          done
+          if [ -n "${APPLE_API_KEY_CONTENT:-}" ]; then
+            # build_dmg.sh 的公证环节读 APPLE_API_KEY_PATH（会回落到 NOTARYTOOL_API_KEY_PATH）
+            echo "$APPLE_API_KEY_CONTENT" | base64 -d > "$RUNNER_TEMP/AuthKey.p8"
+            export APPLE_API_KEY_PATH="$RUNNER_TEMP/AuthKey.p8"
+          fi
+          unset APPLE_API_KEY_CONTENT
+          bash packaging/build_dmg.sh
+
+      - name: 构建 .msi + NSIS .exe (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: ./packaging/build_windows.ps1
+
+      - name: Windows 代码签名 (Authenticode，可选)
+        # 样板里 Windows 包是未签名的（build_windows.ps1 头部注明"Authenticode 是后续步骤"）。
+        # 企业版在这里补上：装 .pfx → signtool 签 NSIS/.msi → 重新生成更新签名。
+        # 顺序很关键：Tauri 的 .sig 签的是"安装包内容"，Authenticode 会改写文件字节，
+        # 所以必须签完再重算 .sig，否则已安装客户端校验失败、永远更新不上。
+        if: runner.os == 'Windows' && env.HAS_WIN_CERT == 'true'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $Bundle = "surfaces/gui/src-tauri/target/release/bundle"
+
+          $pfx = Join-Path $env:RUNNER_TEMP "corp-code-signing.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+
+          # Windows SDK 的 signtool.exe 在 runner 镜像里，路径带 SDK 版本号，取最新的 x64 版
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -like "*\x64\*" } |
+              Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw "找不到 signtool.exe（Windows SDK 未安装？）" }
+
+          $targets = @()
+          $targets += Get-ChildItem "$Bundle/nsis" -Filter *.exe -ErrorAction SilentlyContinue
+          $targets += Get-ChildItem "$Bundle/msi"  -Filter *.msi -ErrorAction SilentlyContinue
+          if ($targets.Count -eq 0) { throw "没有可签名的安装包" }
+
+          foreach ($t in $targets) {
+              Write-Host "==> signtool sign $($t.Name)"
+              # 证书没设密码时必须整个省掉 /p：PowerShell 会把值为 $null 的参数直接丢弃，
+              # 写成 `/p $env:PWD` 会退化成 "/p /tr"，把下一个开关当成密码。
+              $signArgs = @("sign", "/fd", "SHA256", "/f", $pfx)
+              if ($env:WINDOWS_CERTIFICATE_PASSWORD) {
+                  $signArgs += @("/p", $env:WINDOWS_CERTIFICATE_PASSWORD)
+              }
+              $signArgs += @("/tr", "http://timestamp.digicert.com", "/td", "SHA256", $t.FullName)
+              & $signtool.FullName @signArgs
+              if ($LASTEXITCODE -ne 0) { throw "signtool 签名失败：$($t.Name)" }
+          }
+          Remove-Item $pfx -Force
+
+          # 重算 NSIS 安装包的更新签名。tauri signer 从 TAURI_SIGNING_PRIVATE_KEY /
+          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD 环境变量读私钥（若某版本 CLI 不认环境变量，
+          # 改成 `& npm run tauri -- signer sign --private-key $env:TAURI_SIGNING_PRIVATE_KEY ...`）。
+          if ($env:TAURI_SIGNING_PRIVATE_KEY) {
+              $nsis = Get-ChildItem "$Bundle/nsis" -Filter *.exe | Select-Object -First 1
+              $sig = "$($nsis.FullName).sig"
+              # 先删旧签名：这样"CLI 没写出新 .sig"也会被下面的断言拦住，
+              # 绝不会把 Authenticode 之前的旧签名当成新签名发出去。
+              if (Test-Path $sig) { Remove-Item $sig -Force }
+              Push-Location surfaces/gui
+              try {
+                  & npm run tauri -- signer sign $nsis.FullName
+                  if ($LASTEXITCODE -ne 0) { throw "重新生成 .sig 失败 —— 拒绝发布签名与内容不匹配的更新包" }
+              } finally { Pop-Location }
+              if (-not (Test-Path $sig)) { throw "未生成 $sig —— 拒绝发布签名与内容不匹配的更新包" }
+          }
+
+      - name: 归集产物（版本名 + 稳定名）
+        # 每个安装包上传两份：带版本号的原名（存档用）和固定名（供下载页长期直链）：
+        #   https://<企业托管>/releases/latest/download/<固定名>
+        run: |
+          set -euo pipefail
+          # nullglob：没命中的通配符展开成空，而不是把字面量 "*.sig" 当文件名传下去
+          shopt -s nullglob
+          mkdir -p out
+          BUNDLE=surfaces/gui/src-tauri/target/release/bundle
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cp "$BUNDLE"/nsis/*.exe out/
+            cp "$BUNDLE"/nsis/*.exe "out/${CORP_NAME}-windows-setup.exe"
+            cp "$BUNDLE"/msi/*.msi out/
+            cp "$BUNDLE"/msi/*.msi "out/${CORP_NAME}-windows.msi"
+            # 更新签名（配了 updater 密钥才有）。.sig 签的是内容，所以改名安全。
+            # 用数组而不是 `ls | head -1`：productName 会进产物文件名，企业中文名/空格
+            # 会让按行解析 ls 输出变得不可靠。
+            sigs=("$BUNDLE"/nsis/*.exe.sig)
+            if [ "${#sigs[@]}" -gt 0 ]; then
+              cp "${sigs[0]}" "out/${CORP_NAME}-windows-setup.exe.sig"
+            fi
+          else
+            cp "$BUNDLE"/dmg/*.dmg out/
+            cp "$BUNDLE"/dmg/*.dmg "out/${CORP_NAME}-${{ matrix.slug }}.dmg"
+            # macOS 的更新产物：已安装 App 用来热替换的签名 .app 压缩包
+            tgzs=("$BUNDLE"/macos/*.app.tar.gz)
+            if [ "${#tgzs[@]}" -gt 0 ]; then
+              cp "${tgzs[0]}" "out/${CORP_NAME}-${{ matrix.slug }}.app.tar.gz"
+              # .sig 缺失就直接失败：宁可不发，也不能发一个 updater 装不上的包
+              cp "${tgzs[0]}.sig" "out/${CORP_NAME}-${{ matrix.slug }}.app.tar.gz.sig"
+            fi
+          fi
+
+          # 未签名测试包：把更新物料全部剔除，确保这条链路和已安装用户的自动更新彻底隔离
+          if [ "$SIGNED" != "true" ]; then
+            rm -f out/*.sig out/*.app.tar.gz
+          fi
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.slug }}
+          path: out/*
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # 发布
+  # ---------------------------------------------------------------------------
+  publish:
+    if: needs.preflight.outputs.publish == 'true'
+    needs: [preflight, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      CORP_NAME: ${{ needs.preflight.outputs.corp_name }}
+      CORP_ID: ${{ needs.preflight.outputs.corp_id }}
+      VERSION: ${{ needs.preflight.outputs.version }}
+      TAG: ${{ needs.preflight.outputs.tag }}
+      SIGNED: ${{ needs.preflight.outputs.signed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: 生成企业更新清单 latest-<corp>.json
+        if: needs.preflight.outputs.signed == 'true'
+        env:
+          # 更新包托管方式（二选一）：
+          #   方式 A · 私有 Release（默认，CORP_UPDATE_BASE_URL 留空）
+          #     URL = https://github.com/<owner>/<repo>/releases/download/<tag>/<资产名>
+          #     ⚠️ 私有仓的 Release 资产必须带凭据才能下载，Tauri updater 默认不带；
+          #        要用这种方式，得在 tauri.conf.json 的 plugins.updater 里加 headers
+          #        （形如 {"Authorization": "Bearer <token>"}），等于把只读 token 发到客户端 ——
+          #        仅适合"企业仓设为 internal、装机范围可控"的场景。
+          #   方式 B · 内网静态服务器 / 对象存储（推荐，设 vars.CORP_UPDATE_BASE_URL）
+          #     URL = <CORP_UPDATE_BASE_URL>/<tag>/<资产名>
+          #     内网 Nginx、MinIO、OSS 内网端点都行；配合下面的"上传"步骤使用。
+          #     好处：不依赖 GitHub 可达性，也不用把 token 发到客户端。
+          CORP_UPDATE_BASE_URL: ${{ vars.CORP_UPDATE_BASE_URL }}
+          # 只用于下面那条「设了分发地址却没有上传地址」的自检
+          CORP_UPDATE_UPLOAD_URL: ${{ vars.CORP_UPDATE_UPLOAD_URL }}
+        run: |
+          set -euo pipefail
+          # 内联实现，不复用 packaging/make_update_manifest.py：
+          # 那个脚本的 ARTIFACTS 把 OpenWorker-CN-* 写死了，企业前缀对不上。
+          python3 - <<'PY'
+          import datetime, json, os, pathlib, sys
+
+          dist = pathlib.Path("dist")
+          corp_name = os.environ["CORP_NAME"]
+          corp_id = os.environ["CORP_ID"]
+          version = os.environ["VERSION"]
+          tag = os.environ["TAG"]
+
+          base = os.environ.get("CORP_UPDATE_BASE_URL", "").strip().rstrip("/")
+          if base:
+              # 只设 BASE_URL、不设 UPLOAD_URL 时，清单会指向一个本流水线从没往里放过文件的
+              # 地址 —— 客户端会拿到 404 并静默停在旧版本。必须显式提醒。
+              if not os.environ.get("CORP_UPDATE_UPLOAD_URL", "").strip():
+                  print(
+                      "::warning::设了 vars.CORP_UPDATE_BASE_URL 却没设 vars.CORP_UPDATE_UPLOAD_URL"
+                      " —— 本流水线不会上传任何文件到该地址，请确认另有分发流程把 dist/ 放上去"
+                  )
+              base = f"{base}/{tag}"                                   # 方式 B：内网托管
+          else:
+              repo = os.environ["GITHUB_REPOSITORY"]                   # 方式 A：私有 Release
+              base = f"https://github.com/{repo}/releases/download/{tag}"
+
+          # 稳定资产名 -> Tauri 平台键
+          artifacts = {
+              f"{corp_name}-macos-arm64.app.tar.gz": "darwin-aarch64",
+              f"{corp_name}-macos-x64.app.tar.gz": "darwin-x86_64",
+              f"{corp_name}-windows-setup.exe": "windows-x86_64",
+          }
+
+          platforms = {}
+          for asset, platform in artifacts.items():
+              artifact, sig = dist / asset, dist / (asset + ".sig")
+              if not artifact.exists():
+                  print(f"::warning::{asset} 不在 dist/ 里 —— 跳过 {platform}")
+                  continue
+              if not sig.exists():
+                  print(f"::warning::{asset} 没有 .sig —— 跳过 {platform}（没签名的更新包装不上）")
+                  continue
+              platforms[platform] = {
+                  "signature": sig.read_text().strip(),
+                  # URL 必须指向 tag 固定路径，不能用 latest/：
+                  # 清单只能引用与自己一同发布的那批产物，否则半成品发布会混版本。
+                  "url": f"{base}/{asset}",
+              }
+
+          if not platforms:
+              print("::error::dist/ 里没有任何带签名的更新产物 —— 拒绝发布无法自动更新的正式版")
+              sys.exit(1)
+
+          manifest = {
+              "version": version,
+              "notes": f"{corp_name} {version} 企业版更新",
+              "pub_date": datetime.datetime.now(datetime.timezone.utc)
+              .isoformat(timespec="seconds").replace("+00:00", "Z"),
+              "platforms": platforms,
+          }
+          out = dist / f"latest-{corp_id}.json"
+          out.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+          print(f"已写出 {out}（{', '.join(sorted(platforms))}）")
+          PY
+
+      - name: 未签名测试包安全检查
+        if: needs.preflight.outputs.signed != 'true'
+        run: |
+          set -euo pipefail
+          # 测试包链路里绝不能出现更新物料，否则可能被已安装的正式版客户端拉去升级。
+          #
+          # ★ 不能写成 `if ls dist/*.sig dist/latest-*.json`：ls 只要有一个参数不存在就整体
+          #   返回非 0，于是「.sig 确实泄漏了、但 latest-*.json 不存在」会被误判成安全 ——
+          #   而未签名分支下 latest-*.json 本来就永远不存在，等于这道防线从来没生效过。
+          #   改成 nullglob 数组，逐个模式独立判定。
+          shopt -s nullglob
+          leaked=(dist/*.sig dist/*.app.tar.gz dist/latest-*.json)
+          if [ "${#leaked[@]}" -gt 0 ]; then
+            printf '::error::测试包产物中不应包含更新物料：%s\n' "${leaked[*]}"
+            exit 1
+          fi
+          ls -la dist
+
+      - name: 生成校验和与发布说明
+        run: |
+          set -euo pipefail
+          # 先写到 dist 外面再移回来，避免 * 把正在生成的 SHA256SUMS.txt 自己算进去
+          (cd dist && sha256sum -- *) > "$RUNNER_TEMP/SHA256SUMS.txt"
+          mv "$RUNNER_TEMP/SHA256SUMS.txt" dist/
+
+          {
+            if [ "$SIGNED" = "true" ]; then
+              echo "## ${CORP_NAME} ${VERSION} 企业版（${TAG}）"
+              echo
+              echo "已签名、已公证；已安装的客户端会通过 \`latest-${CORP_ID}.json\` 自动更新。"
+            else
+              echo "## ${CORP_NAME} ${VERSION} · 未签名内测版（${TAG}）"
+              echo
+              echo "> ⚠️ **未签名、未公证的内测包**：企业签名证书尚未配置。"
+              echo "> 仅供内部测试；正式版发布后请改用正式包。"
+              echo "> 本包**不接入自动更新** —— 既不会推给已安装的正式版用户，自身也不会自动升级。"
+            fi
+            echo
+            echo "### 下载对照"
+            echo
+            echo "| 系统 | 文件 |"
+            echo "|------|------|"
+            echo "| macOS · Apple 芯片（M 系列） | \`${CORP_NAME}-macos-arm64.dmg\` |"
+            echo "| macOS · Intel 芯片 | \`${CORP_NAME}-macos-x64.dmg\` |"
+            echo "| Windows 10/11 (x64) | \`${CORP_NAME}-windows-setup.exe\`（推荐）或 \`${CORP_NAME}-windows.msi\` |"
+            echo
+            echo "不确定自己 Mac 的芯片？点左上角  → 关于本机，「芯片」写 Apple M… 选 arm64，写 Intel 选 x64。"
+            echo
+            if [ "$SIGNED" != "true" ]; then
+              echo "### macOS 安装（未签名，需要手工放行一次）"
+              echo
+              echo '```bash'
+              echo "# 1) 打开 DMG，把 App 拖进「应用程序」"
+              echo "# 2) 解除隔离属性（否则会提示「已损坏」）"
+              echo 'sudo xattr -rd com.apple.quarantine "/Applications/<企业版 App 名>.app"'
+              echo '```'
+              echo
+              echo "### Windows 安装"
+              echo
+              echo "双击 setup.exe；SmartScreen 提示「Windows 已保护你的电脑」时，点「更多信息」→「仍要运行」。"
+              echo "首次启动若缺少 WebView2 会自动下载安装。"
+              echo
+            fi
+            echo "### 校验和"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS.txt
+            echo '```'
+          } > release-notes.md
+          cat release-notes.md
+
+      - name: 发布到企业私有 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          # 未签名测试包发成 prerelease：GitHub 的 "latest" 按定义跳过 prerelease，
+          # 客户端的 releases/latest/download/... 端点因此拿不到测试包。
+          prerelease: ${{ needs.preflight.outputs.signed != 'true' }}
+          make_latest: ${{ needs.preflight.outputs.signed == 'true' && 'true' || 'false' }}
+          tag_name: ${{ needs.preflight.outputs.tag }}
+          name: >-
+            ${{ needs.preflight.outputs.corp_name }}
+            ${{ needs.preflight.outputs.version }}
+            ${{ needs.preflight.outputs.signed == 'true' && '企业版' || '· 未签名内测版' }}
+          target_commitish: ${{ github.sha }}
+          body_path: release-notes.md
+          files: dist/*
+
+      - name: 上传更新包到企业内网服务器（方式 B）
+        # 仅在配置了 vars.CORP_UPDATE_UPLOAD_URL 时执行。
+        # ⚠️ GitHub 托管 runner 访问不到企业内网 —— 用这条路径必须换成 self-hosted runner
+        #    （把本 job 的 runs-on 改成 self-hosted），或让上传接口有公网入口 + 鉴权。
+        if: needs.preflight.outputs.signed == 'true' && vars.CORP_UPDATE_UPLOAD_URL != ''
+        env:
+          UPLOAD_URL: ${{ vars.CORP_UPDATE_UPLOAD_URL }}
+          UPLOAD_TOKEN: ${{ secrets.CORP_UPDATE_UPLOAD_TOKEN }}
+        run: |
+          set -euo pipefail
+          BASE="${UPLOAD_URL%/}"
+
+          # 缺凭据时 curl 会带一个空的 Bearer 发出去，多数网关回 401/403，
+          # 报错信息（"HTTP 401"）跟"忘配 Secret"完全对不上号。先自检，给人话。
+          if [ -z "${UPLOAD_TOKEN:-}" ]; then
+            echo "::error::配置了 vars.CORP_UPDATE_UPLOAD_URL，但 secrets.CORP_UPDATE_UPLOAD_TOKEN 为空"
+            exit 1
+          fi
+
+          # 1) 带 tag 的归档路径：与清单里的 URL 一一对应
+          for f in dist/*; do
+            name=$(basename "$f")
+            echo "==> PUT $BASE/$TAG/$name"
+            curl -fsS --retry 3 -X PUT \
+              -H "Authorization: Bearer $UPLOAD_TOKEN" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$f" \
+              "$BASE/$TAG/$name"
+          done
+
+          # 2) 不带 tag 的稳定路径：客户端 updater 长期指向这里
+          #    （对应 tauri.conf.json endpoints 里的 <CORP_UPDATE_BASE_URL>/latest-<corp>.json）
+          echo "==> PUT $BASE/latest-${CORP_ID}.json"
+          curl -fsS --retry 3 -X PUT \
+            -H "Authorization: Bearer $UPLOAD_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @"dist/latest-${CORP_ID}.json" \
+            "$BASE/latest-${CORP_ID}.json"
+
+          # 换成 rsync / scp 分发（内网文件服务器）时，把上面两段替换为：
+          #   echo "$SSH_KEY" > "$RUNNER_TEMP/id" && chmod 600 "$RUNNER_TEMP/id"
+          #   rsync -av -e "ssh -i $RUNNER_TEMP/id -o StrictHostKeyChecking=accept-new" \
+          #     dist/ deploy@dl.corp.example.com:/srv/openworker/"$TAG"/
+          # 换成对象存储（S3 / MinIO / OSS）时：
+          #   aws s3 sync dist/ "s3://corp-openworker/$TAG/" --endpoint-url "$S3_ENDPOINT"
+          #   aws s3 cp "dist/latest-${CORP_ID}.json" "s3://corp-openworker/latest-${CORP_ID}.json" \
+          #     --endpoint-url "$S3_ENDPOINT" --cache-control no-cache
+          #   （清单一定要 no-cache，否则 CDN 缓存会让客户端看不到新版本）
+
+      - name: 回写站内兜底清单到 enterprise/site（可选）
+        # 对应样板里"更新 main 分支的 releases/latest-zh.json"那一步。
+        # 汉化仓靠 raw.githubusercontent.com 读兜底清单，私有仓没有匿名 raw 访问，
+        # 所以默认关闭；只有当 enterprise/site 会被发布成内网站点时才打开
+        # （vars.CORP_WRITE_SITE_FALLBACK = "true"）。
+        if: needs.preflight.outputs.signed == 'true' && vars.CORP_WRITE_SITE_FALLBACK == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          mkdir -p enterprise/site
+          cp "dist/latest-${CORP_ID}.json" "enterprise/site/latest-${CORP_ID}.json"
+          git add "enterprise/site/latest-${CORP_ID}.json"
+          git commit -m "release: 更新 ${TAG} 的企业版更新清单" || exit 0
+          git push origin HEAD:main
