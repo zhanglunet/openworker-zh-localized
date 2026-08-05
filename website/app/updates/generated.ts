@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-05T15:27:05Z",
+  "generatedAt": "2026-08-05T15:56:17Z",
   "branch": "main",
-  "head": "8546ba04015914e6e349244c191d4ad15dc3d2bb",
-  "shortHead": "8546ba0",
+  "head": "12a7c8313e8560aa39aa36fa9984de7c05464c94",
+  "shortHead": "12a7c83",
   "totalFiles": 535,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "12a7c83",
+      "date": "2026-08-05",
+      "subject": "fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败"
+    },
+    {
+      "hash": "0394aa2",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "8546ba0",
       "date": "2026-08-05",
       "subject": "ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "255da25",
       "date": "2026-08-04",
       "subject": "docs: 并入完整性检查发现的关键事实"
-    },
-    {
-      "hash": "ed541e8",
-      "date": "2026-08-04",
-      "subject": "docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明"
-    },
-    {
-      "hash": "726b11a",
-      "date": "2026-08-04",
-      "subject": "docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "12a7c83",
+      "date": "2026-08-05",
+      "subject": "fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败"
+    },
+    {
+      "hash": "0394aa2",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "8546ba0",
       "date": "2026-08-05",

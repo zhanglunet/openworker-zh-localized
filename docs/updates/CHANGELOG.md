@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-05T15:27:05Z
+更新时间：2026-08-05T15:56:17Z
 
 ## 最近提交
 
+- 2026-08-05 12a7c83 fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败
+- 2026-08-05 0394aa2 docs: refresh generated site reports
 - 2026-08-05 8546ba0 ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验
 - 2026-08-05 fb1b810 docs: refresh generated site reports
 - 2026-08-05 fc875a3 ci: 测试版流水线支持手动触发发布并修正校验和生成
@@ -14,5 +16,3 @@
 - 2026-08-05 41b32bd ci: 新增中文站 Cloudflare 自动部署流水线
 - 2026-08-05 aaeec98 docs: refresh generated site reports
 - 2026-08-04 255da25 docs: 并入完整性检查发现的关键事实
-- 2026-08-04 ed541e8 docs: 补充 sidecar 企业包打包与 updater 密钥切换断链说明
-- 2026-08-04 726b11a docs: 企业定制版全套准备文档 + 站点企业定制扩展点章节
