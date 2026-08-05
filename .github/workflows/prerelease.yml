@@ -1,0 +1,198 @@
+name: Prerelease (未签名测试版)
+
+# 未签名的三平台测试版流水线 —— 在 Apple 开发者证书 / Windows 代码签名证书到位之前，
+# 让测试者也能拿到 macOS（Apple 芯片 + Intel）与 Windows 安装包。
+#
+# 与正式发布（release.yml）的区别：
+#   release.yml   tag v*      → 强制要求签名/公证/更新密钥 Secrets，缺一即失败；发布正式 Release，
+#                               并回写 releases/latest-zh.json，已安装的客户端会自动更新到该版本。
+#   本文件        tag beta-v* → 不需要任何 Secrets；发布为 GitHub **预发布(prerelease)**，
+#                               不写 latest-zh.json、不动 releases/ 目录。
+#
+# 为什么预发布不会影响已安装用户的自动更新：
+#   客户端更新端点是 releases/latest/download/latest-zh.json 与 main 分支的
+#   releases/latest-zh.json。GitHub 的 "latest" 按定义**跳过 prerelease**，而本流水线
+#   也从不写这两个文件 —— 因此测试包只能手工下载，绝不会被推送给现有用户。
+#
+# 用法：
+#   git tag beta-v0.1.7-beta.1 && git push origin beta-v0.1.7-beta.1
+#   手动运行（workflow_dispatch）只产出 workflow artifacts，不发布 Release。
+
+on:
+  push:
+    tags: ["beta-v*"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prerelease-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest # Apple Silicon
+            slug: macos-arm64
+          - os: macos-15-intel # Intel macOS（Actions 提供到 2027-08）
+            slug: macos-x64
+          - os: windows-latest
+            slug: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: surfaces/gui/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: surfaces/gui/src-tauri
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up the sidecar venv (.venv)
+        # 与 release.yml 相同：构建脚本期望 .venv 里装好本包与 PyInstaller。
+        # typer/tzdata 只在构建期需要（PyInstaller 走 mcp.cli 需要 typer；Windows 需要 tzdata）。
+        run: |
+          python -m venv .venv
+          if [ "$RUNNER_OS" = "Windows" ]; then VPY=.venv/Scripts/python; else VPY=.venv/bin/python; fi
+          "$VPY" -m pip install --upgrade pip
+          "$VPY" -m pip install -e ".[bedrock]" pyinstaller typer tzdata
+          "$VPY" -c "import aisuite, coworker"
+
+      - name: npm ci
+        working-directory: surfaces/gui
+        run: npm ci
+
+      - name: Build .dmg (macOS, 未签名)
+        if: runner.os == 'macOS'
+        # 刻意不传任何 APPLE_* 变量：Tauri 见到"存在但为空"的变量会报配置错误，
+        # 完全不设置才能得到干净的未签名构建。
+        run: bash packaging/build_dmg.sh
+
+      - name: Build .msi + NSIS .exe (Windows, 未签名)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./packaging/build_windows.ps1
+
+      - name: Stage artifacts (versioned + stable names)
+        run: |
+          mkdir -p out
+          BUNDLE=surfaces/gui/src-tauri/target/release/bundle
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cp "$BUNDLE"/nsis/*.exe out/
+            cp "$BUNDLE"/nsis/*.exe out/OpenWorker-CN-beta-windows-setup.exe
+            cp "$BUNDLE"/msi/*.msi out/
+            cp "$BUNDLE"/msi/*.msi out/OpenWorker-CN-beta-windows.msi
+          else
+            cp "$BUNDLE"/dmg/*.dmg out/
+            cp "$BUNDLE"/dmg/*.dmg out/OpenWorker-CN-beta-${{ matrix.slug }}.dmg
+          fi
+          # 测试版不分发自动更新包：即使仓库配了 updater 密钥，也不把 .sig / .app.tar.gz 带出去，
+          # 确保这条链路和已安装用户的自动更新彻底隔离。
+          rm -f out/*.sig out/*.app.tar.gz
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.slug }}
+          path: out/*
+          if-no-files-found: error
+
+  prerelease:
+    if: startsWith(github.ref, 'refs/tags/beta-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: 安全检查 —— 绝不发布自动更新物料
+        run: |
+          if ls dist/*.sig dist/latest-zh.json >/dev/null 2>&1; then
+            echo "::error::测试版产物中不应包含更新签名或 latest-zh.json"
+            exit 1
+          fi
+          ls -la dist
+
+      - name: 生成校验和与说明
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt || shasum -a 256 * > SHA256SUMS.txt
+          cd ..
+          CONF_VERSION=$(python3 -c "import json; print(json.load(open('surfaces/gui/src-tauri/tauri.conf.json'))['version'])")
+          {
+            echo "## OpenWorker 中文版 ${CONF_VERSION} · 未签名测试版（${GITHUB_REF_NAME}）"
+            echo
+            echo "> ⚠️ **这是测试版**：尚未申请 Apple 开发者证书与 Windows 代码签名证书，安装包**未签名、未公证**。"
+            echo "> 仅供内部测试试用；正式版发布后请改用正式包。"
+            echo
+            echo "### 下载对照"
+            echo
+            echo "| 系统 | 文件 |"
+            echo "|------|------|"
+            echo "| macOS · Apple 芯片（M 系列） | \`OpenWorker-CN-beta-macos-arm64.dmg\` |"
+            echo "| macOS · Intel 芯片 | \`OpenWorker-CN-beta-macos-x64.dmg\` |"
+            echo "| Windows 10/11 (x64) | \`OpenWorker-CN-beta-windows-setup.exe\`（推荐）或 \`.msi\` |"
+            echo
+            echo "不确定自己 Mac 的芯片？点左上角  → 关于本机，「芯片」写 Apple M… 选 arm64，写 Intel 选 x64。"
+            echo
+            echo "### macOS 安装（未签名，需要手工放行一次）"
+            echo
+            echo '```bash'
+            echo "# 1) 打开 DMG，把 App 拖进「应用程序」"
+            echo "# 2) 解除隔离属性（否则会提示「已损坏」）"
+            echo 'sudo xattr -rd com.apple.quarantine "/Applications/OpenWorker 中文版.app"'
+            echo '```'
+            echo
+            echo "或者：在「应用程序」里右键点 App → 打开 → 再次点「打开」；若 macOS 15+ 仍拦截，去"
+            echo "系统设置 → 隐私与安全性 → 页面底部点「仍要打开」。"
+            echo
+            echo "### Windows 安装"
+            echo
+            echo "双击 setup.exe；SmartScreen 提示「Windows 已保护你的电脑」时，点「更多信息」→「仍要运行」。"
+            echo "首次启动若缺少 WebView2 会自动下载安装。"
+            echo
+            echo "### 关于自动更新"
+            echo
+            echo "测试版**不接入自动更新**：它不会推送给已安装正式版的用户，自身也不会自动升级。"
+            echo "请从本页手工下载更新的测试版。"
+            echo
+            echo "### 校验和"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS.txt
+            echo '```'
+          } > release-notes.md
+          cat release-notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: true
+          make_latest: false
+          name: "OpenWorker 中文版 · 测试版 ${{ github.ref_name }}"
+          body_path: release-notes.md
+          files: dist/*
