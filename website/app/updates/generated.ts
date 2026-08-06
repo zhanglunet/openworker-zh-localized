@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T00:09:49Z",
+  "generatedAt": "2026-08-06T00:13:45Z",
   "branch": "main",
-  "head": "73477600c218daca063a7d0e50f828e9d7d9df7f",
-  "shortHead": "7347760",
-  "totalFiles": 558,
+  "head": "068e1db46cd5b0d24d63f59a37cbe16170068531",
+  "shortHead": "068e1db",
+  "totalFiles": 562,
   "byExt": [
     {
       "name": "py",
-      "count": 235
+      "count": 237
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 26
+      "count": 27
     },
     {
       "name": "svg",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 93
+      "count": 94
     },
     {
       "name": "docs",
-      "count": 38
+      "count": 41
     },
     {
       "name": "website",
@@ -362,6 +362,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "068e1db",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 归档调度器竞态的上游提交材料"
+    },
+    {
+      "hash": "b09e893",
+      "date": "2026-08-06",
+      "subject": "test(automation): 补上 skip-on-overlap 竞态的确定性回归用例"
+    },
+    {
+      "hash": "28c1e42",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "7347760",
       "date": "2026-08-06",
       "subject": "fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行"
@@ -405,24 +420,24 @@ export const repoReport = {
       "hash": "8546ba0",
       "date": "2026-08-05",
       "subject": "ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验"
-    },
-    {
-      "hash": "fb1b810",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "fc875a3",
-      "date": "2026-08-05",
-      "subject": "ci: 测试版流水线支持手动触发发布并修正校验和生成"
-    },
-    {
-      "hash": "ab204cf",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "068e1db",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 归档调度器竞态的上游提交材料"
+    },
+    {
+      "hash": "b09e893",
+      "date": "2026-08-06",
+      "subject": "test(automation): 补上 skip-on-overlap 竞态的确定性回归用例"
+    },
+    {
+      "hash": "28c1e42",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "7347760",
       "date": "2026-08-06",

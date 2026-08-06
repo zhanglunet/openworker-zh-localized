@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T00:09:49Z
+更新时间：2026-08-06T00:13:45Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：73477600c218daca063a7d0e50f828e9d7d9df7f
+当前提交：068e1db46cd5b0d24d63f59a37cbe16170068531
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：558
-- 当前提交：7347760
+- 跟踪文件总数：562
+- 当前提交：068e1db
 - 主要文件类型：
-  - py: 235
+  - py: 237
   - ts: 105
   - tsx: 78
-  - md: 26
+  - md: 27
   - svg: 23
   - png: 22
   - json: 12
@@ -38,8 +38,8 @@
 
 - surfaces: 228 个文件
 - coworker: 127 个文件
-- tests: 93 个文件
-- docs: 38 个文件
+- tests: 94 个文件
+- docs: 41 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,6 +231,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 068e1db docs(upstream): 归档调度器竞态的上游提交材料
+- 2026-08-06 b09e893 test(automation): 补上 skip-on-overlap 竞态的确定性回归用例
+- 2026-08-06 28c1e42 docs: refresh generated site reports
 - 2026-08-06 7347760 fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行
 - 2026-08-05 3923f58 docs: refresh generated site reports
 - 2026-08-05 5f790df feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）
@@ -240,6 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-05 12a7c83 fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败
 - 2026-08-05 0394aa2 docs: refresh generated site reports
 - 2026-08-05 8546ba0 ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验
-- 2026-08-05 fb1b810 docs: refresh generated site reports
-- 2026-08-05 fc875a3 ci: 测试版流水线支持手动触发发布并修正校验和生成
-- 2026-08-05 ab204cf docs: refresh generated site reports
