@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T02:48:25Z",
+  "generatedAt": "2026-08-06T03:11:37Z",
   "branch": "main",
-  "head": "e83a8671513004dfd2177d726204d62f94fd3044",
-  "shortHead": "e83a867",
+  "head": "5627b2d303836ee0ee546fd2aa5dcdb10bed556b",
+  "shortHead": "5627b2d",
   "totalFiles": 592,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "5627b2d",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 补三个实操中真的踩到的坑"
+    },
+    {
+      "hash": "657f581",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "e83a867",
       "date": "2026-08-06",
       "subject": "docs(upstream): 澄清克隆目录放哪儿不重要，git remote -v 才是判据"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "d182a24",
       "date": "2026-08-06",
       "subject": "feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）"
-    },
-    {
-      "hash": "d86177b",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ee6e05b",
-      "date": "2026-08-06",
-      "subject": "feat(provisioning): 首启把已发布的默认值种进空的状态目录（M1 配置预置）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "5627b2d",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 补三个实操中真的踩到的坑"
+    },
+    {
+      "hash": "657f581",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "e83a867",
       "date": "2026-08-06",
