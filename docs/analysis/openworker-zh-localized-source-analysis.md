@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T03:26:25Z
+更新时间：2026-08-06T03:35:41Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：d47751873abaf1c59061e3fe728375c4aeb61293
+当前提交：b26c4c839cb280fab6958e492b8be3b236f01a03
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：592
-- 当前提交：d477518
+- 当前提交：b26c4c8
 - 主要文件类型：
   - py: 260
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 b26c4c8 fix(enterprise): 镜像前必须先关掉企业仓的 Actions
+- 2026-08-06 209c7e8 docs: refresh generated site reports
 - 2026-08-06 d477518 docs(upstream): 记录 PR #458 已提交
 - 2026-08-06 81ac2d8 docs: refresh generated site reports
 - 2026-08-06 2d81328 docs(upstream): 第 4 步标为可选，并写清 macOS 自带 Python 的两个坑
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 657f581 docs: refresh generated site reports
 - 2026-08-06 e83a867 docs(upstream): 澄清克隆目录放哪儿不重要，git remote -v 才是判据
 - 2026-08-06 d54ed56 docs(upstream): 上游 PR 提交步骤写成逐条可执行命令
-- 2026-08-06 69a5e59 docs: refresh generated site reports
-- 2026-08-06 4888975 内部系统 connector：模板 + 接入指南（M3 3.3）

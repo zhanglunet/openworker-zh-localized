@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T03:26:25Z",
+  "generatedAt": "2026-08-06T03:35:41Z",
   "branch": "main",
-  "head": "d47751873abaf1c59061e3fe728375c4aeb61293",
-  "shortHead": "d477518",
+  "head": "b26c4c839cb280fab6958e492b8be3b236f01a03",
+  "shortHead": "b26c4c8",
   "totalFiles": 592,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "b26c4c8",
+      "date": "2026-08-06",
+      "subject": "fix(enterprise): 镜像前必须先关掉企业仓的 Actions"
+    },
+    {
+      "hash": "209c7e8",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "d477518",
       "date": "2026-08-06",
       "subject": "docs(upstream): 记录 PR #458 已提交"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "d54ed56",
       "date": "2026-08-06",
       "subject": "docs(upstream): 上游 PR 提交步骤写成逐条可执行命令"
-    },
-    {
-      "hash": "69a5e59",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "4888975",
-      "date": "2026-08-06",
-      "subject": "内部系统 connector：模板 + 接入指南（M3 3.3）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "b26c4c8",
+      "date": "2026-08-06",
+      "subject": "fix(enterprise): 镜像前必须先关掉企业仓的 Actions"
+    },
+    {
+      "hash": "209c7e8",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "d477518",
       "date": "2026-08-06",
