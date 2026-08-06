@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T04:21:02Z",
+  "generatedAt": "2026-08-06T06:38:59Z",
   "branch": "main",
-  "head": "3ef062b396514472b8ee4fb74bb45a0c2a2f4e1a",
-  "shortHead": "3ef062b",
+  "head": "f4327824102058bbbbf319eef9a83d56712538f3",
+  "shortHead": "f432782",
   "totalFiles": 598,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "f432782",
+      "date": "2026-08-06",
+      "subject": "docs(deployment): 企业站部署改写成逐步操作指南"
+    },
+    {
+      "hash": "e399187",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "3ef062b",
       "date": "2026-08-06",
       "subject": "feat(enterprise): 企业站模板 + Cloudflare 部署流水线"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "83574b0",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "5627b2d",
-      "date": "2026-08-06",
-      "subject": "docs(upstream): 补三个实操中真的踩到的坑"
-    },
-    {
-      "hash": "657f581",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "f432782",
+      "date": "2026-08-06",
+      "subject": "docs(deployment): 企业站部署改写成逐步操作指南"
+    },
+    {
+      "hash": "e399187",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "3ef062b",
       "date": "2026-08-06",

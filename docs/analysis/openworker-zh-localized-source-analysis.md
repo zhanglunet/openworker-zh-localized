@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T04:21:02Z
+更新时间：2026-08-06T06:38:59Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：3ef062b396514472b8ee4fb74bb45a0c2a2f4e1a
+当前提交：f4327824102058bbbbf319eef9a83d56712538f3
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：598
-- 当前提交：3ef062b
+- 当前提交：f432782
 - 主要文件类型：
   - py: 261
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 f432782 docs(deployment): 企业站部署改写成逐步操作指南
+- 2026-08-06 e399187 docs: refresh generated site reports
 - 2026-08-06 3ef062b feat(enterprise): 企业站模板 + Cloudflare 部署流水线
 - 2026-08-06 00c2fd9 docs: refresh generated site reports
 - 2026-08-06 b26c4c8 fix(enterprise): 镜像前必须先关掉企业仓的 Actions
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 422a6b1 docs: refresh generated site reports
 - 2026-08-06 95bbb1a docs(upstream): 更正依赖说明——不能只装那三个包
 - 2026-08-06 83574b0 docs: refresh generated site reports
-- 2026-08-06 5627b2d docs(upstream): 补三个实操中真的踩到的坑
-- 2026-08-06 657f581 docs: refresh generated site reports
