@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T10:12:03Z",
+  "generatedAt": "2026-08-06T11:51:33Z",
   "branch": "main",
-  "head": "c68e9037b94cc52809c7805222927e42fe037ac3",
-  "shortHead": "c68e903",
-  "totalFiles": 600,
+  "head": "057bbeab3aa475c1467110d237b69c7339109c2f",
+  "shortHead": "057bbea",
+  "totalFiles": 601,
   "byExt": [
     {
       "name": "py",
@@ -35,7 +35,7 @@ export const repoReport = {
     },
     {
       "name": "yml",
-      "count": 10
+      "count": 11
     },
     {
       "name": "[none]",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 58
+      "count": 59
     },
     {
       "name": "website",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "057bbea",
+      "date": "2026-08-06",
+      "subject": "feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线"
+    },
+    {
+      "hash": "ec04f81",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "c68e903",
       "date": "2026-08-06",
       "subject": "fix(site): 免责声明里企业名两侧的空格 —— \"非 亚信 官方发布\""
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "364a7da",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "bb2f4dc",
-      "date": "2026-08-06",
-      "subject": "fix(smoke): 冒烟测试认不出零冲突的模型声明路径，且漏掉类型错误"
-    },
-    {
-      "hash": "066c17c",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "057bbea",
+      "date": "2026-08-06",
+      "subject": "feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线"
+    },
+    {
+      "hash": "ec04f81",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "c68e903",
       "date": "2026-08-06",

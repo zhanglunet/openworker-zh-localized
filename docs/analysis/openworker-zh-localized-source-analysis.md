@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T10:12:03Z
+更新时间：2026-08-06T11:51:33Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：c68e9037b94cc52809c7805222927e42fe037ac3
+当前提交：057bbeab3aa475c1467110d237b69c7339109c2f
 
 ## 1. 总体判断
 
@@ -14,8 +14,8 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：600
-- 当前提交：c68e903
+- 跟踪文件总数：601
+- 当前提交：057bbea
 - 主要文件类型：
   - py: 262
   - ts: 105
@@ -24,7 +24,7 @@
   - svg: 23
   - png: 22
   - json: 17
-  - yml: 10
+  - yml: 11
   - [none]: 7
   - html: 7
   - sh: 5
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 107 个文件
-- docs: 58 个文件
+- docs: 59 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 057bbea feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线
+- 2026-08-06 ec04f81 docs: refresh generated site reports
 - 2026-08-06 c68e903 fix(site): 免责声明里企业名两侧的空格 —— "非 亚信 官方发布"
 - 2026-08-06 3aaa1f1 docs: refresh generated site reports
 - 2026-08-06 b299059 fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 2c4e572 docs: refresh generated site reports
 - 2026-08-06 3aec7d6 fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明
 - 2026-08-06 364a7da docs: refresh generated site reports
-- 2026-08-06 bb2f4dc fix(smoke): 冒烟测试认不出零冲突的模型声明路径，且漏掉类型错误
-- 2026-08-06 066c17c docs: refresh generated site reports
