@@ -123,6 +123,17 @@ def _err(exc: Exception) -> str:
     return f"{type(exc).__name__}: {exc}"
 
 
+def _is_timeout(exc: Exception) -> bool:
+    """区分「超时」与「明确拒绝」。socket.timeout 在 py3.10+ 是 TimeoutError 的别名，
+    但 urllib 有时把它裹进 URLError，所以文本兜底一层。"""
+    if isinstance(exc, TimeoutError):
+        return True
+    reason = getattr(exc, "reason", None)
+    if isinstance(reason, TimeoutError):
+        return True
+    return "timed out" in str(exc).lower()
+
+
 def run(probe: Probe) -> dict[str, Any]:
     """逐项实测。每项返回 (通过?, 说明)，任何一项失败都不中断后面的探测。"""
     out: dict[str, Any] = {}
@@ -140,12 +151,35 @@ def run(probe: Probe) -> dict[str, Any]:
         out["models_endpoint"] = (False, f"不可用（{_err(exc)}）—— GUI 的「获取模型」按钮会失败")
 
     # 1) 普通对话 —— 最低门槛
+    #
+    # max_tokens 给足 256，不是 32：推理模型（deepseek-v4-pro 这类）会先烧一段
+    # reasoning_content 再吐 content，32 个 token 全被推理吃掉，content 回来是空的，
+    # 于是"模型好好的"被判成"基础对话不通"。这个假阴性会一路传染——报告说不通，
+    # 后面的探测全部 return 掉，人再去查端点和凭据，查半天什么都没有。
     try:
         t0 = time.time()
-        res = probe.chat([{"role": "user", "content": "只回复两个字：可以"}], max_tokens=32)
-        text = (res.get("choices") or [{}])[0].get("message", {}).get("content") or ""
+        res = probe.chat([{"role": "user", "content": "只回复两个字：可以"}], max_tokens=256)
+        msg = (res.get("choices") or [{}])[0].get("message", {}) or {}
+        text = msg.get("content") or ""
+        # 各家推理模型的字段名不统一，见到哪个算哪个
+        reasoning = ""
+        for k in ("reasoning_content", "reasoning", "thinking"):
+            if msg.get(k):
+                reasoning = str(msg[k])
+                break
         usage = res.get("usage") or {}
-        out["chat"] = (bool(text.strip()), f"{time.time() - t0:.1f}s，回复 {len(text)} 字符")
+        took = time.time() - t0
+        if text.strip():
+            out["chat"] = (True, f"{took:.1f}s，回复 {len(text)} 字符")
+        elif reasoning.strip():
+            # 能推理说明链路是通的，只是 content 为空 —— 不当失败，但要说清楚
+            out["chat"] = (
+                True,
+                f"{took:.1f}s，content 为空但返回了 {len(reasoning)} 字符推理内容"
+                "（推理模型；如仍为空请调大 max_tokens 复测）",
+            )
+        else:
+            out["chat"] = (False, f"{took:.1f}s，content 与推理内容都为空")
         out["_usage"] = bool(usage.get("prompt_tokens"))
     except Exception as exc:
         out["chat"] = (False, _err(exc))
@@ -189,7 +223,13 @@ def run(probe: Probe) -> dict[str, Any]:
                 f"一轮返回 {len(calls)} 个调用" + ("" if len(calls) >= 2 else "（只肯一个一个来）"),
             )
         except Exception as exc:
-            out["parallel_tool_calls"] = (False, _err(exc))
+            # 超时 ≠ 不支持。把网关抖动记成 parallel_tool_calls=false 会被写进配置，
+            # 之后 Agent 永远串行执行，慢一倍，而且没有任何地方会提示你重测。
+            # 所以超时单独记成 None（未判定），由调用方决定重试或留空。
+            out["parallel_tool_calls"] = (
+                None if _is_timeout(exc) else False,
+                _err(exc) + ("　←　超时，未能判定，请重测" if _is_timeout(exc) else ""),
+            )
     else:
         out["parallel_tool_calls"] = (False, "跳过：工具调用本身就不通")
 
@@ -256,7 +296,8 @@ def report(model_id: str, results: dict[str, Any]) -> bool:
         if key not in results:
             continue
         ok, note = results[key]
-        print(f"  {'✅' if ok else '❌'}  {label:<14} {note}")
+        mark = "⚠️" if ok is None else ("✅" if ok else "❌")
+        print(f"  {mark}  {label:<14} {note}")
 
     blocking = []
     if not results.get("chat", (False, ""))[0]:
@@ -275,7 +316,11 @@ def report(model_id: str, results: dict[str, Any]) -> bool:
             print(f"   · {b}")
     else:
         print("结论：✅ 可以作为企业默认模型")
-        if not results.get("parallel_tool_calls", (False, ""))[0]:
+        par = results.get("parallel_tool_calls", (False, ""))[0]
+        if par is None:
+            print("   · 并行工具调用**未判定**（超时）—— 声明里已省略该字段，请重测后再填，")
+            print("     不要默认填 false：那会让 Agent 永远串行，而且没人会想起来复查")
+        elif not par:
             print("   · 并行工具调用不支持 —— 已在生成的声明里关掉，Agent 会串行执行，慢但正确")
         if not results.get("streaming", (False, ""))[0]:
             print("   · 不支持流式 —— 界面会整段蹦出而不是逐字，可用但体验打折")
@@ -283,15 +328,19 @@ def report(model_id: str, results: dict[str, Any]) -> bool:
 
 
 def declaration(model_id: str, label: str, results: dict[str, Any], window: Optional[int]) -> dict:
-    got = lambda k: bool(results.get(k, (False, ""))[0])  # noqa: E731
+    raw = lambda k: results.get(k, (False, ""))[0]  # noqa: E731
+    got = lambda k: bool(raw(k))  # noqa: E731
     entry: dict[str, Any] = {
         "label": label or model_id,
         "tools": got("tools"),
         "streaming": got("streaming"),
-        "parallel_tool_calls": got("parallel_tool_calls"),
         "vision": got("vision"),
         "pdf": False,  # OpenAI 兼容端点都没有内联文件入参，PDF 走 pdf_support.py 降级
     }
+    # 未判定（超时）的能力**不写进声明**：宁可缺一个字段让它落到保守默认，
+    # 也不能把"没测出来"写成"不支持"——后者是一条看起来有依据的错误事实。
+    if raw("parallel_tool_calls") is not None:
+        entry["parallel_tool_calls"] = got("parallel_tool_calls")
     if window:
         entry["context_window"] = window
     return {"models": {model_id: entry}}

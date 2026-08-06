@@ -1,230 +1,229 @@
-"""The private-model probe script, driven against a stub OpenAI-compatible endpoint.
+"""私有模型验证脚本的判定逻辑。
 
-"OpenAI-compatible" is a spectrum in practice: gateways that accept `tools` and never
-return `tool_calls`, that only ever emit one call per turn, that reject `role=tool`
-messages, that 404 on `/models`. None of those raise an error — they just make the agent
-quietly worse. The script exists to name them before a rollout, so these tests drive it
-against endpoints that fail in exactly those ways.
+这个脚本的输出会被直接抄进模型能力声明，所以它判错的代价不是"报告难看"，
+而是**一条看起来有依据的错误事实**被写进配置，之后没人会回头复查。
+
+实测中真的踩到的两个：
+
+1. 基础对话探针用 max_tokens=32 且只读 message.content。推理模型把预算全烧在
+   reasoning_content 上，content 回来是空的 —— 于是好好的模型被判"基础对话不通"，
+   而且该判定会 return 掉后面全部探测，人再去查端点和凭据，查半天什么都没有。
+2. 并行工具调用探针把 60 秒超时 except 成 False。超时是"没测出来"，不是"不支持"；
+   写成 false 会让 Agent 永远串行执行，慢一倍，且没有任何地方提示重测。
 """
 
 from __future__ import annotations
 
 import importlib.util
-import json
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 import pytest
 
 SCRIPT = (
     Path(__file__).resolve().parent.parent
-    / "docs"
-    / "enterprise"
-    / "templates"
-    / "verify-private-model.py"
+    / "docs" / "enterprise" / "templates" / "verify-private-model.py"
 )
 
 
-def _load_script():
+def _load():
     spec = importlib.util.spec_from_file_location("verify_private_model", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-vpm = _load_script()
+vpm = _load()
 
 
-class _Stub:
-    """A configurable fake endpoint. `behaviour` picks which compatibility gaps to fake."""
+class FakeProbe:
+    """按脚本调用顺序回放预设响应。model/base 只是占位。"""
 
-    def __init__(self, behaviour: str = "full"):
-        self.behaviour = behaviour
-        self.seen: list[dict] = []
-        handler = self._handler()
-        self.httpd = HTTPServer(("127.0.0.1", 0), handler)
-        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
-        self.thread.start()
+    model = "corp/model"
 
-    @property
-    def base_url(self) -> str:
-        host, port = self.httpd.server_address
-        return f"http://{host}:{port}/v1"
+    def __init__(self, chat_responses, stream_chunks=3, models=("corp/model",)):
+        self._chat = list(chat_responses)
+        self._stream = stream_chunks
+        self._models = list(models)
+        self.calls = []
 
-    def stop(self) -> None:
-        self.httpd.shutdown()
-        self.httpd.server_close()
+    def models(self):
+        return self._models
 
-    def _handler(self):
-        outer = self
+    def chat(self, messages, **kw):
+        self.calls.append(kw)
+        item = self._chat.pop(0) if self._chat else {}
+        if isinstance(item, Exception):
+            raise item
+        return item
 
-        class Handler(BaseHTTPRequestHandler):
-            def log_message(self, *a):  # keep pytest output clean
-                pass
-
-            def _send(self, code: int, payload, raw: bool = False):
-                body = payload if raw else json.dumps(payload).encode()
-                self.send_response(code)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-
-            def do_GET(self):
-                if self.path.endswith("/models"):
-                    if outer.behaviour == "no_models_endpoint":
-                        return self._send(404, {"error": "not found"})
-                    return self._send(200, {"data": [{"id": "corp-model"}]})
-                self._send(404, {"error": "nope"})
-
-            def do_POST(self):
-                length = int(self.headers.get("Content-Length", 0))
-                req = json.loads(self.rfile.read(length) or b"{}")
-                outer.seen.append(req)
-
-                has_tool_msg = any(m.get("role") == "tool" for m in req.get("messages", []))
-                if has_tool_msg and outer.behaviour == "no_tool_results":
-                    return self._send(400, {"error": "role 'tool' is not supported"})
-
-                if req.get("stream"):
-                    if outer.behaviour == "no_streaming":
-                        return self._send(400, {"error": "stream unsupported"})
-                    chunk = json.dumps({"choices": [{"delta": {"content": "1"}}]})
-                    body = f"data: {chunk}\n\ndata: [DONE]\n\n".encode()
-                    return self._send(200, body, raw=True)
-
-                # Vision probe: content is a list of parts.
-                content = (req.get("messages") or [{}])[-1].get("content")
-                if isinstance(content, list):
-                    if outer.behaviour in ("no_vision", "text_only"):
-                        return self._send(400, {"error": "image input unsupported"})
-                    return self._send(200, self._msg({"content": "white"}))
-
-                if req.get("tools") and not has_tool_msg:
-                    if outer.behaviour in ("tools_accepted_never_called", "text_only"):
-                        return self._send(200, self._msg({"content": "I cannot call tools"}))
-                    wants_two = "同时" in json.dumps(req.get("messages"), ensure_ascii=False)
-                    calls = [self._call("get_weather", "call_1")]
-                    if wants_two and outer.behaviour != "serial_tools_only":
-                        calls.append(self._call("get_time", "call_2"))
-                    return self._send(200, self._msg({"content": None, "tool_calls": calls}))
-
-                return self._send(200, self._msg({"content": "可以"}))
-
-            @staticmethod
-            def _call(name: str, cid: str) -> dict:
-                return {
-                    "id": cid,
-                    "type": "function",
-                    "function": {"name": name, "arguments": '{"city":"x"}'},
-                }
-
-            @staticmethod
-            def _msg(message: dict) -> dict:
-                return {
-                    "choices": [{"message": {"role": "assistant", **message}}],
-                    "usage": {"prompt_tokens": 10, "completion_tokens": 2},
-                }
-
-        return Handler
+    def chat_stream(self, messages):
+        return ["chunk"] * self._stream
 
 
-@pytest.fixture
-def stub():
-    made: list[_Stub] = []
-
-    def build(behaviour: str = "full") -> _Stub:
-        s = _Stub(behaviour)
-        made.append(s)
-        return s
-
-    yield build
-    for s in made:
-        s.stop()
+def _msg(**fields):
+    return {"choices": [{"message": fields}], "usage": {"prompt_tokens": 5}}
 
 
-def _run(server: _Stub):
-    probe = vpm.Probe(server.base_url, "corp-model", "k")
-    return vpm.run(probe)
+_TOOL_CALL = {"id": "c1", "type": "function", "function": {"name": "get_weather", "arguments": "{}"}}
 
 
-def _ok(results, key) -> bool:
-    return bool(results.get(key, (False, ""))[0])
+# -- 缺陷 1：推理模型的假阴性 -------------------------------------------------------
+def test_reasoning_model_with_empty_content_is_not_a_failure():
+    """content 为空但有 reasoning_content —— 链路是通的，不能判失败。
+
+    把 chat 探针改回「只看 content」，这条必须变红。
+    """
+    probe = FakeProbe([_msg(content="", reasoning_content="嗯，用户要两个字……")])
+    out = vpm.run(probe)
+    ok, note = out["chat"]
+    assert ok is True, note
+    assert "推理" in note
 
 
-def test_fully_capable_endpoint_passes(stub):
-    results = _run(stub("full"))
-    for key in ("models_endpoint", "chat", "streaming", "tools",
-                "parallel_tool_calls", "tool_result_roundtrip", "vision"):
-        assert _ok(results, key), (key, results.get(key))
-    assert vpm.report("custom:corp-model", results) is True
+@pytest.mark.parametrize("field", ["reasoning_content", "reasoning", "thinking"])
+def test_all_known_reasoning_field_names_are_recognized(field):
+    """各家字段名不统一，认少了就还是假阴性。"""
+    probe = FakeProbe([_msg(content=None, **{field: "思考中"})])
+    assert vpm.run(probe)["chat"][0] is True
 
 
-def test_tools_accepted_but_never_called_is_blocking(stub):
-    """The nastiest failure mode: nothing errors, the model just never calls a tool."""
-    results = _run(stub("tools_accepted_never_called"))
-    assert _ok(results, "chat") and not _ok(results, "tools")
-    assert vpm.report("custom:corp-model", results) is False
+def test_basic_chat_probe_asks_for_enough_tokens():
+    """max_tokens 太小，推理模型永远吐不出 content。32 是原来的值，被这条钉死。"""
+    probe = FakeProbe([_msg(content="可以")])
+    vpm.run(probe)
+    assert probe.calls[0].get("max_tokens", 0) >= 256
 
 
-def test_tool_results_rejected_is_blocking(stub):
-    """Can start a tool call but won't accept the result — a half tool loop, worse than none."""
-    results = _run(stub("no_tool_results"))
-    assert _ok(results, "tools")
-    assert not _ok(results, "tool_result_roundtrip")
-    assert vpm.report("custom:corp-model", results) is False
+def test_truly_empty_response_is_still_a_failure():
+    """修假阴性不能修成"什么都算通过"。"""
+    probe = FakeProbe([_msg(content="", reasoning_content="")])
+    ok, note = vpm.run(probe)["chat"]
+    assert ok is False and "都为空" in note
 
 
-def test_serial_only_tools_is_usable_but_declared_false(stub):
-    results = _run(stub("serial_tools_only"))
-    assert _ok(results, "tools") and not _ok(results, "parallel_tool_calls")
-    assert vpm.report("custom:corp-model", results) is True  # usable, just slower
-    decl = vpm.declaration("custom:corp-model", "", results, None)
-    assert decl["models"]["custom:corp-model"]["parallel_tool_calls"] is False
+def test_failed_chat_short_circuits_the_rest():
+    probe = FakeProbe([RuntimeError("connection refused")])
+    out = vpm.run(probe)
+    assert out["chat"][0] is False
+    assert "streaming" not in out, "基础对话不通时不该继续探测"
 
 
-def test_missing_streaming_and_models_endpoint_are_not_blocking(stub):
-    for behaviour, key in (("no_streaming", "streaming"), ("no_models_endpoint", "models_endpoint")):
-        results = _run(stub(behaviour))
-        assert not _ok(results, key)
-        assert vpm.report("custom:corp-model", results) is True
+# -- 缺陷 2：超时被记成「不支持」---------------------------------------------------
+def test_parallel_timeout_is_undetermined_not_false():
+    """超时 → None（未判定），不是 False。
+
+    改回 `out["parallel_tool_calls"] = (False, _err(exc))` 这条必须变红。
+    """
+    probe = FakeProbe([
+        _msg(content="可以"),                 # chat
+        _msg(content=None, tool_calls=[_TOOL_CALL]),  # tools
+        TimeoutError("The read operation timed out"),  # parallel
+        _msg(content="ok"),                   # tool_result_roundtrip
+        _msg(content="ok"),                   # vision
+    ])
+    out = vpm.run(probe)
+    assert out["parallel_tool_calls"][0] is None
+    assert "超时" in out["parallel_tool_calls"][1]
 
 
-def test_declaration_matches_probe_results(stub):
-    results = _run(stub("no_vision"))
-    decl = vpm.declaration("custom:corp-model", "内网 Qwen", results, 131072)
-    entry = decl["models"]["custom:corp-model"]
-    assert entry["label"] == "内网 Qwen"
-    assert entry["context_window"] == 131072
-    assert entry["vision"] is False
-    assert entry["tools"] is True
-    # OpenAI-compatible chat APIs have no inline file part; PDFs go through pdf_support.py.
-    assert entry["pdf"] is False
+def test_parallel_explicit_refusal_is_still_false():
+    """明确的 4xx 拒绝仍然是 False —— 不能因为怕误判就全都判成未知。"""
+    probe = FakeProbe([
+        _msg(content="可以"),
+        _msg(content=None, tool_calls=[_TOOL_CALL]),
+        ValueError("HTTP 400 Bad Request: parallel tool calls not supported"),
+        _msg(content="ok"),
+        _msg(content="ok"),
+    ])
+    assert vpm.run(probe)["parallel_tool_calls"][0] is False
 
 
-def test_declaration_is_consumable_by_the_overlay(stub, tmp_path, monkeypatch):
-    """End to end: what the probe emits must be exactly what the runtime reads back."""
-    from coworker.providers import matrix, model_overlay
-
-    results = _run(stub("full"))
-    decl = vpm.declaration("custom:corp-model", "内网模型", results, 65536)
-    path = tmp_path / "models.json"
-    path.write_text(json.dumps(decl, ensure_ascii=False), encoding="utf-8")
-    monkeypatch.setattr(model_overlay, "overlay_path", lambda: path)
-    model_overlay.invalidate()
-    try:
-        entry = matrix.entry_for("custom:corp-model")
-        assert entry is not None
-        assert entry.label == "内网模型"
-        assert entry.context_window == 65536
-        assert entry.caps.parallel_tool_calls is True
-    finally:
-        model_overlay.invalidate()
+def test_single_tool_call_is_false_not_undetermined():
+    """一轮只回一个调用 = 实测出来的不支持，跟超时是两回事。"""
+    probe = FakeProbe([
+        _msg(content="可以"),
+        _msg(content=None, tool_calls=[_TOOL_CALL]),
+        _msg(content=None, tool_calls=[_TOOL_CALL]),
+        _msg(content="ok"),
+        _msg(content="ok"),
+    ])
+    ok, note = vpm.run(probe)["parallel_tool_calls"]
+    assert ok is False and "只肯一个一个来" in note
 
 
-def test_dead_endpoint_reports_cleanly():
-    probe = vpm.Probe("http://127.0.0.1:9", "corp-model", "")  # discard port
-    results = vpm.run(probe)
-    assert not _ok(results, "chat")
-    assert vpm.report("custom:corp-model", results) is False
+@pytest.mark.parametrize(
+    "exc",
+    [
+        TimeoutError("timed out"),
+        OSError("The read operation timed out"),
+    ],
+)
+def test_timeout_detection_covers_the_shapes_urllib_raises(exc):
+    assert vpm._is_timeout(exc) is True
+
+
+def test_non_timeout_is_not_mistaken_for_one():
+    assert vpm._is_timeout(ValueError("HTTP 400 Bad Request")) is False
+
+
+# -- 声明生成：未判定的能力不能落成 false ------------------------------------------
+def test_undetermined_capability_is_omitted_from_the_declaration():
+    """宁可缺一个字段落到保守默认，也不能把「没测出来」写成「不支持」——
+    后者是一条看起来有依据的错误事实，之后没人会回头复查。"""
+    results = {
+        "tools": (True, ""),
+        "streaming": (True, ""),
+        "parallel_tool_calls": (None, "超时"),
+        "vision": (True, ""),
+    }
+    entry = vpm.declaration("custom:m", "M", results, None)["models"]["custom:m"]
+    assert "parallel_tool_calls" not in entry
+    assert entry["tools"] is True and entry["vision"] is True
+
+
+def test_determined_capabilities_are_written():
+    for value in (True, False):
+        results = {
+            "tools": (True, ""),
+            "streaming": (True, ""),
+            "parallel_tool_calls": (value, ""),
+            "vision": (False, ""),
+        }
+        entry = vpm.declaration("custom:m", "M", results, None)["models"]["custom:m"]
+        assert entry["parallel_tool_calls"] is value
+
+
+def test_context_window_only_written_when_given():
+    base = {"tools": (True, ""), "streaming": (True, ""), "parallel_tool_calls": (True, ""), "vision": (True, "")}
+    assert "context_window" not in vpm.declaration("custom:m", "M", base, None)["models"]["custom:m"]
+    assert vpm.declaration("custom:m", "M", base, 200_000)["models"]["custom:m"]["context_window"] == 200_000
+
+
+# -- 报告渲染 ---------------------------------------------------------------------
+def test_report_renders_undetermined_distinctly(capsys):
+    results = {
+        "chat": (True, "1.0s"),
+        "streaming": (True, ""),
+        "tools": (True, ""),
+        "parallel_tool_calls": (None, "超时，未能判定"),
+        "tool_result_roundtrip": (True, ""),
+        "vision": (True, ""),
+    }
+    vpm.report("custom:m", results)
+    out = capsys.readouterr().out
+    assert "⚠️" in out, "未判定必须和 ❌ 区分开，否则人会当成不支持"
+    assert "未判定" in out
+    assert "不要默认填 false" in out
+
+
+def test_report_blocks_on_real_failures(capsys):
+    results = {"chat": (True, ""), "tools": (False, ""), "tool_result_roundtrip": (False, "")}
+    assert vpm.report("custom:m", results) is False
+    assert "只能当聊天模型" in capsys.readouterr().out
+
+
+def test_report_flags_half_a_toolchain(capsys):
+    """能发起调用却不接受回执 = 多轮任务会断，这个必须拦。"""
+    results = {"chat": (True, ""), "tools": (True, ""), "tool_result_roundtrip": (False, "")}
+    assert vpm.report("custom:m", results) is False
+    assert "半截" in capsys.readouterr().out
