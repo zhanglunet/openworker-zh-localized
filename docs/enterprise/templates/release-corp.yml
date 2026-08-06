@@ -433,35 +433,93 @@ jobs:
               if (-not (Test-Path $sig)) { throw "未生成 $sig —— 拒绝发布签名与内容不匹配的更新包" }
           }
 
+      - name: 断言更新签名产物（配了密钥就必须签出来）
+        env:
+          HAS_UPDATER_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          BUNDLE=surfaces/gui/src-tauri/target/release/bundle
+          # 为什么要有这一步：build_dmg.sh 在没有 TAURI_SIGNING_PRIVATE_KEY 时只打一行
+          # WARNING 然后照常构建成功（packaging/build_dmg.sh 的 UPDATER_OVERLAY 分支），
+          # 而下面的归集步骤在 SIGNED != true 时又会把 .sig 全删掉。两头一夹，
+          # "密钥有没有配对、签名到底发没发生"在整条流水线上没有任何地方看得出来 ——
+          # 构建绿了也可能是根本没用它。（2026-08-06 的验证跑就栽在这儿。）
+          if [ "$HAS_UPDATER_KEY" != "true" ]; then
+            echo "::notice::未配置 TAURI_SIGNING_PRIVATE_KEY —— 本次不产出自动更新物料，装出来的包无法自动升级。"
+            exit 0
+          fi
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            sigs=("$BUNDLE"/nsis/*.exe.sig)
+          else
+            sigs=("$BUNDLE"/macos/*.app.tar.gz.sig)
+          fi
+          if [ "${#sigs[@]}" -eq 0 ]; then
+            echo "::error::配了 TAURI_SIGNING_PRIVATE_KEY，却没有签出任何 .sig。"
+            echo "常见原因：TAURI_SIGNING_PRIVATE_KEY_PASSWORD 与私钥不匹配；私钥内容被截断；"
+            echo "或 createUpdaterArtifacts 没有生效。以下是产物目录现状："
+            ls -la "$BUNDLE"/macos "$BUNDLE"/nsis 2>/dev/null || true
+            exit 1
+          fi
+          echo "更新签名产物已生成（$RUNNER_OS）："
+          for f in "${sigs[@]}"; do echo "  · $(basename "$f")"; done
+
       - name: 归集产物（版本名 + 稳定名）
         # 每个安装包上传两份：带版本号的原名（存档用）和固定名（供下载页长期直链）：
         #   https://<企业托管>/releases/latest/download/<固定名>
         run: |
           set -euo pipefail
-          # nullglob：没命中的通配符展开成空，而不是把字面量 "*.sig" 当文件名传下去
+          # nullglob：没命中的通配符展开成空，而不是把字面量 "*.sig" 当文件名传下去。
+          # 代价是"必需产物不存在"会退化成 `cp out/`（单参数）→ BSD cp 报 usage、exit 64，
+          # 完全看不出真实原因。所以必需产物一律先经 need_one 自查，缺了报人话。
           shopt -s nullglob
           mkdir -p out
           BUNDLE=surfaces/gui/src-tauri/target/release/bundle
+
+          # need_one <目录> <后缀说明> <glob...> —— 命中恰好 1 个则回显路径，否则带现场报错退出
+          need_one() {
+            local dir="$1" what="$2"; shift 2
+            local hits=("$@")
+            if [ "${#hits[@]}" -eq 0 ]; then
+              echo "::error::${dir} 下没有找到${what}。" >&2
+              echo "该目录实际内容：" >&2
+              ls -la "$dir" >&2 2>/dev/null || echo "  （目录不存在）" >&2
+              return 1
+            fi
+            if [ "${#hits[@]}" -gt 1 ]; then
+              echo "::error::${dir} 下有 ${#hits[@]} 个${what}，无法确定该发哪个：" >&2
+              printf '  %s\n' "${hits[@]}" >&2
+              return 1
+            fi
+            printf '%s' "${hits[0]}"
+          }
+
           if [ "$RUNNER_OS" = "Windows" ]; then
-            cp "$BUNDLE"/nsis/*.exe out/
-            cp "$BUNDLE"/nsis/*.exe "out/${CORP_NAME}-windows-setup.exe"
-            cp "$BUNDLE"/msi/*.msi out/
-            cp "$BUNDLE"/msi/*.msi "out/${CORP_NAME}-windows.msi"
-            # 更新签名（配了 updater 密钥才有）。.sig 签的是内容，所以改名安全。
-            # 用数组而不是 `ls | head -1`：productName 会进产物文件名，企业中文名/空格
-            # 会让按行解析 ls 输出变得不可靠。
+            exe="$(need_one "$BUNDLE/nsis" ".exe 安装包" "$BUNDLE"/nsis/*.exe)"
+            msi="$(need_one "$BUNDLE/msi" ".msi 安装包" "$BUNDLE"/msi/*.msi)"
+            cp "$exe" out/
+            cp "$exe" "out/${CORP_NAME}-windows-setup.exe"
+            cp "$msi" out/
+            cp "$msi" "out/${CORP_NAME}-windows.msi"
+            # 更新签名（配了 updater 密钥才有，上一步已断言过）。.sig 签的是内容，改名安全。
             sigs=("$BUNDLE"/nsis/*.exe.sig)
             if [ "${#sigs[@]}" -gt 0 ]; then
               cp "${sigs[0]}" "out/${CORP_NAME}-windows-setup.exe.sig"
             fi
           else
-            cp "$BUNDLE"/dmg/*.dmg out/
-            cp "$BUNDLE"/dmg/*.dmg "out/${CORP_NAME}-${{ matrix.slug }}.dmg"
+            dmg="$(need_one "$BUNDLE/dmg" ".dmg 安装包" "$BUNDLE"/dmg/*.dmg)"
+            cp "$dmg" out/
+            cp "$dmg" "out/${CORP_NAME}-${{ matrix.slug }}.dmg"
             # macOS 的更新产物：已安装 App 用来热替换的签名 .app 压缩包
             tgzs=("$BUNDLE"/macos/*.app.tar.gz)
             if [ "${#tgzs[@]}" -gt 0 ]; then
               cp "${tgzs[0]}" "out/${CORP_NAME}-${{ matrix.slug }}.app.tar.gz"
               # .sig 缺失就直接失败：宁可不发，也不能发一个 updater 装不上的包
+              if [ ! -f "${tgzs[0]}.sig" ]; then
+                echo "::error::有 .app.tar.gz 却没有配套的 .sig，updater 会拒绝安装：${tgzs[0]}.sig" >&2
+                ls -la "$BUNDLE/macos" >&2 || true
+                exit 1
+              fi
               cp "${tgzs[0]}.sig" "out/${CORP_NAME}-${{ matrix.slug }}.app.tar.gz.sig"
             fi
           fi

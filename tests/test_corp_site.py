@@ -220,3 +220,68 @@ def test_workflow_skips_instead_of_failing_without_credentials():
     text = _read(WORKFLOW)
     assert 'echo "ready=false"' in text
     assert "::notice::" in text
+
+
+# -- 免责声明：本站带着企业品牌名与配色，不澄清就会被读成官方发布 ----------------
+def test_disclaimer_is_present_and_says_the_three_things():
+    """三件事缺一不可：个人作品、非官方发布、无隶属/背书关系。
+
+    只写"个人作品"不够——读者会理解成"公司内部某个人做的官方工具"。
+    """
+    html = _read(PUBLIC / "index.html")
+    for phrase in ("免责声明", "个人作品", "官方发布", "无隶属"):
+        assert phrase in html, f"免责声明缺少「{phrase}」"
+
+
+def test_disclaimer_comes_before_the_hero():
+    """澄清得越晚越无效。它必须排在带品牌名的 hero 之前，不能塞进页脚了事。"""
+    html = _read(PUBLIC / "index.html")
+    assert html.index('class="disclaimer"') < html.index('class="hero"')
+
+
+def test_disclaimer_is_also_in_the_footer():
+    """长页面滚到底的人不会回头看顶部。"""
+    html = _read(PUBLIC / "index.html")
+    foot = html[html.index("<footer"):html.index("</footer>")]
+    assert "非 __CORP_NAME__ 官方发布" in foot or "官方发布" in foot
+
+
+def test_disclaimer_survives_placeholder_substitution():
+    """免责声明里用的是 __CORP_NAME__，必须在已知占位符表里，否则会原样印在页面上。"""
+    html = _read(PUBLIC / "index.html")
+    block = html[html.index('class="disclaimer"'):html.index("</header>")]
+    for ph in re.findall(r"__[A-Z0-9_]+__", block):
+        assert ph in PLACEHOLDERS, f"免责声明里的 {ph} 不在替换表里"
+
+
+def test_hero_does_not_claim_official_or_corporate_endorsement():
+    """措辞层面也要守住：别写成公司 IT 部门发的东西。
+
+    注意禁的是「声称官方」，不是「官方」这两个字本身——hero 里的
+    「个人作品 · 非官方」恰恰是我们要的表述。第一版把「官方」整个拉黑，
+    被自己的澄清文案命中了。
+    """
+    html = _read(PUBLIC / "index.html")
+    hero = html[html.index('class="hero"'):html.index("</header>")]
+    # 公司口径的表述：把它写成"公司发给员工的东西"
+    for claim in ("内部发布", "企业边界", "员工的 AI 助手客户端", "官方发布的", "官方出品"):
+        assert claim not in hero, f"hero 里出现了会被读成官方口径的表述：「{claim}」"
+    # 「官方」只允许以否定形式出现
+    for m in re.finditer("官方", hero):
+        before = hero[max(0, m.start() - 3):m.start()]
+        assert "非" in before, f"hero 里的「官方」不是否定形式：…{hero[max(0,m.start()-12):m.end()+8]}…"
+
+
+def test_hero_states_it_is_a_personal_project():
+    """光是"不声称官方"还不够，要主动说明身份。"""
+    html = _read(PUBLIC / "index.html")
+    hero = html[html.index('class="hero"'):html.index("</header>")]
+    assert "个人作品" in hero and "非官方" in hero
+
+
+def test_disclaimer_is_styled_to_stand_out_from_the_brand():
+    """用品牌色会让它看起来像页面的一部分，而它的作用恰恰是从品牌里跳出来。"""
+    css = _read(PUBLIC / "styles.css")
+    assert ".disclaimer" in css
+    block = css[css.index(".disclaimer"):]
+    assert "var(--accent)" not in block.split("}")[0], "免责声明条不该用品牌主色"

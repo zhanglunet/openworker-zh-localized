@@ -193,3 +193,30 @@ footer {
 footer p {
   margin: 0;
 }
+
+/* 免责声明条：放在页面最顶端、hero 之前。
+   用琥珀色而不是品牌色 —— 品牌色会让它看起来像页面的一部分，
+   而这一条的作用恰恰是"从品牌里跳出来"。 */
+.disclaimer {
+  background: #fff8e1;
+  border-bottom: 1px solid #f0d99b;
+  color: #6b4e00;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  padding: 12px 0;
+}
+
+.disclaimer strong {
+  color: #5a3f00;
+}
+
+@media (prefers-color-scheme: dark) {
+  .disclaimer {
+    background: #2a2410;
+    border-bottom-color: #4a3f1a;
+    color: #e8d9a8;
+  }
+  .disclaimer strong {
+    color: #f5ead0;
+  }
+}

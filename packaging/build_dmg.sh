@@ -213,9 +213,27 @@ OSA
   local i; for i in $(seq 1 15); do [ -f "$mnt/.DS_Store" ] && break; sleep 1; done
   [ -f "$mnt/.DS_Store" ] || { hdiutil detach "$dev" -force >/dev/null 2>&1 || true; return 1; }
   sync; sync
-  hdiutil detach "$dev" -force >/dev/null
-  hdiutil convert "$rw" -format UDZO -imagekey zlib-level=9 -o "$DMG" >/dev/null
+  # detach 会因为卷仍被 Finder 占用而失败；直接往下 convert 会撞上 "Resource busy"。
+  # 重试几次，仍卸不掉就明确失败，让下面的 plain-dmg 兜底接手。
+  local d
+  for d in 1 2 3 4 5; do
+    hdiutil detach "$dev" -force >/dev/null 2>&1 && break
+    sleep 2
+  done
+  if [ -d "$mnt" ]; then
+    echo "    (volume still mounted, cannot convert: $mnt)" >&2
+    return 1
+  fi
+  hdiutil convert "$rw" -format UDZO -imagekey zlib-level=9 -o "$DMG" >/dev/null || {
+    rm -f "$rw"
+    return 1
+  }
   rm -f "$rw"
+  # 显式用"产物是否真的存在"作为返回值。否则函数返回的是上一行 rm -f 的退出码 ——
+  # 而 rm -f 几乎必定成功，会把 convert 的失败掩盖成 0，于是兜底分支被跳过、
+  # 脚本以 exit 0 结束却没有 .dmg。（本函数在 `if !` 位置被调用，函数体内 set -e
+  # 是失效的，所以中间任何一条 hdiutil 失败都不会自己中止。）
+  [ -s "$DMG" ]
 }
 
 if ! style_dmg; then
@@ -223,6 +241,16 @@ if ! style_dmg; then
   hdiutil create -volname "$APP" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null
 fi
 rm -rf "$STAGING"
+
+# 到这里必须有产物。少了这道断言，任何"没产出 .dmg 却 exit 0"的路径都会一路绿到
+# 发布流水线的归集步骤，在那里以 `usage: cp` + exit 64 的形式爆出来 —— 报错完全
+# 看不出真实原因。（2026-08-06 在 macos-latest/arm64 上真实发生过：构建步骤报成功、
+# 归集步骤挂掉，排查时先怀疑的是产物路径和交叉编译。）
+if [ ! -s "$DMG" ]; then
+  echo "ERROR: no .dmg was produced: $DMG" >&2
+  ls -la "$(dirname "$DMG")" >&2 || true
+  exit 1
+fi
 
 if [ "${OCW_SKIP_NOTARIZE:-}" = "1" ] && [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
   # Local-iteration escape hatch: sign (seconds) but skip the notary round-trip
