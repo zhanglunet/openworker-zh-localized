@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T00:48:11Z",
+  "generatedAt": "2026-08-06T01:01:21Z",
   "branch": "main",
-  "head": "dfd99070fd3bb19417252ca113a5597edb578b57",
-  "shortHead": "dfd9907",
-  "totalFiles": 567,
+  "head": "f2bcad548f7ff6e6fd4394719e5b4f7814a2a7e0",
+  "shortHead": "f2bcad5",
+  "totalFiles": 571,
   "byExt": [
     {
       "name": "py",
-      "count": 241
+      "count": 245
     },
     {
       "name": "ts",
@@ -85,15 +85,15 @@ export const repoReport = {
     },
     {
       "name": "coworker",
-      "count": 130
+      "count": 131
     },
     {
       "name": "tests",
-      "count": 95
+      "count": 97
     },
     {
       "name": "docs",
-      "count": 41
+      "count": 42
     },
     {
       "name": "website",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "f2bcad5",
+      "date": "2026-08-06",
+      "subject": "feat(providers): 私有模型能力声明覆盖层 + 端点能力实测脚本（M1）"
+    },
+    {
+      "hash": "5dd7db0",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "dfd9907",
       "date": "2026-08-06",
       "subject": "feat(sheets): excel_ai 注册为内置工具（大表哥 L3）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "5f790df",
       "date": "2026-08-05",
       "subject": "feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）"
-    },
-    {
-      "hash": "661dfe9",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6cbe8c2",
-      "date": "2026-08-05",
-      "subject": "docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "f2bcad5",
+      "date": "2026-08-06",
+      "subject": "feat(providers): 私有模型能力声明覆盖层 + 端点能力实测脚本（M1）"
+    },
+    {
+      "hash": "5dd7db0",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "dfd9907",
       "date": "2026-08-06",
