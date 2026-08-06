@@ -186,12 +186,30 @@ def test_wrangler_is_assets_only():
     assert conf["assets"]["directory"] == "./public"
 
 
-def test_page_has_no_external_requests():
-    """内网/弱网环境下外链字体和 CDN 就是白屏。站点必须自包含。"""
-    html = _read(PUBLIC / "index.html")
-    for m in re.finditer(r'(?:src|href)="([^"]+)"', html):
-        url = m.group(1)
-        assert not url.startswith(("http://", "https://", "//")), f"外部资源：{url}"
+@pytest.mark.parametrize("page", ["index.html", "versions.html"])
+def test_page_loads_no_external_resources(page):
+    """内网/弱网环境下外链字体和 CDN 就是白屏。站点必须自包含。
+
+    只禁**资源加载**（<link>、<script src>、<img src>），不禁 <a href> 导航链接 ——
+    版本说明页要指向各仓库的 GitHub 地址，那是页面内容不是依赖。
+    第一版把两者混为一谈，加 GitHub 链接时才发现。
+    """
+    html = _read(PUBLIC / page)
+    for tag in re.finditer(r"<(link|script|img|iframe|source)\b[^>]*>", html, re.I):
+        for url in re.findall(r'(?:src|href)="([^"]+)"', tag.group(0)):
+            assert not url.startswith(("http://", "https://", "//")), (
+                f"{page} 加载了外部资源：{url}"
+            )
+
+
+def test_navigation_links_are_allowed_but_only_to_expected_hosts():
+    """导航链接可以外链，但不能悄悄多出一个没人审过的域名。"""
+    html = _read(PUBLIC / "versions.html")
+    hosts = set()
+    for tag in re.finditer(r"<a\b[^>]*>", html, re.I):
+        for url in re.findall(r'href="(https?://[^"]+)"', tag.group(0)):
+            hosts.add(url.split("/")[2])
+    assert hosts <= {"github.com"}, f"版本说明页出现了预期外的外链域名：{sorted(hosts)}"
 
 
 def test_page_declares_charset_and_viewport():
@@ -285,3 +303,85 @@ def test_disclaimer_is_styled_to_stand_out_from_the_brand():
     assert ".disclaimer" in css
     block = css[css.index(".disclaimer"):]
     assert "var(--accent)" not in block.split("}")[0], "免责声明条不该用品牌主色"
+
+
+# -- 版本说明页 --------------------------------------------------------------------
+VERSIONS = PUBLIC / "versions.html"
+
+
+def test_versions_page_links_all_three_repos():
+    html = _read(VERSIONS)
+    for repo in (
+        "github.com/andrewyng/openworker",
+        "github.com/zhanglunet/openworker-zh-localized",
+        "zhanglunet/openworker-enterprise",
+    ):
+        assert repo in html, f"版本说明页没提到 {repo}"
+
+
+def test_private_repo_is_not_a_clickable_link():
+    """企业版是私有仓：做成可点链接只会让人点进 404，且暗示它是公开的。"""
+    html = _read(VERSIONS)
+    assert 'href="https://github.com/zhanglunet/openworker-enterprise"' not in html
+    assert "私有仓库" in html
+
+
+@pytest.mark.parametrize("page", ["index.html", "versions.html"])
+def test_every_page_carries_the_disclaimer_block(page):
+    """每一页都可能被单独分享出去，声明不能只在首页。
+
+    断言范围必须收在**声明块之内**：早先查的是整页，而页脚里也有「个人作品」，
+    于是把声明条里的字删掉测试照样绿 —— 变异测试才暴露出来。
+    """
+    html = _read(PUBLIC / page)
+    i = html.index('class="disclaimer"')
+    assert i < html.index('class="hero"'), f"{page} 的声明排在 hero 之后"
+    block = html[i:html.index("</div>", html.index("</div>", i) + 6)]
+    for phrase in ("个人作品", "官方发布", "无隶属"):
+        assert phrase in block, f"{page} 的声明块里缺少「{phrase}」"
+
+
+def test_index_links_to_the_versions_page():
+    assert 'href="./versions.html"' in _read(PUBLIC / "index.html")
+
+
+def test_infographic_is_inline_svg_with_an_accessible_label():
+    """图必须带 role/aria-label：读屏用户和图片加载失败时靠它。"""
+    html = _read(VERSIONS)
+    svg = html[html.index("<svg"):html.index("</svg>") + 6]
+    assert 'role="img"' in svg and "aria-label=" in svg
+    assert "<image" not in svg and "xlink:href" not in svg, "信息图必须是纯矢量、不外链图片"
+
+
+def test_infographic_is_valid_xml():
+    import xml.etree.ElementTree as ET
+
+    html = _read(VERSIONS)
+    ET.fromstring(html[html.index("<svg"):html.index("</svg>") + 6])
+
+
+def test_infographic_colors_follow_the_theme():
+    """SVG 里写死 #fff / #000 会在另一个主题下瞎掉。"""
+    html = _read(VERSIONS)
+    svg = html[html.index("<svg"):html.index("</svg>") + 6]
+    assert not re.search(r'(fill|stroke)="#[0-9a-fA-F]{3,6}"', svg), (
+        "信息图里有写死的颜色，换主题会瞎"
+    )
+
+
+def test_wide_content_scrolls_inside_its_own_container():
+    """表格和信息图比窄屏宽，必须自己滚，页面本身不能横向滚动。"""
+    css = _read(PUBLIC / "styles.css")
+    for sel in (".table-scroll", ".figure"):
+        block = css[css.index(sel):]
+        first = block[: block.index("}")]
+        assert "overflow-x: auto" in first, f"{sel} 没有自己的横向滚动容器"
+
+
+def test_comparison_table_has_a_row_for_every_column():
+    """表头 4 列（能力 + 三个版本），每一行都必须填满，缺一格就是暗示"未知"。"""
+    html = _read(VERSIONS)
+    body = html[html.index("<tbody>"):html.index("</tbody>")]
+    for row in re.findall(r"<tr>(.*?)</tr>", body, re.S):
+        cells = len(re.findall(r"<(?:th|td)\b", row))
+        assert cells == 4, f"某行只有 {cells} 格（应为 4）：{row[:80]}"

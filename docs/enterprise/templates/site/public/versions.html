@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>三个版本的关系 · __CORP_PRODUCT__</title>
+    <meta
+      name="description"
+      content="OpenWorker 原版、中文版、企业版三者的关系、各自新增了什么，以及功能对照表。"
+    />
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="disclaimer" role="note">
+      <div class="wrap">
+        <strong>免责声明</strong>：本站与本程序为<strong>个人作品</strong>，
+        <strong>非 __CORP_NAME__ 官方发布</strong>，与 __CORP_NAME__ 无隶属、代理或背书关系，
+        不代表其产品或立场。使用风险自负。
+      </div>
+    </div>
+
+    <header class="hero">
+      <div class="wrap">
+        <p class="eyebrow"><a href="./">← 返回下载</a></p>
+        <h1>三个版本，一条单向链</h1>
+        <p class="lede">
+          原版做平台，中文版补语言与国内生态，企业版补配置与资产。
+          三者不是分叉，是一条<strong>单向同步链</strong>：上游的改动会一路流下来，
+          而下游的定制不会被覆盖。
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <!-- 信息图：一条链 + 每层加了什么 -->
+      <section aria-labelledby="chain-title">
+        <h2 id="chain-title">同步链路</h2>
+        <div class="figure">
+          <svg
+            viewBox="0 0 760 300"
+            role="img"
+            aria-label="上游 OpenWorker 每日同步到中文版，中文版每日同步到企业版；同步是单向的，下游定制不会被上游覆盖。"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7"
+                      markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+              </marker>
+            </defs>
+
+            <!-- 上游 -->
+            <g class="node">
+              <rect x="8" y="40" width="212" height="118" rx="12" />
+              <text class="t-name" x="28" y="72">OpenWorker 原版</text>
+              <text class="t-sub" x="28" y="95">andrewyng/openworker</text>
+              <text class="t-li" x="28" y="120">Agent 平台核心</text>
+              <text class="t-li" x="28" y="140">英文界面 · 6 家模型服务商</text>
+            </g>
+
+            <!-- 中文版 -->
+            <g class="node">
+              <rect x="274" y="40" width="212" height="118" rx="12" />
+              <text class="t-name" x="294" y="72">中文版</text>
+              <text class="t-sub" x="294" y="95">openworker-zh-localized</text>
+              <text class="t-li" x="294" y="120">全量汉化 · 19 家服务商</text>
+              <text class="t-li" x="294" y="140">桌面安装包 · 企业化机制</text>
+            </g>
+
+            <!-- 企业版 -->
+            <g class="node node--corp">
+              <rect x="540" y="40" width="212" height="118" rx="12" />
+              <text class="t-name" x="560" y="72">企业版</text>
+              <text class="t-sub" x="560" y="95">openworker-enterprise（私有）</text>
+              <text class="t-li" x="560" y="120">私有模型 · 知识库 · 内部系统</text>
+              <text class="t-li" x="560" y="140">自有品牌与更新源</text>
+            </g>
+
+            <!-- 箭头 -->
+            <g class="flow">
+              <line x1="224" y1="99" x2="268" y2="99" marker-end="url(#arrow)" />
+              <line x1="490" y1="99" x2="534" y2="99" marker-end="url(#arrow)" />
+              <text class="t-flow" x="246" y="88" text-anchor="middle">每日</text>
+              <text class="t-flow" x="512" y="88" text-anchor="middle">每日</text>
+            </g>
+
+            <!-- 单向说明 -->
+            <g class="note-band">
+              <rect x="8" y="196" width="744" height="86" rx="10" />
+              <text class="t-note" x="28" y="224">
+                同步只有一个方向。每次同步都开 PR，并跑「定制存活」冒烟测试
+              </text>
+              <text class="t-note" x="28" y="248">
+                （品牌字段、模型声明、主题挂载点…）—— 定制被覆盖就当场报红，
+              </text>
+              <text class="t-note" x="28" y="272">
+                合不进去。反向：下游的改动不会自动推回上游。
+              </text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <!-- 每层加了什么 -->
+      <section aria-labelledby="layers-title">
+        <h2 id="layers-title">每一层加了什么</h2>
+        <div class="notes">
+          <article>
+            <h3>原版 · 做平台</h3>
+            <p>
+              Agent 运行时、权限引擎、技能系统、MCP 客户端、19 类工具。
+              界面英文，内置 6 家模型服务商（OpenAI / Anthropic / Gemini / Bedrock /
+              Vertex / Ollama），不提供预编译安装包。
+            </p>
+            <p class="small">
+              <a href="https://github.com/andrewyng/openworker" rel="noopener">github.com/andrewyng/openworker</a>
+              · MIT
+            </p>
+          </article>
+          <article>
+            <h3>中文版 · 补语言与生态</h3>
+            <p>
+              界面全量汉化；模型服务商从 6 家扩到 <strong>19 家</strong>，补齐 DeepSeek、
+              通义千问、Kimi、智谱、MiniMax、阶跃等国内厂商，并新增
+              <strong>自定义端点</strong>（任意 OpenAI 兼容地址）。提供 macOS 安装包。
+            </p>
+            <p class="small">
+              <a href="https://github.com/zhanglunet/openworker-zh-localized" rel="noopener">github.com/zhanglunet/openworker-zh-localized</a>
+              · MIT
+            </p>
+          </article>
+          <article>
+            <h3>企业版 · 补配置与资产</h3>
+            <p>
+              企业化的<strong>机制</strong>都在中文版里、公开可用；企业版真正多出来的是
+              <strong>配置与资产</strong>：接哪个私有网关、装哪些技能、连哪套内部系统、
+              用什么品牌与更新源，以及一条私有仓的同步与发布流水线。
+            </p>
+            <p class="small">私有仓库，需授权访问。</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- 对照表 -->
+      <section aria-labelledby="table-title">
+        <h2 id="table-title">功能对照</h2>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">能力</th>
+                <th scope="col">原版</th>
+                <th scope="col">中文版</th>
+                <th scope="col">企业版</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">界面语言</th>
+                <td>英文</td>
+                <td>简体中文</td>
+                <td>简体中文</td>
+              </tr>
+              <tr>
+                <th scope="row">模型服务商</th>
+                <td>6 家</td>
+                <td><strong>19 家</strong>（含国内厂商）</td>
+                <td>19 家 + 自建网关</td>
+              </tr>
+              <tr>
+                <th scope="row">自定义 OpenAI 兼容端点</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span></td>
+                <td><span class="yes">✓</span></td>
+              </tr>
+              <tr>
+                <th scope="row">私有模型能力声明</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 机制</td>
+                <td><span class="yes">✓</span> 已实测声明</td>
+              </tr>
+              <tr>
+                <th scope="row">连接器 / 服务商白名单</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 机制</td>
+                <td><span class="yes">✓</span> 已启用</td>
+              </tr>
+              <tr>
+                <th scope="row">工具调用审计外发</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 机制</td>
+                <td><span class="yes">✓</span> 已配置</td>
+              </tr>
+              <tr>
+                <th scope="row">表格分析（公式逆向 / 逐行校验）</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 内置工具</td>
+                <td><span class="yes">✓</span> + 技能包预置</td>
+              </tr>
+              <tr>
+                <th scope="row">企业知识库检索</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 机制 + 模板</td>
+                <td><span class="yes">✓</span> 已配置</td>
+              </tr>
+              <tr>
+                <th scope="row">内部系统接入（HTTP / CLI）</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 模板</td>
+                <td><span class="yes">✓</span> 模板已就位</td>
+              </tr>
+              <tr>
+                <th scope="row">首启配置预置</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 机制</td>
+                <td><span class="yes">✓</span> 已预置</td>
+              </tr>
+              <tr>
+                <th scope="row">桌面安装包</th>
+                <td>自行构建</td>
+                <td>macOS</td>
+                <td>macOS（双芯片）+ Windows</td>
+              </tr>
+              <tr>
+                <th scope="row">自有品牌与图标</th>
+                <td><span class="no">—</span></td>
+                <td>中文版品牌</td>
+                <td><span class="yes">✓</span> 独立品牌</td>
+              </tr>
+              <tr>
+                <th scope="row">自有更新源与签名密钥</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span></td>
+                <td><span class="yes">✓</span> 独立密钥</td>
+              </tr>
+              <tr>
+                <th scope="row">上游同步流水线</th>
+                <td>—</td>
+                <td>每日自原版</td>
+                <td>每日自中文版</td>
+              </tr>
+              <tr>
+                <th scope="row">定制存活冒烟测试</th>
+                <td><span class="no">—</span></td>
+                <td><span class="yes">✓</span> 模板</td>
+                <td><span class="yes">✓</span> 每次同步必跑</td>
+              </tr>
+              <tr>
+                <th scope="row">许可</th>
+                <td>MIT</td>
+                <td>MIT</td>
+                <td>私有（基于 MIT）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="meta">
+          「机制」= 代码能力已具备、开箱可配；「已配置 / 已声明」= 本部署里已经接上并验证过。
+        </p>
+      </section>
+
+      <section aria-labelledby="repo-title">
+        <h2 id="repo-title">仓库地址</h2>
+        <div class="cards">
+          <a class="card" href="https://github.com/andrewyng/openworker" rel="noopener">
+            <span class="card__label">原版</span>
+            <span class="card__sub">andrewyng/openworker</span>
+            <span class="card__cta">GitHub · MIT</span>
+          </a>
+          <a class="card" href="https://github.com/zhanglunet/openworker-zh-localized" rel="noopener">
+            <span class="card__label">中文版</span>
+            <span class="card__sub">zhanglunet/openworker-zh-localized</span>
+            <span class="card__cta">GitHub · MIT</span>
+          </a>
+          <span class="card card--disabled" role="group" aria-disabled="true">
+            <span class="card__label">企业版</span>
+            <span class="card__sub">zhanglunet/openworker-enterprise</span>
+            <span class="card__cta">私有仓库 · 需授权</span>
+          </span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <p class="small">
+        个人作品，非 __CORP_NAME__ 官方发布；与 __CORP_NAME__ 无隶属、代理或背书关系。
+        程序基于开源项目 OpenWorker 构建，商标与名称的权利归各自所有者。
+      </p>
+    </footer>
+  </body>
+</html>
