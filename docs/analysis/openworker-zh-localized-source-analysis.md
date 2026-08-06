@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T09:22:56Z
+更新时间：2026-08-06T09:36:39Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：f8811f92ff6fe1210afef2f9cb1c78bfc9817dc8
+当前提交：5335f701e538810b0052654041f630482e053fce
 
 ## 1. 总体判断
 
@@ -14,8 +14,8 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：598
-- 当前提交：f8811f9
+- 跟踪文件总数：599
+- 当前提交：5335f70
 - 主要文件类型：
   - py: 261
   - ts: 105
@@ -26,7 +26,7 @@
   - json: 17
   - yml: 10
   - [none]: 7
-  - html: 6
+  - html: 7
   - sh: 5
   - css: 4
   - mjs: 4
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 106 个文件
-- docs: 57 个文件
+- docs: 58 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图
+- 2026-08-06 90cdee3 docs: refresh generated site reports
 - 2026-08-06 f8811f9 fix(gui): 设置页「侧边栏」卡片被渲染了两次
 - 2026-08-06 2c4e572 docs: refresh generated site reports
 - 2026-08-06 3aec7d6 fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 c08a31d docs: refresh generated site reports
 - 2026-08-06 f432782 docs(deployment): 企业站部署改写成逐步操作指南
 - 2026-08-06 e399187 docs: refresh generated site reports
-- 2026-08-06 3ef062b feat(enterprise): 企业站模板 + Cloudflare 部署流水线
-- 2026-08-06 00c2fd9 docs: refresh generated site reports

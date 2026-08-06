@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T09:22:56Z",
+  "generatedAt": "2026-08-06T09:36:39Z",
   "branch": "main",
-  "head": "f8811f92ff6fe1210afef2f9cb1c78bfc9817dc8",
-  "shortHead": "f8811f9",
-  "totalFiles": 598,
+  "head": "5335f701e538810b0052654041f630482e053fce",
+  "shortHead": "5335f70",
+  "totalFiles": 599,
   "byExt": [
     {
       "name": "py",
@@ -43,7 +43,7 @@ export const repoReport = {
     },
     {
       "name": "html",
-      "count": 6
+      "count": 7
     },
     {
       "name": "sh",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 57
+      "count": 58
     },
     {
       "name": "website",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "5335f70",
+      "date": "2026-08-06",
+      "subject": "feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图"
+    },
+    {
+      "hash": "90cdee3",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "f8811f9",
       "date": "2026-08-06",
       "subject": "fix(gui): 设置页「侧边栏」卡片被渲染了两次"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "e399187",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3ef062b",
-      "date": "2026-08-06",
-      "subject": "feat(enterprise): 企业站模板 + Cloudflare 部署流水线"
-    },
-    {
-      "hash": "00c2fd9",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "5335f70",
+      "date": "2026-08-06",
+      "subject": "feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图"
+    },
+    {
+      "hash": "90cdee3",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "f8811f9",
       "date": "2026-08-06",
