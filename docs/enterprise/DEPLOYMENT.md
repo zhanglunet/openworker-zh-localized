@@ -143,7 +143,33 @@ port = 8765
 
 配套两件事：
 
-- **能力矩阵登记**：`coworker/providers/matrix.py` 的 `MATRIX` 是精选模型表（键为完整路由 id，如 `custom:qwen3-72b-corp`），未登记的模型会落入 `capabilities.py` 的保守启发式（并行工具调用/视觉默认关、无上下文水位条），Agent 效果被动降级——企业模型条目是**必改项**（挂载点小改）。
+- **能力声明（不必改代码）**：未登记的模型会落入 `capabilities.py` 的保守启发式（并行工具调用/视觉默认关、无上下文水位条），Agent 被动降级。本仓库已加入**本地声明覆盖层**：在 `<state-dir>/models.json` 里声明即可，热重载、格式错只告警不影响启动。
+
+  ```json
+  {
+    "models": {
+      "custom:qwen3-72b-corp": {
+        "label": "Qwen3 72B · 内网",
+        "context_window": 131072,
+        "tools": true, "streaming": true,
+        "parallel_tool_calls": true, "vision": false, "pdf": false
+      }
+    }
+  }
+  ```
+
+  声明优先于内置矩阵（网关可能用熟悉的模型名提供不同规格），并同时作用于能力探测、界面显示名、上下文水位条与模型建议列表。键必须是**完整路由 id**。
+
+- **能力实测**：别靠猜。用 [templates/verify-private-model.py](templates/verify-private-model.py) 对着真实端点跑一遍：
+
+  ```bash
+  python3 docs/enterprise/templates/verify-private-model.py \
+      --base-url https://llm.corp.example/v1 --model qwen3-72b-corp \
+      --api-key "$CORP_LLM_KEY" --label "Qwen3 72B · 内网" \
+      --context-window 131072 --emit
+  ```
+
+  它逐项实测 `/models`、基础对话、流式、工具调用、**并行工具调用**、**工具结果回传**、图片输入，给出「能不能作为企业默认模型」的结论，并直接生成上面那段 `models.json`（`--write` 可直接落盘）。「兼容 OpenAI 接口」在实践中是个光谱——收下 `tools` 却从不返回 `tool_calls`、能发起调用却不接受 `role=tool` 回执，这些都不报错，只会让 Agent 悄悄变笨，必须实测才知道。
 - **凭据预置**：Provider 密钥存 `<state-dir>/secrets.json`（0600 权限），值支持 `${ENV_VAR}` 引用（配合 `<state-dir>/.env`），适合 IT 下发时不落明文。
 - **企业规范注入**：把企业写作规范、术语表、合规要求写入 `<state-dir>/AGENTS.md`——每个会话的 system prompt 自动注入该文件（零代码），项目根的 `AGENTS.md` 再按项目叠加。
 

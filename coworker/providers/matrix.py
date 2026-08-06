@@ -207,19 +207,39 @@ MATRIX: dict[str, ModelEntry] = {
 }
 
 
+def _effective() -> dict[str, ModelEntry]:
+    """The curated matrix plus any locally declared models (``<state-dir>/models.json``).
+
+    Privately deployed models can't be curated here — nobody outside the deployment knows
+    they exist — and without a declaration they run on ``capabilities.py``'s conservative
+    fallbacks (no parallel tool calls, no context meter). The overlay is how a deployment
+    states its own models' capabilities without patching this file; declarations win, since
+    a gateway may serve a familiar id with different limits. See ``model_overlay.py``.
+    """
+    from .model_overlay import declared
+
+    extra = declared()
+    if not extra:
+        return MATRIX
+    merged: dict[str, ModelEntry] = dict(MATRIX)
+    for mid, row in extra.items():
+        merged[mid] = ModelEntry(row.label, row.caps, row.context_window)
+    return merged
+
+
 def entry_for(model: str) -> ModelEntry | None:
-    return MATRIX.get(model)
+    return _effective().get(model)
 
 
 def model_labels() -> dict[str, str]:
     """Full-id → display-label map, shipped to the GUI so every picker shows human names."""
-    return {mid: e.label for mid, e in MATRIX.items()}
+    return {mid: e.label for mid, e in _effective().items()}
 
 
 def model_context_windows() -> dict[str, int]:
     """Full-id → context-window map (verified entries only), for the GUI's fill meter."""
     return {
-        mid: e.context_window for mid, e in MATRIX.items() if e.context_window
+        mid: e.context_window for mid, e in _effective().items() if e.context_window
     }
 
 
@@ -228,7 +248,8 @@ def models_for_provider(provider: str) -> list[str]:
     Settings pane's suggestions and the composer picker so both stay in lockstep with the
     matrix. OpenAI entries are stored without a prefix (bare ids route to the OpenAI
     default), so its list is every un-prefixed id."""
+    effective = _effective()
     if provider == "openai":
-        return [mid for mid in MATRIX if ":" not in mid]
+        return [mid for mid in effective if ":" not in mid]
     prefix = provider + ":"
-    return [mid[len(prefix) :] for mid in MATRIX if mid.startswith(prefix)]
+    return [mid[len(prefix) :] for mid in effective if mid.startswith(prefix)]

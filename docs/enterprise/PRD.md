@@ -64,7 +64,7 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 | 接入企业私有模型（vLLM / Ollama / 企业网关，自定义 host:port） | Custom Provider 配 `base_url`（如 `http://llm.corp.example:8000/v1`）；或 Ollama Provider 配本地/内网地址 | 配置级 |
 | 指定模型版本与默认模型 | `config.toml` 的 `model` 键 + Provider profile 中的模型名 | 配置级 |
 | 预置企业 Provider（员工不需手工填端点） | 安装包内预置 `~/.config/coworker/config.toml` 模板或首启引导写入；或在 registry 中新增企业 Provider 描述符（名称、图标、默认端点） | 资产级/代码级 |
-| 模型能力声明（上下文窗口、工具调用、多模态） | `coworker/providers/matrix.py` / `capabilities.py` 中登记企业模型能力 | 代码级（小） |
+| 模型能力声明（上下文窗口、工具调用、多模态） | ✅ **已交付**：`<state-dir>/models.json` 本地声明覆盖层，不必改代码；能力用 [templates/verify-private-model.py](templates/verify-private-model.py) 对真实端点实测得出 | 配置级 |
 | 禁用海外模型入口 | 定制 Provider 目录：企业构建里只暴露白名单 Provider | 代码级（小） |
 
 ### 3.2 技能层：企业技能包（资产级）
