@@ -437,8 +437,6 @@ function AppearanceSection() {
 
       <SidebarCard />
 
-      <SidebarCard />
-
       <ContextBarCard />
 
       <FilesCard />
