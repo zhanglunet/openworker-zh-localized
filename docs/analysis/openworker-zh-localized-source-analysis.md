@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T11:51:33Z
+更新时间：2026-08-06T12:06:36Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：057bbeab3aa475c1467110d237b69c7339109c2f
+当前提交：b2d490d904dc124b60be511f6c7a68ec75672a42
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：601
-- 当前提交：057bbea
+- 当前提交：b2d490d
 - 主要文件类型：
   - py: 262
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 b2d490d fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的
+- 2026-08-06 9d69dad docs: refresh generated site reports
 - 2026-08-06 057bbea feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线
 - 2026-08-06 ec04f81 docs: refresh generated site reports
 - 2026-08-06 c68e903 fix(site): 免责声明里企业名两侧的空格 —— "非 亚信 官方发布"
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 90cdee3 docs: refresh generated site reports
 - 2026-08-06 f8811f9 fix(gui): 设置页「侧边栏」卡片被渲染了两次
 - 2026-08-06 2c4e572 docs: refresh generated site reports
-- 2026-08-06 3aec7d6 fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明
-- 2026-08-06 364a7da docs: refresh generated site reports

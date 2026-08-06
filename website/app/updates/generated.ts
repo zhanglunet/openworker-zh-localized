@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T11:51:33Z",
+  "generatedAt": "2026-08-06T12:06:36Z",
   "branch": "main",
-  "head": "057bbeab3aa475c1467110d237b69c7339109c2f",
-  "shortHead": "057bbea",
+  "head": "b2d490d904dc124b60be511f6c7a68ec75672a42",
+  "shortHead": "b2d490d",
   "totalFiles": 601,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "b2d490d",
+      "date": "2026-08-06",
+      "subject": "fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的"
+    },
+    {
+      "hash": "9d69dad",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "057bbea",
       "date": "2026-08-06",
       "subject": "feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "2c4e572",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3aec7d6",
-      "date": "2026-08-06",
-      "subject": "fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明"
-    },
-    {
-      "hash": "364a7da",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "b2d490d",
+      "date": "2026-08-06",
+      "subject": "fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的"
+    },
+    {
+      "hash": "9d69dad",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "057bbea",
       "date": "2026-08-06",
