@@ -52,9 +52,19 @@ def _mcp_tokens_present(secrets: SecretStore, name: str) -> bool:
 
 
 def connector_list(secrets: SecretStore) -> list[dict[str, Any]]:
+    from ..catalog_policy import connector_policy
+
     show_experimental = experimental_enabled(secrets)
+    policy = connector_policy()
     out: list[dict[str, Any]] = []
     for d in list_descriptors():
+        # Catalog policy (global config): a deployment can narrow the surface to an
+        # approved set. Filtering HERE also drops the tools from engine builds — the
+        # agent's toolset is assembled from this same listing
+        # (agent._enabled_connector_tools) — so a denied connector is unreachable, not
+        # merely hidden. connect_connector() refuses separately for stored profiles.
+        if not policy.permits(d.name):
+            continue
         # Experimental connectors are invisible (not just disabled) until the user opts in;
         # hiding them here also drops their tools from engine builds via
         # _enabled_connector_tools, so flipping the setting off cuts access immediately.
@@ -311,9 +321,15 @@ def connect_connector(
     validate: bool = True,
     acknowledged: bool = False,
 ) -> dict[str, Any]:
+    from ..catalog_policy import connector_permitted, refusal
+
     d = get_descriptor(name)
     if d is None or not d.available:
         return {"ok": False, "error": "unknown or unavailable connector"}
+    # Checked here as well as in connector_list: hiding an entry is not the same as
+    # refusing it, and this path is reachable with a hand-written request.
+    if not connector_permitted(name):
+        return {"ok": False, "error": refusal("connector", name)}
     if d.experimental:
         if not experimental_enabled(secrets):
             return {"ok": False, "error": "experimental connectors are disabled"}

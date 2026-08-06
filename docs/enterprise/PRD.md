@@ -134,7 +134,7 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 ### 3.7 安全与合规（配置级 + 代码级小改）
 
 - 权限与审批：`coworker/permissions.py` + `risk.py` 已有分级审批（工具按 read/write_local/exec/external 四类风险；discuss/plan/interactive/auto/custom 五种模式；命令前缀白名单且含 shell 元字符一律强制审批）；企业策略通过 `config.toml`（`mode`、`allowed_commands`、`auto_allow`）统一下发
-- 审计：每个工具调用的 proposed→approval→finished 全阶段经 `audit_sink` 写入 `<state-dir>/coworker.db` 的 audit_events 表（`coworker/audit.py`）；企业外发 SIEM 只需在 `build_engine(audit_sink=…)` 唯一注入点包一层转发（代码级小改）
+- 审计：每个工具调用的 proposed→approval→finished 全阶段经 `audit_sink` 写入 `<state-dir>/coworker.db` 的 audit_events 表（`coworker/audit.py`）；**外发 SIEM 已交付**（`audit_forward_url` 等四个配置项）——后台线程、有界队列丢旧留新、失败开放，本地日志始终是事实来源
 - 凭据：`coworker/secrets.py` 本机存储；企业密钥不进仓库、不进安装包
 - 网络边界：企业构建默认只配置内网模型端点；云中转（`cloud_base_url`，默认 `https://api.openworker.com`，仅 OAuth 中转）在企业版中禁用或替换为企业网关
 - 更新安全：Tauri updater 签名公钥替换为企业自持密钥，更新源指向企业内网/私有 GitHub
@@ -160,8 +160,8 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 | F6 | 企业更新源：三平台自动更新指向企业发布清单，企业自持签名密钥 | P0 | 配置级 | 旧版安装包可自动升级到新版 |
 | F7 | 知识库 v1：文件根挂载 + 技能内置知识 ✅**已交付** —— `knowledge_roots` 常驻只读挂载（全局配置专属）+ `corp-knowledge` 检索技能 | P1 | 配置级 | 员工可让 agent 检索企业制度文档并回答 |
 | F8 | 企业 CLI 接入：≥1 个企业 CLI 以 MCP server 方式注册 ✅**已交付** —— 通用 CLI→MCP 桥（配置驱动，白名单子命令 + 参数校验 + 不经 shell） | P1 | 资产级 | 对话中可调用企业 CLI 完成真实操作 |
-| F9 | 连接器/Provider 目录白名单：隐藏不合规入口 | P1 | 代码级小 | 企业构建 UI 中无海外 SaaS 连接器 |
-| F10 | 审计外发：工具调用审计日志推送企业日志系统 | P1 | 代码级小 | SIEM 可查任意会话的工具调用记录 |
+| F9 | 连接器/Provider 目录白名单：隐藏不合规入口 ✅**已交付** —— `allowed/denied_connectors|providers` 四个全局配置项，四处执行点（列表/工具装配/连接/client 构建），拒绝优先 | P1 | 配置级 | 企业构建 UI 中无海外 SaaS 连接器，且实际调用也被拒 |
+| F10 | 审计外发：工具调用审计日志推送企业日志系统 ✅**已交付** —— 后台线程 + 有界队列 + 失败开放；本地先落库再外发，脱敏复用本地同一套规则 | P1 | 配置级 | SIEM 可查任意会话的工具调用记录 |
 | F11 | 大表哥 L3：excel_ai 注册为内置工具 | P2 | 代码级 | agent 可编程调用并产出验证报告 |
 | F12 | 知识库 v2：企业知识库 MCP 检索服务 | P2 | 代码级 | 知识检索走 MCP，权限在知识库侧校验 |
 | F13 | 企业内部系统连接器（OA/工单等，首个） | P2 | 代码级 | 完成一个真实内部系统的读写操作 |

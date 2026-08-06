@@ -42,6 +42,20 @@ class Config:
     # sync client that hasn't finished, or a folder mounted only on some machines, must
     # not break session creation.
     knowledge_roots: list[str] = field(default_factory=list)
+    # Catalog policy — which connectors / model providers this installation may use.
+    # Empty allowlist = no restriction; a name in both lists is denied (deny wins).
+    # See catalog_policy.py; global-only for the same reason as allowed_commands.
+    allowed_connectors: list[str] = field(default_factory=list)
+    denied_connectors: list[str] = field(default_factory=list)
+    allowed_providers: list[str] = field(default_factory=list)
+    denied_providers: list[str] = field(default_factory=list)
+    # Audit forwarding to an enterprise log sink (SIEM). Empty url = off. See
+    # audit_forward.py: background-threaded, bounded queue, fails open — the local audit
+    # log stays the source of truth and a down collector never blocks a turn.
+    audit_forward_url: str = ""
+    audit_forward_token: str = ""   # "${CORP_SIEM_TOKEN}" resolves from the environment
+    audit_forward_batch: int = 50
+    audit_forward_timeout: float = 5.0
     host: str = "127.0.0.1"
     port: int = 8765
     # Web search provider: "duckduckgo" (keyless default) | "tavily" | "brave" (need a key).
@@ -72,6 +86,14 @@ _FIELDS = {
     "allowed_commands",
     "auto_allow",
     "knowledge_roots",
+    "allowed_connectors",
+    "denied_connectors",
+    "allowed_providers",
+    "denied_providers",
+    "audit_forward_url",
+    "audit_forward_token",
+    "audit_forward_batch",
+    "audit_forward_timeout",
     "host",
     "port",
     "web_search_provider",
@@ -88,7 +110,22 @@ _FIELDS = {
 # `knowledge_roots` is here for the same reason in reverse: it GRANTS read access to
 # folders outside the workspace, so a checked-out repo must never be able to declare one
 # (`knowledge_roots = ["~/.ssh"]` in a project config would otherwise be a handed-over key).
-_GLOBAL_ONLY_FIELDS = {"allowed_commands", "auto_allow", "knowledge_roots"}
+_GLOBAL_ONLY_FIELDS = {
+    "allowed_commands",
+    "auto_allow",
+    "knowledge_roots",
+    # Catalog policy decides what may leave the machine; a checked-out repo widening it
+    # would defeat the point.
+    "allowed_connectors",
+    "denied_connectors",
+    "allowed_providers",
+    "denied_providers",
+    # Where activity data is shipped is not a per-project preference.
+    "audit_forward_url",
+    "audit_forward_token",
+    "audit_forward_batch",
+    "audit_forward_timeout",
+}
 _WORKSPACE_FIELDS = _FIELDS - _GLOBAL_ONLY_FIELDS
 
 

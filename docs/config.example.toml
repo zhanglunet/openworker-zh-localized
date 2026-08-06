@@ -26,6 +26,23 @@ auto_allow = ["write_file", "replace_in_file", "apply_patch", "apply_unified_dif
 # paths are skipped silently.
 # knowledge_roots = ["~/CorpKB", "/Volumes/Shared/policies"]
 
+# Catalog policy — which connectors / model providers this installation may use.
+# Empty allowlist = no restriction. A name in both lists is denied (deny wins). Enforced at
+# every path, not just the listing: a denied connector's tools are never assembled, connect
+# is refused, and building a denied provider's client raises. Global config only.
+# allowed_connectors = ["github", "jira"]
+# denied_connectors  = ["gmail", "slack"]
+# allowed_providers  = ["custom", "ollama"]
+# denied_providers   = ["openai", "anthropic"]
+
+# Ship audit events to an enterprise log sink (SIEM). Empty url = off. Forwarding runs on a
+# background thread with a bounded queue and fails open: the local audit log stays the
+# source of truth, and an unreachable collector never blocks or breaks a turn.
+# audit_forward_url     = "https://siem.corp.internal/ingest"
+# audit_forward_token   = "${CORP_SIEM_TOKEN}"   # sent as Bearer; ${VAR} reads the env
+# audit_forward_batch   = 50
+# audit_forward_timeout = 5
+
 # Server (openworker-server) bind address.
 host = "127.0.0.1"
 port = 8765

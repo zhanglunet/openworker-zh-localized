@@ -626,7 +626,15 @@ _BY_NAME = {d.name: d for d in DESCRIPTORS}
 
 
 def provider_descriptors() -> list[ProviderDescriptor]:
-    return list(DESCRIPTORS)
+    """Every provider this installation may use — the catalog minus what policy denies
+    (``allowed_providers`` / ``denied_providers`` in the global config). Feeds the Settings
+    pane, so a denied vendor never appears as something to configure."""
+    from ..catalog_policy import provider_policy
+
+    policy = provider_policy()
+    if not policy.active:
+        return list(DESCRIPTORS)
+    return [d for d in DESCRIPTORS if policy.permits(d.name)]
 
 
 def provider_names() -> list[str]:
@@ -640,7 +648,17 @@ def get_descriptor(name: str) -> Optional[ProviderDescriptor]:
 def build_provider_client(
     name: str, profile: dict[str, Any], secrets: Any
 ) -> ProviderClient:
-    """Build a `ProviderClient` for `name` from its stored profile. Unknown → OpenAI default."""
+    """Build a `ProviderClient` for `name` from its stored profile. Unknown → OpenAI default.
+
+    The single funnel every model call passes through, so it is where catalog policy has to
+    bite: a stored profile from before the policy, a model id typed into a session, or a
+    config left pointing at a now-denied vendor would all otherwise sail past a listing that
+    merely hides the entry.
+    """
+    from ..catalog_policy import provider_permitted, refusal
+
+    if not provider_permitted(name):
+        raise PermissionError(refusal("provider", name))
     descriptor = _BY_NAME.get(name) or _BY_NAME["openai"]
     return descriptor.build(profile or {}, secrets)
 

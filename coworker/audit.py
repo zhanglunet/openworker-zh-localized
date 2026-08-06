@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import threading
 from pathlib import Path
 from typing import Any, Optional
 
 from .connectors import connector_for_tool
+
+logger = logging.getLogger("coworker.audit")
 
 _SECRET_KEYS = (
     "token",
@@ -24,7 +27,18 @@ _BODY_KEYS = ("body", "content", "html")
 
 
 class AuditStore:
-    def __init__(self, db_path: str | Path) -> None:
+    def __init__(self, db_path: str | Path, forwarder: Any = None) -> None:
+        # Optional SIEM forwarder. Built from the global config when not injected, and None
+        # unless a deployment configured one — see audit_forward.py. The local log is always
+        # written first: a forward that never happens is a gap in the SIEM, never here.
+        if forwarder is None:
+            from .audit_forward import forwarder_from_config
+
+            try:
+                forwarder = forwarder_from_config()
+            except Exception:  # noqa: BLE001 - never let log shipping break audit logging
+                forwarder = None
+        self._forwarder = forwarder
         self.db_path = Path(db_path).expanduser()
         self._lock = threading.RLock()
         self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
@@ -79,6 +93,30 @@ class AuditStore:
                 ),
             )
             self._conn.commit()
+        # After the commit, and outside the lock: forwarding must not hold up the next
+        # audit write, and a durable local row must exist before anything leaves the machine.
+        if self._forwarder is not None:
+            try:
+                self._forwarder.send(
+                    {
+                        "session_id": event.get("session_id") or "",
+                        "agent": event.get("agent") or "",
+                        "workspace": event.get("workspace") or "",
+                        "connector": connector,
+                        "tool": tool,
+                        "stage": event.get("stage") or "",
+                        "status": event.get("status") or "",
+                        "approval": event.get("approval") or "",
+                        # The sanitized args — whatever is redacted on disk is redacted
+                        # on the wire, by construction rather than by a second rule set.
+                        "args": args,
+                        "result_preview": _truncate(str(event.get("result_preview") or "")),
+                        "reason": _truncate(str(event.get("reason") or "")),
+                        "resource": _truncate(str(resource or "")),
+                    }
+                )
+            except Exception:  # noqa: BLE001 - a log sink can never break the action itself
+                logger.debug("audit forwarding raised on send", exc_info=True)
 
     def list(
         self,

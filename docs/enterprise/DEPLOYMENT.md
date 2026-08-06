@@ -285,6 +285,42 @@ python3 server.py --spec tools.json --check   # 先校验并列出工具，不�
 
 知识库权限在 MCP 服务端按调用者校验，知识内容不进安装包。也可通过 `POST /v1/mcp` 由脚本写入配置。
 
+## 5.4 目录白名单：只留企业批准的入口
+
+```toml
+# <state-dir>/config.toml（全局专属）
+allowed_connectors = ["github", "jira"]      # 留空 = 不限制
+denied_connectors  = ["gmail", "slack"]      # 与 allowlist 冲突时，拒绝优先
+allowed_providers  = ["custom", "ollama"]
+denied_providers   = ["openai", "anthropic"]
+```
+
+**隐藏不等于禁止**，所以四处都拦：
+
+| 执行点 | 拦什么 |
+|--------|--------|
+| `connector_list()` | UI 列表 —— 同时也是 agent 工具装配的数据源，所以被拒的连接器**工具根本不会被装进去** |
+| `connect_connector()` | 手写 API 请求也连不上 |
+| `provider_descriptors()` | 设置页里不出现被拒的模型厂商 |
+| `build_provider_client()` | 每次模型调用的唯一漏斗 —— 旧的存储档案、会话里手打的模型 id、指向已禁厂商的配置，全都在这里被拒 |
+
+## 5.5 审计外发到企业 SIEM
+
+```toml
+audit_forward_url     = "https://siem.corp.internal/ingest"
+audit_forward_token   = "${CORP_SIEM_TOKEN}"   # Bearer；${VAR} 从环境读，不必写进配置
+audit_forward_batch   = 50
+audit_forward_timeout = 5
+```
+
+按优先级排的三条承诺，各有测试钉着：
+
+1. **一轮对话绝不等 SIEM** —— 后台线程发送，`send()` 只入队。收集器要 30 秒才回，用户零感知。
+2. **SIEM 挂了绝不影响 Agent** —— 所有失败路径吞掉并降频记日志。不存在「日志收集器不可达」导致人干不了活的配置。
+3. **本地日志始终是事实来源** —— 先落 SQLite 再外发。外发丢了是 SIEM 的缺口，永远不是审计链的缺口。
+
+队列有界，满了**丢旧留新**并计数：无界队列是拿看得见的缺口换看不见的内存增长，而队列满本身就说明收集器已经落后了，新事件才是排查要看的。脱敏复用本地那一套规则——磁盘上被打码的，线上也一定被打码，不是另写一套会漂移的规则。
+
 ## 6. 桌面端构建、签名与分发
 
 按 [BRANDING_PACKAGING.md](BRANDING_PACKAGING.md) 完成品牌化后：
