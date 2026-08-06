@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T01:33:46Z",
+  "generatedAt": "2026-08-06T01:52:19Z",
   "branch": "main",
-  "head": "61bf46c0bc269682b0a73730a0cc08237cc5f329",
-  "shortHead": "61bf46c",
-  "totalFiles": 582,
+  "head": "ef78e3339bd7dc04ad1bc66fa151085d877eeb05",
+  "shortHead": "ef78e33",
+  "totalFiles": 585,
   "byExt": [
     {
       "name": "py",
-      "count": 254
+      "count": 256
     },
     {
       "name": "ts",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 13
+      "count": 14
     },
     {
       "name": "yml",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 102
+      "count": 103
     },
     {
       "name": "docs",
-      "count": 45
+      "count": 47
     },
     {
       "name": "website",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "ef78e33",
+      "date": "2026-08-06",
+      "subject": "企业知识库 v2：MCP 检索服务（M3）"
+    },
+    {
+      "hash": "6759d93",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "61bf46c",
       "date": "2026-08-06",
       "subject": "feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "fa89654",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "78a126d",
-      "date": "2026-08-06",
-      "subject": "feat(gui): 表格助手入口（大表哥 L2）"
-    },
-    {
-      "hash": "b9c6deb",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "ef78e33",
+      "date": "2026-08-06",
+      "subject": "企业知识库 v2：MCP 检索服务（M3）"
+    },
+    {
+      "hash": "6759d93",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "61bf46c",
       "date": "2026-08-06",
