@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T03:35:41Z
+更新时间：2026-08-06T04:21:02Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：b26c4c839cb280fab6958e492b8be3b236f01a03
+当前提交：3ef062b396514472b8ee4fb74bb45a0c2a2f4e1a
 
 ## 1. 总体判断
 
@@ -14,32 +14,32 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：592
-- 当前提交：b26c4c8
+- 跟踪文件总数：598
+- 当前提交：3ef062b
 - 主要文件类型：
-  - py: 260
+  - py: 261
   - ts: 105
   - tsx: 79
   - md: 29
   - svg: 23
   - png: 22
-  - json: 16
-  - yml: 9
+  - json: 17
+  - yml: 10
   - [none]: 7
-  - html: 5
+  - html: 6
   - sh: 5
+  - css: 4
   - mjs: 4
   - rs: 4
   - toml: 4
-  - css: 3
   - dmg: 2
 
 ## 3. 目录结构
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 105 个文件
-- docs: 52 个文件
+- tests: 106 个文件
+- docs: 57 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 3ef062b feat(enterprise): 企业站模板 + Cloudflare 部署流水线
+- 2026-08-06 00c2fd9 docs: refresh generated site reports
 - 2026-08-06 b26c4c8 fix(enterprise): 镜像前必须先关掉企业仓的 Actions
 - 2026-08-06 209c7e8 docs: refresh generated site reports
 - 2026-08-06 d477518 docs(upstream): 记录 PR #458 已提交
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 83574b0 docs: refresh generated site reports
 - 2026-08-06 5627b2d docs(upstream): 补三个实操中真的踩到的坑
 - 2026-08-06 657f581 docs: refresh generated site reports
-- 2026-08-06 e83a867 docs(upstream): 澄清克隆目录放哪儿不重要，git remote -v 才是判据
-- 2026-08-06 d54ed56 docs(upstream): 上游 PR 提交步骤写成逐条可执行命令

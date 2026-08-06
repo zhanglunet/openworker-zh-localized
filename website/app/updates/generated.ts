@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T03:35:41Z",
+  "generatedAt": "2026-08-06T04:21:02Z",
   "branch": "main",
-  "head": "b26c4c839cb280fab6958e492b8be3b236f01a03",
-  "shortHead": "b26c4c8",
-  "totalFiles": 592,
+  "head": "3ef062b396514472b8ee4fb74bb45a0c2a2f4e1a",
+  "shortHead": "3ef062b",
+  "totalFiles": 598,
   "byExt": [
     {
       "name": "py",
-      "count": 260
+      "count": 261
     },
     {
       "name": "ts",
@@ -31,11 +31,11 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 16
+      "count": 17
     },
     {
       "name": "yml",
-      "count": 9
+      "count": 10
     },
     {
       "name": "[none]",
@@ -43,11 +43,15 @@ export const repoReport = {
     },
     {
       "name": "html",
-      "count": 5
+      "count": 6
     },
     {
       "name": "sh",
       "count": 5
+    },
+    {
+      "name": "css",
+      "count": 4
     },
     {
       "name": "mjs",
@@ -62,10 +66,6 @@ export const repoReport = {
       "count": 4
     },
     {
-      "name": "css",
-      "count": 3
-    },
-    {
       "name": "dmg",
       "count": 2
     },
@@ -74,7 +74,7 @@ export const repoReport = {
       "count": 2
     },
     {
-      "name": "lock",
+      "name": "jsonc",
       "count": 2
     }
   ],
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 105
+      "count": 106
     },
     {
       "name": "docs",
-      "count": 52
+      "count": 57
     },
     {
       "name": "website",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "3ef062b",
+      "date": "2026-08-06",
+      "subject": "feat(enterprise): 企业站模板 + Cloudflare 部署流水线"
+    },
+    {
+      "hash": "00c2fd9",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "b26c4c8",
       "date": "2026-08-06",
       "subject": "fix(enterprise): 镜像前必须先关掉企业仓的 Actions"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "657f581",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "e83a867",
-      "date": "2026-08-06",
-      "subject": "docs(upstream): 澄清克隆目录放哪儿不重要，git remote -v 才是判据"
-    },
-    {
-      "hash": "d54ed56",
-      "date": "2026-08-06",
-      "subject": "docs(upstream): 上游 PR 提交步骤写成逐条可执行命令"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "3ef062b",
+      "date": "2026-08-06",
+      "subject": "feat(enterprise): 企业站模板 + Cloudflare 部署流水线"
+    },
+    {
+      "hash": "00c2fd9",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "b26c4c8",
       "date": "2026-08-06",
