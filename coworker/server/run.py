@@ -10,6 +10,7 @@ from pathlib import Path
 
 from ..config import load_config
 from ..permissions import Mode
+from ..provisioning import seed_defaults
 from ..secrets import state_dir, write_private_text
 from .app import _WS_MAX_FRAME_BYTES, create_app
 from .manager import SessionManager
@@ -138,6 +139,10 @@ def _ensure_api_token(port: int) -> Path | None:
 
 def main(argv=None) -> None:
     _ensure_ca_bundle()
+    # Before load_config(), or a first run would read the empty state dir and the seeded
+    # config would only take effect on the SECOND launch. No-op unless this build ships
+    # defaults (COWORKER_DEFAULTS_DIR / coworker/defaults) — see provisioning.py.
+    seed_defaults()
     cfg = load_config()  # global config supplies defaults
     parser = argparse.ArgumentParser(prog="openworker-server")
     parser.add_argument("--cwd", default=None, help="optional seed/default workspace")

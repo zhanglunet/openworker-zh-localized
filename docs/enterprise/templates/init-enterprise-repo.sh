@@ -863,6 +863,31 @@ MD
 ## 放什么
 
 - `config.default.toml` —— 企业默认配置模板（本目录已生成）
+- `models.json` —— 私有模型能力声明（可选；用 verify-private-model.py 实测后生成）
+
+## 怎么让它们真正到员工机器上（首启预置）
+
+`coworker/provisioning.py` 会在服务启动时（`load_config()` 之前）把「已发布的默认值」
+种进空的 `<state-dir>`。企业构建把下面这个目录打进安装包，并设 `COWORKER_DEFAULTS_DIR`
+指向它：
+
+```
+defaults/
+  config.toml        → <state-dir>/config.toml
+  models.json        → <state-dir>/models.json
+  mcp.json           → <state-dir>/mcp.json
+  AGENTS.md          → <state-dir>/AGENTS.md      # 企业规范/术语表，自动进 system prompt
+  skills/<name>/     → <state-dir>/skills/<name>/  # 逐个技能，不是整棵树
+```
+
+打包时把本目录的 `config.default.toml` 改名为 `defaults/config.toml` 即可。
+
+三条铁律（已有测试钉住）：**不覆盖**已存在的文件（用户的就是用户的）、**不复活**被删掉的
+技能（回执文件 `<state-dir>/.provisioned.json` 记着种过什么）、**不致命**（默认值有语法错
+只告警，不能让人打不开应用）。逐技能而非整目录的粒度，是为了让后续版本能加新技能而不动
+已有的。
+
+想推「必须生效」的策略，这个机制不合适——它只填空位，不覆盖。
 
 ## 配置分层（`coworker/config.py`）
 

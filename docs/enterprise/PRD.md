@@ -78,7 +78,7 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 
 | 需求 | 实现路径 | 档位 |
 |------|---------|------|
-| 预置企业技能包（如报销 SOP、周报模板、公文写作、**excel-ai-analyst 大表哥**） | 首启时把打包内置的技能目录解压/复制到 `state_dir()/skills`；或 IT 下发脚本同步；也可对运行中服务走 REST 批量导入（`POST /v1/skills`、`/v1/skills/upload`） | 资产级 |
+| 预置企业技能包（如报销 SOP、周报模板、公文写作、**excel-ai-analyst 大表哥**） | ✅**已交付**：`provisioning.py` 首启把 `defaults/skills/<name>/` 逐个种进 `state_dir()/skills`——技能终于有了随安装包下发的正规通道；也可 IT 下发或走 REST 批量导入 | 资产级 |
 | 技能包版本管理与更新 | 企业技能包独立 git 仓库 + 定时同步（可用 automation 定时任务或 IT 分发）；业务仓库级技能放 `<workspace>/.coworker/skills` 随 git 分发 | 资产级 |
 | 技能白名单管控 | `skills-settings.json`（`state_dir()` 下）+ SkillLoader 的 allowed 回调已支持启停 | 配置级 |
 
@@ -153,7 +153,7 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 | ID | 需求 | 优先级 | 档位 | 验收标准 |
 |----|------|--------|------|---------|
 | F1 | 私有模型接入：Custom/Ollama Provider 预置企业端点、端口、模型版本 | P0 | 配置级 | 断网（仅内网）环境完成一次完整对话 + 工具调用 |
-| F2 | 企业配置预置：安装包首启写入默认 `config.toml`（模型、审批策略、命令白名单） | P0 | 资产级 | 全新机器安装后零配置可用 |
+| F2 | 企业配置预置：安装包首启写入默认 `config.toml`（模型、审批策略、命令白名单） ✅**已交付** —— `coworker/provisioning.py` 首启种入 config.toml / models.json / mcp.json / AGENTS.md / skills，不覆盖、不复活、不致命 | P0 | 资产级 | 全新机器安装后零配置可用 |
 | F3 | 企业技能包：≥5 个企业 SOP 技能 + excel-ai-analyst 预置到全局技能目录。注意：技能**没有包内分发通道**（PyInstaller 只打代码包，仅 personas/builtin 有 package-data），预置必须靠安装器/首启动拷贝逻辑（代码级小改）或 REST 导入脚本 | P0 | 资产级+小改 | 技能目录出现在会话 catalog，`load_skill` 可用 |
 | F4 | 大表哥 L1+L2：技能 + 前端表格助手入口 | P0 | 代码级 | 3.5 节验收场景通过 |
 | F5 | 品牌换肤：企业主题色/logo/应用名/图标/DMG 背景 | P0 | 资产级 | 三平台安装包全部呈现企业品牌 |

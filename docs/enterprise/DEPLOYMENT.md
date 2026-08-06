@@ -173,11 +173,32 @@ port = 8765
 - **凭据预置**：Provider 密钥存 `<state-dir>/secrets.json`（0600 权限），值支持 `${ENV_VAR}` 引用（配合 `<state-dir>/.env`），适合 IT 下发时不落明文。
 - **企业规范注入**：把企业写作规范、术语表、合规要求写入 `<state-dir>/AGENTS.md`——每个会话的 system prompt 自动注入该文件（零代码），项目根的 `AGENTS.md` 再按项目叠加。
 
-预置落地方式（按序生效）：
+预置落地方式：
 
-1. 安装包首启引导：桌面壳检测 `~/.config/coworker/config.toml` 不存在时，从打包资源复制默认配置（代码级小改，放挂载点）
-2. 或 IT 批量下发：MDM/域策略把 `config.toml` 与 Provider profile 写到用户目录
-3. Provider 端点/密钥属敏感信息：默认配置只带端点不带 Key，Key 由员工首登时输入（存本机 secrets），或对接企业统一鉴权网关按人发 Key
+**① 首启自动预置（已交付，推荐）** —— `coworker/provisioning.py` 在服务启动时（`load_config()` 之前）把已发布的默认值种进空的 `<state-dir>`。企业构建把下面的目录打进安装包，设环境变量 `COWORKER_DEFAULTS_DIR` 指向它即可：
+
+```
+defaults/
+  config.toml        → <state-dir>/config.toml
+  models.json        → <state-dir>/models.json      # 私有模型能力声明
+  mcp.json           → <state-dir>/mcp.json         # 企业 CLI / 知识库 MCP
+  AGENTS.md          → <state-dir>/AGENTS.md        # 企业规范，自动进 system prompt
+  skills/<name>/     → <state-dir>/skills/<name>/    # 逐个技能（含大表哥）
+```
+
+这条同时解决了此前记录的「**技能没有包内分发通道**」问题——技能终于有了随安装包下发的正规路径。
+
+三条铁律（有测试钉住，含变异验证）：
+
+- **不覆盖**已存在的文件——用户的就是用户的。想推「必须生效」的策略，这个机制不合适。
+- **不复活**被删掉的技能——回执文件 `<state-dir>/.provisioned.json` 记着种过什么，员工删掉的东西不会在下次启动时自己回来。
+- **不致命**——默认值有语法错只告警。没人应该因为一份配置里的笔误而打不开应用。
+
+逐技能而非整目录的粒度，让后续版本能加新技能而不动员工已改过的那些。可用 `COWORKER_SKIP_PROVISIONING=1` 关闭。
+
+**② IT 批量下发**（补充手段）：MDM/域策略直接把 `config.toml` 写到用户目录。
+
+**③ 密钥不进默认值**：默认配置只带端点不带 Key。Key 由员工首登时输入（存本机 `secrets.json`），或对接企业统一鉴权网关按人发放。`config.toml` 与 `.env` 种下时会被设为 0600。
 
 验收：断公网环境（仅内网）新装机器完成一次对话 + 一次文件工具调用。
 
