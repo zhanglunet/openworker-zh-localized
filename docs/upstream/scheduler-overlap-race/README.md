@@ -157,11 +157,18 @@ git rebase upstream/main
 ### 第 4 步：跑测试确认
 
 ```bash
+python3 -m venv .venv && source .venv/bin/activate     # .venv/ 已在 .gitignore 里
 pip install -e '.[dev]'
 python3 -m pytest tests/test_scheduler_overlap.py tests/test_standing_approvals.py -q
 ```
 
-装不动全套依赖不影响提 PR——这两个文件只要 `pytest`、`pytest-asyncio`、`croniter`。
+必须装完整的 `.[dev]`，**不能只装 `pytest pytest-asyncio croniter`**：
+`from coworker.automation.models import …` 会触发包的 `__init__`，它 `from .tools import …`，
+而 `automation/tools.py` 顶层 `import aisuite`；`tests/conftest.py` 又会 import
+`coworker.testing.fake_slack`。少一个都是 collection error，不是测试失败。
+
+macOS 系统 Python 直接 `pip install` 多半会报 `externally-managed-environment`，
+上面那行 venv 就是为此——别用 `--break-system-packages`。
 
 想亲眼确认新测试确实逮得住缺陷（而不是一个恒绿的摆设），**只回退 `scheduler.py`、留下测试文件**：
 
