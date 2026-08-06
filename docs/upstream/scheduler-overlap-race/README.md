@@ -120,7 +120,29 @@ head -4 /tmp/scheduler-fix.patch
 ```bash
 git checkout -b fix/scheduler-skip-on-overlap-race
 git am -3 /tmp/scheduler-fix.patch
+git log -1 --stat        # 必须显示：HEAD -> fix/scheduler-…，两个文件，106 insertions
 ```
+
+> ⚠️ **这一组必须一条一条跑，看着 `checkout` 那条成功了再跑 `am`。**
+> 如果分支已存在（上次尝试留下的），`git checkout -b` 会失败：
+>
+> ```
+> fatal: a branch named 'fix/scheduler-skip-on-overlap-race' already exists
+> ```
+>
+> 而 `git am` 不管这个，会照样把补丁提交到**你当前所在的分支**——通常就是 `main`。
+> 这就是为什么最后要用 `git log -1 --stat` 确认 HEAD 指向的是特性分支。
+> 已经打错到 `main` 上了也不用重来，把提交挪过去即可：
+>
+> ```bash
+> git branch -m fix/scheduler-skip-on-overlap-race fix/scheduler-old-attempt   # 旧分支改名留存
+> git checkout -b fix/scheduler-skip-on-overlap-race                            # 当前提交钉到正确分支
+> git branch -f main upstream/main                                              # main 放回上游状态
+> ```
+>
+> 另外：zsh 交互模式默认不把 `#` 当注释，整段带注释粘贴会刷出一串
+> `zsh: command not found: #`，**真正的错误会被这些噪音盖住**。
+> 粘贴前删掉注释行，或先执行一次 `setopt interactivecomments`。
 
 `-3` 是三方合并兜底。补丁对 `01b6f83` 是干净的（见上面「验证」表），但**上游从那以后可能已往前走**，
 所以万一 `git am` 报冲突，退回到补丁的原始基点再 rebase：
@@ -162,8 +184,28 @@ python3 -m pytest tests/test_scheduler_overlap.py -q     # 恢复后：绿
 git push -u origin fix/scheduler-skip-on-overlap-race
 ```
 
-浏览器打开自己的 fork → **Compare & pull request**，确认两项（GitHub 有时会把 base 默认成
-你自己的 fork，那样 PR 就开到自己仓库里去了）：
+> 若报 `non-fast-forward`：说明这个分支之前推过（`git log --oneline -1 origin/fix/scheduler-skip-on-overlap-race`
+> 能看到）。**先比内容再决定**，不要上来就 `--force`：
+>
+> ```bash
+> git diff origin/fix/scheduler-skip-on-overlap-race HEAD    # 无输出 = 内容相同，只是 SHA 不同
+> ```
+>
+> 无输出就直接对齐到远端那个，省掉一次 force push（远端已经是对的）：
+>
+> ```bash
+> git reset --hard origin/fix/scheduler-skip-on-overlap-race
+> ```
+>
+> 有输出才说明本地这版确实不一样，再决定要不要 `git push --force-with-lease`。
+
+然后直接打开这个链接——base 与 head 都写死在 URL 里，绕开「GitHub 把 base 默认成你自己
+fork、PR 开到自己仓库里」那个坑：
+
+<https://github.com/andrewyng/openworker/compare/main...zhanglunet:openworker:fix/scheduler-skip-on-overlap-race>
+
+格式是 `…/<上游>/compare/<base 分支>...<fork 属主>:<fork 仓库名>:<你的分支>`。
+页面上仍应核对一遍：
 
 - base repository = `andrewyng/openworker`，base = `main`
 - head repository = `zhanglunet/openworker`，compare = `fix/scheduler-skip-on-overlap-race`
