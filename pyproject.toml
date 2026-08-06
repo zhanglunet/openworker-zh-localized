@@ -46,6 +46,10 @@ messaging = ["python-telegram-bot>=21", "slack-bolt>=1.18", "aiohttp>=3.9"]
 browser = ["playwright>=1.44"]
 # AWS Bedrock provider (lazy-imported; desktop builds bundle it, pip users opt in).
 bedrock = ["boto3>=1.34"]
+# Spreadsheet reverse-engineering tools (tools/sheets.py + sheets/excel_ai.py). Heavy and
+# lazy-imported: without them the `sheets` capability is skipped entirely, so a default
+# install pays nothing for it.
+sheets = ["pandas>=2", "openpyxl>=3.1"]
 
 [project.scripts]
 openworker = "coworker.cli:main"

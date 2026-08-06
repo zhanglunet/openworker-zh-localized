@@ -26,8 +26,19 @@ class RiskClass(str, Enum):
 WRITE_TOOLS = {"write_file", "replace_in_file", "apply_patch", "apply_unified_diff"}
 SHELL_TOOL = "run_shell"
 
+# Spreadsheet tools (tools/sheets.py) write their reports into a directory named by the
+# `path` argument. Without an entry here `classify()` would fall through to READ — a tool
+# that writes files would then bypass both the path scoping and the approval gate.
+SHEET_TOOLS = {
+    "sheet_to_markdown",
+    "sheet_verify",
+    "sheet_result_xlsx",
+    "sheet_analyze",
+}
+
 _BASE: dict[str, RiskClass] = {
     **{name: RiskClass.WRITE_LOCAL for name in WRITE_TOOLS},
+    **{name: RiskClass.WRITE_LOCAL for name in SHEET_TOOLS},
     SHELL_TOOL: RiskClass.EXEC,
 }
 

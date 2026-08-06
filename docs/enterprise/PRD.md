@@ -121,7 +121,7 @@ OpenWorker 是本地优先（local-first）的开源 AI Agent 桌面应用：Pyt
 |----|------|------|
 | L1 技能层 ✅**已交付** | 预置 `excel-ai-analyst` 技能（SKILL.md + `excel_ai.py` 脚本资源），员工对话里说"分析这个表"即触发五步法；表格文件放工作区或由技能引导指定路径。见 [templates/skills/excel-ai-analyst/](templates/skills/excel-ai-analyst/) | 资产级 |
 | L2 入口层 ✅**已交付** | 会话空状态新增「读懂一张业务表格」任务卡（`surfaces/gui/src/components/SessionIntro.tsx`），点击预填五步法提示词。**仅当 `excel-ai-analyst` 技能对本会话可用时才渲染**——没装技能的用户界面完全不变，不会出现点了没反应的死入口；缺共享目录时降级为引导选择文件夹。如需"拖拽上传即分析"，须同步扩展 `attachments.py` 接受表格类型（挂载点小改） | 代码级（中） |
-| L3 工具层 | 把 `excel_ai.py` 注册为内置工具：`coworker/tools/` 新增工厂模块（任意 Python callable 配 schema/metadata 三属性即成工具，参照 `tools/search.py`），再到 `coworker/catalog.py` 的 `_CAPS` 登记为 Capability（如 `enterprise_sheets`）——此后任何 persona 在 manifest 的 `tools:` 里按 id 引用即可 | 代码级（中） |
+| L3 工具层 ✅**已交付** | 引擎 vendored 到 `coworker/sheets/`，`coworker/tools/sheets.py` 提供四个工具（`sheet_to_markdown` / `sheet_verify` / `sheet_result_xlsx` / `sheet_analyze`），在 `catalog.py` 登记为 `sheets` capability。相比技能走 shell 的路子多三点：**不必每步弹审批**（WRITE_LOCAL 而非 EXEC）、**冻结的 sidecar 里也能跑**（桌面版没有 python3 可 shell 出去）、**读路径按会话根目录校验**（含 spec.json 里点名的 workbook）。pandas/openpyxl 是可选 extra，未安装时能力整个跳过，默认安装零成本 | 代码级（中） |
 
 验收：员工把一个 20MB 内多 Sheet 的 xlsx 拖入桌面端，得到结构探测 + 公式链 + 全量验证报告（MD/网页），全程数据不出本机/内网。
 

@@ -24,14 +24,20 @@ from .risk import RiskClass
 from .tools.files import file_tools
 from .tools.git import git_tools
 from .tools.search import search_tools
+from .tools.sheets import sheet_tools, sheets_available
 from .tools.shell import shell_tools
 from .tools.todo import todo_tools
 
 # Context prerequisites a capability may require, mapped to a predicate over AgentContext.
+# `sheet_engine` is the one entry that doesn't read the context: the spreadsheet engine's
+# deps (pandas/openpyxl) are an optional extra, and a capability whose tools would only
+# ever answer "not installed" is worse than no capability at all — it still costs every
+# request the schema tokens. Skipping it here keeps a default install unchanged.
 _REQUIREMENTS: dict[str, Callable[[AgentContext], bool]] = {
     "workspace": lambda c: c.workspace is not None,
     "executor": lambda c: c.executor is not None,
     "todo": lambda c: c.todo is not None,
+    "sheet_engine": lambda c: sheets_available(),
 }
 
 
@@ -98,6 +104,11 @@ def _todo(context: AgentContext) -> list:
     return todo_tools(context.todo)  # todo_write (drives the Progress panel)
 
 
+def _sheets(context: AgentContext) -> list:
+    # Roots ride by reference so a folder added mid-session is readable without a rebuild.
+    return sheet_tools(str(context.workspace), context.roots)
+
+
 _CAPS: list[Capability] = [
     Capability(
         id="code_files",
@@ -146,6 +157,17 @@ _CAPS: list[Capability] = [
         build=_todo,
         requires=("todo",),
         risk=(RiskClass.READ,),
+    ),
+    Capability(
+        id="sheets",
+        name="Spreadsheet analysis",
+        description=(
+            "Reverse-engineer formula-bearing spreadsheets: structure to markdown, replay the "
+            "understanding over every row to verify it, then annotated results and analysis."
+        ),
+        build=_sheets,
+        requires=("workspace", "sheet_engine"),
+        risk=(RiskClass.READ, RiskClass.WRITE_LOCAL),
     ),
 ]
 

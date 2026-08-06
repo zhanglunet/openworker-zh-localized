@@ -71,7 +71,10 @@ def test_persona_detail_endpoint(tmp_path, monkeypatch):
     )  # §16 collapse: ops is a scratch persona now
     assert detail["default_permission_mode"] == "interactive"
     assert "anthropic:claude-opus-4-8" in detail["recommended_models"]
-    assert set(detail["tools"]) == {"files", "search", "shell", "todo"}
+    # `sheets` rides along with Cowork's capability list (test_builtin_personas pins the
+    # two to stay equal); it is a declared capability id, so this set is the same whether or
+    # not the optional engine deps are installed.
+    assert set(detail["tools"]) == {"files", "search", "shell", "todo", "sheets"}
     assert detail["description"]  # the manifest description is surfaced
 
     # recommends annotated with `connected` (github connected; slack/datadog not)

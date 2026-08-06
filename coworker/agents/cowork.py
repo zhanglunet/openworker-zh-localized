@@ -13,7 +13,10 @@ from .base import Agent, AgentContext
 
 # Capabilities the knowledge-work surface composes from the vetted catalog. `files` is the
 # multi-root variant (reads/writes across added folders), unlike Code's single-root `code_files`.
-COWORK_CAPABILITIES = ["files", "search", "shell", "todo"]
+# `sheets` is last on purpose: it self-skips when the optional engine deps aren't installed
+# (catalog's `sheet_engine` requirement), so a default install gets the exact toolset it had
+# before and only an install that opted in pays for the four extra schemas.
+COWORK_CAPABILITIES = ["files", "search", "shell", "todo", "sheets"]
 
 COWORK_INSTRUCTIONS = (
     "You are a Cowork agent — a capable knowledge-work coworker spun up to solve one problem "

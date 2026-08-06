@@ -14,6 +14,7 @@ from coworker.agents.code import CODE_CAPABILITIES, code_agent
 from coworker.agents.cowork import COWORK_CAPABILITIES, cowork_agent
 from coworker.catalog import CATALOG, capability, expand, risk_summary
 from coworker.risk import RiskClass
+from coworker.tools.sheets import sheets_available
 from coworker.tools.todo import TodoList
 
 # Expected toolset for each surface — the frozen equivalence contract for the refactor.
@@ -47,6 +48,14 @@ COWORK_TOOLS = {
     "shell_task_kill",
     "todo_write",
 }
+# The `sheets` capability rides on an optional extra (pandas/openpyxl) and self-skips when
+# it isn't installed — so the expected set has to ask, or this assertion would pass or fail
+# depending on what happens to be in the environment.
+SHEET_TOOLS = {"sheet_to_markdown", "sheet_verify", "sheet_result_xlsx", "sheet_analyze"}
+
+
+def _expected_cowork() -> set:
+    return COWORK_TOOLS | (SHEET_TOOLS if sheets_available() else set())
 
 
 def _names(tools) -> set:
@@ -70,14 +79,14 @@ def test_expand_code_matches_expected(tmp_path):
 
 def test_expand_cowork_matches_expected(tmp_path):
     tools = expand(COWORK_CAPABILITIES, _full_context(tmp_path))
-    assert _names(tools) == COWORK_TOOLS
+    assert _names(tools) == _expected_cowork()
 
 
 def test_agents_use_catalog(tmp_path):
     # The agent factories build through the catalog now — same result as direct expand.
     ctx = _full_context(tmp_path)
     assert _names(code_agent().build_tools(ctx)) == CODE_TOOLS
-    assert _names(cowork_agent().build_tools(ctx)) == COWORK_TOOLS
+    assert _names(cowork_agent().build_tools(ctx)) == _expected_cowork()
 
 
 def test_file_capability_distinction(tmp_path):
