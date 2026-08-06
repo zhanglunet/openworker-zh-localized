@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getConnectors, getSessionConnections } from "../api";
+import { getConnectors, getSessionConnections, sessionSkills } from "../api";
 import type { Attachment } from "../types";
 import { ConnectorIcon } from "../connectors/ConnectorIcon";
 import { indexConnectors, visualFor, type ConnectorMap } from "../connectors/visuals";
@@ -20,6 +20,19 @@ const HUBSPOT_PROMPT =
 const GH_SLACK_PROMPT =
   "设置一份每周进度报告：汇总我 GitHub 仓库的活动，并在每周五上午发布到 Slack。";
 
+// 表格助手（大表哥）——这一行只有在 excel-ai-analyst 技能真的装好、且对本会话启用时才出现。
+// 没装技能的用户看到的仍是原来的三张卡，不会出现点了没反应的死入口。
+const SHEET_SKILL = "excel-ai-analyst";
+// 提示词点名技能与「五步法」：技能目录（name + description）每轮都注入上下文，
+// 模型据此调 load_skill 取回完整指令。刻意不写成 "/excel-ai-analyst …" —— 那个斜杠前缀
+// 是 Composer 的内部状态约定（见 Composer.tsx §4.1），预填的文本不会被识别成强制运行，
+// 只会把斜杠原样发出去。
+const SHEET_PROMPT =
+  "用大表哥（excel-ai-analyst）的五步法分析我共享目录里的这张业务表格：" +
+  "先转结构化 MD 看清表头与公式，再写字段本体和公式链，" +
+  "然后用全量真实数据逐行验证你的理解，最后给我带标注的结果表和分析报告。" +
+  "（表格文件名：）";
+
 export function SessionIntro({
   sessionId,
   onOpenSessionSettings,
@@ -34,6 +47,11 @@ export function SessionIntro({
   const [live, setLive] = useState<Set<string>>(new Set());
   const [byName, setByName] = useState<ConnectorMap>({});
   const [addingFolder, setAddingFolder] = useState(false);
+  // 本会话可用的表格助手技能（未装 / 被静音 → 整张卡不渲染）。
+  const [sheetSkill, setSheetSkill] = useState(false);
+  // 缺文件夹时这张卡自己的展开态——与上面的 addingFolder 分开，
+  // 免得点了「表格助手」却弹出属于第一张卡的表单。
+  const [addingSheetFolder, setAddingSheetFolder] = useState(false);
 
   useEffect(() => {
     // Live = what this session can touch right now (connected AND not muted here) — the same
@@ -44,6 +62,11 @@ export function SessionIntro({
     getConnectors()
       .then((list) => setByName(indexConnectors(list)))
       .catch(() => {});
+    // 用会话级的有效技能菜单判断（已算过 Settings 停用与本会话静音），
+    // 而不是全局技能列表——后者会让被静音的技能仍显示成可用。
+    sessionSkills(sessionId)
+      .then((rows) => setSheetSkill(rows.some((s) => s.name === SHEET_SKILL && s.enabled)))
+      .catch(() => setSheetSkill(false));
   }, [sessionId]);
 
   const shared = roots.filter((r) => !r.primary);
@@ -125,6 +148,42 @@ export function SessionIntro({
           </span>
           <span className="task-card-act">{ghSlackReady ? "开始 →" : "配置 ›"}</span>
         </button>
+
+        {/* 表格助手（大表哥）。装了技能才出现，所以没装的用户仍是三张卡的原设计。
+            聊天附件管线只收 image/pdf/text（coworker/attachments.py），xlsx 传不进模型上下文，
+            所以这条路必须走「共享目录里的文件」，而不是让用户去拖拽表格。 */}
+        {sheetSkill && (
+          <button
+            className={"task-card" + (shared.length > 0 ? "" : " gated")}
+            data-testid="intro-task-sheets"
+            onClick={() =>
+              shared.length > 0 ? onPrefill(SHEET_PROMPT) : setAddingSheetFolder((v) => !v)
+            }
+          >
+            <span className="task-card-body">
+              <span className="task-card-title">读懂一张业务表格</span>
+              <span className="task-card-sub">
+                还原公式链，再用全量数据逐行验证算得对不对
+              </span>
+            </span>
+            <span className="task-card-act">{shared.length > 0 ? "开始 →" : "选择文件夹 ›"}</span>
+          </button>
+        )}
+        {sheetSkill && addingSheetFolder && (
+          <div className="intro-addfolder">
+            <AddFolderForm
+              startOpen
+              busy={busy}
+              onAdd={async (path, writable) => {
+                const ok = await addRoot(path, writable);
+                if (ok !== false) onPrefill(SHEET_PROMPT);
+                return ok;
+              }}
+              onDismiss={() => setAddingSheetFolder(false)}
+            />
+            {error && <div className="roots-err">{error}</div>}
+          </div>
+        )}
       </div>
     </div>
   );
