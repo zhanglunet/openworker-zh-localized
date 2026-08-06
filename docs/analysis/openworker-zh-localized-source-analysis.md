@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T01:08:14Z
+更新时间：2026-08-06T01:22:36Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：ee6e05b29f1c8db312785a7bcde775419b60739a
+当前提交：d182a246427e53e4ff9099816f4048443e219efb
 
 ## 1. 总体判断
 
@@ -14,16 +14,16 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：573
-- 当前提交：ee6e05b
+- 跟踪文件总数：578
+- 当前提交：d182a24
 - 主要文件类型：
-  - py: 247
+  - py: 250
   - ts: 105
   - tsx: 79
-  - md: 27
+  - md: 28
   - svg: 23
   - png: 22
-  - json: 12
+  - json: 13
   - yml: 9
   - [none]: 7
   - html: 5
@@ -38,8 +38,8 @@
 
 - surfaces: 229 个文件
 - coworker: 132 个文件
-- tests: 98 个文件
-- docs: 42 个文件
+- tests: 100 个文件
+- docs: 45 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 d182a24 feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）
+- 2026-08-06 d86177b docs: refresh generated site reports
 - 2026-08-06 ee6e05b feat(provisioning): 首启把已发布的默认值种进空的状态目录（M1 配置预置）
 - 2026-08-06 3e2fdca docs: refresh generated site reports
 - 2026-08-06 f2bcad5 feat(providers): 私有模型能力声明覆盖层 + 端点能力实测脚本（M1）
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 b9c6deb docs: refresh generated site reports
 - 2026-08-06 068e1db docs(upstream): 归档调度器竞态的上游提交材料
 - 2026-08-06 b09e893 test(automation): 补上 skip-on-overlap 竞态的确定性回归用例
-- 2026-08-06 28c1e42 docs: refresh generated site reports
-- 2026-08-06 7347760 fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行

@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T01:08:14Z",
+  "generatedAt": "2026-08-06T01:22:36Z",
   "branch": "main",
-  "head": "ee6e05b29f1c8db312785a7bcde775419b60739a",
-  "shortHead": "ee6e05b",
-  "totalFiles": 573,
+  "head": "d182a246427e53e4ff9099816f4048443e219efb",
+  "shortHead": "d182a24",
+  "totalFiles": 578,
   "byExt": [
     {
       "name": "py",
-      "count": 247
+      "count": 250
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 27
+      "count": 28
     },
     {
       "name": "svg",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 12
+      "count": 13
     },
     {
       "name": "yml",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 98
+      "count": 100
     },
     {
       "name": "docs",
-      "count": 42
+      "count": 45
     },
     {
       "name": "website",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d182a24",
+      "date": "2026-08-06",
+      "subject": "feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）"
+    },
+    {
+      "hash": "d86177b",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "ee6e05b",
       "date": "2026-08-06",
       "subject": "feat(provisioning): 首启把已发布的默认值种进空的状态目录（M1 配置预置）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "b09e893",
       "date": "2026-08-06",
       "subject": "test(automation): 补上 skip-on-overlap 竞态的确定性回归用例"
-    },
-    {
-      "hash": "28c1e42",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "7347760",
-      "date": "2026-08-06",
-      "subject": "fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d182a24",
+      "date": "2026-08-06",
+      "subject": "feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）"
+    },
+    {
+      "hash": "d86177b",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "ee6e05b",
       "date": "2026-08-06",
