@@ -74,25 +74,102 @@ git checkout -b corp/init && git add -A && git commit -m "corp: 初始化企业�
 
 现状参考：oaosf.cn 站点源码在 `website/`（Next.js 16 由 vinext 适配 Cloudflare Workers，wrangler 部署，`scripts/generate-site-reports.mjs` 从仓库 git 数据与 `docs/` 生成分析/更新页内容）。
 
-### 形态 A：公网企业站（沿用 Cloudflare，最省事）
+### 形态 A：公网企业站（`enterprise/site` + Cloudflare Workers）✅**已交付**
 
-```bash
-cd website
-npm ci
-npm run dev                 # 本地预览 http://localhost:3000
-npm test                    # 构建 + 渲染 HTML 测试
-npx wrangler login          # 企业 Cloudflare 账号
-npm run deploy:cloudflare   # 构建并部署 Worker
-# Cloudflare 控制台：Workers 自定义域绑定企业域名（DNS 托管到 Cloudflare 或 CNAME 接入）
+init 脚本已经把站点装好了：`enterprise/site/`（下载页 + 企业介绍，纯静态 assets-only
+Worker，不引入 Next.js 构建）+ `.github/workflows/deploy-corp-site.yml`。
+
+**三步有先后依赖，顺序错了会卡住**：Worker 必须先存在才能绑域名；安装包超过 Worker
+的单文件上限，所以要单独建对象存储。
+
+#### A1. Cloudflare API Token → GitHub Secret
+
+1. Cloudflare → 右上角头像 → **My Profile** → **API Tokens** → **Create Token**
+2. 用模板 **「Edit Cloudflare Workers」** → **Use template**
+3. 只改两处：**Account Resources** 选目标账号；**Zone Resources** 选企业域名
+   （域名还没进 Cloudflare 就先选 All zones，A2 做完再回来收紧）
+4. **Continue to summary** → **Create Token** → **立刻复制**（页面关掉就再也看不到）
+5. 企业仓 Settings → Secrets and variables → Actions → **New repository secret**：
+   - `CLOUDFLARE_API_TOKEN` = 刚才那串
+   - `CLOUDFLARE_ACCOUNT_ID` = Workers & Pages 页面右栏的 Account ID
+     —— **仅当 token 能访问多个账号时才需要**
+
+> ⚠️ Secret 名字必须逐字一致、区分大小写。写错不会报错：工作流只打一条
+> 「未配置，跳过部署」的 notice 然后**绿灯通过** —— 看起来一切正常，实际什么都没发。
+> 这是有意设计（没配凭据不该让流水线常红），代价就是拼错会静默。
+
+配好后手动跑一次 `Deploy 企业站`，Worker `openworker-<corp-id>-site` 才真正存在。
+
+#### A2. 绑定企业域名
+
+**前置**：域名得先是这个 Cloudflare 账号下的站点（首页站点列表里状态 **Active**）。
+还没有的话：Add a site → 输入域名 → 选套餐 → 拿到两个 Cloudflare 名称服务器 →
+去注册商后台把域名 NS 改成它们 → 等状态变 Active。
+
+然后：Workers & Pages → 点 `openworker-<corp-id>-site` → **Settings** →
+**Domains & Routes** → **Add** → **Custom Domain** → 填域名 → Add domain。
+
+Cloudflare 自动建 DNS 记录并签发证书，一两分钟后即可访问。
+
+> 域名绑定**不在代码里**，只存在于 Cloudflare 控制台 —— `deploy 成功 ≠ 域名可访问`。
+
+#### A3. 安装包托管（R2）
+
+安装包**不能**放进 `enterprise/site/public/`：Cloudflare Workers 静态资源
+**单文件上限 25 MiB**，而桌面端 DMG 通常 60–80 MB，会直接部署失败。
+私有仓的 GitHub Release 直链也不行 —— 员工匿名访问是 404。
+
+用 R2（同账号，免出网流量费）：
+
+1. Cloudflare 左侧 → **R2 Object Storage** → 首次使用需激活
+2. **Create bucket** → 如 `<corp>-openworker-releases`
+3. 进桶 → **Settings** → **Custom Domains** → **Connect Domain** → 如 `dl.<企业域名>`
+   （**别用自带的 `*.r2.dev`** —— 有速率限制，只适合调试）
+4. **Upload** 三个安装包（macOS arm64 `.dmg`、macOS x64 `.dmg`、Windows `.msi`）
+5. 填 `enterprise/site/public/downloads.json`：
+
+```json
+{
+  "version": "0.1.0",
+  "released": "2026-08-06",
+  "files": {
+    "mac-arm64":   { "url": "https://dl.example.com/App-0.1.0-aarch64.dmg", "size": "72 MB" },
+    "mac-x64":     { "url": "https://dl.example.com/App-0.1.0-x64.dmg",     "size": "78 MB" },
+    "windows-x64": { "url": "https://dl.example.com/App-0.1.0-x64.msi",     "size": "65 MB" }
+  }
+}
 ```
 
-两个已知配置缺口（部署时必须处理）：
+三个 key 是固定的（与页面里的 `PLATFORMS` 一一对应，`tests/test_corp_site.py` 钉着）。
+`url` 留空页面显示「即将开放」，不是坏链接。改完推送即自动重新部署。
 
-- **域名绑定不在代码里**：`wrangler.jsonc` 无 routes/custom_domain 配置，域名 → Worker 的映射只存在于 Cloudflare 控制台，必须手工绑定（deploy 成功 ≠ 域名可访问）。
-- **IMAGES 绑定缺失**：`worker/index.ts` 的 `/_vinext/image` 端点调用 `env.IMAGES`，但 `wrangler.jsonc` 未声明 images 绑定——照抄配置部署后图片优化端点会运行时报错；企业站需在 `wrangler.jsonc` 补 `"images": { "binding": "IMAGES" }`，或确认站内不用该端点。
-- 换品牌时**站点测试断言要同步改**：`tests/rendered-html.test.mjs` 硬编码了「OpenWorker 中文站」、DMG 文件名、SHA-256、Bundle ID 与双仓库链接。
+> **R2 顺带解开 1.7 和 D1 的一半**：把 `tauri.conf.json` 的
+> `plugins.updater.endpoints` 指向同一个桶的 `latest-<corp-id>.json`，
+> 冒烟测试 `test_updater_endpoints_point_at_enterprise_host` 就能变绿 ——
+> 它把 `zhanglunet` / `andrewyng` / `github.com` / `githubusercontent.com` /
+> `openworker.com` 一律判为「非企业域」，企业自有域名不在黑名单里。
 
-品牌化改动：站名/文案/Logo（`website/app/` 各页面）、下载链接指向企业托管产物、删除或替换 oaosf.cn 专属内容。企业站定制项集中记录在 `enterprise/site/`，正式文件按挂载点规则小改 `website/`。
+#### A4. 两条不能破的红线（`deploy-corp-site.yml` 里各有守卫）
+
+1. **不能覆盖汉化站。** 汉化站 oaosf.cn 的 Worker 叫 `openworker-cn-site`，而企业仓是
+   从汉化仓镜像来的，`website/wrangler.jsonc` 里那个名字一直在树里 —— 同账号下同名
+   部署会直接把线上站顶掉，wrangler 不会问你一句。部署前查两处：解析出的 Worker 名、
+   以及 `enterprise/site/wrangler.jsonc` 的 `name` 字段。
+2. **不能把内部信息发到公网。** 部署前扫 `public/`，内网域名、私网 IP、疑似凭据一律
+   拒绝部署 —— 发出去就已经被抓取了，撤回也晚了。
+
+#### A5.（可选）沿用汉化站那套 Next.js 站
+
+想要源码分析等完整页面时才走这条。三个已知缺口：
+
+- **会公开仓库提交记录**：`scripts/generate-site-reports.mjs` 把最近提交发布到页面上。
+  在企业仓里那等于公开企业开发动态 —— 这正是 `enterprise/site/` 不继承它的原因。
+- **IMAGES 绑定缺失**：`worker/index.ts` 的 `/_vinext/image` 端点调用 `env.IMAGES`，
+  但 `wrangler.jsonc` 未声明 images 绑定 —— 照抄配置部署后该端点会运行时报错。
+- **站点测试断言要同步改**：`tests/rendered-html.test.mjs` 硬编码了「OpenWorker 中文站」、
+  DMG 文件名、SHA-256、Bundle ID 与双仓库链接。
+
+走这条务必先把 `wrangler.jsonc` 的 `name` 改掉，否则就是 A4 第 1 条那个后果。
 
 ### 形态 B：内网静态/Node 部署（数据合规要求高时）
 
