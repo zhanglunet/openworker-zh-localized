@@ -422,7 +422,8 @@ preflight() {
 
   # --- 模板目录 ---
   local f
-  for f in sync-localized.yml release-corp.yml test_enterprise_customization.py; do
+  for f in sync-localized.yml release-corp.yml verify-update-channel.yml \
+           test_enterprise_customization.py; do
     if [[ -f "${TEMPLATE_DIR%/}/$f" ]]; then
       ok "找到模板 ${f}"
     else
@@ -1521,6 +1522,13 @@ step_pipeline() {
   # 它替代第 3 步里被停用的 release.yml / prerelease.yml / build-windows.yml。
   copy_template "release-corp.yml" \
     "$TARGET_DIR/.github/workflows/release-corp.yml"
+
+  # 更新源验证流水线：手动触发，端到端验「方式 B」是否真的通。
+  # 自动更新的失败是全静默的（客户端拉不到清单就当作已是最新版），而这条链路
+  # 只有发正式签名版时才会被走到 —— 等办完证书发版时才发现桶名/权限/域名绑错，
+  # 是最坏的发现时机。所以拆成一条随时能跑的独立验证。
+  copy_template "verify-update-channel.yml" \
+    "$TARGET_DIR/.github/workflows/verify-update-channel.yml"
 
   # 冒烟测试：断言所有挂载点定制还在。
   copy_template "test_enterprise_customization.py" \

@@ -1,0 +1,178 @@
+# 验证「方式 B · 自建更新源」这条链路是否真的通。
+#
+# 为什么需要一条独立的验证流水线：
+#   自动更新链路的失败是**全静默**的。客户端每次启动去拉 tauri.conf.json 里写的
+#   endpoints，拉不到就当作"已是最新版"，不报错、不提示、日志里也没有。
+#   于是"更新源根本没搭好"和"确实已是最新版"在用户侧长得一模一样，
+#   可能几个月都没人发现——直到某次要紧急推修复版才暴露。
+#
+#   而这条链路又只有在**发正式签名版**时才会被走到（release-corp.yml 里
+#   生成清单/上传两步都带 `if: signed == 'true'`）。等 Apple 证书办下来再发现
+#   桶名不对、token 没有 R2 权限、自定义域没绑好——那是最坏的发现时机。
+#
+#   所以：把它从"发布的副作用"拆成一条可以随时手动跑的独立验证。
+#
+# 这条流水线做四件事，每一件都断言，不通就红：
+#   1. tauri.conf.json 的 endpoint 与 vars.CORP_UPDATE_BASE_URL / vars.CORP_ID 三者自洽
+#   2. CLOUDFLARE_API_TOKEN 确实有 R2 权限（能列出桶），并确认目标桶存在
+#   3. 往桶里写一个探针对象，再**从公网自定义域读回来**——写得进 ≠ 读得到，
+#      自定义域没绑或绑错时，写入照样成功，读出来是 404
+#   4. 清理探针（always()，失败也清）
+#
+# 探针路径统一在 __verify/ 前缀下，绝不碰 latest-<corp>.json 或任何 tag 目录。
+
+name: 验证更新源（方式 B）
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-update-channel
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CORP_ID: ${{ vars.CORP_ID }}
+      BASE_URL: ${{ vars.CORP_UPDATE_BASE_URL }}
+      BUCKET: ${{ vars.CORP_R2_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── 1. 三者自洽 ────────────────────────────────────────────────────────
+      # 客户端读的是 tauri.conf.json 里那个写死的 URL；流水线写的是
+      # <CORP_UPDATE_BASE_URL>/latest-<CORP_ID>.json。两者对不上，
+      # 就是"客户端盯着一个永远没人往里放东西的地址"——正是上面说的静默失败。
+      - name: 校验 endpoint 与更新源配置自洽
+        run: |
+          set -euo pipefail
+
+          if [ -z "${CORP_ID:-}" ]; then
+            echo "::error::未设置仓库 Variable CORP_ID"
+            exit 1
+          fi
+          if [ -z "${BASE_URL:-}" ]; then
+            echo "::error::未设置仓库 Variable CORP_UPDATE_BASE_URL —— 不设它就会退回「方式 A · 私有 Release」，"
+            echo "而私有仓的 Release 资产要带凭据才能下载，Tauri updater 默认不带，自动更新必然失败。"
+            echo "设为你的分发根地址，例如 https://dl.example.com"
+            exit 1
+          fi
+
+          # tauri.conf.json 里的 endpoints 是唯一真源（客户端编译进去的就是它）
+          mapfile -t ENDPOINTS < <(python3 -c "
+          import json, io
+          c = json.load(io.open('surfaces/gui/src-tauri/tauri.conf.json', encoding='utf-8'))
+          for e in c.get('plugins', {}).get('updater', {}).get('endpoints', []):
+              print(e)
+          ")
+          if [ "${#ENDPOINTS[@]}" -eq 0 ]; then
+            echo "::error::tauri.conf.json 的 plugins.updater.endpoints 是空的 —— 客户端根本不会去检查更新"
+            exit 1
+          fi
+
+          expected="${BASE_URL%/}/latest-${CORP_ID}.json"
+          hit=false
+          for e in "${ENDPOINTS[@]}"; do
+            echo "  endpoint: $e"
+            [ "$e" = "$expected" ] && hit=true
+          done
+          if [ "$hit" != "true" ]; then
+            echo "::error::endpoints 里没有 ${expected}"
+            echo "客户端会去拉上面列出的地址，而流水线只会往 ${expected} 写。两者必须有一个一致，"
+            echo "否则更新永远拉不到，且客户端不会报任何错。"
+            exit 1
+          fi
+          echo "✓ 客户端读 ${expected}，流水线也写这里"
+          echo "PROBE_PREFIX=__verify/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+
+      # ── 2. 凭据与桶 ────────────────────────────────────────────────────────
+      # 站点部署那个 token 只需要 Workers Scripts:Edit，未必带 R2 权限。
+      # 这里先列桶：列不出来就是 token 权限不够，比等到发版时才炸好得多。
+      - name: 校验 R2 凭据并确认目标桶
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "::error::缺少 CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          fi
+
+          echo "==> 账号下的 R2 桶："
+          if ! npx --yes wrangler@4 r2 bucket list 2>&1 | tee /tmp/buckets.txt; then
+            echo "::error::列桶失败 —— CLOUDFLARE_API_TOKEN 多半没有 R2 权限。"
+            echo "去 Cloudflare → My Profile → API Tokens，给它加上 Workers R2 Storage:Edit。"
+            exit 1
+          fi
+
+          if [ -z "${BUCKET:-}" ]; then
+            echo "::error::未设置仓库 Variable CORP_R2_BUCKET。"
+            echo "从上面列出的桶里挑出承载 ${BASE_URL} 的那个，填进 Settings → Variables。"
+            exit 1
+          fi
+          # 子串匹配会把 foo 匹配到 foo-bak 上，用词边界卡死
+          if ! grep -qE "(^|[^A-Za-z0-9._-])${BUCKET}([^A-Za-z0-9._-]|$)" /tmp/buckets.txt; then
+            echo "::error::账号下没有名为 ${BUCKET} 的桶（见上面的列表）"
+            exit 1
+          fi
+          echo "✓ token 有 R2 权限，桶 ${BUCKET} 存在"
+
+      # ── 3. 写进去，再从公网读回来 ──────────────────────────────────────────
+      - name: 探针：写入 R2
+        run: |
+          set -euo pipefail
+          # 探针内容带 run id，读回来时逐字节比对 —— 只比对 HTTP 200 是不够的：
+          # 自定义域如果指向了另一个桶，照样返回 200，只是内容是别人的。
+          printf '{"probe":"%s"}\n' "$GITHUB_RUN_ID" > /tmp/probe.json
+
+          # ★ 必须带 --remote。wrangler 4 的 r2 object put 默认写**本地模拟存储**，
+          #   不加这个参数会打印一行成功、然后什么都没上传，下一步 404 而原因完全看不出来。
+          npx --yes wrangler@4 r2 object put \
+            "${BUCKET}/${PROBE_PREFIX}/probe.json" \
+            --file /tmp/probe.json \
+            --content-type application/json \
+            --remote
+          echo "✓ 已写入 ${BUCKET}/${PROBE_PREFIX}/probe.json"
+
+      - name: 探针：从公网自定义域读回并比对
+        run: |
+          set -euo pipefail
+          url="${BASE_URL%/}/${PROBE_PREFIX}/probe.json"
+          echo "==> GET $url"
+
+          # R2 写入到自定义域可见之间有短暂延迟，重试几次再判死
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -sS -o /tmp/got.json -w '%{http_code}' "$url" || echo 000)
+            [ "$code" = "200" ] && break
+            echo "  第 ${i} 次：HTTP ${code}，2 秒后重试"
+            sleep 2
+          done
+
+          if [ "$code" != "200" ]; then
+            echo "::error::写进桶了，但公网读不到（HTTP ${code}）。"
+            echo "多半是 ${BASE_URL} 这个自定义域没绑到桶 ${BUCKET} 上，"
+            echo "或者绑到了同账号下的另一个桶。去 R2 → ${BUCKET} → Settings → Custom Domains 核对。"
+            exit 1
+          fi
+
+          if ! diff -q /tmp/probe.json /tmp/got.json >/dev/null; then
+            echo "::error::读回来的内容和写进去的不一致 —— ${BASE_URL} 指向的不是桶 ${BUCKET}。"
+            echo "写入：$(cat /tmp/probe.json)"
+            echo "读到：$(cat /tmp/got.json)"
+            exit 1
+          fi
+          echo "✓ 方式 B 链路打通：流水线写得进，客户端读得到，内容一致"
+
+      # ── 4. 清理 ────────────────────────────────────────────────────────────
+      - name: 清理探针
+        if: always() && env.PROBE_PREFIX != ''
+        run: |
+          # 不加 set -e：清理失败不该把一次成功的验证判成失败，
+          # 但要把删不掉这件事说出来，否则 __verify/ 下会慢慢堆垃圾。
+          npx --yes wrangler@4 r2 object delete \
+            "${BUCKET}/${PROBE_PREFIX}/probe.json" --remote \
+            || echo "::warning::探针对象没删掉，请手动清理 ${BUCKET}/${PROBE_PREFIX}/"

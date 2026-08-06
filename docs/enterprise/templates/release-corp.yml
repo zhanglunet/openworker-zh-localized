@@ -599,8 +599,9 @@ jobs:
           #     内网 Nginx、MinIO、OSS 内网端点都行；配合下面的"上传"步骤使用。
           #     好处：不依赖 GitHub 可达性，也不用把 token 发到客户端。
           CORP_UPDATE_BASE_URL: ${{ vars.CORP_UPDATE_BASE_URL }}
-          # 只用于下面那条「设了分发地址却没有上传地址」的自检
+          # 下面两个只用于「设了分发地址却没有任何上传方式」的自检
           CORP_UPDATE_UPLOAD_URL: ${{ vars.CORP_UPDATE_UPLOAD_URL }}
+          CORP_R2_BUCKET: ${{ vars.CORP_R2_BUCKET }}
         run: |
           set -euo pipefail
           # 内联实现，不复用 packaging/make_update_manifest.py：
@@ -616,14 +617,19 @@ jobs:
 
           base = os.environ.get("CORP_UPDATE_BASE_URL", "").strip().rstrip("/")
           if base:
-              # 只设 BASE_URL、不设 UPLOAD_URL 时，清单会指向一个本流水线从没往里放过文件的
-              # 地址 —— 客户端会拿到 404 并静默停在旧版本。必须显式提醒。
-              if not os.environ.get("CORP_UPDATE_UPLOAD_URL", "").strip():
+              # 只设 BASE_URL、却没有任何一种上传方式时，清单会指向一个本流水线从没往里
+              # 放过文件的地址 —— 客户端会拿到 404 并静默停在旧版本。必须显式提醒。
+              has_uploader = (
+                  os.environ.get("CORP_UPDATE_UPLOAD_URL", "").strip()
+                  or os.environ.get("CORP_R2_BUCKET", "").strip()
+              )
+              if not has_uploader:
                   print(
-                      "::warning::设了 vars.CORP_UPDATE_BASE_URL 却没设 vars.CORP_UPDATE_UPLOAD_URL"
-                      " —— 本流水线不会上传任何文件到该地址，请确认另有分发流程把 dist/ 放上去"
+                      "::warning::设了 vars.CORP_UPDATE_BASE_URL，却既没设 vars.CORP_R2_BUCKET"
+                      " 也没设 vars.CORP_UPDATE_UPLOAD_URL —— 本流水线不会上传任何文件到该地址，"
+                      "请确认另有分发流程把 dist/ 放上去"
                   )
-              base = f"{base}/{tag}"                                   # 方式 B：内网托管
+              base = f"{base}/{tag}"                                   # 方式 B：自建分发
           else:
               repo = os.environ["GITHUB_REPOSITORY"]                   # 方式 A：私有 Release
               base = f"https://github.com/{repo}/releases/download/{tag}"
@@ -755,7 +761,48 @@ jobs:
           body_path: release-notes.md
           files: dist/*
 
-      - name: 上传更新包到企业内网服务器（方式 B）
+      # ── 方式 B 的两条上传路径，按配置二选一 ──────────────────────────────────
+      # B-1 Cloudflare R2（vars.CORP_R2_BUCKET）
+      # B-2 通用 HTTP PUT 接口（vars.CORP_UPDATE_UPLOAD_URL），内网 Nginx / MinIO 网关等
+      #
+      # 为什么 R2 不能复用下面那条 curl PUT：R2 的自定义域是**只读**的，
+      # 对它 PUT 会直接被拒（实测 401），而且失败信息看起来像"凭据不对"，
+      # 极容易被误诊成 token 问题。写 R2 必须走 S3 API 或 wrangler。
+      - name: 上传更新包到 Cloudflare R2（方式 B-1）
+        if: needs.preflight.outputs.signed == 'true' && vars.CORP_R2_BUCKET != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BUCKET: ${{ vars.CORP_R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "::error::设了 vars.CORP_R2_BUCKET，但缺 CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          fi
+
+          # ★ 每条命令都必须带 --remote。wrangler 4 的 r2 object put 默认写**本地模拟存储**，
+          #   不加就是打印一行成功、实际什么都没上传 —— 发布流程全绿，客户端拿到 404。
+          #   这个坑没有任何报错，只能靠这行注释和 verify-update-channel.yml 拦。
+
+          # 1) 带 tag 的归档路径：与清单里的 URL 一一对应
+          for f in dist/*; do
+            name=$(basename "$f")
+            echo "==> R2 put ${BUCKET}/${TAG}/${name}"
+            npx --yes wrangler@4 r2 object put "${BUCKET}/${TAG}/${name}" \
+              --file "$f" --remote
+          done
+
+          # 2) 不带 tag 的稳定路径：客户端 updater 长期指向这里。
+          #    清单必须 no-cache —— 否则 CDN 会把旧清单缓存住，新版本发了也没人收到。
+          echo "==> R2 put ${BUCKET}/latest-${CORP_ID}.json"
+          npx --yes wrangler@4 r2 object put "${BUCKET}/latest-${CORP_ID}.json" \
+            --file "dist/latest-${CORP_ID}.json" \
+            --content-type application/json \
+            --cache-control "no-cache" \
+            --remote
+
+      - name: 上传更新包到企业内网服务器（方式 B-2）
         # 仅在配置了 vars.CORP_UPDATE_UPLOAD_URL 时执行。
         # ⚠️ GitHub 托管 runner 访问不到企业内网 —— 用这条路径必须换成 self-hosted runner
         #    （把本 job 的 runs-on 改成 self-hosted），或让上传接口有公网入口 + 鉴权。
