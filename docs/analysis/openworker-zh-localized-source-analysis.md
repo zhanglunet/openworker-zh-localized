@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T10:09:00Z
+更新时间：2026-08-06T10:12:03Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：b2990599605914e454191fb44bfd509ea0dd1687
+当前提交：c68e9037b94cc52809c7805222927e42fe037ac3
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：600
-- 当前提交：b299059
+- 当前提交：c68e903
 - 主要文件类型：
   - py: 262
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 c68e903 fix(site): 免责声明里企业名两侧的空格 —— "非 亚信 官方发布"
+- 2026-08-06 3aaa1f1 docs: refresh generated site reports
 - 2026-08-06 b299059 fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃
 - 2026-08-06 cef62de docs: refresh generated site reports
 - 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 364a7da docs: refresh generated site reports
 - 2026-08-06 bb2f4dc fix(smoke): 冒烟测试认不出零冲突的模型声明路径，且漏掉类型错误
 - 2026-08-06 066c17c docs: refresh generated site reports
-- 2026-08-06 ceff7ae fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持
-- 2026-08-06 c08a31d docs: refresh generated site reports

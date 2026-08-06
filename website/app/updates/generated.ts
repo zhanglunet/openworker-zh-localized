@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T10:09:00Z",
+  "generatedAt": "2026-08-06T10:12:03Z",
   "branch": "main",
-  "head": "b2990599605914e454191fb44bfd509ea0dd1687",
-  "shortHead": "b299059",
+  "head": "c68e9037b94cc52809c7805222927e42fe037ac3",
+  "shortHead": "c68e903",
   "totalFiles": 600,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "c68e903",
+      "date": "2026-08-06",
+      "subject": "fix(site): 免责声明里企业名两侧的空格 —— \"非 亚信 官方发布\""
+    },
+    {
+      "hash": "3aaa1f1",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "b299059",
       "date": "2026-08-06",
       "subject": "fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "066c17c",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ceff7ae",
-      "date": "2026-08-06",
-      "subject": "fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持"
-    },
-    {
-      "hash": "c08a31d",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "c68e903",
+      "date": "2026-08-06",
+      "subject": "fix(site): 免责声明里企业名两侧的空格 —— \"非 亚信 官方发布\""
+    },
+    {
+      "hash": "3aaa1f1",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "b299059",
       "date": "2026-08-06",
