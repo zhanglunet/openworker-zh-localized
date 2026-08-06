@@ -1,11 +1,16 @@
-# 待提交上游：定时任务在 skip-on-overlap 下仍可能重复执行
+# 已提交上游：定时任务在 skip-on-overlap 下仍可能重复执行
 
 - 发现时间：2026-08-05
 - 影响文件：`coworker/automation/scheduler.py`（与上游 `01b6f83` 逐字一致，本仓库未曾改动过它）
 - 本仓库已修复：`7347760`（修复）+ `d6c3bcd`（回归测试）
-- **上游尚未提交**——本会话的 GitHub 权限只覆盖 `zhanglunet/openworker-zh-localized`，
-  无法在 `andrewyng/openworker` 或其 fork 上 push / 开 PR。本目录是可直接使用的提交材料，
-  照「怎么提交给上游」一节逐条执行即可（fork 已就绪：`zhanglunet/openworker`）。
+- **上游 PR：<https://github.com/andrewyng/openworker/pull/458>**（2026-08-06 提交，
+  经 `zhanglunet/openworker` fork 的 `fix/scheduler-skip-on-overlap-race` 分支，commit `de5f6fd`）
+
+> 本目录保留全部提交材料：补丁、复现脚本、以及下面那份逐条命令。
+> PR 若被要求改动（rebase 到新的上游 main、拆分提交、补测试），照同一套流程重跑即可。
+>
+> 注意：本仓库的会话 GitHub 权限只覆盖 `zhanglunet/openworker-zh-localized`，
+> **看不到也回不了 #458 上的评论**。上游有反馈时请贴回会话里。
 
 ## 缺陷
 
