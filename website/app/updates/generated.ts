@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T03:13:52Z",
+  "generatedAt": "2026-08-06T03:16:34Z",
   "branch": "main",
-  "head": "95bbb1a2246664cb9e4ce82c69b7f53b935faed5",
-  "shortHead": "95bbb1a",
+  "head": "2d8132800f795cf7865de18583839827bb2343bb",
+  "shortHead": "2d81328",
   "totalFiles": 592,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "2d81328",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 第 4 步标为可选，并写清 macOS 自带 Python 的两个坑"
+    },
+    {
+      "hash": "422a6b1",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "95bbb1a",
       "date": "2026-08-06",
       "subject": "docs(upstream): 更正依赖说明——不能只装那三个包"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "ef78e33",
       "date": "2026-08-06",
       "subject": "企业知识库 v2：MCP 检索服务（M3）"
-    },
-    {
-      "hash": "6759d93",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "61bf46c",
-      "date": "2026-08-06",
-      "subject": "feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "2d81328",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 第 4 步标为可选，并写清 macOS 自带 Python 的两个坑"
+    },
+    {
+      "hash": "422a6b1",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "95bbb1a",
       "date": "2026-08-06",
