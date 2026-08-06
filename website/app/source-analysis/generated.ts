@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T01:22:36Z",
+  "generatedAt": "2026-08-06T01:33:46Z",
   "branch": "main",
-  "head": "d182a246427e53e4ff9099816f4048443e219efb",
-  "shortHead": "d182a24",
-  "totalFiles": 578,
+  "head": "61bf46c0bc269682b0a73730a0cc08237cc5f329",
+  "shortHead": "61bf46c",
+  "totalFiles": 582,
   "byExt": [
     {
       "name": "py",
-      "count": 250
+      "count": 254
     },
     {
       "name": "ts",
@@ -85,11 +85,11 @@ export const repoReport = {
     },
     {
       "name": "coworker",
-      "count": 132
+      "count": 134
     },
     {
       "name": "tests",
-      "count": 100
+      "count": 102
     },
     {
       "name": "docs",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "61bf46c",
+      "date": "2026-08-06",
+      "subject": "feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）"
+    },
+    {
+      "hash": "590559a",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "d182a24",
       "date": "2026-08-06",
       "subject": "feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "b9c6deb",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "068e1db",
-      "date": "2026-08-06",
-      "subject": "docs(upstream): 归档调度器竞态的上游提交材料"
-    },
-    {
-      "hash": "b09e893",
-      "date": "2026-08-06",
-      "subject": "test(automation): 补上 skip-on-overlap 竞态的确定性回归用例"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "61bf46c",
+      "date": "2026-08-06",
+      "subject": "feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）"
+    },
+    {
+      "hash": "590559a",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "d182a24",
       "date": "2026-08-06",

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T01:22:36Z
+更新时间：2026-08-06T01:33:46Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：d182a246427e53e4ff9099816f4048443e219efb
+当前提交：61bf46c0bc269682b0a73730a0cc08237cc5f329
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：578
-- 当前提交：d182a24
+- 跟踪文件总数：582
+- 当前提交：61bf46c
 - 主要文件类型：
-  - py: 250
+  - py: 254
   - ts: 105
   - tsx: 79
   - md: 28
@@ -37,8 +37,8 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- coworker: 132 个文件
-- tests: 100 个文件
+- coworker: 134 个文件
+- tests: 102 个文件
 - docs: 45 个文件
 - website: 36 个文件
 - packaging: 10 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 61bf46c feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）
+- 2026-08-06 590559a docs: refresh generated site reports
 - 2026-08-06 d182a24 feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）
 - 2026-08-06 d86177b docs: refresh generated site reports
 - 2026-08-06 ee6e05b feat(provisioning): 首启把已发布的默认值种进空的状态目录（M1 配置预置）
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 fa89654 docs: refresh generated site reports
 - 2026-08-06 78a126d feat(gui): 表格助手入口（大表哥 L2）
 - 2026-08-06 b9c6deb docs: refresh generated site reports
-- 2026-08-06 068e1db docs(upstream): 归档调度器竞态的上游提交材料
-- 2026-08-06 b09e893 test(automation): 补上 skip-on-overlap 竞态的确定性回归用例
