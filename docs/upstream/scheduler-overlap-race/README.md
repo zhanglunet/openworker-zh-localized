@@ -73,13 +73,20 @@
 ### 第 1 步：全新目录克隆 fork，并同步到上游最新
 
 ```bash
-cd ~
+cd ~          # 放哪儿都行，只要不在某个已有克隆的内部
 git clone https://github.com/zhanglunet/openworker.git openworker-upstream-pr
 cd openworker-upstream-pr
 git remote -v
 ```
 
-最后一条**必须**输出 `zhanglunet/openworker`。
+**目录路径本身不重要**（`~/openworker-upstream-pr`、`~/OpenWorker/openworker-upstream-pr`
+都可以，只要父目录不是另一个 git 仓库）。真正决定对错的只有 `git remote -v` 这一条：
+
+```
+origin    https://github.com/zhanglunet/openworker.git (fetch)
+origin    https://github.com/zhanglunet/openworker.git (push)
+```
+
 输出里带 `openworker-zh-localized` 就是进错目录了，停下重来。
 
 fork 可能落后于上游（GitHub 不会自动跟进），先补齐——这一步同时保证第 3 步退路要用的
