@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T01:01:21Z",
+  "generatedAt": "2026-08-06T01:08:14Z",
   "branch": "main",
-  "head": "f2bcad548f7ff6e6fd4394719e5b4f7814a2a7e0",
-  "shortHead": "f2bcad5",
-  "totalFiles": 571,
+  "head": "ee6e05b29f1c8db312785a7bcde775419b60739a",
+  "shortHead": "ee6e05b",
+  "totalFiles": 573,
   "byExt": [
     {
       "name": "py",
-      "count": 245
+      "count": 247
     },
     {
       "name": "ts",
@@ -85,11 +85,11 @@ export const repoReport = {
     },
     {
       "name": "coworker",
-      "count": 131
+      "count": 132
     },
     {
       "name": "tests",
-      "count": 97
+      "count": 98
     },
     {
       "name": "docs",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "ee6e05b",
+      "date": "2026-08-06",
+      "subject": "feat(provisioning): 首启把已发布的默认值种进空的状态目录（M1 配置预置）"
+    },
+    {
+      "hash": "3e2fdca",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "f2bcad5",
       "date": "2026-08-06",
       "subject": "feat(providers): 私有模型能力声明覆盖层 + 端点能力实测脚本（M1）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "7347760",
       "date": "2026-08-06",
       "subject": "fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行"
-    },
-    {
-      "hash": "3923f58",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "5f790df",
-      "date": "2026-08-05",
-      "subject": "feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "ee6e05b",
+      "date": "2026-08-06",
+      "subject": "feat(provisioning): 首启把已发布的默认值种进空的状态目录（M1 配置预置）"
+    },
+    {
+      "hash": "3e2fdca",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "f2bcad5",
       "date": "2026-08-06",
