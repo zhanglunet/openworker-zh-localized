@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T01:52:19Z
+更新时间：2026-08-06T02:29:14Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：ef78e3339bd7dc04ad1bc66fa151085d877eeb05
+当前提交：48889751ff76e032f610821ac544a0ebc2fefa7c
 
 ## 1. 总体判断
 
@@ -14,16 +14,16 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：585
-- 当前提交：ef78e33
+- 跟踪文件总数：592
+- 当前提交：4888975
 - 主要文件类型：
-  - py: 256
+  - py: 260
   - ts: 105
   - tsx: 79
-  - md: 28
+  - md: 29
   - svg: 23
   - png: 22
-  - json: 14
+  - json: 16
   - yml: 9
   - [none]: 7
   - html: 5
@@ -38,8 +38,8 @@
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 103 个文件
-- docs: 47 个文件
+- tests: 105 个文件
+- docs: 52 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 4888975 内部系统 connector：模板 + 接入指南（M3 3.3）
+- 2026-08-06 07bb4b0 docs: refresh generated site reports
 - 2026-08-06 ef78e33 企业知识库 v2：MCP 检索服务（M3）
 - 2026-08-06 6759d93 docs: refresh generated site reports
 - 2026-08-06 61bf46c feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 3e2fdca docs: refresh generated site reports
 - 2026-08-06 f2bcad5 feat(providers): 私有模型能力声明覆盖层 + 端点能力实测脚本（M1）
 - 2026-08-06 5dd7db0 docs: refresh generated site reports
-- 2026-08-06 dfd9907 feat(sheets): excel_ai 注册为内置工具（大表哥 L3）
-- 2026-08-06 fa89654 docs: refresh generated site reports

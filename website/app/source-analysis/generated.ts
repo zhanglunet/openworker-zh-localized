@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T01:52:19Z",
+  "generatedAt": "2026-08-06T02:29:14Z",
   "branch": "main",
-  "head": "ef78e3339bd7dc04ad1bc66fa151085d877eeb05",
-  "shortHead": "ef78e33",
-  "totalFiles": 585,
+  "head": "48889751ff76e032f610821ac544a0ebc2fefa7c",
+  "shortHead": "4888975",
+  "totalFiles": 592,
   "byExt": [
     {
       "name": "py",
-      "count": 256
+      "count": 260
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 28
+      "count": 29
     },
     {
       "name": "svg",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 14
+      "count": 16
     },
     {
       "name": "yml",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 103
+      "count": 105
     },
     {
       "name": "docs",
-      "count": 47
+      "count": 52
     },
     {
       "name": "website",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "4888975",
+      "date": "2026-08-06",
+      "subject": "内部系统 connector：模板 + 接入指南（M3 3.3）"
+    },
+    {
+      "hash": "07bb4b0",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "ef78e33",
       "date": "2026-08-06",
       "subject": "企业知识库 v2：MCP 检索服务（M3）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "5dd7db0",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "dfd9907",
-      "date": "2026-08-06",
-      "subject": "feat(sheets): excel_ai 注册为内置工具（大表哥 L3）"
-    },
-    {
-      "hash": "fa89654",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "4888975",
+      "date": "2026-08-06",
+      "subject": "内部系统 connector：模板 + 接入指南（M3 3.3）"
+    },
+    {
+      "hash": "07bb4b0",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "ef78e33",
       "date": "2026-08-06",
