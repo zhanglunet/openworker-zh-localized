@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T02:29:14Z",
+  "generatedAt": "2026-08-06T02:48:25Z",
   "branch": "main",
-  "head": "48889751ff76e032f610821ac544a0ebc2fefa7c",
-  "shortHead": "4888975",
+  "head": "e83a8671513004dfd2177d726204d62f94fd3044",
+  "shortHead": "e83a867",
   "totalFiles": 592,
   "byExt": [
     {
@@ -362,6 +362,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "e83a867",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 澄清克隆目录放哪儿不重要，git remote -v 才是判据"
+    },
+    {
+      "hash": "d54ed56",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 上游 PR 提交步骤写成逐条可执行命令"
+    },
+    {
+      "hash": "69a5e59",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "4888975",
       "date": "2026-08-06",
       "subject": "内部系统 connector：模板 + 接入指南（M3 3.3）"
@@ -405,24 +420,24 @@ export const repoReport = {
       "hash": "ee6e05b",
       "date": "2026-08-06",
       "subject": "feat(provisioning): 首启把已发布的默认值种进空的状态目录（M1 配置预置）"
-    },
-    {
-      "hash": "3e2fdca",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "f2bcad5",
-      "date": "2026-08-06",
-      "subject": "feat(providers): 私有模型能力声明覆盖层 + 端点能力实测脚本（M1）"
-    },
-    {
-      "hash": "5dd7db0",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "e83a867",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 澄清克隆目录放哪儿不重要，git remote -v 才是判据"
+    },
+    {
+      "hash": "d54ed56",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 上游 PR 提交步骤写成逐条可执行命令"
+    },
+    {
+      "hash": "69a5e59",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "4888975",
       "date": "2026-08-06",
