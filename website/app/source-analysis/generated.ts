@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T03:11:37Z",
+  "generatedAt": "2026-08-06T03:13:52Z",
   "branch": "main",
-  "head": "5627b2d303836ee0ee546fd2aa5dcdb10bed556b",
-  "shortHead": "5627b2d",
+  "head": "95bbb1a2246664cb9e4ce82c69b7f53b935faed5",
+  "shortHead": "95bbb1a",
   "totalFiles": 592,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "95bbb1a",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 更正依赖说明——不能只装那三个包"
+    },
+    {
+      "hash": "83574b0",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "5627b2d",
       "date": "2026-08-06",
       "subject": "docs(upstream): 补三个实操中真的踩到的坑"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "61bf46c",
       "date": "2026-08-06",
       "subject": "feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）"
-    },
-    {
-      "hash": "590559a",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d182a24",
-      "date": "2026-08-06",
-      "subject": "feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "95bbb1a",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 更正依赖说明——不能只装那三个包"
+    },
+    {
+      "hash": "83574b0",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "5627b2d",
       "date": "2026-08-06",

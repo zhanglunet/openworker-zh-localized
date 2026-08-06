@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T03:11:37Z
+更新时间：2026-08-06T03:13:52Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：5627b2d303836ee0ee546fd2aa5dcdb10bed556b
+当前提交：95bbb1a2246664cb9e4ce82c69b7f53b935faed5
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：592
-- 当前提交：5627b2d
+- 当前提交：95bbb1a
 - 主要文件类型：
   - py: 260
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 95bbb1a docs(upstream): 更正依赖说明——不能只装那三个包
+- 2026-08-06 83574b0 docs: refresh generated site reports
 - 2026-08-06 5627b2d docs(upstream): 补三个实操中真的踩到的坑
 - 2026-08-06 657f581 docs: refresh generated site reports
 - 2026-08-06 e83a867 docs(upstream): 澄清克隆目录放哪儿不重要，git remote -v 才是判据
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 ef78e33 企业知识库 v2：MCP 检索服务（M3）
 - 2026-08-06 6759d93 docs: refresh generated site reports
 - 2026-08-06 61bf46c feat: 目录白名单 + 审计外发 SIEM（M2 的 2.3 与 2.4）
-- 2026-08-06 590559a docs: refresh generated site reports
-- 2026-08-06 d182a24 feat: 知识库常驻挂载 + 企业 CLI→MCP 桥（M2 的 2.1 与 2.2）
