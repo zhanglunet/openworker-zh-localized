@@ -225,9 +225,20 @@ enterprise/skills/                 # 企业技能包源（随仓库版本管理�
 
 ### 5.2 知识库 v1（文件根挂载）
 
-1. 企业知识库目录通过同步盘/网盘挂载到员工机器（如 `~/CorpKB/`）
-2. 员工把该目录添加为工作区/文件根，agent 即可读取检索；IT 脚本也可对运行中会话直接挂载：`POST /v1/sessions/{id}/roots`，body `{"path": "...", "writable": false}`（只读挂载）
-3. 敏感子库用目录权限控制（agent 以当前用户权限访问）
+**① 常驻挂载（已交付，推荐）** —— 全局配置里声明，每个会话自动只读挂载，员工不必手工添加：
+
+```toml
+# <state-dir>/config.toml
+knowledge_roots = ["~/CorpKB", "/Volumes/Shared/制度"]
+```
+
+三条性质：**永远只读**（常驻共享目录的写权限不该由一行配置发出去）、**工作区配置不能声明**（否则一个克隆下来的仓库写上 `knowledge_roots = ["~/.ssh"]` 就等于自己给自己发钥匙，与 `allowed_commands` 同级别管控）、**不持久化进会话**（管理员从配置里移除，访问权限就真的没了，不会在旧会话里阴魂不散）。路径不存在时静默跳过——同步盘还没下完不该让人开不了会话。
+
+**② 临时挂载**：员工把目录添加为工作区文件根；IT 脚本也可对运行中会话直接挂：`POST /v1/sessions/{id}/roots`，body `{"path": "...", "writable": false}`。
+
+**③ 检索技能**：预置 [templates/skills/corp-knowledge/](templates/skills/corp-knowledge/)，教模型「先 grep 定位、再精读片段」，并强制**每个结论给出处**——企业知识库里答错的代价不是回答质量差，是有人照着做了。
+
+**④ 敏感子库**用目录权限控制（agent 以当前用户身份访问，读不到的就是读不到）。
 
 > 相关目录速查：状态目录 `<state-dir>`（`$COWORKER_STATE_DIR` > `%APPDATA%\coworker` > `~/.config/coworker`）下有 `config.toml`、`secrets.json`、`mcp.json`、`skills/`、`AGENTS.md`、`models/`（whisper 语音模型）、`coworker.db`（记忆+审计）、`prefs.json` 等；会话草稿/产出默认落 `~/OpenWorker/<session_id>`（prefs 键 `scratch_base` 可改）——企业文件落盘规范应覆盖这两处。
 
@@ -258,9 +269,19 @@ MCP 配置文件是标准 `mcpServers` 格式（与 Claude Desktop/Cursor 粘贴
 
 ```
 enterprise/mcp/
-├── corp-cli/          # 企业 CLI 封装成 stdio MCP server（薄封装脚本）
+├── cli-bridge/        # ✅ 已交付：通用 CLI → MCP 桥（配置驱动，不必每个 CLI 手写一个 server）
 └── corp-kb/           # 知识库检索 MCP server（对接 Confluence/语雀/自建 RAG）
 ```
+
+**CLI 桥怎么用**（[templates/mcp/cli-bridge/](templates/mcp/cli-bridge/)）：用一份 `tools.json` 声明「哪些子命令、各自什么参数」，桥自己生成 MCP 工具定义。
+
+```bash
+python3 server.py --spec tools.json --check   # 先校验并列出工具，不启动服务
+```
+
+**为什么不直接把 `corp-cli` 加进 `allowed_commands`**：那等于把整个 CLI 的全部子命令、全部参数都交出去，包括 `delete`、`--force`、以及你没想到的那些。桥反过来做——只有白名单里显式声明的子命令能被调用，参数名/类型/枚举逐个校验，未声明的参数是**拒绝**而不是忽略（静默忽略会让调用方以为 `--force` 生效了）。
+
+其余边界：argv 直传不经 shell（`;` `|` `$()` 只会是普通字符串实参）、每次调用有超时、输出超长截断、按正则脱敏后才回给模型、环境变量按白名单传递而非整个继承。
 
 知识库权限在 MCP 服务端按调用者校验，知识内容不进安装包。也可通过 `POST /v1/mcp` 由脚本写入配置。
 

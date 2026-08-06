@@ -31,6 +31,10 @@ zhanglunet/openworker-zh-localized（汉化版，公开）
 | `sync-localized.yml` | 汉化版 → 企业版每日同步流水线：有新提交就在 `sync/localized-main` 分支上 merge，成功开 PR、冲突开 Issue，并在 PR 上跑定制存活冒烟测试 | `.github/workflows/sync-localized.yml` | **init 脚本自动装** |
 | `test_enterprise_customization.py` | 定制"存活"冒烟测试：把每一处挂载点（品牌五键、provider 注册、能力矩阵、主题 import、技能名规则）变成 pytest 断言，同步覆盖了就红 | `enterprise/tests/test_enterprise_customization.py` | **init 脚本自动装** |
 | `release-corp.yml` | 企业品牌发布流水线：macOS arm64/x64 + Windows；`corp-v*` tag 触发；产物用企业前缀；生成 `latest-<corp>.json` 更新清单；**没配签名 Secrets 时自动降级为未签名内测包** | `.github/workflows/release-corp.yml` | **init 脚本自动装** |
+| `skills/excel-ai-analyst/` | 大表哥表格助手技能包：SKILL.md + 配套 `excel_ai.py`（四子命令）+ references + 测试与对抗套件 | `enterprise/skills/excel-ai-analyst/` | **init 脚本自动装** |
+| `skills/corp-knowledge/` | 企业知识库检索技能：先 grep 定位再精读片段，**每个结论必须给出处**（答错的代价是有人照着做了） | `enterprise/skills/corp-knowledge/` | 人工拷贝 |
+| `mcp/cli-bridge/` | 企业 CLI → MCP 桥：一份 `tools.json` 声明子命令与参数，桥生成 MCP 工具定义；只放行白名单子命令、argv 直传不经 shell、超时/截断/脱敏 | `enterprise/mcp/cli-bridge/` | 人工拷贝 |
+| `verify-private-model.py` | 私有模型接入验证：对企业自建的 OpenAI 兼容端点实测能力矩阵（含并行工具调用、工具结果回传），产出结论与可直接用的 `models.json` | 不进仓，拿到端点时跑一次 | 人工执行 |
 
 > init 脚本默认从**自己所在目录**找模板（`-t/--templates` 可改），三个模板文件（两个 `.yml`
 > 加一个 `.py`）它都会装；缺哪个就 warn 并跳过哪个。所以请**整包一起下载/拷贝**，

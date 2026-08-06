@@ -1476,6 +1476,15 @@ step_pipeline() {
   copy_template_dir "skills/excel-ai-analyst" \
     "$TARGET_DIR/enterprise/skills/excel-ai-analyst"
 
+  # 企业知识库检索技能：配合全局配置的 knowledge_roots（常驻只读挂载）使用。
+  copy_template_dir "skills/corp-knowledge" \
+    "$TARGET_DIR/enterprise/skills/corp-knowledge"
+
+  # 企业 CLI → MCP 桥：用 tools.json 声明子命令，不必每个 CLI 手写一个 server。
+  # 只放行白名单子命令、argv 直传不经 shell —— 比把整个 CLI 加进 allowed_commands 安全得多。
+  copy_template_dir "mcp/cli-bridge" \
+    "$TARGET_DIR/enterprise/mcp/cli-bridge"
+
   # 提示把 enterprise/tests 挂进现有 CI。企业仓继承的 .github/workflows/ci.yml
   # 里 pytest 这一步跑的是 `pytest tests -q`，不会覆盖 enterprise/tests。
   local ci="$TARGET_DIR/.github/workflows/ci.yml"

@@ -19,6 +19,13 @@ allowed_commands = [
 # asks). e.g. auto-accept file edits but keep asking before running shell commands.
 auto_allow = ["write_file", "replace_in_file", "apply_patch", "apply_unified_diff"]
 
+# Folders mounted READ-ONLY into every knowledge-work session, on top of its scratch dir.
+# This is how a shared reference corpus (runbooks, policies, a synced knowledge drive) is
+# available in every conversation without re-adding it each time. Global config only: it
+# grants read access, so a checked-out repo must never be able to declare one. Missing
+# paths are skipped silently.
+# knowledge_roots = ["~/CorpKB", "/Volumes/Shared/policies"]
+
 # Server (openworker-server) bind address.
 host = "127.0.0.1"
 port = 8765

@@ -35,6 +35,13 @@ class Config:
     # In "custom" permission mode, these tools are auto-approved (e.g. file edits)
     # while everything else still asks.
     auto_allow: list[str] = field(default_factory=list)
+    # Folders mounted READ-ONLY into every knowledge-work session, on top of its scratch
+    # root and whatever the user added by hand. This is how a shared reference corpus (an
+    # ops runbook tree, a synced policy folder) is available in every conversation without
+    # someone re-adding it each time. Paths that don't exist are skipped silently — a
+    # sync client that hasn't finished, or a folder mounted only on some machines, must
+    # not break session creation.
+    knowledge_roots: list[str] = field(default_factory=list)
     host: str = "127.0.0.1"
     port: int = 8765
     # Web search provider: "duckduckgo" (keyless default) | "tavily" | "brave" (need a key).
@@ -64,6 +71,7 @@ _FIELDS = {
     "max_iterations",
     "allowed_commands",
     "auto_allow",
+    "knowledge_roots",
     "host",
     "port",
     "web_search_provider",
@@ -77,7 +85,10 @@ _FIELDS = {
 # These fields change what consequential actions can run without a prompt, so the normal
 # workspace override pass never applies them. `allowed_commands` is added separately only
 # for a canonically trusted workspace; `auto_allow` remains user-global only.
-_GLOBAL_ONLY_FIELDS = {"allowed_commands", "auto_allow"}
+# `knowledge_roots` is here for the same reason in reverse: it GRANTS read access to
+# folders outside the workspace, so a checked-out repo must never be able to declare one
+# (`knowledge_roots = ["~/.ssh"]` in a project config would otherwise be a handed-over key).
+_GLOBAL_ONLY_FIELDS = {"allowed_commands", "auto_allow", "knowledge_roots"}
 _WORKSPACE_FIELDS = _FIELDS - _GLOBAL_ONLY_FIELDS
 
 

@@ -433,7 +433,11 @@ class SessionManager:
                 for r in ((record.extra_roots if record else []) or [])
                 if Path(str(r.get("path", ""))).is_dir()
             ]
-            roots = [{"path": ws, "writable": True, "label": "scratch"}, *extra]
+            roots = [
+                {"path": ws, "writable": True, "label": "scratch"},
+                *extra,
+                *self._knowledge_roots(ws, extra),
+            ]
         engine = build_engine(
             agent=ag,
             workspace=ws,
@@ -3468,12 +3472,54 @@ class SessionManager:
             engine.permissions.allow_command_for_session(str(command))
 
     @staticmethod
+    def _knowledge_roots(
+        workspace: Path, already: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Standing read-only reference folders from the global config's `knowledge_roots`.
+
+        Mounted on top of the scratch root so a shared corpus (runbooks, policies, a synced
+        knowledge drive) is readable in every conversation without re-adding it each time.
+
+        Read-only always: this is a reference corpus, and a standing writable grant to a
+        shared folder is not something a config line should be able to hand out. Missing
+        paths are skipped rather than raised — a sync client mid-download, or a folder that
+        only exists on some machines, must not stop a session from starting.
+        """
+        seen = {Path(str(r.get("path", ""))).expanduser().resolve() for r in already}
+        seen.add(Path(workspace).resolve())
+        out: list[dict[str, Any]] = []
+        for raw in load_config().knowledge_roots or []:
+            try:
+                path = Path(str(raw)).expanduser().resolve()
+            except (OSError, ValueError):
+                continue
+            if path in seen or not path.is_dir():
+                continue
+            seen.add(path)
+            out.append({"path": str(path), "writable": False, "label": path.name})
+        return out
+
+    @staticmethod
     def _extra_roots_of(engine: TurnEngine) -> list[dict[str, Any]]:
-        """Added folders = the engine's roots minus the primary scratch (index 0)."""
+        """Added folders = the engine's roots minus the primary scratch (index 0), and minus
+        anything the config mounts.
+
+        Config-managed knowledge roots live in the same list but must never be persisted as
+        this session's own folders: they'd outlive the config entry, leaving a session with
+        standing read access to a corpus the admin has since removed. Re-derived from the
+        config on every session build instead, so removing the line actually removes access.
+        """
+        managed = set()
+        for raw in load_config().knowledge_roots or []:
+            try:
+                managed.add(Path(str(raw)).expanduser().resolve())
+            except (OSError, ValueError):
+                continue
         roots = getattr(engine, "roots", None) or []
         return [
             {"path": str(r.path), "writable": bool(r.writable), "label": r.label}
             for r in roots[1:]
+            if Path(r.path).resolve() not in managed
         ]
 
     # -- LLM auto-titles (FB-010) -------------------------------------------------

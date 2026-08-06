@@ -1,0 +1,68 @@
+{
+  "//": "企业 CLI → MCP 的声明。只有这里列出的子命令能被调用，参数逐个校验。",
+
+  "defaults": {
+    "timeout": 60,
+    "max_output": 20000,
+    "cwd": null,
+    "//env_passthrough": "只有这些环境变量会传给子进程；其余一律不继承，免得把无关凭据带进 CLI。",
+    "env_passthrough": ["CORP_TOKEN", "CORP_API_BASE"],
+    "//redact": "命中的内容在回给模型前替换掉——token 不该回流进对话与日志。",
+    "redact": [
+      "eyJ[A-Za-z0-9_.-]{20,}",
+      "(?i)(token|secret|password)\\s*[=:]\\s*\\S+"
+    ]
+  },
+
+  "tools": [
+    {
+      "name": "ticket_search",
+      "description": "按关键词搜索工单。只读，返回工单号、标题、状态、负责人。",
+      "argv": ["corp-cli", "ticket", "search"],
+      "params": [
+        { "name": "query", "type": "string", "required": true, "description": "搜索关键词" },
+        {
+          "name": "status",
+          "type": "string",
+          "flag": "--status",
+          "enum": ["open", "in_progress", "closed"],
+          "description": "只看某个状态"
+        },
+        { "name": "limit", "type": "integer", "flag": "--limit", "description": "最多返回几条（默认 20）" }
+      ]
+    },
+    {
+      "name": "ticket_get",
+      "description": "按工单号取工单详情，含处理记录。只读。",
+      "argv": ["corp-cli", "ticket", "get"],
+      "params": [
+        { "name": "id", "type": "string", "required": true, "description": "工单号，如 OPS-1234" }
+      ]
+    },
+    {
+      "name": "ticket_create",
+      "description": "创建工单。会真的建单，调用前请与用户确认标题与负责人。",
+      "argv": ["corp-cli", "ticket", "create"],
+      "timeout": 30,
+      "params": [
+        { "name": "title", "type": "string", "required": true, "flag": "--title" },
+        { "name": "body", "type": "string", "flag": "--body", "description": "工单正文" },
+        {
+          "name": "priority",
+          "type": "string",
+          "flag": "--priority",
+          "enum": ["p0", "p1", "p2", "p3"]
+        },
+        { "name": "assignee", "type": "string", "flag": "--assignee", "description": "负责人工号" },
+        { "name": "notify", "type": "boolean", "flag": "--notify", "description": "是否通知负责人" }
+      ]
+    }
+  ],
+
+  "//注意": [
+    "1. 不要声明 delete / --force 这类不可逆子命令，除非你确实想让 Agent 能执行它们。",
+    "2. 写操作在 mcp.json 里配 \"requires_approval\": true，让每次调用都过审批卡。",
+    "3. argv 直接传给 subprocess，不经过 shell —— 参数里的 ; | $() 只会是普通字符串。",
+    "4. 改完用 python3 server.py --spec tools.json --check 校验，不必启动服务。"
+  ]
+}
