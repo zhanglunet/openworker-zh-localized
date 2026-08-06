@@ -733,20 +733,105 @@ def test_enterprise_provider_builds_with_fake_profile(provider_name: str):
         )
 
 
+def _declared_in_repo() -> dict:
+    """仓库里那份模型声明（enterprise/config/models.json），用**运行时同一套解析器**读。
+
+    为什么不直接 json.load：model_overlay 会丢弃类型不对的字段（布尔写成字符串、
+    context_window 写成 "128k"）并只打一条 warning。naive 解析看着好好的，
+    运行时却少一半能力——测试必须和运行时同构。
+    """
+    path = ENTERPRISE_DIR / "config" / "models.json"
+    if not path.is_file():
+        return {}
+    overlay = pytest.importorskip(
+        "coworker.providers.model_overlay", reason="coworker 依赖未安装"
+    )
+    import shutil
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        shutil.copyfile(path, Path(tmp) / "models.json")
+        old_dir = os.environ.get("COWORKER_STATE_DIR")
+        os.environ["COWORKER_STATE_DIR"] = tmp
+        try:
+            overlay.invalidate()
+            return dict(overlay.declared())
+        finally:
+            if old_dir is None:
+                os.environ.pop("COWORKER_STATE_DIR", None)
+            else:
+                os.environ["COWORKER_STATE_DIR"] = old_dir
+            overlay.invalidate()
+
+
+@requires_enterprise
+def test_model_declaration_types_survive_the_runtime_parser():
+    """models.json 里写下的值，必须和运行时真正用到的值一致。
+
+    model_overlay._parse_entry 遇到类型不对（布尔写成 "true"、context_window 写成 "128k"）
+    只打一条 warning 然后**回落到默认值**。于是：
+      "parallel_tool_calls": "true"   → 实际生效 False → Agent 永远串行，慢一倍
+      "vision": "false"               → 实际生效 False → 恰好一致，看不出问题
+    第一种是把实测出来的能力静默关掉，而 JSON 本身完全合法、naive 校验也查不出来。
+    这条比对「文件里写的」与「解析器给出的」，不一致即失败。
+    """
+    path = ENTERPRISE_DIR / "config" / "models.json"
+    if not path.is_file():
+        pytest.skip("没有 enterprise/config/models.json（走的是改 matrix.py 那条路）")
+    raw = _load_json(path)
+    parsed = _declared_in_repo()
+    for model_id, row in (raw.get("models") or {}).items():
+        entry = parsed.get(model_id)
+        assert entry is not None, _msg(
+            f"{model_id} 写在 models.json 里，运行时解析器却没收下它", path
+        )
+        for flag in ("tools", "streaming", "vision", "pdf", "parallel_tool_calls"):
+            if flag not in row:
+                continue
+            written = row[flag]
+            assert isinstance(written, bool), _msg(
+                f"{model_id}.{flag} 写成了 {type(written).__name__}（{written!r}），必须是 true/false",
+                path,
+                "解析器会丢弃它并回落到默认值——JSON 合法、构建照过，能力却静默变了。",
+            )
+            assert getattr(entry.caps, flag) is written, _msg(
+                f"{model_id}.{flag} 写的是 {written}，运行时实际是 {getattr(entry.caps, flag)}",
+                path,
+            )
+        if "context_window" in row:
+            assert isinstance(row["context_window"], int) and row["context_window"] > 0, _msg(
+                f"{model_id}.context_window 必须是正整数，收到 {row['context_window']!r}", path
+            )
+            assert entry.context_window == row["context_window"], _msg(
+                f"{model_id}.context_window 写的是 {row['context_window']}，"
+                f"运行时实际是 {entry.context_window}",
+                path,
+            )
+
+
 @requires_enterprise
 def test_enterprise_models_registered_in_matrix():
-    """企业模型在 MATRIX 中有条目（键是完整路由 id，如 custom:xxx）。"""
+    """企业模型可被解析到 —— 内置 MATRIX 或 enterprise/config/models.json 声明，两条都算。
+
+    早先这里只看 matrix_mod.MATRIX 这个原字典，那是错的：运行时读的是 _effective()，
+    它把 <state-dir>/models.json 的声明合进**一个新字典**、不写回 MATRIX。
+    于是一个正确用声明覆盖层配好的部署（零上游改动，正是我们推荐的做法），
+    冒烟测试照样红 —— 假警报。而 CI 里又没有 state-dir，所以也不能去读运行时那份，
+    要校验的是**仓库里**那份声明。
+    """
     matrix_mod = pytest.importorskip(
         "coworker.providers.matrix", reason="coworker 依赖未安装，跳过能力矩阵检查"
     )
-    matrix = matrix_mod.MATRIX
+    matrix = dict(matrix_mod.MATRIX)
+    for mid, row in _declared_in_repo().items():
+        matrix[mid] = matrix_mod.ModelEntry(row.label, row.caps, row.context_window)
     # 前缀不能写死成 "custom:" —— 企业换用 ollama / 某个 OpenAI 兼容厂商时，
     # 写死会让这条断言永远失败，且失败信息指向一个根本不相关的 provider。
     prefixes = tuple(f"{name}:" for name in _enterprise_provider_names())
     enterprise_keys = [k for k in matrix if k.startswith(prefixes)]
     assert enterprise_keys, _msg(
-        f"MATRIX 中没有任何 {list(prefixes)} 前缀的企业模型条目",
-        f"{matrix_mod.__file__} 的 MATRIX",
+        f"没有任何 {list(prefixes)} 前缀的企业模型条目",
+        f"{matrix_mod.__file__} 的 MATRIX，或 enterprise/config/models.json",
         "未登记的模型会落到 capabilities.py 的保守启发式：并行工具调用/视觉默认关、"
         "GUI 上下文水位条消失，Agent 效果被动降级。",
     )
@@ -759,8 +844,11 @@ def test_enterprise_models_registered_in_matrix():
     for model_id in expected_ids:
         entry = matrix.get(model_id)
         assert entry is not None, _msg(
-            f"企业模型 {model_id!r} 不在 MATRIX 中",
-            f"{matrix_mod.__file__} 的 MATRIX（键必须是完整路由 id，含 provider 前缀）",
+            f"企业模型 {model_id!r} 既不在 MATRIX 里，也没有在 enterprise/config/models.json 里声明",
+            f"{matrix_mod.__file__} 的 MATRIX 或 enterprise/config/models.json"
+            "（键必须是完整路由 id，含 provider 前缀）",
+            "推荐用 models.json 声明：不动上游文件，同步时零冲突。"
+            "能力值请用 verify-private-model.py 实测得出，不要照抄上游同名模型。",
         )
         assert getattr(entry.caps, "tools", False), _msg(
             f"企业模型 {model_id!r} 的 MATRIX 条目 tools=False",
