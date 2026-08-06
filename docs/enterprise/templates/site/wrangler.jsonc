@@ -1,0 +1,18 @@
+{
+  // 纯静态资源 Worker：没有 main，Wrangler 以 assets-only 模式部署 public/。
+  //
+  // ⚠️ 这个 name 绝对不能是 "openworker-cn-site" —— 那是汉化站 oaosf.cn 的 Worker。
+  // 同一个 Cloudflare 账号下用同名部署 = 直接覆盖掉汉化站。
+  // 这里的值由 init 脚本按 CORP_ID 替换；deploy-corp-site.yml 也会用
+  // --name "openworker-${CORP_ID}-site" 显式传一次，两边算出来是同一个名字 ——
+  // 这样本地手动 wrangler deploy 和 CI 部署不会指向两个不同的 Worker。
+  // 部署前还会断言最终名字不是 openworker-cn-site。
+  "name": "openworker-__CORP_ID__-site",
+  "compatibility_date": "2026-08-04",
+  "assets": {
+    "directory": "./public"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

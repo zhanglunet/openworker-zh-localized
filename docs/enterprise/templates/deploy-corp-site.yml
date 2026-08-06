@@ -1,0 +1,101 @@
+name: Deploy 企业站
+
+# 企业站 → Cloudflare Workers（静态资源）。
+#
+# 与汉化站 deploy-site.yml 的关系：那条已被 init 脚本改名停用（deploy-site.yml.disabled），
+# 因为它会把 website/ 发布到汉化版公开站 oaosf.cn。本工作流是企业版的替代品，
+# 发布的是 enterprise/site/，Worker 名与汉化站严格隔离。
+#
+# 前置：
+#   Secret   CLOUDFLARE_API_TOKEN    Workers 编辑权限。未配置时本工作流不失败，只跳过。
+#   Secret   CLOUDFLARE_ACCOUNT_ID   token 能访问多个账号时必填。
+#   Variable CORP_ID                 Worker 名取 openworker-<CORP_ID>-site。
+#
+# 域名绑定不在本配置里：Cloudflare 控制台 → Workers & Pages → 该 Worker →
+# Settings → Domains & Routes 手工绑一次即可。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "enterprise/site/**"
+      - ".github/workflows/deploy-corp-site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-corp-site
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CORP_ID: ${{ vars.CORP_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # 这一步是承重墙，不是形式检查。
+      # 汉化站的 Worker 叫 openworker-cn-site；同一个 Cloudflare 账号下用同名部署，
+      # 会直接把 oaosf.cn 覆盖掉，而且没有任何提示。企业仓是从汉化仓镜像来的，
+      # website/wrangler.jsonc 里那个名字一直都在——复制粘贴一次就够出事了。
+      - name: 解析 Worker 名并拒绝覆盖汉化站
+        id: name
+        run: |
+          corp_id="${CORP_ID:-corp}"
+          worker="openworker-${corp_id}-site"
+          if [ "$worker" = "openworker-cn-site" ]; then
+            echo "::error::Worker 名解析成 openworker-cn-site —— 那是汉化站 oaosf.cn 的 Worker，部署上去会直接覆盖它。请把仓库 Variable CORP_ID 改成企业标识（如 asiainfo）。"
+            exit 1
+          fi
+          # 配置文件里也不允许出现汉化站的名字（防止有人把 website/wrangler.jsonc 抄过来）。
+          # 只看 "name" 字段那一行，不是整文件 grep —— wrangler.jsonc 的注释里就写着
+          # 「不能是 openworker-cn-site」，整文件 grep 会被自己的告警注释绊倒，每次部署都失败。
+          if grep -E '^[[:space:]]*"name"[[:space:]]*:' enterprise/site/wrangler.jsonc \
+             | grep -q 'openworker-cn-site'; then
+            echo "::error::enterprise/site/wrangler.jsonc 的 name 是 openworker-cn-site。这会覆盖汉化站，拒绝部署。"
+            exit 1
+          fi
+          echo "worker=$worker" >> "$GITHUB_OUTPUT"
+          echo "将部署到 Worker：$worker"
+
+      - name: 检查部署凭据
+        id: creds
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::未配置 CLOUDFLARE_API_TOKEN，跳过部署。在仓库 Settings → Secrets 添加后即可自动发布。"
+          fi
+
+      # 企业站是公网可访问的。这一步在部署前扫一遍 public/，
+      # 把常见的内网标记拦下来——一旦发出去，撤回也已经被抓取过了。
+      - name: 拒绝把内部信息发到公网
+        if: steps.creds.outputs.ready == 'true'
+        run: |
+          set +e
+          hits=$(grep -rInE \
+            '\.internal\b|\.corp\b|\.local\b|10\.[0-9]+\.[0-9]+\.[0-9]+|192\.168\.[0-9]+\.[0-9]+|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]+\.[0-9]+|(api[_-]?key|secret|token|password)\s*[:=]\s*["'"'"'][^"'"'"']{8,}' \
+            enterprise/site/public)
+          set -e
+          if [ -n "$hits" ]; then
+            echo "::error::企业站 public/ 里出现了内网地址或疑似凭据，拒绝部署："
+            printf '%s\n' "$hits"
+            exit 1
+          fi
+          echo "public/ 未发现内网标记。"
+
+      - uses: actions/setup-node@v4
+        if: steps.creds.outputs.ready == 'true'
+        with:
+          node-version: "22"
+
+      - name: 部署到 Cloudflare Workers
+        if: steps.creds.outputs.ready == 'true'
+        working-directory: enterprise/site
+        run: npx --yes wrangler@4 deploy --name "${{ steps.name.outputs.worker }}"

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>__CORP_PRODUCT__ · 下载</title>
+    <meta name="description" content="__CORP_NAME__ 内部 AI 助手客户端下载与安装说明。" />
+    <!-- 企业站是公网可访问的：这里只放品牌、下载与安装说明。
+         内部系统地址、接入凭据、企业文档一律不要写进这个目录。
+         tests/test_corp_site.py 会扫描 public/ 拦截常见的内网标记。 -->
+    <meta name="robots" content="noindex" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <p class="eyebrow">__CORP_NAME__</p>
+        <h1>__CORP_PRODUCT__</h1>
+        <p class="lede">
+          面向 __CORP_NAME__ 员工的 AI 助手客户端。表格分析、知识检索、内部系统操作，
+          都在本机完成，数据不出企业边界。
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section aria-labelledby="download-title">
+        <h2 id="download-title">下载</h2>
+        <p class="hint" id="platform-hint" hidden></p>
+        <div class="cards" id="downloads">
+          <p class="loading">正在读取版本信息…</p>
+        </div>
+        <p class="meta" id="release-meta" hidden></p>
+      </section>
+
+      <section aria-labelledby="install-title">
+        <h2 id="install-title">安装说明</h2>
+        <div class="notes">
+          <article>
+            <h3>macOS</h3>
+            <p>
+              下载 <code>.dmg</code> 后双击打开，把应用拖进「应用程序」。
+              首次启动如果提示「无法打开，因为无法验证开发者」，
+              在「应用程序」里<strong>右键点击图标 → 打开</strong>，再点一次「打开」即可。
+            </p>
+            <p class="small">
+              Apple 芯片（M 系列）和 Intel 芯片的安装包不通用。
+              不确定的话：左上角  → 关于本机 → 看「芯片」还是「处理器」。
+            </p>
+          </article>
+          <article>
+            <h3>Windows</h3>
+            <p>
+              下载 <code>.msi</code> 后双击安装。若 SmartScreen 提示「已保护你的电脑」，
+              点<strong>「更多信息」→「仍要运行」</strong>。
+            </p>
+            <p class="small">仅支持 64 位 Windows 10 及以上。</p>
+          </article>
+          <article>
+            <h3>更新</h3>
+            <p>
+              客户端会自动检查更新并在后台下载，重启应用即完成升级。
+              不需要手动重新下载安装包。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="help-title">
+        <h2 id="help-title">遇到问题</h2>
+        <p>
+          安装、登录或使用上的问题，请联系 <span id="support-contact">__CORP_SUPPORT__</span>。
+        </p>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <p>© __CORP_NAME__ · 内部使用</p>
+    </footer>
+
+    <script>
+      // 下载信息单独放在 downloads.json：发新版只改这一个文件，页面结构不动。
+      const PLATFORMS = [
+        { key: "mac-arm64", label: "macOS", sub: "Apple 芯片（M 系列）" },
+        { key: "mac-x64", label: "macOS", sub: "Intel 芯片" },
+        { key: "windows-x64", label: "Windows", sub: "64 位" },
+      ];
+
+      function guessPlatform() {
+        const ua = navigator.userAgent;
+        if (/Windows/i.test(ua)) return "windows-x64";
+        if (/Mac/i.test(ua)) {
+          // Apple 芯片上的 Safari/Chrome 仍然自报 Intel，UA 判不出来，所以只提示、不自动选。
+          return "mac-arm64";
+        }
+        return null;
+      }
+
+      function card(platform, entry) {
+        const el = document.createElement("a");
+        const ready = entry && entry.url;
+        el.className = "card" + (ready ? "" : " card--disabled");
+        if (ready) {
+          el.href = entry.url;
+          el.setAttribute("download", "");
+        } else {
+          el.setAttribute("role", "group");
+          el.setAttribute("aria-disabled", "true");
+        }
+        const size = entry && entry.size ? ` · ${entry.size}` : "";
+        el.innerHTML = `
+          <span class="card__label">${platform.label}</span>
+          <span class="card__sub">${platform.sub}</span>
+          <span class="card__cta">${ready ? "下载" + size : "即将开放"}</span>`;
+        return el;
+      }
+
+      async function render() {
+        const host = document.getElementById("downloads");
+        let data = null;
+        try {
+          const resp = await fetch("./downloads.json", { cache: "no-cache" });
+          if (resp.ok) data = await resp.json();
+        } catch (_) {
+          /* 读不到就走占位分支，不要把页面整块打空 */
+        }
+        host.textContent = "";
+        const files = (data && data.files) || {};
+        for (const p of PLATFORMS) host.appendChild(card(p, files[p.key]));
+
+        const meta = document.getElementById("release-meta");
+        if (data && data.version) {
+          meta.textContent = `当前版本 ${data.version}` + (data.released ? ` · 发布于 ${data.released}` : "");
+          meta.hidden = false;
+        }
+        const hint = document.getElementById("platform-hint");
+        const guess = guessPlatform();
+        if (guess === "windows-x64") {
+          hint.textContent = "看起来你在用 Windows，选下面的 Windows 版本。";
+          hint.hidden = false;
+        } else if (guess === "mac-arm64") {
+          hint.textContent =
+            "看起来你在用 Mac。浏览器分不出 Apple 芯片还是 Intel 芯片，请按上面「安装说明」里的方法确认后再选。";
+          hint.hidden = false;
+        }
+      }
+
+      render();
+    </script>
+  </body>
+</html>

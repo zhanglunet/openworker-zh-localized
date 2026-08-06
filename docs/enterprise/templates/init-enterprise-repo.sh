@@ -121,6 +121,11 @@ workflow_reason() {
 
 CORP_ID="${CORP_ID:-}"                              # 企业标识，如 acme
 CORP_NAME="${CORP_NAME:-}"                          # 企业中文名，如 「艾克米科技」
+# 企业站相关（都可留空，留空就是占位值，后面在 enterprise/site/ 里改）
+CORP_DOMAIN="${CORP_DOMAIN:-}"                      # 企业站域名，如 asiainfo.app
+CORP_SUPPORT="${CORP_SUPPORT:-请联系 IT 支持}"      # 站点上的求助联系方式
+CORP_ACCENT="${CORP_ACCENT:-#2563eb}"               # 品牌主色（浅色模式）
+CORP_ACCENT_DARK="${CORP_ACCENT_DARK:-#4c8dff}"     # 品牌主色（深色模式）
 ENTERPRISE_URL="${ENTERPRISE_REPO_URL:-}"           # 企业私有仓 git 地址
 LOCALIZED_URL="${LOCALIZED_REPO_URL:-$DEFAULT_LOCALIZED_URL}"
 WORKDIR="${WORKDIR:-$PWD}"                          # 在哪里落地克隆出来的工作副本
@@ -193,6 +198,11 @@ ${SCRIPT_NAME} —— 初始化 OpenWorker 企业定制版私有仓
                           （环境变量 ENTERPRISE_REPO_URL）
 
 可选参数：
+  -D, --domain <域名>     企业站域名，如 asiainfo.app（环境变量 CORP_DOMAIN）
+                          留空则站点里保留占位，后面在 enterprise/site/ 手工改
+      --support <文本>    企业站上的求助联系方式（环境变量 CORP_SUPPORT）
+      --accent <色值>     品牌主色，浅色模式，如 #2563eb（环境变量 CORP_ACCENT）
+      --accent-dark <色值> 品牌主色，深色模式（环境变量 CORP_ACCENT_DARK）
   -u, --upstream <url>    上游汉化仓地址
                           默认：${DEFAULT_LOCALIZED_URL}
                           （环境变量 LOCALIZED_REPO_URL）
@@ -240,6 +250,10 @@ parse_args() {
       -N|--name)      [[ $# -ge 2 ]] || die "$1 需要一个参数"; CORP_NAME="$2";      shift 2 ;;
       -r|--repo)      [[ $# -ge 2 ]] || die "$1 需要一个参数"; ENTERPRISE_URL="$2"; shift 2 ;;
       -u|--upstream)  [[ $# -ge 2 ]] || die "$1 需要一个参数"; LOCALIZED_URL="$2";  shift 2 ;;
+      -D|--domain)    [[ $# -ge 2 ]] || die "$1 需要一个参数"; CORP_DOMAIN="$2";    shift 2 ;;
+      --support)      [[ $# -ge 2 ]] || die "$1 需要一个参数"; CORP_SUPPORT="$2";   shift 2 ;;
+      --accent)       [[ $# -ge 2 ]] || die "$1 需要一个参数"; CORP_ACCENT="$2";    shift 2 ;;
+      --accent-dark)  [[ $# -ge 2 ]] || die "$1 需要一个参数"; CORP_ACCENT_DARK="$2"; shift 2 ;;
       -d|--workdir)   [[ $# -ge 2 ]] || die "$1 需要一个参数"; WORKDIR="$2";        shift 2 ;;
       -t|--templates) [[ $# -ge 2 ]] || die "$1 需要一个参数"; TEMPLATE_DIR="$2";   shift 2 ;;
       --corp=*)       CORP_ID="${1#*=}";        shift ;;
@@ -556,6 +570,33 @@ copy_template_dir() {
   cp -R -- "$src/." "$dest"
   CREATED_PATHS+=("$dest")
   ok "安装 ${rel}/"
+}
+
+# copy_template_dir_subst <模板目录名> <目标绝对目录>
+# 同上，外加把 __CORP_*__ 占位符替换成本次初始化的实际值（企业站模板要用）。
+# 替换表和模板必须同步：tests/test_corp_site.py 会断言模板里不出现表外的占位符，
+# 也会断言表里的每一个都真的被用到——漏一个就是页面上直接印出 __CORP_NAME__。
+copy_template_dir_subst() {
+  copy_template_dir "$1" "$2" || return $?
+  local dest="$2"
+  if (( DRY_RUN )) || [[ ! -d "$dest" ]]; then
+    (( DRY_RUN )) && dry_note "替换 ${dest#"$TARGET_DIR"/}/ 里的 __CORP_*__ 占位符"
+    return 0
+  fi
+  local file
+  while IFS= read -r -d '' file; do
+    # 分隔符用 | ：企业名、域名里可能有 /，用 s/// 会炸
+    sed -i.bak \
+      -e "s|__CORP_ID__|${CORP_ID}|g" \
+      -e "s|__CORP_NAME__|${CORP_NAME}|g" \
+      -e "s|__CORP_PRODUCT__|${CORP_NAME} 智能助手|g" \
+      -e "s|__CORP_DOMAIN__|${CORP_DOMAIN}|g" \
+      -e "s|__CORP_SUPPORT__|${CORP_SUPPORT}|g" \
+      -e "s|__CORP_ACCENT__|${CORP_ACCENT}|g" \
+      -e "s|__CORP_ACCENT_DARK__|${CORP_ACCENT_DARK}|g" \
+      -- "$file" && rm -f -- "${file}.bak"
+  done < <(find "$dest" -type f -print0)
+  ok "替换 ${dest#"$TARGET_DIR"/}/ 的企业占位符"
 }
 
 # ---------------------------------------------------------------------------
@@ -1518,6 +1559,12 @@ step_pipeline() {
   # 故意不自动改上游文件：那是一处会在同步时冲突的改动，必须由人来决定要不要。
   copy_template_dir "connectors/corp" \
     "$TARGET_DIR/enterprise/connectors/corp"
+
+  # 企业站（公网下载页 + 企业介绍）。Worker 名与汉化站 openworker-cn-site 严格隔离 ——
+  # 同账号下同名部署会直接覆盖 oaosf.cn，deploy-corp-site.yml 里有两道守卫拦这件事。
+  copy_template_dir_subst "site" "$TARGET_DIR/enterprise/site"
+  copy_template "deploy-corp-site.yml" \
+    "$TARGET_DIR/.github/workflows/deploy-corp-site.yml"
 
   # 提示把 enterprise/tests 挂进现有 CI。企业仓继承的 .github/workflows/ci.yml
   # 里 pytest 这一步跑的是 `pytest tests -q`，不会覆盖 enterprise/tests。

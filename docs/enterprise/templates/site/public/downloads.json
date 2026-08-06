@@ -1,0 +1,20 @@
+{
+  "_comment": "发新版只改这个文件。三个 key 是固定的：mac-arm64 / mac-x64 / windows-x64。url 留空或整条删掉，页面会显示「即将开放」而不是坏链接。",
+  "_comment_url": "url 必须是员工匿名可下载的地址。私有仓的 GitHub Release 直链不行——未登录访问 404。用企业站同域路径（把安装包一起放进 public/）或企业自己的对象存储。",
+  "version": "",
+  "released": "",
+  "files": {
+    "mac-arm64": {
+      "url": "",
+      "size": ""
+    },
+    "mac-x64": {
+      "url": "",
+      "size": ""
+    },
+    "windows-x64": {
+      "url": "",
+      "size": ""
+    }
+  }
+}
