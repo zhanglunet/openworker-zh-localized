@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T09:03:55Z",
+  "generatedAt": "2026-08-06T09:14:23Z",
   "branch": "main",
-  "head": "bb2f4dc115b8ed450cde45a7c7ddb049e923e892",
-  "shortHead": "bb2f4dc",
+  "head": "3aec7d6c1c8188d539ccfc7c7d3bc82caecc4d60",
+  "shortHead": "3aec7d6",
   "totalFiles": 598,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "3aec7d6",
+      "date": "2026-08-06",
+      "subject": "fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明"
+    },
+    {
+      "hash": "364a7da",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "bb2f4dc",
       "date": "2026-08-06",
       "subject": "fix(smoke): 冒烟测试认不出零冲突的模型声明路径，且漏掉类型错误"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "209c7e8",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d477518",
-      "date": "2026-08-06",
-      "subject": "docs(upstream): 记录 PR #458 已提交"
-    },
-    {
-      "hash": "81ac2d8",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "3aec7d6",
+      "date": "2026-08-06",
+      "subject": "fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明"
+    },
+    {
+      "hash": "364a7da",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "bb2f4dc",
       "date": "2026-08-06",
