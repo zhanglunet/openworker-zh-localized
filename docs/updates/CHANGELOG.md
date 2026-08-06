@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-06T09:36:39Z
+更新时间：2026-08-06T10:09:00Z
 
 ## 最近提交
 
+- 2026-08-06 b299059 fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃
+- 2026-08-06 cef62de docs: refresh generated site reports
 - 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图
 - 2026-08-06 90cdee3 docs: refresh generated site reports
 - 2026-08-06 f8811f9 fix(gui): 设置页「侧边栏」卡片被渲染了两次
@@ -14,5 +16,3 @@
 - 2026-08-06 066c17c docs: refresh generated site reports
 - 2026-08-06 ceff7ae fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持
 - 2026-08-06 c08a31d docs: refresh generated site reports
-- 2026-08-06 f432782 docs(deployment): 企业站部署改写成逐步操作指南
-- 2026-08-06 e399187 docs: refresh generated site reports

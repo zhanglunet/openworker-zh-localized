@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T09:36:39Z",
+  "generatedAt": "2026-08-06T10:09:00Z",
   "branch": "main",
-  "head": "5335f701e538810b0052654041f630482e053fce",
-  "shortHead": "5335f70",
-  "totalFiles": 599,
+  "head": "b2990599605914e454191fb44bfd509ea0dd1687",
+  "shortHead": "b299059",
+  "totalFiles": 600,
   "byExt": [
     {
       "name": "py",
-      "count": 261
+      "count": 262
     },
     {
       "name": "ts",
@@ -89,7 +89,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 106
+      "count": 107
     },
     {
       "name": "docs",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "b299059",
+      "date": "2026-08-06",
+      "subject": "fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃"
+    },
+    {
+      "hash": "cef62de",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "5335f70",
       "date": "2026-08-06",
       "subject": "feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "c08a31d",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "f432782",
-      "date": "2026-08-06",
-      "subject": "docs(deployment): 企业站部署改写成逐步操作指南"
-    },
-    {
-      "hash": "e399187",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "b299059",
+      "date": "2026-08-06",
+      "subject": "fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃"
+    },
+    {
+      "hash": "cef62de",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "5335f70",
       "date": "2026-08-06",

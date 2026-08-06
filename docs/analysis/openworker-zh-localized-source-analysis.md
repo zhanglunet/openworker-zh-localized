@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T09:36:39Z
+更新时间：2026-08-06T10:09:00Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：5335f701e538810b0052654041f630482e053fce
+当前提交：b2990599605914e454191fb44bfd509ea0dd1687
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：599
-- 当前提交：5335f70
+- 跟踪文件总数：600
+- 当前提交：b299059
 - 主要文件类型：
-  - py: 261
+  - py: 262
   - ts: 105
   - tsx: 79
   - md: 29
@@ -38,7 +38,7 @@
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 106 个文件
+- tests: 107 个文件
 - docs: 58 个文件
 - website: 36 个文件
 - packaging: 10 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 b299059 fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃
+- 2026-08-06 cef62de docs: refresh generated site reports
 - 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图
 - 2026-08-06 90cdee3 docs: refresh generated site reports
 - 2026-08-06 f8811f9 fix(gui): 设置页「侧边栏」卡片被渲染了两次
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 066c17c docs: refresh generated site reports
 - 2026-08-06 ceff7ae fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持
 - 2026-08-06 c08a31d docs: refresh generated site reports
-- 2026-08-06 f432782 docs(deployment): 企业站部署改写成逐步操作指南
-- 2026-08-06 e399187 docs: refresh generated site reports
