@@ -156,11 +156,27 @@ git rebase upstream/main
 
 ### 第 4 步：跑测试确认
 
+> **这一步是可选的。** 补丁的验证见上面「验证」表（都是实跑出来的）。
+> 如果本机 Python 环境不顺手，跳过它直接去第 5 步开 PR，不影响任何事——
+> 别为一次确认去装半天工具链。
+
 ```bash
+python3 --version                 # 必须 >= 3.10（pyproject 的 requires-python）
 python3 -m venv .venv && source .venv/bin/activate     # .venv/ 已在 .gitignore 里
+python -m pip install --upgrade pip                    # 见下，这行不能省
 pip install -e '.[dev]'
-python3 -m pytest tests/test_scheduler_overlap.py tests/test_standing_approvals.py -q
+python -m pytest tests/test_scheduler_overlap.py tests/test_standing_approvals.py -q
 ```
+
+> macOS 自带的 `python3` 通常是 **3.9**，配的 pip 是 **21.2.4**。两个问题各自会炸：
+>
+> - pip 21 不支持 PEP 660，对「只有 `pyproject.toml`、没有 `setup.py`」的项目会报
+>   `Directory cannot be installed in editable mode` —— 所以先 `--upgrade pip`。
+> - Python 3.9 本身就低于 `requires-python = ">=3.10"`。
+>
+> 3.9 的情况下要么 `brew install python@3.12` 后用它建 venv
+> （Apple 芯片 `/opt/homebrew/bin/python3.12`，Intel `/usr/local/bin/python3.12`），
+> 要么**直接跳过这一步**。后者更划算。
 
 必须装完整的 `.[dev]`，**不能只装 `pytest pytest-asyncio croniter`**：
 `from coworker.automation.models import …` 会触发包的 `__init__`，它 `from .tools import …`，
