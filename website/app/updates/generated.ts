@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T03:16:34Z",
+  "generatedAt": "2026-08-06T03:26:25Z",
   "branch": "main",
-  "head": "2d8132800f795cf7865de18583839827bb2343bb",
-  "shortHead": "2d81328",
+  "head": "d47751873abaf1c59061e3fe728375c4aeb61293",
+  "shortHead": "d477518",
   "totalFiles": 592,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d477518",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 记录 PR #458 已提交"
+    },
+    {
+      "hash": "81ac2d8",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "2d81328",
       "date": "2026-08-06",
       "subject": "docs(upstream): 第 4 步标为可选，并写清 macOS 自带 Python 的两个坑"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "4888975",
       "date": "2026-08-06",
       "subject": "内部系统 connector：模板 + 接入指南（M3 3.3）"
-    },
-    {
-      "hash": "07bb4b0",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ef78e33",
-      "date": "2026-08-06",
-      "subject": "企业知识库 v2：MCP 检索服务（M3）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d477518",
+      "date": "2026-08-06",
+      "subject": "docs(upstream): 记录 PR #458 已提交"
+    },
+    {
+      "hash": "81ac2d8",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "2d81328",
       "date": "2026-08-06",

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T03:16:34Z
+更新时间：2026-08-06T03:26:25Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：2d8132800f795cf7865de18583839827bb2343bb
+当前提交：d47751873abaf1c59061e3fe728375c4aeb61293
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：592
-- 当前提交：2d81328
+- 当前提交：d477518
 - 主要文件类型：
   - py: 260
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 d477518 docs(upstream): 记录 PR #458 已提交
+- 2026-08-06 81ac2d8 docs: refresh generated site reports
 - 2026-08-06 2d81328 docs(upstream): 第 4 步标为可选，并写清 macOS 自带 Python 的两个坑
 - 2026-08-06 422a6b1 docs: refresh generated site reports
 - 2026-08-06 95bbb1a docs(upstream): 更正依赖说明——不能只装那三个包
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 d54ed56 docs(upstream): 上游 PR 提交步骤写成逐条可执行命令
 - 2026-08-06 69a5e59 docs: refresh generated site reports
 - 2026-08-06 4888975 内部系统 connector：模板 + 接入指南（M3 3.3）
-- 2026-08-06 07bb4b0 docs: refresh generated site reports
-- 2026-08-06 ef78e33 企业知识库 v2：MCP 检索服务（M3）
