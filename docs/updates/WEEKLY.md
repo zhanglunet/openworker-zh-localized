@@ -1,17 +1,17 @@
 # OpenWorker 中文站周报
 
-生成时间：2026-08-06T00:13:45Z
+生成时间：2026-08-06T00:24:20Z
 
 ## 本周概览
 
+- 2026-08-06 78a126d feat(gui): 表格助手入口（大表哥 L2）
+- 2026-08-06 b9c6deb docs: refresh generated site reports
 - 2026-08-06 068e1db docs(upstream): 归档调度器竞态的上游提交材料
 - 2026-08-06 b09e893 test(automation): 补上 skip-on-overlap 竞态的确定性回归用例
 - 2026-08-06 28c1e42 docs: refresh generated site reports
 - 2026-08-06 7347760 fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行
 - 2026-08-05 3923f58 docs: refresh generated site reports
 - 2026-08-05 5f790df feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）
-- 2026-08-05 661dfe9 docs: refresh generated site reports
-- 2026-08-05 6cbe8c2 docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）
 
 ## 维护建议
 

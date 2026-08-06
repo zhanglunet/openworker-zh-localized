@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T00:13:45Z",
+  "generatedAt": "2026-08-06T00:24:20Z",
   "branch": "main",
-  "head": "068e1db46cd5b0d24d63f59a37cbe16170068531",
-  "shortHead": "068e1db",
-  "totalFiles": 562,
+  "head": "78a126d65e225f2c6bc1e4d71afe7d21bebacbac",
+  "shortHead": "78a126d",
+  "totalFiles": 563,
   "byExt": [
     {
       "name": "py",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "tsx",
-      "count": 78
+      "count": 79
     },
     {
       "name": "md",
@@ -81,7 +81,7 @@ export const repoReport = {
   "byTopDir": [
     {
       "name": "surfaces",
-      "count": 228
+      "count": 229
     },
     {
       "name": "coworker",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "78a126d",
+      "date": "2026-08-06",
+      "subject": "feat(gui): 表格助手入口（大表哥 L2）"
+    },
+    {
+      "hash": "b9c6deb",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "068e1db",
       "date": "2026-08-06",
       "subject": "docs(upstream): 归档调度器竞态的上游提交材料"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "12a7c83",
       "date": "2026-08-05",
       "subject": "fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败"
-    },
-    {
-      "hash": "0394aa2",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "8546ba0",
-      "date": "2026-08-05",
-      "subject": "ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "78a126d",
+      "date": "2026-08-06",
+      "subject": "feat(gui): 表格助手入口（大表哥 L2）"
+    },
+    {
+      "hash": "b9c6deb",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "068e1db",
       "date": "2026-08-06",

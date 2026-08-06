@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T00:13:45Z
+更新时间：2026-08-06T00:24:20Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：068e1db46cd5b0d24d63f59a37cbe16170068531
+当前提交：78a126d65e225f2c6bc1e4d71afe7d21bebacbac
 
 ## 1. 总体判断
 
@@ -14,12 +14,12 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：562
-- 当前提交：068e1db
+- 跟踪文件总数：563
+- 当前提交：78a126d
 - 主要文件类型：
   - py: 237
   - ts: 105
-  - tsx: 78
+  - tsx: 79
   - md: 27
   - svg: 23
   - png: 22
@@ -36,7 +36,7 @@
 
 ## 3. 目录结构
 
-- surfaces: 228 个文件
+- surfaces: 229 个文件
 - coworker: 127 个文件
 - tests: 94 个文件
 - docs: 41 个文件
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 78a126d feat(gui): 表格助手入口（大表哥 L2）
+- 2026-08-06 b9c6deb docs: refresh generated site reports
 - 2026-08-06 068e1db docs(upstream): 归档调度器竞态的上游提交材料
 - 2026-08-06 b09e893 test(automation): 补上 skip-on-overlap 竞态的确定性回归用例
 - 2026-08-06 28c1e42 docs: refresh generated site reports
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-05 6cbe8c2 docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）
 - 2026-08-05 1647e48 docs: refresh generated site reports
 - 2026-08-05 12a7c83 fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败
-- 2026-08-05 0394aa2 docs: refresh generated site reports
-- 2026-08-05 8546ba0 ci: 测试版 Windows 只出 NSIS，并加 MSI 中文代码页诊断实验
