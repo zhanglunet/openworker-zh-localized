@@ -1485,6 +1485,11 @@ step_pipeline() {
   copy_template_dir "mcp/cli-bridge" \
     "$TARGET_DIR/enterprise/mcp/cli-bridge"
 
+  # 企业知识库检索 MCP server（知识库 v2）：知识库不是文件系统、或权限要按人校验时用它。
+  # 与 knowledge_roots（v1 目录挂载）的区别：Agent 只拿得到检索结果，没有文件系统访问权。
+  copy_template_dir "mcp/kb-server" \
+    "$TARGET_DIR/enterprise/mcp/kb-server"
+
   # 提示把 enterprise/tests 挂进现有 CI。企业仓继承的 .github/workflows/ci.yml
   # 里 pytest 这一步跑的是 `pytest tests -q`，不会覆盖 enterprise/tests。
   local ci="$TARGET_DIR/.github/workflows/ci.yml"

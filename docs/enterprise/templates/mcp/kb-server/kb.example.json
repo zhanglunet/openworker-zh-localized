@@ -1,0 +1,61 @@
+{
+  "//": "企业知识库检索 MCP server 配置。backend 二选一：http（对接已有检索服务）或 folder（本地目录排序检索）。",
+
+  "backend": "http",
+
+  "http": {
+    "//": "对接任何有搜索接口的知识库：Confluence、语雀、自建 RAG 都行，靠下面的字段映射适配。",
+    "search_url": "https://kb.corp.example/api/search",
+    "method": "GET",
+    "query_param": "q",
+    "limit_param": "size",
+
+    "//headers": "凭据写 ${VAR}，从环境读，不要落在配置文件里。mcp.json 的 env 段负责传进来。",
+    "headers": {
+      "Authorization": "Bearer ${CORP_KB_TOKEN}"
+    },
+
+    "//results_path": "结果数组在响应里的位置，点路径。响应本身就是数组则留空。",
+    "results_path": "data.items",
+
+    "//fields": "把知识库的字段映射成统一形状。title 必填，其余可选；值是点路径。",
+    "fields": {
+      "id": "id",
+      "title": "title",
+      "snippet": "excerpt",
+      "url": "url",
+      "updated": "updated_at",
+      "space": "space.name"
+    },
+
+    "//doc_url": "取全文的地址，{id} 会被替换。不配则只能检索、不能取全文。",
+    "doc_url": "https://kb.corp.example/api/doc/{id}",
+    "doc_field": "data.content"
+  },
+
+  "folder": {
+    "//": "还没有检索服务时先用这个：对一棵文档目录做本地排序检索。",
+    "//区别": "与全局配置的 knowledge_roots 不同——目录不挂给 Agent，它只拿得到检索结果，读不了任意文件。",
+    "root": "/mnt/corp-kb",
+    "extensions": [".md", ".txt", ".rst"]
+  },
+
+  "limits": {
+    "max_results": 8,
+    "snippet_chars": 500,
+    "doc_chars": 20000,
+    "timeout": 15
+  },
+
+  "//redact": "回给模型之前先脱敏——知识库正文里混着密钥是常见事故。",
+  "redact": [
+    "eyJ[A-Za-z0-9_.-]{20,}",
+    "(?i)(token|secret|password)\\s*[=:]\\s*\\S+"
+  ],
+
+  "//注意": [
+    "1. 权限留在知识库侧：凭据按人发放，Agent 搜得到什么由知识库决定，不是由本配置决定。",
+    "2. 改完用 python3 server.py --config kb.json --check --query 报销 试一次，不必启动服务。",
+    "3. 知识内容不进仓库、不进安装包 —— 这正是 v2 相对 v1（目录挂载）的意义。"
+  ]
+}

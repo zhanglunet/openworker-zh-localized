@@ -270,7 +270,25 @@ MCP 配置文件是标准 `mcpServers` 格式（与 Claude Desktop/Cursor 粘贴
 ```
 enterprise/mcp/
 ├── cli-bridge/        # ✅ 已交付：通用 CLI → MCP 桥（配置驱动，不必每个 CLI 手写一个 server）
-└── corp-kb/           # 知识库检索 MCP server（对接 Confluence/语雀/自建 RAG）
+└── kb-server/         # ✅ 已交付：知识库检索 MCP server（知识库 v2）
+```
+
+### 知识库 v2：什么时候需要它
+
+v1（`knowledge_roots` 目录挂载）零成本、够用，但有三件事做不到，任一成立就该上 v2：
+
+| v1 做不到 | 为什么 |
+|-----------|--------|
+| 知识库不是文件系统 | Confluence、语雀、自建 RAG 只有 HTTP 接口，挂不了盘 |
+| 权限要按人校验 | 挂载是「这台机器上这个用户能读的目录」，合规要的是「这个人在知识库里有权看的内容」——只有知识库自己能回答 |
+| 检索质量 | grep 在几万篇文档上又慢又只会字面匹配 |
+
+v2 把知识库放在 MCP 后面：Agent 只能调 `kb_search` / `kb_get`，**拿不到文件系统访问权**，每次调用带调用方凭据打到知识库，能看什么由知识库说了算。知识内容不进仓库、不进安装包。
+
+两种后端一份配置切换：`http`（对接已有检索服务，响应字段声明式映射，不必为每家写代码）、`folder`（对文档目录做本地排序检索，给还没有检索服务的团队先用起来——注意它与 v1 的区别仍是**不把目录挂给 Agent**）。
+
+```bash
+python3 server.py --config kb.json --check --query 报销   # 不启动服务，先试搜一次
 ```
 
 **CLI 桥怎么用**（[templates/mcp/cli-bridge/](templates/mcp/cli-bridge/)）：用一份 `tools.json` 声明「哪些子命令、各自什么参数」，桥自己生成 MCP 工具定义。
