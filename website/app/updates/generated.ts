@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T00:24:20Z",
+  "generatedAt": "2026-08-06T00:48:11Z",
   "branch": "main",
-  "head": "78a126d65e225f2c6bc1e4d71afe7d21bebacbac",
-  "shortHead": "78a126d",
-  "totalFiles": 563,
+  "head": "dfd99070fd3bb19417252ca113a5597edb578b57",
+  "shortHead": "dfd9907",
+  "totalFiles": 567,
   "byExt": [
     {
       "name": "py",
-      "count": 237
+      "count": 241
     },
     {
       "name": "ts",
@@ -85,11 +85,11 @@ export const repoReport = {
     },
     {
       "name": "coworker",
-      "count": 127
+      "count": 130
     },
     {
       "name": "tests",
-      "count": 94
+      "count": 95
     },
     {
       "name": "docs",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "dfd9907",
+      "date": "2026-08-06",
+      "subject": "feat(sheets): excel_ai 注册为内置工具（大表哥 L3）"
+    },
+    {
+      "hash": "fa89654",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "78a126d",
       "date": "2026-08-06",
       "subject": "feat(gui): 表格助手入口（大表哥 L2）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "6cbe8c2",
       "date": "2026-08-05",
       "subject": "docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）"
-    },
-    {
-      "hash": "1647e48",
-      "date": "2026-08-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "12a7c83",
-      "date": "2026-08-05",
-      "subject": "fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "dfd9907",
+      "date": "2026-08-06",
+      "subject": "feat(sheets): excel_ai 注册为内置工具（大表哥 L3）"
+    },
+    {
+      "hash": "fa89654",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "78a126d",
       "date": "2026-08-06",

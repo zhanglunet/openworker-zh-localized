@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-06T00:24:20Z
+更新时间：2026-08-06T00:48:11Z
 
 ## 最近提交
 
+- 2026-08-06 dfd9907 feat(sheets): excel_ai 注册为内置工具（大表哥 L3）
+- 2026-08-06 fa89654 docs: refresh generated site reports
 - 2026-08-06 78a126d feat(gui): 表格助手入口（大表哥 L2）
 - 2026-08-06 b9c6deb docs: refresh generated site reports
 - 2026-08-06 068e1db docs(upstream): 归档调度器竞态的上游提交材料
@@ -14,5 +16,3 @@
 - 2026-08-05 5f790df feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）
 - 2026-08-05 661dfe9 docs: refresh generated site reports
 - 2026-08-05 6cbe8c2 docs(enterprise): 新增可直接执行的企业仓模板（建仓/同步/冒烟/发布）
-- 2026-08-05 1647e48 docs: refresh generated site reports
-- 2026-08-05 12a7c83 fix(windows): MSI 打包指定 zh-CN WiX 语言，修复中文产品名构建失败
