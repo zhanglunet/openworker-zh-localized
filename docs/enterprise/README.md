@@ -9,11 +9,12 @@
 | [UPSTREAM_SYNC.md](UPSTREAM_SYNC.md) | 三仓同步方案：上游 → 汉化版 → 企业版单向链路、目录隔离 + 挂载点纪律、`sync-localized.yml` 流水线、防覆盖冒烟闸门 | 如何与上游/汉化版保持同步又不覆盖定制？ |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | 部署步骤：私有仓建立、企业站（公网/内网两形态）、私有模型接入、技能与知识库部署、桌面端分发与更新、验收清单 | 怎么从零搭到全员可用？ |
 | [BRANDING_PACKAGING.md](BRANDING_PACKAGING.md) | 换肤与打包：CSS 变量皮肤包、品牌项清单、macOS（Apple Silicon/Intel）与 Windows 构建矩阵、签名公证、企业自动更新源 | 怎么换皮肤？怎么打各平台的包？ |
+| [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md) | 内部系统接入：两条路线的选择题（stdio 桥 vs 原生描述符）、spec 字段参考、读写审批粒度、挂载点与同步冲突面、上线自检清单 | ERP/工单/HR 怎么接进来？写操作怎么保证每次都弹框？ |
 | [templates/](templates/) | **开箱即用的模板**：一键建仓脚本、同步流水线、定制存活冒烟测试、企业发布流水线 | 上面这些怎么真正跑起来？ |
 
 ## 模板目录（可直接执行）
 
-`templates/` 里的四个文件已经过语法校验与端到端演练，可直接投产：
+`templates/` 里的模板都经过语法校验与端到端演练，可直接投产（完整清单见 [templates/README.md](templates/README.md)）：
 
 | 文件 | 用途 |
 |------|------|
@@ -22,6 +23,7 @@
 | `test_enterprise_customization.py` | 17 项定制存活断言（企业技能、Provider、品牌字段、更新源、配置模板、主题包、挂载点形状），失败信息直指「哪项定制可能被同步覆盖」 |
 | `release-corp.yml` | 企业发布：preflight + 三平台构建 + publish；签名 Secrets 未配时自动产出未签名测试包 |
 | `skills/excel-ai-analyst/` | **大表哥表格助手技能包**（PRD F4 的 L1 层）：SKILL.md + 配套脚本 `scripts/excel_ai.py`（四子命令）+ 三份 references + 完整测试与对抗套件。建仓脚本自动装到 `enterprise/skills/` |
+| `mcp/corp-api/` + `connectors/corp/` | **内部系统接入**（PRD F13）：声明式 HTTP→MCP 桥（写一份 `api.json`，零上游改动）+ 原生描述符模板（GUI 卡片 + 逐工具审批，5 行挂载点）。选哪条路见 [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md) |
 
 用法：`bash templates/init-enterprise-repo.sh --help`，详见 [templates/README.md](templates/README.md)。
 

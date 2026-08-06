@@ -517,6 +517,49 @@ def test_mount_point_provider_registry_api():
     )
 
 
+def test_mount_point_connector_registry_api():
+    """内部系统连接器（CONNECTOR_GUIDE 路线 B）的挂载面仍在。
+
+    企业的 corp 连接器靠两件事挂上去：descriptors.register_descriptor()，以及 tool_defs
+    里那几张**可变**查找表。上游要是把 TOOLS_BY_CONNECTOR / _KIND_BY_NAME 换成不可变结构，
+    或改成从 TOOL_DEFS 惰性计算，企业连接器会**静默地只剩一张卡片没有工具**——
+    没有弹框、没有报错、没人会发现。所以这条要在同步 PR 上就红。
+    """
+    ds = pytest.importorskip(
+        "coworker.connectors.descriptors", reason="coworker 依赖未安装，跳过连接器挂载点检查"
+    )
+    for attr in ("ConnectorDescriptor", "Field", "ValidationResult", "register_descriptor",
+                 "list_descriptors", "get_descriptor"):
+        assert hasattr(ds, attr), _msg(
+            f"coworker/connectors/descriptors.py 缺少 {attr}",
+            ds.__file__,
+            "上游重构了连接器注册方式——企业连接器需要重新挂载（见 docs/enterprise/CONNECTOR_GUIDE.md §2.3）。",
+        )
+    td = pytest.importorskip(
+        "coworker.connectors.tool_defs", reason="coworker 依赖未安装，跳过工具注册表挂载点检查"
+    )
+    # 这四张表是 register() 真正写入的地方；只要有一张变成不可变或消失，工具就挂不上去
+    for name, kind in (
+        ("TOOL_TO_CONNECTOR", dict),
+        ("TOOLS_BY_CONNECTOR", dict),
+        ("_KIND_BY_NAME", dict),
+        ("TARGET_ARGS", dict),
+    ):
+        assert isinstance(getattr(td, name, None), kind), _msg(
+            f"coworker/connectors/tool_defs.py 的 {name} 不再是可写的 {kind.__name__}",
+            td.__file__,
+            "企业连接器的工具注册依赖直接写入这张表——上游换了结构就得改 corp/__init__.py 的 register()。",
+        )
+    for attr in ("ConnectorToolDef", "approval_for_tool", "mcp_pinned_tools", "mcp_tool_defs"):
+        assert hasattr(td, attr), _msg(
+            f"coworker/connectors/tool_defs.py 缺少 {attr}", td.__file__
+        )
+    # 逐工具审批的判据仍是 read/write：分类语义变了，CORP_TOOLS 那张表就要重新过一遍
+    assert td.approval_for_tool("github_search") is False, _msg(
+        "连接器 read 工具不再免审批（§36 的『reads never gate』变了）", td.__file__
+    )
+
+
 # ===========================================================================
 # 1. 企业技能包存活
 # ===========================================================================

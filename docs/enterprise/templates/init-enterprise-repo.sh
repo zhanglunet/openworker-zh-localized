@@ -1490,6 +1490,20 @@ step_pipeline() {
   copy_template_dir "mcp/kb-server" \
     "$TARGET_DIR/enterprise/mcp/kb-server"
 
+  # 内部系统 HTTP API → MCP 桥（ERP/工单/HR/审批流）。用 api.json 声明接口，不写 Python。
+  # 随包两份示例是有意拆开的：读一份、写一份。MCP 的 requires_approval 是 server 级的，
+  # 混在一起只能二选一——要么查订单也弹框，要么关单也不弹。接入指南见
+  # docs/enterprise/CONNECTOR_GUIDE.md。
+  copy_template_dir "mcp/corp-api" \
+    "$TARGET_DIR/enterprise/mcp/corp-api"
+
+  # 原生连接器描述符模板（CONNECTOR_GUIDE 路线 B）：要 GUI 卡片 + 逐工具审批时才用。
+  # 放在 enterprise/connectors/ 下不会自动生效——需要把 5 行挂载点加进
+  # coworker/connectors/descriptors.py，并把这个包放到 coworker/connectors/corp/。
+  # 故意不自动改上游文件：那是一处会在同步时冲突的改动，必须由人来决定要不要。
+  copy_template_dir "connectors/corp" \
+    "$TARGET_DIR/enterprise/connectors/corp"
+
   # 提示把 enterprise/tests 挂进现有 CI。企业仓继承的 .github/workflows/ci.yml
   # 里 pytest 这一步跑的是 `pytest tests -q`，不会覆盖 enterprise/tests。
   local ci="$TARGET_DIR/.github/workflows/ci.yml"

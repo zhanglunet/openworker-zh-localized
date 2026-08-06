@@ -35,6 +35,8 @@ zhanglunet/openworker-zh-localized（汉化版，公开）
 | `skills/corp-knowledge/` | 企业知识库检索技能：先 grep 定位再精读片段，**每个结论必须给出处**（答错的代价是有人照着做了） | `enterprise/skills/corp-knowledge/` | 人工拷贝 |
 | `mcp/cli-bridge/` | 企业 CLI → MCP 桥：一份 `tools.json` 声明子命令与参数，桥生成 MCP 工具定义；只放行白名单子命令、argv 直传不经 shell、超时/截断/脱敏 | `enterprise/mcp/cli-bridge/` | **init 脚本自动装** |
 | `mcp/kb-server/` | 企业知识库检索 MCP server（知识库 v2）：`http` 后端对接 Confluence/语雀/自建 RAG（字段声明式映射），`folder` 后端做本地排序检索；**Agent 只拿检索结果、没有文件系统访问权** | `enterprise/mcp/kb-server/` | **init 脚本自动装** |
+| `mcp/corp-api/` | 内部系统 HTTP API → MCP 桥（ERP/工单/HR/审批流）：一份 `api.json` 声明接口、参数与**响应字段白名单**，桥生成 MCP 工具；路径参数逐段转义 + URL 归一化后必须仍在 `base_url` 之下、不跟随重定向、非 GET 必须显式 `write: true`。随包两份示例**有意拆成读/写两份**（`requires_approval` 是 server 级的） | `enterprise/mcp/corp-api/` | **init 脚本自动装** |
+| `connectors/corp/` | 原生连接器描述符模板：要 GUI 卡片 + **逐工具审批**时才用。需要内网有 OAuth 2.1 + DCR 的 HTTP MCP 端点，外加 5 行挂载点 | `enterprise/connectors/corp/` → 人工放到 `coworker/connectors/corp/` | init 脚本装到 `enterprise/`，**挂载点由人工加** |
 | `verify-private-model.py` | 私有模型接入验证：对企业自建的 OpenAI 兼容端点实测能力矩阵（含并行工具调用、工具结果回传），产出结论与可直接用的 `models.json` | 不进仓，拿到端点时跑一次 | 人工执行 |
 
 > init 脚本默认从**自己所在目录**找模板（`-t/--templates` 可改），三个模板文件（两个 `.yml`

@@ -270,8 +270,16 @@ MCP 配置文件是标准 `mcpServers` 格式（与 Claude Desktop/Cursor 粘贴
 ```
 enterprise/mcp/
 ├── cli-bridge/        # ✅ 已交付：通用 CLI → MCP 桥（配置驱动，不必每个 CLI 手写一个 server）
-└── kb-server/         # ✅ 已交付：知识库检索 MCP server（知识库 v2）
+├── kb-server/         # ✅ 已交付：知识库检索 MCP server（知识库 v2）
+└── corp-api/          # ✅ 已交付：内部系统 HTTP API → MCP 桥（ERP/工单/HR/审批流）
+enterprise/connectors/
+└── corp/              # ✅ 已交付：原生连接器描述符模板（要 GUI 卡片 + 逐工具审批时用）
 ```
+
+> 内部系统（ERP/工单/HR）怎么接、两条路线怎么选、写操作怎么保证每次都弹框，
+> 见 **[CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md)**。一句话版：默认走 `corp-api` 声明式桥
+> （零上游改动），**读写必须拆成两个 MCP server 条目**——`requires_approval` 是 server 级的，
+> 混在一起要么查订单也弹框、要么关单也不弹。
 
 ### 知识库 v2：什么时候需要它
 

@@ -1,0 +1,107 @@
+{
+  "base_url": "https://erp.corp.example.com/api/v2",
+  "auth": {
+    "type": "bearer",
+    "token_env": "CORP_API_TOKEN"
+  },
+  "defaults": {
+    "timeout": 30,
+    "max_output": 20000,
+    "ca_bundle": "/opt/corp/ca/corp-root.pem",
+    "headers": {
+      "X-Client": "openworker-corp"
+    },
+    "redact": [
+      "(?i)\"(token|secret|password|id_card|phone)\"\\s*:\\s*\"[^\"]*\""
+    ]
+  },
+  "tools": [
+    {
+      "name": "corp_order_get",
+      "description": "按订单号查询订单详情。返回订单状态、金额、客户名与行项目。",
+      "method": "GET",
+      "path": "/orders/{order_no}",
+      "params": [
+        {
+          "name": "order_no",
+          "type": "string",
+          "in": "path",
+          "required": true,
+          "description": "订单号，如 SO2026080123"
+        }
+      ],
+      "fields": [
+        "order_no",
+        "status",
+        "amount",
+        "currency",
+        "created_at",
+        "customer.name",
+        "customer.code",
+        "items.sku",
+        "items.qty",
+        "items.price"
+      ]
+    },
+    {
+      "name": "corp_order_search",
+      "description": "按客户编码与状态搜索订单，返回订单号与状态的清单。",
+      "method": "GET",
+      "path": "/orders",
+      "params": [
+        {
+          "name": "customer_code",
+          "type": "string",
+          "in": "query",
+          "required": true,
+          "description": "客户编码"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "in": "query",
+          "required": false,
+          "enum": ["draft", "confirmed", "shipped", "closed"],
+          "description": "订单状态"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "in": "query",
+          "required": false,
+          "description": "返回条数上限，默认由服务端决定"
+        }
+      ],
+      "fields": [
+        "total",
+        "results.order_no",
+        "results.status",
+        "results.amount",
+        "results.created_at"
+      ]
+    },
+    {
+      "name": "corp_stock_get",
+      "description": "查询某个 SKU 在指定仓库的可用库存。",
+      "method": "GET",
+      "path": "/warehouses/{warehouse}/stock/{sku}",
+      "params": [
+        {
+          "name": "warehouse",
+          "type": "string",
+          "in": "path",
+          "required": true,
+          "description": "仓库编码"
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "in": "path",
+          "required": true,
+          "description": "物料编码"
+        }
+      ],
+      "fields": ["sku", "warehouse", "on_hand", "available", "updated_at"]
+    }
+  ]
+}

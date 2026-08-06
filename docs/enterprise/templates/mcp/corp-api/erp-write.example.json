@@ -1,0 +1,72 @@
+{
+  "base_url": "https://erp.corp.example.com/api/v2",
+  "auth": {
+    "type": "bearer",
+    "token_env": "CORP_API_TOKEN"
+  },
+  "defaults": {
+    "timeout": 30,
+    "ca_bundle": "/opt/corp/ca/corp-root.pem",
+    "redact": [
+      "(?i)\"(token|secret|password)\"\\s*:\\s*\"[^\"]*\""
+    ]
+  },
+  "tools": [
+    {
+      "name": "corp_order_close",
+      "description": "关闭一张订单，需给出关闭原因。这是不可逆操作。",
+      "method": "POST",
+      "path": "/orders/{order_no}/close",
+      "write": true,
+      "params": [
+        {
+          "name": "order_no",
+          "type": "string",
+          "in": "path",
+          "required": true,
+          "description": "订单号"
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "in": "body",
+          "required": true,
+          "description": "关闭原因，会写进订单审计日志"
+        }
+      ],
+      "fields": ["order_no", "status", "closed_at"]
+    },
+    {
+      "name": "corp_ticket_create",
+      "description": "在工单系统创建一张工单。",
+      "method": "POST",
+      "path": "/tickets",
+      "write": true,
+      "params": [
+        {
+          "name": "title",
+          "type": "string",
+          "in": "body",
+          "required": true,
+          "description": "工单标题"
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "in": "body",
+          "required": true,
+          "description": "工单正文"
+        },
+        {
+          "name": "priority",
+          "type": "string",
+          "in": "body",
+          "required": false,
+          "enum": ["low", "normal", "high", "urgent"],
+          "description": "优先级"
+        }
+      ],
+      "fields": ["ticket_id", "url", "status"]
+    }
+  ]
+}
