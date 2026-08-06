@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T06:38:59Z
+更新时间：2026-08-06T08:39:35Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：f4327824102058bbbbf319eef9a83d56712538f3
+当前提交：ceff7ae27c2b5a386d8103513ff0b42b5d050cd2
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：598
-- 当前提交：f432782
+- 当前提交：ceff7ae
 - 主要文件类型：
   - py: 261
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 ceff7ae fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持
+- 2026-08-06 c08a31d docs: refresh generated site reports
 - 2026-08-06 f432782 docs(deployment): 企业站部署改写成逐步操作指南
 - 2026-08-06 e399187 docs: refresh generated site reports
 - 2026-08-06 3ef062b feat(enterprise): 企业站模板 + Cloudflare 部署流水线
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 81ac2d8 docs: refresh generated site reports
 - 2026-08-06 2d81328 docs(upstream): 第 4 步标为可选，并写清 macOS 自带 Python 的两个坑
 - 2026-08-06 422a6b1 docs: refresh generated site reports
-- 2026-08-06 95bbb1a docs(upstream): 更正依赖说明——不能只装那三个包
-- 2026-08-06 83574b0 docs: refresh generated site reports

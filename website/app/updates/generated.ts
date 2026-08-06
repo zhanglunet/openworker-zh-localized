@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T06:38:59Z",
+  "generatedAt": "2026-08-06T08:39:35Z",
   "branch": "main",
-  "head": "f4327824102058bbbbf319eef9a83d56712538f3",
-  "shortHead": "f432782",
+  "head": "ceff7ae27c2b5a386d8103513ff0b42b5d050cd2",
+  "shortHead": "ceff7ae",
   "totalFiles": 598,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "ceff7ae",
+      "date": "2026-08-06",
+      "subject": "fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持"
+    },
+    {
+      "hash": "c08a31d",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "f432782",
       "date": "2026-08-06",
       "subject": "docs(deployment): 企业站部署改写成逐步操作指南"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "422a6b1",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "95bbb1a",
-      "date": "2026-08-06",
-      "subject": "docs(upstream): 更正依赖说明——不能只装那三个包"
-    },
-    {
-      "hash": "83574b0",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "ceff7ae",
+      "date": "2026-08-06",
+      "subject": "fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持"
+    },
+    {
+      "hash": "c08a31d",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "f432782",
       "date": "2026-08-06",
