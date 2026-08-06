@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-05T23:30:02Z",
+  "generatedAt": "2026-08-06T00:09:49Z",
   "branch": "main",
-  "head": "5f790dfa46993e7d490dd90c704d4bb2ddd4bf70",
-  "shortHead": "5f790df",
+  "head": "73477600c218daca063a7d0e50f828e9d7d9df7f",
+  "shortHead": "7347760",
   "totalFiles": 558,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "7347760",
+      "date": "2026-08-06",
+      "subject": "fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行"
+    },
+    {
+      "hash": "3923f58",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "5f790df",
       "date": "2026-08-05",
       "subject": "feat(enterprise): 大表哥 excel-ai-analyst 技能包（PRD F4 的 L1 层）"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "ab204cf",
       "date": "2026-08-05",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "5f4e397",
-      "date": "2026-08-05",
-      "subject": "ci: 新增未签名测试版发布流水线"
-    },
-    {
-      "hash": "5279588",
-      "date": "2026-08-05",
-      "subject": "sync: 记录上游 OpenWorker 01b6f83 已并入（修复祖先链）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "7347760",
+      "date": "2026-08-06",
+      "subject": "fix(automation): 定时任务在 skip-on-overlap 下仍可能重复执行"
+    },
+    {
+      "hash": "3923f58",
+      "date": "2026-08-05",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "5f790df",
       "date": "2026-08-05",
