@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T08:39:35Z",
+  "generatedAt": "2026-08-06T09:03:55Z",
   "branch": "main",
-  "head": "ceff7ae27c2b5a386d8103513ff0b42b5d050cd2",
-  "shortHead": "ceff7ae",
+  "head": "bb2f4dc115b8ed450cde45a7c7ddb049e923e892",
+  "shortHead": "bb2f4dc",
   "totalFiles": 598,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "bb2f4dc",
+      "date": "2026-08-06",
+      "subject": "fix(smoke): 冒烟测试认不出零冲突的模型声明路径，且漏掉类型错误"
+    },
+    {
+      "hash": "066c17c",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "ceff7ae",
       "date": "2026-08-06",
       "subject": "fix(verify): 实测暴露的两个误判——推理模型假阴性、超时当成不支持"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "81ac2d8",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "2d81328",
-      "date": "2026-08-06",
-      "subject": "docs(upstream): 第 4 步标为可选，并写清 macOS 自带 Python 的两个坑"
-    },
-    {
-      "hash": "422a6b1",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "bb2f4dc",
+      "date": "2026-08-06",
+      "subject": "fix(smoke): 冒烟测试认不出零冲突的模型声明路径，且漏掉类型错误"
+    },
+    {
+      "hash": "066c17c",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "ceff7ae",
       "date": "2026-08-06",
