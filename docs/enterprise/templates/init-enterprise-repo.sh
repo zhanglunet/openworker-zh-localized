@@ -630,6 +630,21 @@ $(printf '%s' "$remote_refs" | sed -E 's#(://)[^/@[:space:]]+@#\1***@#g')"
     ok "企业私有仓为空，可以安全镜像。"
   fi
 
+  # 镜像推送会为「每一条分支和每一个 tag」发出 push 事件，而汉化仓的工作流是随镜像
+  # 一起进来的（第 3 步才停用它们，那已经是这次推送之后了）。于是 tag 一落地，
+  # release.yml（tags: v*）就会当场开三平台构建；main 一落地，update-site-reports.yml
+  # 会往 main 自动提交 —— 那个提交会和本脚本第 7 步的 push 抢同一个 main。
+  warn "镜像之前请先在企业私有仓关掉 Actions：
+     Settings → Actions → General → Actions permissions → Disable actions
+     原因：镜像会推送汉化仓的全部分支与 tag，而汉化仓的工作流此刻还在仓里 ——
+     tag 会触发 release.yml 开三平台构建（发出汉化版品牌的安装包），
+     push main 会触发 update-site-reports.yml 往 main 自动提交，抢第 7 步的推送。
+     第 3 步停用这些工作流、第 7 步推送完成之后，再按待办【B】把 Actions 打开。"
+
+  if ! confirm "企业私有仓的 Actions 已经关掉了吗？（未关请选 n，去关掉再重跑）"; then
+    die "已取消。关掉 Actions 后重新执行本脚本即可（前面几步没有产生任何改动）。"
+  fi
+
   if ! confirm "确认把 ${LOCALIZED_URL_SAFE} 完整镜像推送到 ${ENTERPRISE_URL_SAFE} ？"; then
     die "用户取消。可加 --skip-mirror 只做后续步骤。"
   fi
@@ -1630,6 +1645,13 @@ ${C_BOLD}【A】仓库合并策略（最关键，做错会导致每次同步重�
       对 ${C_BOLD}sync/*${C_RESET} 分支单独强制 merge commit，并在 PR 模板里写死提醒。
 
 ${C_BOLD}【B】GitHub Actions 权限${C_RESET}
+
+  B0. ${C_YELLOW}先把 Actions 重新打开${C_RESET}（镜像之前你关掉了它）：
+      Settings → Actions → General → Actions permissions → Allow all actions
+
+      顺序很重要：关 → 镜像 → 本脚本跑完（第 3 步已把汉化仓工作流改名停用、
+      第 7 步已推送）→ 再开。反过来先开再镜像，会当场触发一轮汉化版品牌的
+      三平台发布构建，并让 update-site-reports.yml 抢 main。
 
   B1. Settings → Actions → General → Workflow permissions：
       勾选 ${C_YELLOW}"Read and write permissions"${C_RESET}
