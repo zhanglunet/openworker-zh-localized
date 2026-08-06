@@ -312,6 +312,31 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: 注入应用内免责声明
+        run: |
+          set -euo pipefail
+          BRAND=enterprise/config/branding.json
+          [ -f "$BRAND" ] || { echo "::notice::没有 ${BRAND}，跳过"; exit 0; }
+          # Windows runner 的 Python 默认编码是 cp1252：open() 读中文 JSON 会 UnicodeDecodeError，
+          # print() 往 cp1252 的 stdout 写中文同样会炸。显式 utf-8 读 + 二进制写，两处都绕开 locale。
+          # （2026-08-06 实测：Windows job 就挂在这里。）写成单行是因为 YAML block scalar 里
+          # 嵌多行 Python 会破坏缩进。
+          text="$(python3 -c "import io,json,sys; fh=io.open(sys.argv[1],encoding='utf-8'); sys.stdout.buffer.write(((json.load(fh).get('disclaimer') or '').strip()).encode('utf-8'))" "$BRAND")"
+          if [ -z "$text" ]; then
+            # 不静默跳过：声明缺失是要被人看见的，否则装出来的包里就没有这段话，
+            # 而没人会去检查"某段本该在的文字有没有在"。
+            echo "::warning::branding.json 没有 disclaimer 字段 —— 应用内会回落到组件里的默认文案。"
+            exit 0
+          fi
+          # 定界符形式而不是 KEY=VALUE：文案将来若出现换行，单行写法会把环境文件写坏，
+          # 坏法还是"后面几行被当成新的环境变量"，排查毫无线索。
+          {
+            echo "VITE_CORP_DISCLAIMER<<__OCW_EOF__"
+            printf '%s\n' "$text"
+            echo "__OCW_EOF__"
+          } >> "$GITHUB_ENV"
+          echo "注入应用内声明：${text}"
+
       - name: 应用企业品牌资源（可选）
         # 图标等品牌资源放在 enterprise/branding/，由企业自己的脚本覆盖到
         # surfaces/gui/src-tauri/icons/ 这个"挂载点"。脚本不存在就跳过（例如只换了文案）。
@@ -461,7 +486,7 @@ jobs:
             ls -la "$BUNDLE"/macos "$BUNDLE"/nsis 2>/dev/null || true
             exit 1
           fi
-          echo "更新签名产物已生成（$RUNNER_OS）："
+          echo "更新签名产物已生成（${RUNNER_OS}）："
           for f in "${sigs[@]}"; do echo "  · $(basename "$f")"; done
 
       - name: 归集产物（版本名 + 稳定名）
