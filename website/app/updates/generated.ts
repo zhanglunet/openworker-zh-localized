@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T09:14:23Z",
+  "generatedAt": "2026-08-06T09:22:56Z",
   "branch": "main",
-  "head": "3aec7d6c1c8188d539ccfc7c7d3bc82caecc4d60",
-  "shortHead": "3aec7d6",
+  "head": "f8811f92ff6fe1210afef2f9cb1c78bfc9817dc8",
+  "shortHead": "f8811f9",
   "totalFiles": 598,
   "byExt": [
     {
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "f8811f9",
+      "date": "2026-08-06",
+      "subject": "fix(gui): 设置页「侧边栏」卡片被渲染了两次"
+    },
+    {
+      "hash": "2c4e572",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "3aec7d6",
       "date": "2026-08-06",
       "subject": "fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明"
@@ -410,19 +420,19 @@ export const repoReport = {
       "hash": "00c2fd9",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b26c4c8",
-      "date": "2026-08-06",
-      "subject": "fix(enterprise): 镜像前必须先关掉企业仓的 Actions"
-    },
-    {
-      "hash": "209c7e8",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "f8811f9",
+      "date": "2026-08-06",
+      "subject": "fix(gui): 设置页「侧边栏」卡片被渲染了两次"
+    },
+    {
+      "hash": "2c4e572",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "3aec7d6",
       "date": "2026-08-06",

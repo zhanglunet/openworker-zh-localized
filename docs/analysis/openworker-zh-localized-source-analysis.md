@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T09:14:23Z
+更新时间：2026-08-06T09:22:56Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：3aec7d6c1c8188d539ccfc7c7d3bc82caecc4d60
+当前提交：f8811f92ff6fe1210afef2f9cb1c78bfc9817dc8
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：598
-- 当前提交：3aec7d6
+- 当前提交：f8811f9
 - 主要文件类型：
   - py: 261
   - ts: 105
@@ -231,6 +231,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-06 f8811f9 fix(gui): 设置页「侧边栏」卡片被渲染了两次
+- 2026-08-06 2c4e572 docs: refresh generated site reports
 - 2026-08-06 3aec7d6 fix(release): macOS 打包失败被吞成 exit 0；补签名断言；站点加免责声明
 - 2026-08-06 364a7da docs: refresh generated site reports
 - 2026-08-06 bb2f4dc fix(smoke): 冒烟测试认不出零冲突的模型声明路径，且漏掉类型错误
@@ -241,5 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 e399187 docs: refresh generated site reports
 - 2026-08-06 3ef062b feat(enterprise): 企业站模板 + Cloudflare 部署流水线
 - 2026-08-06 00c2fd9 docs: refresh generated site reports
-- 2026-08-06 b26c4c8 fix(enterprise): 镜像前必须先关掉企业仓的 Actions
-- 2026-08-06 209c7e8 docs: refresh generated site reports
