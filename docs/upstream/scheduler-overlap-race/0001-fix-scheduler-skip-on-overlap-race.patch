@@ -1,0 +1,185 @@
+From 1b71089f02c1ca2a645d4968fd1d31131a927991 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 6 Aug 2026 00:12:09 +0000
+Subject: [PATCH] fix(automation): scheduled task can run twice despite
+ skip-on-overlap
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The skip-on-overlap guard is taken inside the spawned `run_task`, which leaves a
+TOCTOU window between a tick's `due()` scan and the in-flight run finishing:
+
+1. A run suspends on a parked approval. It never advances `next_run`, so every
+   tick's `due()` scan keeps returning the task and each tick spawns another
+   `run_task`.
+2. Those extra spawns normally start while the guard is still held and bail out.
+3. But if one of them only gets its first execution slot *after* the in-flight
+   run finished — guard released **and** `next_run` advanced — it sails past the
+   guard and runs the task a second time.
+
+Impact: an automation parked on an approval can execute twice. It surfaces in CI
+as an intermittent failure of
+
+    tests/test_standing_approvals.py::test_blocked_run_does_not_stall_other_tasks
+    AssertionError: assert 2 == 1
+
+on loaded runners (observed on several runs of the same commit; it passes on an
+idle machine 30/30).
+
+Fix: claim the id in `_tick`, synchronously with the decision to spawn, so a
+duplicate is never spawned in the first place. `run_task` grows a `claimed` flag;
+direct callers ("run now" from the UI, tests calling `run_task` themselves) keep
+taking the guard inside `run_task`, so their behaviour is unchanged.
+
+The added test pins the window deterministically rather than racing for it: it
+opens the gate from inside a `due()` call, i.e. exactly when a tick has just read
+the task as due and is about to spawn for it. It fails on the current code
+(run_count == 2) and passes with the fix.
+---
+ coworker/automation/scheduler.py | 34 ++++++++++----
+ tests/test_scheduler_overlap.py  | 80 ++++++++++++++++++++++++++++++++
+ 2 files changed, 106 insertions(+), 8 deletions(-)
+ create mode 100644 tests/test_scheduler_overlap.py
+
+diff --git a/coworker/automation/scheduler.py b/coworker/automation/scheduler.py
+index 36c828e..6f4173e 100644
+--- a/coworker/automation/scheduler.py
++++ b/coworker/automation/scheduler.py
+@@ -77,9 +77,21 @@ class Scheduler:
+         for task in self.store.due():
+             # Spawn, don't await: a run can suspend on a parked approval (standing
+             # scoped approvals, §25) and one blocked automation must never stall the
+-            # scheduler loop, other due tasks, or self-wake resumption. Overlap is
+-            # still guarded inside run_task via _running_ids.
+-            spawned = asyncio.create_task(self.run_task(task, trigger=trigger))
++            # scheduler loop, other due tasks, or self-wake resumption.
++            #
++            # Claim the id HERE, synchronously, instead of inside the spawned
++            # run_task. A suspended run never advances next_run, so every tick's
++            # due() scan keeps handing back the same task; if one of those spawns
++            # only gets its first execution slot *after* the in-flight run finished
++            # (released the guard AND advanced next_run), it sails past the guard
++            # and runs the task a second time — skip-on-overlap silently violated.
++            if task.id in self._running_ids:
++                logger.info("skipping %s — previous run still going", task.id)
++                continue
++            self._running_ids.add(task.id)
++            spawned = asyncio.create_task(
++                self.run_task(task, trigger=trigger, claimed=True)
++            )
+             self._spawned.add(spawned)
+             spawned.add_done_callback(self._spawned.discard)
+         if self.extra_tick is not None:
+@@ -88,11 +100,17 @@ class Scheduler:
+             except Exception:
+                 logger.exception("scheduler extra_tick (wake resume) failed")
+ 
+-    async def run_task(self, task: ScheduledTask, *, trigger: str) -> Optional[TaskRun]:
+-        if task.id in self._running_ids:  # skip-on-overlap
+-            logger.info("skipping %s — previous run still going", task.id)
+-            return None
+-        self._running_ids.add(task.id)
++    async def run_task(
++        self, task: ScheduledTask, *, trigger: str, claimed: bool = False
++    ) -> Optional[TaskRun]:
++        # `claimed` means the caller already reserved the id synchronously (_tick
++        # does). Direct callers — "run now" from the UI, tests — still take the
++        # guard here, so skip-on-overlap holds for them too.
++        if not claimed:
++            if task.id in self._running_ids:  # skip-on-overlap
++                logger.info("skipping %s — previous run still going", task.id)
++                return None
++            self._running_ids.add(task.id)
+         try:
+             run = await self.runner(task, trigger)
+         except Exception as exc:
+diff --git a/tests/test_scheduler_overlap.py b/tests/test_scheduler_overlap.py
+new file mode 100644
+index 0000000..0d3fd21
+--- /dev/null
++++ b/tests/test_scheduler_overlap.py
+@@ -0,0 +1,80 @@
++"""Regression: skip-on-overlap must hold even when a due() scan races the finish.
++
++The scheduler documents "skip-on-overlap (don't stack a run if the previous is still
++going)". The guard used to be taken inside the *spawned* ``run_task`` coroutine, which
++leaves a TOCTOU window:
++
++1. A run suspends (parked approval). It never advances ``next_run``, so every tick's
++   ``due()`` scan keeps handing the task back and each tick spawns another ``run_task``.
++2. Those extra spawns normally start while the guard is still held and bail out.
++3. But if one of them only gets its first execution slot *after* the in-flight run
++   finished — the guard released **and** ``next_run`` advanced — it sails past the guard
++   and runs the task a second time.
++
++On a loaded CI runner this surfaced as an intermittent failure of
++``test_standing_approvals.py::test_blocked_run_does_not_stall_other_tasks``
++(``assert 2 == 1``). The test below pins the window deterministically instead of racing
++for it: it opens the gate from inside a ``due()`` call, i.e. at the exact moment a tick
++has just decided to spawn a duplicate.
++"""
++
++from __future__ import annotations
++
++import asyncio
++
++import pytest
++
++from coworker.automation.models import Schedule, ScheduledTask, TaskRun
++from coworker.automation.scheduler import Scheduler
++from coworker.automation.store import TaskStore
++
++
++def _task(title: str) -> ScheduledTask:
++    return ScheduledTask(
++        title=title,
++        instructions="summarize the week and post it",
++        schedule=Schedule(kind="cron", cron="0 9 * * 1"),
++        workspace="/tmp/cw-overlap",
++    )
++
++
++@pytest.mark.asyncio
++async def test_due_scan_racing_a_finishing_run_does_not_double_run(tmp_path):
++    store = TaskStore(tmp_path / "auto.db")
++    blocked = _task("blocked")
++    store.save(blocked)
++    store._conn.execute(
++        "UPDATE scheduled_tasks SET next_run=1.0 WHERE id=?", (blocked.id,)
++    )
++    store._conn.commit()
++
++    gate = asyncio.Event()
++
++    async def runner(task, trigger):
++        if task.id == blocked.id:
++            await gate.wait()  # parked approval: suspended until a human answers
++        return TaskRun(task_id=task.id, status="ok", trigger=trigger)
++
++    # Open the gate from *inside* a due() scan: at that instant the tick has already
++    # read the task as due (next_run is still 1.0 — the in-flight run hasn't saved yet)
++    # and is about to spawn for it, while the original run is free to finish.
++    real_due = store.due
++    scans = 0
++
++    def due(**kwargs):
++        nonlocal scans
++        rows = real_due(**kwargs)
++        scans += 1
++        if scans == 4:
++            gate.set()
++        return rows
++
++    store.due = due  # type: ignore[method-assign]
++
++    sched = Scheduler(store, runner, tick_seconds=0.05)
++    sched.start()
++    await asyncio.sleep(0.5)
++    try:
++        assert store.get(blocked.id).run_count == 1
++    finally:
++        await sched.stop()
+-- 
+2.43.0
+
