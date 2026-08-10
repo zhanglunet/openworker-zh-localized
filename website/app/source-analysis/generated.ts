@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-06T12:06:36Z",
+  "generatedAt": "2026-08-06T12:07:19Z",
   "branch": "main",
-  "head": "b2d490d904dc124b60be511f6c7a68ec75672a42",
-  "shortHead": "b2d490d",
+  "head": "0f913c3cfbf5554dae39307520e46e788f801530",
+  "shortHead": "0f913c3",
   "totalFiles": 601,
   "byExt": [
     {
@@ -362,6 +362,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "0f913c3",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "b2d490d",
       "date": "2026-08-06",
       "subject": "fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的"
@@ -415,14 +420,14 @@ export const repoReport = {
       "hash": "f8811f9",
       "date": "2026-08-06",
       "subject": "fix(gui): 设置页「侧边栏」卡片被渲染了两次"
-    },
-    {
-      "hash": "2c4e572",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "0f913c3",
+      "date": "2026-08-06",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "b2d490d",
       "date": "2026-08-06",
@@ -937,106 +942,6 @@ export const repoReport = {
       "hash": "4b19f8b",
       "date": "2026-08-03",
       "subject": "Initial commit"
-    },
-    {
-      "hash": "01b6f83",
-      "date": "2026-08-01",
-      "subject": "Merge pull request #393 from andrewyng/issue/ope-46"
-    },
-    {
-      "hash": "997b2a9",
-      "date": "2026-08-01",
-      "subject": "Merge branch 'main' into issue/ope-46"
-    },
-    {
-      "hash": "70e4610",
-      "date": "2026-08-01",
-      "subject": "Add support for Skills (#391)"
-    },
-    {
-      "hash": "e0cb129",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #356 from andrewyng/rpMacIntelBuild"
-    },
-    {
-      "hash": "bfabfaa",
-      "date": "2026-07-30",
-      "subject": "ci: build macOS Intel on macos-15-intel"
-    },
-    {
-      "hash": "ae7256f",
-      "date": "2026-07-30",
-      "subject": "Prepare app release 0.1.7: version bump"
-    },
-    {
-      "hash": "907752b",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #354 from andrewyng/rpArtifactWalkAndContextBar"
-    },
-    {
-      "hash": "25dc283",
-      "date": "2026-07-30",
-      "subject": "fix: stop artifact walk entering OS app-data dirs; context bar off by default"
-    },
-    {
-      "hash": "11d9f72",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #353 from andrewyng/rpSsrfFollowup"
-    },
-    {
-      "hash": "e5c5699",
-      "date": "2026-07-30",
-      "subject": "security: block CGNAT range and guard browser_open_url"
-    },
-    {
-      "hash": "7e69398",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #290 from Mr-Neutr0n/security/block-ssrf-in-url-tools"
-    },
-    {
-      "hash": "38e1f03",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #161 from psssnikhil/fix/inbox-reply-word-boundaries"
-    },
-    {
-      "hash": "98445fe",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #352 from andrewyng/rpMcpGlobalWins"
-    },
-    {
-      "hash": "6217dbc",
-      "date": "2026-07-30",
-      "subject": "mcp: global config wins on name clash with a trusted workspace"
-    },
-    {
-      "hash": "5071451",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #351 from andrewyng/rpCompactionPolish"
-    },
-    {
-      "hash": "cca0421",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #215 from HaoChiBao/security/workspace-mcp-trust-gate"
-    },
-    {
-      "hash": "fe034c8",
-      "date": "2026-07-30",
-      "subject": "models: Kimi K3 via Together (1M window, vision); right-align the more/less toggle"
-    },
-    {
-      "hash": "1e819e0",
-      "date": "2026-07-30",
-      "subject": "transcript: clamp long user messages with a more…/less… toggle"
-    },
-    {
-      "hash": "f9f51c9",
-      "date": "2026-07-30",
-      "subject": "compaction: live progress signal + user-message cap"
-    },
-    {
-      "hash": "b303823",
-      "date": "2026-07-30",
-      "subject": "Merge pull request #347 from andrewyng/review/ope-27"
     }
   ]
 } as const;
