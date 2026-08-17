@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-06T12:07:19Z
+更新时间：2026-08-10T03:19:42Z
 
 ## 最近提交
 
+- 2026-08-10 1a9a1c7 docs: refresh generated site reports
 - 2026-08-06 0f913c3 docs: refresh generated site reports
 - 2026-08-06 b2d490d fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的
 - 2026-08-06 9d69dad docs: refresh generated site reports
@@ -15,4 +16,3 @@
 - 2026-08-06 cef62de docs: refresh generated site reports
 - 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图
 - 2026-08-06 90cdee3 docs: refresh generated site reports
-- 2026-08-06 f8811f9 fix(gui): 设置页「侧边栏」卡片被渲染了两次

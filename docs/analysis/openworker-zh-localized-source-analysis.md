@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-06T12:07:19Z
+更新时间：2026-08-10T03:19:42Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：0f913c3cfbf5554dae39307520e46e788f801530
+当前提交：1a9a1c74e874d763da26ec4ce3effd28fd347484
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：601
-- 当前提交：0f913c3
+- 当前提交：1a9a1c7
 - 主要文件类型：
   - py: 262
   - ts: 105
@@ -231,6 +231,7 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-10 1a9a1c7 docs: refresh generated site reports
 - 2026-08-06 0f913c3 docs: refresh generated site reports
 - 2026-08-06 b2d490d fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的
 - 2026-08-06 9d69dad docs: refresh generated site reports
@@ -242,4 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 cef62de docs: refresh generated site reports
 - 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图
 - 2026-08-06 90cdee3 docs: refresh generated site reports
-- 2026-08-06 f8811f9 fix(gui): 设置页「侧边栏」卡片被渲染了两次
