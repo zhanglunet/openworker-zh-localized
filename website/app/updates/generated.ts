@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-10T03:19:42Z",
+  "generatedAt": "2026-08-17T02:35:17Z",
   "branch": "main",
-  "head": "1a9a1c74e874d763da26ec4ce3effd28fd347484",
-  "shortHead": "1a9a1c7",
+  "head": "2504742b8adcb04a111e921b174d9f7081324e59",
+  "shortHead": "2504742",
   "totalFiles": 601,
   "byExt": [
     {
@@ -362,6 +362,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "2504742",
+      "date": "2026-08-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "1a9a1c7",
       "date": "2026-08-10",
       "subject": "docs: refresh generated site reports"
@@ -415,18 +420,7 @@ export const repoReport = {
       "hash": "5335f70",
       "date": "2026-08-06",
       "subject": "feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图"
-    },
-    {
-      "hash": "90cdee3",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
-  "weeklyCommits": [
-    {
-      "hash": "1a9a1c7",
-      "date": "2026-08-10",
-      "subject": "docs: refresh generated site reports"
-    }
-  ]
+  "weeklyCommits": []
 } as const;

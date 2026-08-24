@@ -1,10 +1,10 @@
 # OpenWorker 中文站周报
 
-生成时间：2026-08-10T03:19:42Z
+生成时间：2026-08-17T02:35:17Z
 
 ## 本周概览
 
-- 2026-08-10 1a9a1c7 docs: refresh generated site reports
+- 最近 7 天没有新的 Git 提交。
 
 ## 维护建议
 
