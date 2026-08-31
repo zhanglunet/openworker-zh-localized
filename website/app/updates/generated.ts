@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-08-17T02:35:17Z",
+  "generatedAt": "2026-08-24T02:38:21Z",
   "branch": "main",
-  "head": "2504742b8adcb04a111e921b174d9f7081324e59",
-  "shortHead": "2504742",
+  "head": "dd21e4f75c00845fda645803f69feaf54c91a379",
+  "shortHead": "dd21e4f",
   "totalFiles": 601,
   "byExt": [
     {
@@ -362,6 +362,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "dd21e4f",
+      "date": "2026-08-24",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "2504742",
       "date": "2026-08-17",
       "subject": "docs: refresh generated site reports"
@@ -415,11 +420,6 @@ export const repoReport = {
       "hash": "cef62de",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "5335f70",
-      "date": "2026-08-06",
-      "subject": "feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图"
     }
   ],
   "weeklyCommits": []

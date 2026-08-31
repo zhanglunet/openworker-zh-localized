@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-17T02:35:17Z
+更新时间：2026-08-24T02:38:21Z
 
 ## 最近提交
 
+- 2026-08-24 dd21e4f docs: refresh generated site reports
 - 2026-08-17 2504742 docs: refresh generated site reports
 - 2026-08-10 1a9a1c7 docs: refresh generated site reports
 - 2026-08-06 0f913c3 docs: refresh generated site reports
@@ -15,4 +16,3 @@
 - 2026-08-06 3aaa1f1 docs: refresh generated site reports
 - 2026-08-06 b299059 fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃
 - 2026-08-06 cef62de docs: refresh generated site reports
-- 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图

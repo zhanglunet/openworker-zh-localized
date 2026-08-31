@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-08-17T02:35:17Z
+更新时间：2026-08-24T02:38:21Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：2504742b8adcb04a111e921b174d9f7081324e59
+当前提交：dd21e4f75c00845fda645803f69feaf54c91a379
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：601
-- 当前提交：2504742
+- 当前提交：dd21e4f
 - 主要文件类型：
   - py: 262
   - ts: 105
@@ -231,6 +231,7 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-08-24 dd21e4f docs: refresh generated site reports
 - 2026-08-17 2504742 docs: refresh generated site reports
 - 2026-08-10 1a9a1c7 docs: refresh generated site reports
 - 2026-08-06 0f913c3 docs: refresh generated site reports
@@ -242,4 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 3aaa1f1 docs: refresh generated site reports
 - 2026-08-06 b299059 fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃
 - 2026-08-06 cef62de docs: refresh generated site reports
-- 2026-08-06 5335f70 feat(site): 版本说明页 —— 原版 / 中文版 / 企业版的关系、对照表与信息图
