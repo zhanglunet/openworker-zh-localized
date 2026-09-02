@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-08-24T02:38:21Z",
+  "generatedAt": "2026-09-02T15:50:46Z",
   "branch": "main",
-  "head": "dd21e4f75c00845fda645803f69feaf54c91a379",
-  "shortHead": "dd21e4f",
-  "totalFiles": 601,
+  "head": "3be469ef2e5871612b19e8d00e90d6043fbee450",
+  "shortHead": "3be469e",
+  "totalFiles": 602,
   "byExt": [
     {
       "name": "py",
-      "count": 262
+      "count": 263
     },
     {
       "name": "ts",
@@ -89,7 +89,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 107
+      "count": 108
     },
     {
       "name": "docs",
@@ -362,6 +362,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "3be469e",
+      "date": "2026-09-02",
+      "subject": "fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果"
+    },
+    {
+      "hash": "f4ef37f",
+      "date": "2026-08-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "dd21e4f",
       "date": "2026-08-24",
       "subject": "docs: refresh generated site reports"
@@ -410,17 +420,18 @@ export const repoReport = {
       "hash": "3aaa1f1",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b299059",
-      "date": "2026-08-06",
-      "subject": "fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃"
-    },
-    {
-      "hash": "cef62de",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
-  "weeklyCommits": []
+  "weeklyCommits": [
+    {
+      "hash": "3be469e",
+      "date": "2026-09-02",
+      "subject": "fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果"
+    },
+    {
+      "hash": "f4ef37f",
+      "date": "2026-08-31",
+      "subject": "docs: refresh generated site reports"
+    }
+  ]
 } as const;

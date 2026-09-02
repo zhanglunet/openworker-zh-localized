@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-08-24T02:38:21Z
+更新时间：2026-09-02T15:50:46Z
 
 ## 最近提交
 
+- 2026-09-02 3be469e fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果
+- 2026-08-31 f4ef37f docs: refresh generated site reports
 - 2026-08-24 dd21e4f docs: refresh generated site reports
 - 2026-08-17 2504742 docs: refresh generated site reports
 - 2026-08-10 1a9a1c7 docs: refresh generated site reports
@@ -14,5 +16,3 @@
 - 2026-08-06 ec04f81 docs: refresh generated site reports
 - 2026-08-06 c68e903 fix(site): 免责声明里企业名两侧的空格 —— "非 亚信 官方发布"
 - 2026-08-06 3aaa1f1 docs: refresh generated site reports
-- 2026-08-06 b299059 fix(release): $VAR 紧邻全角字符 / Windows cp1252，两处中文导致的 CI 崩溃
-- 2026-08-06 cef62de docs: refresh generated site reports
