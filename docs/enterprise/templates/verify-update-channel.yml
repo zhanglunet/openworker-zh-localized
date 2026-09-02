@@ -19,7 +19,8 @@
 #      自定义域没绑或绑错时，写入照样成功，读出来是 404
 #   4. 清理探针（always()，失败也清）
 #
-# 探针路径统一在 __verify/ 前缀下，绝不碰 latest-<corp>.json 或任何 tag 目录。
+# 探针路径统一在 __verify/<run>-<attempt>-<nonce>/ 下，绝不碰 latest-<corp>.json
+# 或任何 tag 目录；每次尝试唯一，因此读回比对不可能命中历史残留。
 
 name: 验证更新源（方式 B）
 
@@ -89,7 +90,13 @@ jobs:
             exit 1
           fi
           echo "✓ 客户端读 ${expected}，流水线也写这里"
-          echo "PROBE_PREFIX=__verify/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+          # ★ 路径必须对【每一次尝试】唯一，不能只用 GITHUB_RUN_ID ——
+          #   re-run 时 GITHUB_RUN_ID 不变（变的是 GITHUB_RUN_ATTEMPT），而下面的清理
+          #   是软失败，残留对象是可预期的。于是同一个 run 的第二次尝试里，
+          #   "GET 200 + 内容一致" 分不清读到的是本次写的还是上次残留的 ——
+          #   这条流水线唯一的兜底断言就会有旁路，在什么都没写进去时照样打印 ✓。
+          #   （对抗审查发现，2026-08-06。）
+          echo "PROBE_PREFIX=__verify/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 8)" >> "$GITHUB_ENV"
 
       # ── 2. 凭据与桶 ────────────────────────────────────────────────────────
       # 站点部署那个 token 只需要 Workers Scripts:Edit，未必带 R2 权限。
@@ -125,9 +132,20 @@ jobs:
       - name: 探针：写入 R2
         run: |
           set -euo pipefail
-          # 探针内容带 run id，读回来时逐字节比对 —— 只比对 HTTP 200 是不够的：
-          # 自定义域如果指向了另一个桶，照样返回 200，只是内容是别人的。
-          printf '{"probe":"%s"}\n' "$GITHUB_RUN_ID" > /tmp/probe.json
+          # 探针内容里带完整 PROBE_PREFIX（含 nonce），读回来时逐字节比对。
+          # 只比 HTTP 200 不够：自定义域若指向另一个桶，照样返回 200，只是内容是别人的。
+          # 内容也不能只放裸 run id —— 那个值跨 re-run 不变，比一个常量等于没比。
+          printf '{"probe":"%s"}\n' "$PROBE_PREFIX" > /tmp/probe.json
+
+          # 写之前先确认该路径是空的。nonce 已让碰撞几乎不可能，这条是纵深防御：
+          # 万一将来自定义域上加了 catch-all / rewrite 规则，任何路径都返回 200，
+          # 下一步的「读得到」就不再能证明「写进去了」。基线断言能顶住那种情况。
+          pre=$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL%/}/${PROBE_PREFIX}/probe.json" || echo 000)
+          if [ "${pre}" != "404" ]; then
+            echo "::error::写入前该探针路径就返回了 HTTP ${pre}（预期 404）。"
+            echo "这种情况下「读得到」无法证明「写进去了」，拒绝继续。"
+            exit 1
+          fi
 
           # ★ 必须带 --remote。wrangler 4 的 r2 object put 默认写**本地模拟存储**，
           #   不加这个参数会打印一行成功、然后什么都没上传，下一步 404 而原因完全看不出来。

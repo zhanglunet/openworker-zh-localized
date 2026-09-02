@@ -649,7 +649,7 @@ jobs:
   # ---------------------------------------------------------------------------
   publish:
     if: needs.preflight.outputs.publish == 'true'
-    needs: [preflight, build]
+    needs: [preflight, publish-perms, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -685,6 +685,8 @@ jobs:
           # 下面两个只用于「设了分发地址却没有任何上传方式」的自检
           CORP_UPDATE_UPLOAD_URL: ${{ vars.CORP_UPDATE_UPLOAD_URL }}
           CORP_R2_BUCKET: ${{ vars.CORP_R2_BUCKET }}
+          # 显式声明「有带外分发流程」，用来放行上面那条硬失败
+          CORP_UPDATE_EXTERNAL_UPLOAD: ${{ vars.CORP_UPDATE_EXTERNAL_UPLOAD }}
         run: |
           set -euo pipefail
           # 内联实现，不复用 packaging/make_update_manifest.py：
@@ -701,16 +703,34 @@ jobs:
           base = os.environ.get("CORP_UPDATE_BASE_URL", "").strip().rstrip("/")
           if base:
               # 只设 BASE_URL、却没有任何一种上传方式时，清单会指向一个本流水线从没往里
-              # 放过文件的地址 —— 客户端会拿到 404 并静默停在旧版本。必须显式提醒。
+              # 放过文件的地址。后果分两种，都无声：
+              #   · 从没上传过 → 客户端拿 404，静默停在旧版本
+              #   · 以前上传过、后来变量被删 → 客户端拿到【旧清单】，判定"已是最新"，
+              #     永久钉死在旧版本，连服务端的 404 日志线索都没有
+              #
+              # ★ 这里原来只 print("::warning::")。GitHub Actions 用退出码决定成败，
+              #   annotation 不参与 —— 那条自检从写下那天起就不可能让任何东西变红，
+              #   它想防的场景发生时流水线照样全绿。（对抗审查发现，2026-08-06。）
+              #
+              # 但也不能无条件 exit 1：「方式 B + 带外分发」（内网 Nginx 手工同步、
+              # 独立部署流程）是被有意支持的配置，硬失败会打死它。所以要求显式声明。
               has_uploader = (
                   os.environ.get("CORP_UPDATE_UPLOAD_URL", "").strip()
                   or os.environ.get("CORP_R2_BUCKET", "").strip()
               )
-              if not has_uploader:
+              external = os.environ.get("CORP_UPDATE_EXTERNAL_UPLOAD", "").strip().lower() == "true"
+              if not has_uploader and not external:
                   print(
-                      "::warning::设了 vars.CORP_UPDATE_BASE_URL，却既没设 vars.CORP_R2_BUCKET"
+                      "::error::设了 vars.CORP_UPDATE_BASE_URL，却既没设 vars.CORP_R2_BUCKET"
                       " 也没设 vars.CORP_UPDATE_UPLOAD_URL —— 本流水线不会上传任何文件到该地址，"
-                      "请确认另有分发流程把 dist/ 放上去"
+                      "客户端会拉不到清单并静默停在旧版本。"
+                      "若确有带外分发流程，请显式设 vars.CORP_UPDATE_EXTERNAL_UPLOAD=true 声明这一点。"
+                  )
+                  sys.exit(1)
+              if not has_uploader and external:
+                  print(
+                      "::warning::按 vars.CORP_UPDATE_EXTERNAL_UPLOAD=true 放行：本流水线不上传，"
+                      "请确认带外分发流程把 dist/ 放到了 " + base
                   )
               base = f"{base}/{tag}"                                   # 方式 B：自建分发
           else:
@@ -933,6 +953,68 @@ jobs:
           #   aws s3 cp "dist/latest-${CORP_ID}.json" "s3://corp-openworker/latest-${CORP_ID}.json" \
           #     --endpoint-url "$S3_ENDPOINT" --cache-control no-cache
           #   （清单一定要 no-cache，否则 CDN 缓存会让客户端看不到新版本）
+
+      # 上传成功 ≠ 客户端读得到。
+      # `wrangler r2 object put` 成功只证明"写进了桶"，与"自定义域绑没绑到这个桶"
+      # 是两件完全独立的事。没有这一步，下面这个场景会全程绿灯：
+      #   有人在 Cloudflare 控制台重建了桶、或改了 dl.<域> 的 Custom Domain 绑定，
+      #   桶名和 token 都没变 → 每条 put 照常 exit 0 → Release 建好 → workflow 全绿，
+      #   而所有已安装的客户端从此拉不到清单。
+      # 客户端侧同样无声：Rust 侧只往应用日志写一行 error，而 surfaces/gui/src/tauri.ts
+      # 的 invoke() 用 `catch { return null; }` 把"拉不到"和"已是最新"合并成同一个返回值，
+      # 用户点「检查更新」看到的是"已是最新版"。
+      # 也就是说：不在 CI 里断言，这条链路断了之后不会有任何人、任何地方收到信号。
+      - name: 回读校验：客户端真的能拿到刚发布的清单（方式 B）
+        if: >-
+          needs.preflight.outputs.signed == 'true'
+          && vars.CORP_UPDATE_BASE_URL != ''
+          && (vars.CORP_R2_BUCKET != '' || vars.CORP_UPDATE_UPLOAD_URL != '')
+        env:
+          BASE_URL: ${{ vars.CORP_UPDATE_BASE_URL }}
+        run: |
+          set -euo pipefail
+          manifest="${BASE_URL%/}/latest-${CORP_ID}.json"
+
+          # 写入到自定义域可见之间有短暂延迟（verify-update-channel.yml 实测需要重试），
+          # 直接一发断言会引入偶发假红。
+          code=000
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -sS -o "$RUNNER_TEMP/got.json" -w '%{http_code}' "$manifest" || echo 000)
+            [ "${code}" = "200" ] && break
+            echo "  第 ${i} 次：HTTP ${code}，2 秒后重试"
+            sleep 2
+          done
+          if [ "${code}" != "200" ]; then
+            echo "::error::清单已上传，但客户端读不到：${manifest}（HTTP ${code}）"
+            echo "多半是 ${BASE_URL} 没有绑到实际写入的那个桶/目录上。"
+            exit 1
+          fi
+
+          # 只比 200 不够：域指向了另一个桶时照样 200，只是内容是别人的、或是上一版的。
+          # 必须断言版本号 —— 这一条同时兜住 CDN 把旧清单缓存住的情况。
+          got=$(python3 -c "import io,json,sys; print(json.load(io.open(sys.argv[1],encoding='utf-8')).get('version',''))" "$RUNNER_TEMP/got.json")
+          if [ "${got}" != "${VERSION}" ]; then
+            echo "::error::读回的清单版本是 ${got}，本次发布的是 ${VERSION}。"
+            echo "要么 ${BASE_URL} 指向的不是本次写入的桶，要么 CDN 缓存住了旧清单"
+            echo "（清单上传时已带 no-cache，若仍命中缓存请检查域上的缓存规则）。"
+            cat "$RUNNER_TEMP/got.json" || true
+            exit 1
+          fi
+
+          # 清单里每个平台的下载地址也要真的可达，否则 updater 拿到清单却下不动包。
+          python3 -c "import io,json,sys; [print(p['url']) for p in json.load(io.open(sys.argv[1],encoding='utf-8'))['platforms'].values()]" \
+            "$RUNNER_TEMP/got.json" > "$RUNNER_TEMP/urls.txt"
+          while read -r u; do
+            [ -n "$u" ] || continue
+            c=$(curl -sS -o /dev/null -w '%{http_code}' -I "$u" || echo 000)
+            if [ "${c}" != "200" ]; then
+              echo "::error::清单里的下载地址不可达：${u}（HTTP ${c}）"
+              exit 1
+            fi
+            echo "  ✓ ${u}"
+          done < "$RUNNER_TEMP/urls.txt"
+
+          echo "✓ 客户端可以读到 ${VERSION} 的清单，且每个平台的包都可下载"
 
       - name: 回写站内兜底清单到 enterprise/site（可选）
         # 对应样板里"更新 main 分支的 releases/latest-zh.json"那一步。
