@@ -1,9 +1,10 @@
 # OpenWorker 中文站周报
 
-生成时间：2026-09-02T15:50:46Z
+生成时间：2026-09-02T15:51:21Z
 
 ## 本周概览
 
+- 2026-09-02 8d007b2 docs: refresh generated site reports
 - 2026-09-02 3be469e fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果
 - 2026-08-31 f4ef37f docs: refresh generated site reports
 

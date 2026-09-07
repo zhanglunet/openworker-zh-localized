@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-09-02T15:50:46Z",
+  "generatedAt": "2026-09-02T15:51:21Z",
   "branch": "main",
-  "head": "3be469ef2e5871612b19e8d00e90d6043fbee450",
-  "shortHead": "3be469e",
+  "head": "8d007b250530f52926ad783d8aa617123b9bbbc5",
+  "shortHead": "8d007b2",
   "totalFiles": 602,
   "byExt": [
     {
@@ -362,6 +362,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "8d007b2",
+      "date": "2026-09-02",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "3be469e",
       "date": "2026-09-02",
       "subject": "fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果"
@@ -415,14 +420,14 @@ export const repoReport = {
       "hash": "c68e903",
       "date": "2026-08-06",
       "subject": "fix(site): 免责声明里企业名两侧的空格 —— \"非 亚信 官方发布\""
-    },
-    {
-      "hash": "3aaa1f1",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "8d007b2",
+      "date": "2026-09-02",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "3be469e",
       "date": "2026-09-02",
