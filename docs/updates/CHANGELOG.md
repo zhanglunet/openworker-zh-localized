@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-09-02T15:51:21Z
+更新时间：2026-09-07T06:09:22Z
 
 ## 最近提交
 
+- 2026-09-07 35fb45b docs: refresh generated site reports
 - 2026-09-02 8d007b2 docs: refresh generated site reports
 - 2026-09-02 3be469e fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果
 - 2026-08-31 f4ef37f docs: refresh generated site reports
@@ -15,4 +16,3 @@
 - 2026-08-06 9d69dad docs: refresh generated site reports
 - 2026-08-06 057bbea feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线
 - 2026-08-06 ec04f81 docs: refresh generated site reports
-- 2026-08-06 c68e903 fix(site): 免责声明里企业名两侧的空格 —— "非 亚信 官方发布"
