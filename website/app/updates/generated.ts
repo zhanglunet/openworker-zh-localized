@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-09-07T06:09:22Z",
+  "generatedAt": "2026-09-14T06:21:56Z",
   "branch": "main",
-  "head": "35fb45b890bb8300001ac1ee6b16684e7c5d2a5e",
-  "shortHead": "35fb45b",
+  "head": "1c3664f8fd9434daa7310c4d6ba3aae568378c85",
+  "shortHead": "1c3664f",
   "totalFiles": 602,
   "byExt": [
     {
@@ -362,6 +362,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "1c3664f",
+      "date": "2026-09-14",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "35fb45b",
       "date": "2026-09-07",
       "subject": "docs: refresh generated site reports"
@@ -415,11 +420,6 @@ export const repoReport = {
       "hash": "057bbea",
       "date": "2026-08-06",
       "subject": "feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线"
-    },
-    {
-      "hash": "ec04f81",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": []

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-09-07T06:09:22Z
+更新时间：2026-09-14T06:21:56Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：35fb45b890bb8300001ac1ee6b16684e7c5d2a5e
+当前提交：1c3664f8fd9434daa7310c4d6ba3aae568378c85
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：602
-- 当前提交：35fb45b
+- 当前提交：1c3664f
 - 主要文件类型：
   - py: 263
   - ts: 105
@@ -231,6 +231,7 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-09-14 1c3664f docs: refresh generated site reports
 - 2026-09-07 35fb45b docs: refresh generated site reports
 - 2026-09-02 8d007b2 docs: refresh generated site reports
 - 2026-09-02 3be469e fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果
@@ -242,4 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-08-06 b2d490d fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的
 - 2026-08-06 9d69dad docs: refresh generated site reports
 - 2026-08-06 057bbea feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线
-- 2026-08-06 ec04f81 docs: refresh generated site reports
