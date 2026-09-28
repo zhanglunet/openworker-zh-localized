@@ -1,9 +1,10 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-09-14T06:21:56Z
+更新时间：2026-09-21T06:25:06Z
 
 ## 最近提交
 
+- 2026-09-21 b60814a docs: refresh generated site reports
 - 2026-09-14 1c3664f docs: refresh generated site reports
 - 2026-09-07 35fb45b docs: refresh generated site reports
 - 2026-09-02 8d007b2 docs: refresh generated site reports
@@ -15,4 +16,3 @@
 - 2026-08-06 0f913c3 docs: refresh generated site reports
 - 2026-08-06 b2d490d fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的
 - 2026-08-06 9d69dad docs: refresh generated site reports
-- 2026-08-06 057bbea feat(release): 方式 B 补 R2 上传路径 + 新增更新源端到端验证流水线
