@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-09-28T06:59:09Z",
+  "generatedAt": "2026-10-05T07:06:53Z",
   "branch": "main",
-  "head": "1f3150475aaf8d05059aeaea65dbd7b68ab88dc7",
-  "shortHead": "1f31504",
+  "head": "3aae39b530b3e5b61801b54a9cd1483ee91ed13d",
+  "shortHead": "3aae39b",
   "totalFiles": 602,
   "byExt": [
     {
@@ -362,6 +362,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "3aae39b",
+      "date": "2026-10-05",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "1f31504",
       "date": "2026-09-28",
       "subject": "docs: refresh generated site reports"
@@ -415,11 +420,6 @@ export const repoReport = {
       "hash": "0f913c3",
       "date": "2026-08-06",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b2d490d",
-      "date": "2026-08-06",
-      "subject": "fix(release): 发布权限预检 —— 别在构建完 20 分钟后才发现 token 是只读的"
     }
   ],
   "weeklyCommits": []
