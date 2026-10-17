@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-17T15:53:21+08:00",
+  "generatedAt": "2026-10-17T15:54:49+08:00",
   "branch": "main",
-  "head": "b8c055bc33c951ee9303cde9d84cf2bbb38413e5",
-  "shortHead": "b8c055b",
-  "totalFiles": 609,
+  "head": "0cdb8bd956e1188092744bbaf1b3e29733921c61",
+  "shortHead": "0cdb8bd",
+  "totalFiles": 612,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 34
+      "count": 37
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 64
+      "count": 67
     },
     {
       "name": "website",
@@ -366,9 +366,39 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "0cdb8bd",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T4 部署章节正文 (#10)"
+    },
+    {
+      "hash": "a0da1b6",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T3 三仓同步章节正文 (#8)"
+    },
+    {
+      "hash": "6868257",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T2 换肤打包章节正文 (#9)"
+    },
+    {
+      "hash": "be43494",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "b8c055b",
       "date": "2026-10-17",
       "subject": "docs: PRD-029/T3 汉化 diff 报告模板 (#11)"
+    },
+    {
+      "hash": "87358ba",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（对应表版本号注明为 version 非 tag）"
+    },
+    {
+      "hash": "e5aa520",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（macos-15-intel 可用性以 GitHub 公告为准）"
     },
     {
       "hash": "492f514",
@@ -394,43 +424,43 @@ export const repoReport = {
       "hash": "c96e33e",
       "date": "2026-10-17",
       "subject": "fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）"
-    },
-    {
-      "hash": "5c4eb16",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T2 上游变更检测方案（设计稿+检测脚本草稿）"
-    },
-    {
-      "hash": "86dbfe8",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "8628a7e",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲 (#6)"
-    },
-    {
-      "hash": "2c46738",
-      "date": "2026-10-17",
-      "subject": "docs: 填实 PRD-030/T1 playbook 章节↔docs/enterprise/ 文件对应关系"
-    },
-    {
-      "hash": "cf7aabe",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b0e4242",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T1 上游同步策略 (#5)"
     }
   ],
   "weeklyCommits": [
     {
+      "hash": "0cdb8bd",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T4 部署章节正文 (#10)"
+    },
+    {
+      "hash": "a0da1b6",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T3 三仓同步章节正文 (#8)"
+    },
+    {
+      "hash": "6868257",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T2 换肤打包章节正文 (#9)"
+    },
+    {
+      "hash": "be43494",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "b8c055b",
       "date": "2026-10-17",
       "subject": "docs: PRD-029/T3 汉化 diff 报告模板 (#11)"
+    },
+    {
+      "hash": "87358ba",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（对应表版本号注明为 version 非 tag）"
+    },
+    {
+      "hash": "e5aa520",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（macos-15-intel 可用性以 GitHub 公告为准）"
     },
     {
       "hash": "492f514",
@@ -456,6 +486,21 @@ export const repoReport = {
       "hash": "c96e33e",
       "date": "2026-10-17",
       "subject": "fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）"
+    },
+    {
+      "hash": "0c7d5dd",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T4 部署章节正文"
+    },
+    {
+      "hash": "0c23a90",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T2 换肤打包章节正文"
+    },
+    {
+      "hash": "1fba9a3",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T3 三仓同步章节正文"
     },
     {
       "hash": "5c4eb16",

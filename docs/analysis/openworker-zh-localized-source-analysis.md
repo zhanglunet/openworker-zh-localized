@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-17T15:53:21+08:00
+更新时间：2026-10-17T15:54:49+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：b8c055bc33c951ee9303cde9d84cf2bbb38413e5
+当前提交：0cdb8bd956e1188092744bbaf1b3e29733921c61
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：609
-- 当前提交：b8c055b
+- 跟踪文件总数：612
+- 当前提交：0cdb8bd
 - 主要文件类型：
   - py: 265
   - ts: 105
   - tsx: 79
-  - md: 34
+  - md: 37
   - svg: 23
   - png: 22
   - json: 17
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 64 个文件
+- docs: 67 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -232,15 +232,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-17 0cdb8bd docs: PRD-030/T4 部署章节正文 (#10)
+- 2026-10-17 a0da1b6 docs: PRD-030/T3 三仓同步章节正文 (#8)
+- 2026-10-17 6868257 docs: PRD-030/T2 换肤打包章节正文 (#9)
+- 2026-10-17 be43494 docs: refresh generated site reports
 - 2026-10-17 b8c055b docs: PRD-029/T3 汉化 diff 报告模板 (#11)
+- 2026-10-17 87358ba fix: 评审修订（对应表版本号注明为 version 非 tag）
+- 2026-10-17 e5aa520 fix: 评审修订（macos-15-intel 可用性以 GitHub 公告为准）
 - 2026-10-17 492f514 fix: 评审修订（示例 P0 口径、渲染器 additions 判定、模板 P0 来源）
 - 2026-10-17 a3dc967 docs: PRD-029/T3 汉化 diff 报告模板（模板说明+渲染器+真实示例）
 - 2026-10-17 f602080 docs: refresh generated site reports
 - 2026-10-17 2af441a docs: PRD-029/T2 上游变更检测方案 (#7)
 - 2026-10-17 c96e33e fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）
-- 2026-10-17 5c4eb16 docs: PRD-029/T2 上游变更检测方案（设计稿+检测脚本草稿）
-- 2026-10-17 86dbfe8 docs: refresh generated site reports
-- 2026-10-17 8628a7e docs: PRD-030/T1 企业定制版 playbook 大纲 (#6)
-- 2026-10-17 2c46738 docs: 填实 PRD-030/T1 playbook 章节↔docs/enterprise/ 文件对应关系
-- 2026-10-17 cf7aabe docs: refresh generated site reports
-- 2026-10-17 b0e4242 docs: PRD-029/T1 上游同步策略 (#5)
