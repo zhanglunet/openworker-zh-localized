@@ -72,6 +72,8 @@ git checkout -b corp/init && git add -A && git commit -m "corp: 初始化企业�
 
 ## 3. 企业站部署（两种形态选一）
 
+> 本节已被 playbook 第 3 章（部署）引用为"企业下载站搭建与发布"的执行步骤，playbook 版见 `docs/plans/2026-10-17-playbook-ch3-deploy.md` §2.3。
+
 现状参考：oaosf.cn 站点源码在 `website/`（Next.js 16 由 vinext 适配 Cloudflare Workers，wrangler 部署，`scripts/generate-site-reports.mjs` 从仓库 git 数据与 `docs/` 生成分析/更新页内容）。
 
 ### 形态 A：公网企业站（`enterprise/site` + Cloudflare Workers）✅**已交付**
@@ -426,6 +428,8 @@ audit_forward_timeout = 5
 
 ## 6. 桌面端构建、签名与分发
 
+> 本节已被 playbook 第 3 章引用为"构建、签名与发布"的执行步骤，playbook 版见 `docs/plans/2026-10-17-playbook-ch3-deploy.md` §2.2。
+
 按 [BRANDING_PACKAGING.md](BRANDING_PACKAGING.md) 完成品牌化后：
 
 1. 配置企业仓 Secrets：`APPLE_CERTIFICATE(_PASSWORD)`、`APPLE_SIGNING_IDENTITY`、`APPLE_API_KEY(_CONTENT)`、`APPLE_API_ISSUER`、`TAURI_SIGNING_PRIVATE_KEY(_PASSWORD)`（详细流程照 `docs/release-signed-updates.md`）
@@ -435,6 +439,8 @@ audit_forward_timeout = 5
 5. 分发：企业站自助下载 + IT MDM 批量安装（macOS PKG 可由 DMG 内 .app 二次封装，Windows 用 MSI 静默参数）
 
 ## 7. 上线验收清单
+
+> 本节已被 playbook 第 3 章引用为"回滚方案"，playbook 版见 `docs/plans/2026-10-17-playbook-ch3-deploy.md` §2.5。
 
 - [ ] 同步演练：汉化仓出新提交 → 企业仓次日收到同步 PR → CI 冒烟绿 → 合并后企业定制全部存活
 - [ ] 断公网验收：仅内网环境完成对话、技能调用、表格分析、知识库检索

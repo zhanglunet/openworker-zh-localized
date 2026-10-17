@@ -27,7 +27,8 @@
 1. **Bundle ID 定死**：`tauri.conf.json → identifier`（如 `com.<corp>.openworker`）。
    macOS 会把不同 Bundle ID 视为不同 App，状态目录与已装旧版不互通——**首个企业版就必须定妥**，之后再改等于让用户重装。
 2. **侧栏「OpenWorker Cloud」登录入口去留**：企业版通常应隐藏该入口并置空 `cloud_relay_ws_url`
-   （`Sidebar.tsx`，对应 `config.toml` 的 `cloud_*` 键），或替换为企业自建云中转。
+   （入口组件在 `surfaces/gui/src/components/Sidebar.tsx`；`cloud_*` 键在**运行时**
+   应用 state 目录的 `config.toml` 里，仓库内无此文件，不要满仓库找），或替换为企业自建云中转。
 
 素材确认：Logo 源图尺寸/透明底、免责声明文案终稿（见 §2.5）、企业色两套色值齐全。
 
@@ -94,7 +95,7 @@ html[data-theme="dark"] {
 1. `Info.plist`：各 `NSUsageDescription` 替换产品名（已中文化，只换名）。
 2. `surfaces/gui/src-tauri/src/lib.rs`：替换其中「OpenWorker」字样（托盘菜单/更新提示文案）。
 3. `surfaces/gui/index.html`：`<title>`（现仍为 `OpenWorker`），`lang="en"` 一并改 `zh-CN`。
-4. `Sidebar.tsx`（侧栏品牌名 + BETA 徽章）、`App.tsx` 启动屏词标、`Onboarding.tsx` 欢迎语。
+4. `surfaces/gui/src/components/Sidebar.tsx`（侧栏品牌名 + BETA 徽章）、`surfaces/gui/src/App.tsx` 启动屏词标、`surfaces/gui/src/components/Onboarding.tsx` 欢迎语。
 5. `Icon.tsx` 中 `logo` 分支的 SVG path：换企业 Logo 图形。
 6. DMG 背景图：`packaging/dmg-background.png`（`@2x.png` / `.tiff`）换企业视觉版。
 7. 全局搜「OpenWorker」替换品牌词。**不建议大面积改功能文案**：界面中文是直接写在组件里的
@@ -222,7 +223,8 @@ Windows hosted runner（`.gitlab-ci.yml`，见 `docs/windows-gitlab-ci.md`）。
       DMG 背景已品牌化；`theme.css` 亮/暗两套变量齐全，暗色模式下对比度可读；
       全量 UI 走查一遍，无英文残留、无占位符（`humanize.ts` 补译已包含）。
 - [ ] **更新源对**：grep 确认 updater `endpoints` + `pubkey` 为企业值，
-      无 `zhanglunet` / 汉化版公钥残留；默认 `config.toml` 指向企业模型端点，无公网模型默认项。
+      无 `zhanglunet` / 汉化版公钥残留；运行时 `config.toml`（应用 state 目录，非仓库文件）
+      指向企业模型端点，无公网模型默认项。
 - [ ] **功能一致**：与基线汉化版同版本功能一致（换肤只换品牌，不动功能）。
 - [ ] **自动更新全链路演练通过**（旧版 → 新版，签名校验通过）——T5 走查时做。
 - [ ] **LICENSE/NOTICE 保留上游 MIT 声明**。
