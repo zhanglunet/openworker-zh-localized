@@ -149,7 +149,7 @@ openworker-enterprise README 顶部的标准文案，企业版直接沿用（换
 | 平台 | Runner | 产物 |
 |---|---|---|
 | macOS Apple Silicon | `macos-latest` | `.dmg` + `.app.tar.gz`（+`.sig`）|
-| macOS Intel | `macos-15-intel`（Actions 提供至 2027-08）| `.dmg` + `.app.tar.gz`（+`.sig`）|
+| macOS Intel | `macos-15-intel`（以 GitHub 公告的可用性为准）| `.dmg` + `.app.tar.gz`（+`.sig`）|
 | Windows 10/11 x64 | `windows-latest` | NSIS `…-setup.exe`（currentUser 装机）+ `.msi` |
 
 > 双包分发说明：macOS 维持"双包"（arm64/x64 各一包，网站按芯片给下载链接），
