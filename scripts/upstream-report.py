@@ -57,7 +57,7 @@ def render_matrix(files):
 
 def workload(files):
     sens = [f for f in files if f.get("sensitive")]
-    if any("additions" in f for f in files):
+    if any("additions" in f for f in sens):
         new_lines = sum(f.get("additions", 0) for f in sens)
         basis = "compare API 的 additions 字段（新增行数≈新增字符串数）"
     else:
