@@ -17,7 +17,8 @@
 | 0.1.7-corp.3 | v0.1.7 | andrewyng/openworker vX.Y.Z | abc1234 | 2026-10-20 | 张三 |
 
 版本规则（UPSTREAM_SYNC §3.3）：企业版本号 = `<汉化版基线>-corp.<n>`，
-如 `0.1.7-corp.3`；tag 触发企业发布流水线。每次合并同步 PR 后，
+如 `0.1.7-corp.3`；tag 触发企业发布流水线。此处是 `tauri.conf.json` 里的
+version，不是 tag（tag 格式见 playbook 第 1 章 §3.1 的 `corp-vX.Y.Z`）。每次合并同步 PR 后，
 在 PR 描述里记录消化到的汉化版 SHA，便于追溯"企业版含上游哪一天的功能"。
 
 ## 2. 三仓定义与代码流向（UPSTREAM_SYNC §1）
