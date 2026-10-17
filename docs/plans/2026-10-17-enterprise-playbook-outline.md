@@ -8,15 +8,17 @@
 目标读者：下一次企业换肤打包的执行人（可能是第一次干这活的人）。
 使用方式：按章节顺序走，每章的"检查清单"全勾才能进下一章。
 
-| 章 | 名称 | 对应现有文档（`docs/enterprise/`） |
+| 章 | 名称 | 对应现有文档（`docs/enterprise/`，2026-10-17 已按实际文件逐份核对） |
 |---|---|---|
-| 1 | 换肤打包 | 换肤打包相关文档 |
-| 2 | 三仓同步 | 三仓同步相关文档 |
-| 3 | 部署 | 部署相关文档 |
+| 1 | 换肤打包 | `BRANDING_PACKAGING.md`（§1 换肤：主题体系/皮肤包/品牌清单；§2 多平台打包/签名公证/自动更新改源） |
+| 2 | 三仓同步 | `UPSTREAM_SYNC.md`（三仓关系/目录隔离/同步流水线/版本标签/冒烟测试）；汉化版↔上游对应关系输入侧衔接 PRD-029 同步报告 |
+| 3 | 部署 | `DEPLOYMENT.md`（前置准备/私有仓建立/同步流水线部署/企业站部署） |
+| — | 背景/索引（不单独成章） | `README.md`（文档导览）、`PRD.md`（定制能力全景）、`DEV_PLAN.md`（里程碑）、`CONNECTOR_GUIDE.md`（内部系统接入；第 1 章引用作定制范围背景） |
+| — | 可执行模板 | `templates/`：`release-corp.yml`（第 1 章）、`sync-localized.yml` + `test_enterprise_customization.py`（第 2 章）、`deploy-corp-site.yml` + `init-enterprise-repo.sh`（第 3 章） |
 
-> 注：上表"对应现有文档"列为占位——T1 起草时未逐份打开核对。T2–T4 动笔前必须先盘点
-> `docs/enterprise/` 实际文件清单，把"第 X 章 ↔ 具体文件名"一一对应上；
-> 若发现现有文档与 openworker-enterprise 现状不一致，先在走查报告里标注，不在本大纲里假设。
+> 注：上表已按 `docs/enterprise/` 实际文件清单（7 文件 + `templates/`）逐份打开核对。
+> T2–T4 写正文时若发现文档内容与 openworker-enterprise 现状不一致，先在走查报告里标注，
+> 不在本大纲里假设。
 
 ## 第 1 章：换肤打包
 
