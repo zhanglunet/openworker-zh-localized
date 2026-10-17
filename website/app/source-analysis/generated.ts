@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-17T14:33:10+08:00",
+  "generatedAt": "2026-10-17T14:46:28+08:00",
   "branch": "main",
-  "head": "8628a7e3b34904f40ebf165f8319c1ab54e0d705",
-  "shortHead": "8628a7e",
-  "totalFiles": 604,
+  "head": "2af441ac63ebca3b1d043cd0054fc9088443dacd",
+  "shortHead": "2af441a",
+  "totalFiles": 606,
   "byExt": [
     {
       "name": "py",
-      "count": 263
+      "count": 264
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 31
+      "count": 32
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 61
+      "count": 62
     },
     {
       "name": "website",
@@ -141,6 +141,10 @@ export const repoReport = {
     },
     {
       "name": "README.md",
+      "count": 1
+    },
+    {
+      "name": "scripts",
       "count": 1
     },
     {
@@ -362,6 +366,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "2af441a",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T2 上游变更检测方案 (#7)"
+    },
+    {
+      "hash": "c96e33e",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）"
+    },
+    {
+      "hash": "5c4eb16",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T2 上游变更检测方案（设计稿+检测脚本草稿）"
+    },
+    {
+      "hash": "86dbfe8",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "8628a7e",
       "date": "2026-10-17",
       "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲 (#6)"
@@ -400,29 +424,29 @@ export const repoReport = {
       "hash": "d5ca572",
       "date": "2026-10-12",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3aae39b",
-      "date": "2026-10-05",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1f31504",
-      "date": "2026-09-28",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b60814a",
-      "date": "2026-09-21",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1c3664f",
-      "date": "2026-09-14",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "2af441a",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T2 上游变更检测方案 (#7)"
+    },
+    {
+      "hash": "c96e33e",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）"
+    },
+    {
+      "hash": "5c4eb16",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T2 上游变更检测方案（设计稿+检测脚本草稿）"
+    },
+    {
+      "hash": "86dbfe8",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "8628a7e",
       "date": "2026-10-17",
