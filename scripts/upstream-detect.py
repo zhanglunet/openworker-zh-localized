@@ -28,6 +28,7 @@ API = "https://api.github.com"
 # 汉化敏感区（owzh 实际结构，2026-10-17 已核对；T1 稿的 locales//i18n/ 写法作废）
 SENSITIVE_PREFIXES = ("surfaces/gui/src/", "docs/", "website/")
 SENSITIVE_EXCLUDE = ("docs/plans/",)  # 本项目工作稿，不计汉化工作量
+SENSITIVE_EXCLUDE_SUFFIXES = (".test.tsx", ".test.ts")  # T5 复盘建议②：测试断言的英文不需要重翻，计入 P0 是噪音
 P0_PREFIXES = ("surfaces/gui/src/",)  # 用户看得见的 UI 字符串
 L2_STALE_DAYS = 90  # T1 修订：L2 连续 3 个月无更新则降级只看 L1
 MONITOR_REVIEW_DAYS = 90  # PRD 风险：监控清单每季度复核
@@ -50,6 +51,8 @@ def gh_get(path, token):
 def is_sensitive(path):
     if path.startswith(SENSITIVE_EXCLUDE):
         return False
+    if path.endswith(SENSITIVE_EXCLUDE_SUFFIXES):
+        return False
     return path.startswith(SENSITIVE_PREFIXES)
 
 
@@ -65,7 +68,11 @@ def classify(files, layer):
                   "removed": "removed"}.get(status, "modified")  # renamed 等按 modified
         path = f["filename"]
         out.append({"path": path, "change": change,
-                    "sensitive": is_sensitive(path), "layer": layer})
+                    "sensitive": is_sensitive(path), "layer": layer,
+                    # T5 复盘建议①：compare API 本来就返回 additions/deletions，
+                    # 带上后渲染器永远走真实口径，不再需要回退估算
+                    "additions": f.get("additions", 0),
+                    "deletions": f.get("deletions", 0)})
     return out
 
 
