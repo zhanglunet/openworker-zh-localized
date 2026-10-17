@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-17T14:29:05+08:00
+更新时间：2026-10-17T14:33:10+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：b0e4242d952d4c93475f6862060b50af38dc9f38
+当前提交：8628a7e3b34904f40ebf165f8319c1ab54e0d705
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：603
-- 当前提交：b0e4242
+- 跟踪文件总数：604
+- 当前提交：8628a7e
 - 主要文件类型：
   - py: 263
   - ts: 105
   - tsx: 79
-  - md: 30
+  - md: 31
   - svg: 23
   - png: 22
   - json: 17
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 60 个文件
+- docs: 61 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,15 +231,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-17 8628a7e docs: PRD-030/T1 企业定制版 playbook 大纲 (#6)
+- 2026-10-17 2c46738 docs: 填实 PRD-030/T1 playbook 章节↔docs/enterprise/ 文件对应关系
+- 2026-10-17 cf7aabe docs: refresh generated site reports
 - 2026-10-17 b0e4242 docs: PRD-029/T1 上游同步策略 (#5)
 - 2026-10-17 89dba93 docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）
+- 2026-10-17 dff313e docs: PRD-030/T1 企业定制版 playbook 大纲
 - 2026-10-17 4cb7064 docs: PRD-029/T1 上游同步策略
 - 2026-10-12 d5ca572 docs: refresh generated site reports
 - 2026-10-05 3aae39b docs: refresh generated site reports
 - 2026-09-28 1f31504 docs: refresh generated site reports
 - 2026-09-21 b60814a docs: refresh generated site reports
 - 2026-09-14 1c3664f docs: refresh generated site reports
-- 2026-09-07 35fb45b docs: refresh generated site reports
-- 2026-09-02 8d007b2 docs: refresh generated site reports
-- 2026-09-02 3be469e fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果
-- 2026-08-31 f4ef37f docs: refresh generated site reports

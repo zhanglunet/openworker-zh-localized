@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-17T14:29:05+08:00",
+  "generatedAt": "2026-10-17T14:33:10+08:00",
   "branch": "main",
-  "head": "b0e4242d952d4c93475f6862060b50af38dc9f38",
-  "shortHead": "b0e4242",
-  "totalFiles": 603,
+  "head": "8628a7e3b34904f40ebf165f8319c1ab54e0d705",
+  "shortHead": "8628a7e",
+  "totalFiles": 604,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 30
+      "count": 31
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 60
+      "count": 61
     },
     {
       "name": "website",
@@ -362,6 +362,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "8628a7e",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲 (#6)"
+    },
+    {
+      "hash": "2c46738",
+      "date": "2026-10-17",
+      "subject": "docs: 填实 PRD-030/T1 playbook 章节↔docs/enterprise/ 文件对应关系"
+    },
+    {
+      "hash": "cf7aabe",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "b0e4242",
       "date": "2026-10-17",
       "subject": "docs: PRD-029/T1 上游同步策略 (#5)"
@@ -370,6 +385,11 @@ export const repoReport = {
       "hash": "89dba93",
       "date": "2026-10-17",
       "subject": "docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）"
+    },
+    {
+      "hash": "dff313e",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲"
     },
     {
       "hash": "4cb7064",
@@ -400,29 +420,24 @@ export const repoReport = {
       "hash": "1c3664f",
       "date": "2026-09-14",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "35fb45b",
-      "date": "2026-09-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "8d007b2",
-      "date": "2026-09-02",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3be469e",
-      "date": "2026-09-02",
-      "subject": "fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果"
-    },
-    {
-      "hash": "f4ef37f",
-      "date": "2026-08-31",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "8628a7e",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲 (#6)"
+    },
+    {
+      "hash": "2c46738",
+      "date": "2026-10-17",
+      "subject": "docs: 填实 PRD-030/T1 playbook 章节↔docs/enterprise/ 文件对应关系"
+    },
+    {
+      "hash": "cf7aabe",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "b0e4242",
       "date": "2026-10-17",
@@ -432,6 +447,11 @@ export const repoReport = {
       "hash": "89dba93",
       "date": "2026-10-17",
       "subject": "docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）"
+    },
+    {
+      "hash": "dff313e",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲"
     },
     {
       "hash": "4cb7064",
