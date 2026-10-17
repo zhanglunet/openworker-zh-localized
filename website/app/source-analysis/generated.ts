@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-10-17T16:18:32+08:00",
+  "generatedAt": "2026-10-17T16:42:46+08:00",
   "branch": "main",
-  "head": "9d2cbf81c25badd0aa3ad9bb57009325cb25dc09",
-  "shortHead": "9d2cbf8",
+  "head": "dd3b1cb92f66d5bfe31ca6acf6c26fa5a74fa0df",
+  "shortHead": "dd3b1cb",
   "totalFiles": 615,
   "byExt": [
     {
@@ -366,6 +366,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "dd3b1cb",
+      "date": "2026-10-17",
+      "subject": "feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)"
+    },
+    {
+      "hash": "7630087",
+      "date": "2026-10-17",
+      "subject": "feat: T5 复盘建议①②（classify 透出 additions/deletions；敏感区排除测试文件）"
+    },
+    {
+      "hash": "cf1d84e",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "9d2cbf8",
       "date": "2026-10-17",
       "subject": "docs: PRD-030/T5 定稿与换肤走查 (#14)"
@@ -409,24 +424,24 @@ export const repoReport = {
       "hash": "0cdb8bd",
       "date": "2026-10-17",
       "subject": "docs: PRD-030/T4 部署章节正文 (#10)"
-    },
-    {
-      "hash": "a0da1b6",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T3 三仓同步章节正文 (#8)"
-    },
-    {
-      "hash": "6868257",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T2 换肤打包章节正文 (#9)"
-    },
-    {
-      "hash": "be43494",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "dd3b1cb",
+      "date": "2026-10-17",
+      "subject": "feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)"
+    },
+    {
+      "hash": "7630087",
+      "date": "2026-10-17",
+      "subject": "feat: T5 复盘建议①②（classify 透出 additions/deletions；敏感区排除测试文件）"
+    },
+    {
+      "hash": "cf1d84e",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "9d2cbf8",
       "date": "2026-10-17",

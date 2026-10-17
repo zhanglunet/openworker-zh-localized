@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-17T16:18:32+08:00
+更新时间：2026-10-17T16:42:46+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：9d2cbf81c25badd0aa3ad9bb57009325cb25dc09
+当前提交：dd3b1cb92f66d5bfe31ca6acf6c26fa5a74fa0df
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：615
-- 当前提交：9d2cbf8
+- 当前提交：dd3b1cb
 - 主要文件类型：
   - py: 265
   - ts: 105
@@ -232,6 +232,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-17 dd3b1cb feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)
+- 2026-10-17 7630087 feat: T5 复盘建议①②（classify 透出 additions/deletions；敏感区排除测试文件）
+- 2026-10-17 cf1d84e docs: refresh generated site reports
 - 2026-10-17 9d2cbf8 docs: PRD-030/T5 定稿与换肤走查 (#14)
 - 2026-10-17 dc56fa7 docs: PRD-029/T5 试运行复盘 (#13)
 - 2026-10-17 fe012b1 docs: PRD-029/T4 冲突分级 (#12)
@@ -241,6 +244,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-17 1a30d0a docs: PRD-029/T4 冲突分级、处理与回退
 - 2026-10-17 af681ab docs: refresh generated site reports
 - 2026-10-17 0cdb8bd docs: PRD-030/T4 部署章节正文 (#10)
-- 2026-10-17 a0da1b6 docs: PRD-030/T3 三仓同步章节正文 (#8)
-- 2026-10-17 6868257 docs: PRD-030/T2 换肤打包章节正文 (#9)
-- 2026-10-17 be43494 docs: refresh generated site reports
