@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-17T14:46:28+08:00",
+  "generatedAt": "2026-10-17T15:53:21+08:00",
   "branch": "main",
-  "head": "2af441ac63ebca3b1d043cd0054fc9088443dacd",
-  "shortHead": "2af441a",
-  "totalFiles": 606,
+  "head": "b8c055bc33c951ee9303cde9d84cf2bbb38413e5",
+  "shortHead": "b8c055b",
+  "totalFiles": 609,
   "byExt": [
     {
       "name": "py",
-      "count": 264
+      "count": 265
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 32
+      "count": 34
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 62
+      "count": 64
     },
     {
       "name": "website",
@@ -120,6 +120,10 @@ export const repoReport = {
       "count": 3
     },
     {
+      "name": "scripts",
+      "count": 2
+    },
+    {
       "name": ".gitignore",
       "count": 1
     },
@@ -141,10 +145,6 @@ export const repoReport = {
     },
     {
       "name": "README.md",
-      "count": 1
-    },
-    {
-      "name": "scripts",
       "count": 1
     },
     {
@@ -366,6 +366,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "b8c055b",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T3 汉化 diff 报告模板 (#11)"
+    },
+    {
+      "hash": "492f514",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（示例 P0 口径、渲染器 additions 判定、模板 P0 来源）"
+    },
+    {
+      "hash": "a3dc967",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T3 汉化 diff 报告模板（模板说明+渲染器+真实示例）"
+    },
+    {
+      "hash": "f602080",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "2af441a",
       "date": "2026-10-17",
       "subject": "docs: PRD-029/T2 上游变更检测方案 (#7)"
@@ -404,29 +424,29 @@ export const repoReport = {
       "hash": "b0e4242",
       "date": "2026-10-17",
       "subject": "docs: PRD-029/T1 上游同步策略 (#5)"
-    },
-    {
-      "hash": "89dba93",
-      "date": "2026-10-17",
-      "subject": "docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）"
-    },
-    {
-      "hash": "dff313e",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲"
-    },
-    {
-      "hash": "4cb7064",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T1 上游同步策略"
-    },
-    {
-      "hash": "d5ca572",
-      "date": "2026-10-12",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "b8c055b",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T3 汉化 diff 报告模板 (#11)"
+    },
+    {
+      "hash": "492f514",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（示例 P0 口径、渲染器 additions 判定、模板 P0 来源）"
+    },
+    {
+      "hash": "a3dc967",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T3 汉化 diff 报告模板（模板说明+渲染器+真实示例）"
+    },
+    {
+      "hash": "f602080",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "2af441a",
       "date": "2026-10-17",

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-17T14:46:28+08:00
+更新时间：2026-10-17T15:53:21+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：2af441ac63ebca3b1d043cd0054fc9088443dacd
+当前提交：b8c055bc33c951ee9303cde9d84cf2bbb38413e5
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：606
-- 当前提交：2af441a
+- 跟踪文件总数：609
+- 当前提交：b8c055b
 - 主要文件类型：
-  - py: 264
+  - py: 265
   - ts: 105
   - tsx: 79
-  - md: 32
+  - md: 34
   - svg: 23
   - png: 22
   - json: 17
@@ -39,20 +39,20 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 62 个文件
+- docs: 64 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
 - releases: 3 个文件
+- scripts: 2 个文件
 - .gitignore: 1 个文件
 - BUILD_LOG.md: 1 个文件
 - LICENSE: 1 个文件
 - openworker-zh-test-report.md: 1 个文件
 - pyproject.toml: 1 个文件
 - README.md: 1 个文件
-- scripts: 1 个文件
 - start-openworker-gui.sh: 1 个文件
 - start-openworker-server.sh: 1 个文件
 
@@ -232,6 +232,10 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-17 b8c055b docs: PRD-029/T3 汉化 diff 报告模板 (#11)
+- 2026-10-17 492f514 fix: 评审修订（示例 P0 口径、渲染器 additions 判定、模板 P0 来源）
+- 2026-10-17 a3dc967 docs: PRD-029/T3 汉化 diff 报告模板（模板说明+渲染器+真实示例）
+- 2026-10-17 f602080 docs: refresh generated site reports
 - 2026-10-17 2af441a docs: PRD-029/T2 上游变更检测方案 (#7)
 - 2026-10-17 c96e33e fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）
 - 2026-10-17 5c4eb16 docs: PRD-029/T2 上游变更检测方案（设计稿+检测脚本草稿）
@@ -240,7 +244,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-17 2c46738 docs: 填实 PRD-030/T1 playbook 章节↔docs/enterprise/ 文件对应关系
 - 2026-10-17 cf7aabe docs: refresh generated site reports
 - 2026-10-17 b0e4242 docs: PRD-029/T1 上游同步策略 (#5)
-- 2026-10-17 89dba93 docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）
-- 2026-10-17 dff313e docs: PRD-030/T1 企业定制版 playbook 大纲
-- 2026-10-17 4cb7064 docs: PRD-029/T1 上游同步策略
-- 2026-10-12 d5ca572 docs: refresh generated site reports
