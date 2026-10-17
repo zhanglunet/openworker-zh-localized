@@ -20,6 +20,8 @@ beta 期（上游 README 自述 open beta）默认走加密档；上游宣布 GA
 
 只看 L2 会漏掉"中转层还没跟上游"的窗口期；只看 L1 会把"中转层已处理"的变更重复算。报告里两层分开列。
 
+降级预案：若 L2（中转层）连续 3 个月无更新，视为停更，降级为只看 L1（直接跟踪上游），直至 L2 恢复更新。
+
 ## 3. 检测方式
 
 - GitHub API：`GET /repos/{owner}/{repo}/releases` 取 tag 列表；`GET /repos/{owner}/{repo}/compare/{base}...{head}` 取文件级 diff。
@@ -59,7 +61,7 @@ L1 与 L2 的变更分开两节列，末尾给一句话结论（如"L2 已同步
 
 ## 5. 告警与归档
 
-- 检测到 P0 变更：当天在 trend 仓库开一条同步 issue（标题格式 `上游同步 YYYY-MM：<一句话摘要>`），正文贴报告。
+- 检测到 P0 变更：当天在 openworker-zh-localized 仓库开一条同步 issue（标题格式：月度档 `上游同步 YYYY-MM：<一句话摘要>`；双周档 `上游同步 YYYY-MM-DD：<一句话摘要>`），正文贴报告。
 - 无 P0 变更：报告归档到 `docs/updates/`（与现有更新日志机制衔接），不打扰。
 - 每份报告保留 `last_synced_tag`/`last_synced_sha`，作为下次基线。
 
