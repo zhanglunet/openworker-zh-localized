@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-17T15:54:49+08:00",
+  "generatedAt": "2026-10-17T16:18:32+08:00",
   "branch": "main",
-  "head": "0cdb8bd956e1188092744bbaf1b3e29733921c61",
-  "shortHead": "0cdb8bd",
-  "totalFiles": 612,
+  "head": "9d2cbf81c25badd0aa3ad9bb57009325cb25dc09",
+  "shortHead": "9d2cbf8",
+  "totalFiles": 615,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 37
+      "count": 40
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 67
+      "count": 70
     },
     {
       "name": "website",
@@ -366,6 +366,46 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "9d2cbf8",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T5 定稿与换肤走查 (#14)"
+    },
+    {
+      "hash": "dc56fa7",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T5 试运行复盘 (#13)"
+    },
+    {
+      "hash": "fe012b1",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T4 冲突分级 (#12)"
+    },
+    {
+      "hash": "7446e58",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（回退演练改为下次试运行，T5 已跑完）"
+    },
+    {
+      "hash": "2ceba58",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T5 定稿与换肤走查（回指写回 + Acme 桌面推演 + 3 处修订）"
+    },
+    {
+      "hash": "2977a54",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T5 试运行复盘报告"
+    },
+    {
+      "hash": "1a30d0a",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T4 冲突分级、处理与回退"
+    },
+    {
+      "hash": "af681ab",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "0cdb8bd",
       "date": "2026-10-17",
       "subject": "docs: PRD-030/T4 部署章节正文 (#10)"
@@ -384,49 +424,49 @@ export const repoReport = {
       "hash": "be43494",
       "date": "2026-10-17",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b8c055b",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T3 汉化 diff 报告模板 (#11)"
-    },
-    {
-      "hash": "87358ba",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（对应表版本号注明为 version 非 tag）"
-    },
-    {
-      "hash": "e5aa520",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（macos-15-intel 可用性以 GitHub 公告为准）"
-    },
-    {
-      "hash": "492f514",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（示例 P0 口径、渲染器 additions 判定、模板 P0 来源）"
-    },
-    {
-      "hash": "a3dc967",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T3 汉化 diff 报告模板（模板说明+渲染器+真实示例）"
-    },
-    {
-      "hash": "f602080",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "2af441a",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T2 上游变更检测方案 (#7)"
-    },
-    {
-      "hash": "c96e33e",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "9d2cbf8",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T5 定稿与换肤走查 (#14)"
+    },
+    {
+      "hash": "dc56fa7",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T5 试运行复盘 (#13)"
+    },
+    {
+      "hash": "fe012b1",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T4 冲突分级 (#12)"
+    },
+    {
+      "hash": "7446e58",
+      "date": "2026-10-17",
+      "subject": "fix: 评审修订（回退演练改为下次试运行，T5 已跑完）"
+    },
+    {
+      "hash": "2ceba58",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-030/T5 定稿与换肤走查（回指写回 + Acme 桌面推演 + 3 处修订）"
+    },
+    {
+      "hash": "2977a54",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T5 试运行复盘报告"
+    },
+    {
+      "hash": "1a30d0a",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T4 冲突分级、处理与回退"
+    },
+    {
+      "hash": "af681ab",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "0cdb8bd",
       "date": "2026-10-17",
