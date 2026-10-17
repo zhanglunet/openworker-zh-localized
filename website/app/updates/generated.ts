@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-05T07:06:53Z",
+  "generatedAt": "2026-10-17T14:29:05+08:00",
   "branch": "main",
-  "head": "3aae39b530b3e5b61801b54a9cd1483ee91ed13d",
-  "shortHead": "3aae39b",
-  "totalFiles": 602,
+  "head": "b0e4242d952d4c93475f6862060b50af38dc9f38",
+  "shortHead": "b0e4242",
+  "totalFiles": 603,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 29
+      "count": 30
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 59
+      "count": 60
     },
     {
       "name": "website",
@@ -362,6 +362,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "b0e4242",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T1 上游同步策略 (#5)"
+    },
+    {
+      "hash": "89dba93",
+      "date": "2026-10-17",
+      "subject": "docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）"
+    },
+    {
+      "hash": "4cb7064",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T1 上游同步策略"
+    },
+    {
+      "hash": "d5ca572",
+      "date": "2026-10-12",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "3aae39b",
       "date": "2026-10-05",
       "subject": "docs: refresh generated site reports"
@@ -400,27 +420,28 @@ export const repoReport = {
       "hash": "f4ef37f",
       "date": "2026-08-31",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "dd21e4f",
-      "date": "2026-08-24",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "2504742",
-      "date": "2026-08-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1a9a1c7",
-      "date": "2026-08-10",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "0f913c3",
-      "date": "2026-08-06",
-      "subject": "docs: refresh generated site reports"
     }
   ],
-  "weeklyCommits": []
+  "weeklyCommits": [
+    {
+      "hash": "b0e4242",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T1 上游同步策略 (#5)"
+    },
+    {
+      "hash": "89dba93",
+      "date": "2026-10-17",
+      "subject": "docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）"
+    },
+    {
+      "hash": "4cb7064",
+      "date": "2026-10-17",
+      "subject": "docs: PRD-029/T1 上游同步策略"
+    },
+    {
+      "hash": "d5ca572",
+      "date": "2026-10-12",
+      "subject": "docs: refresh generated site reports"
+    }
+  ]
 } as const;

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-05T07:06:53Z
+更新时间：2026-10-17T14:29:05+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：3aae39b530b3e5b61801b54a9cd1483ee91ed13d
+当前提交：b0e4242d952d4c93475f6862060b50af38dc9f38
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：602
-- 当前提交：3aae39b
+- 跟踪文件总数：603
+- 当前提交：b0e4242
 - 主要文件类型：
   - py: 263
   - ts: 105
   - tsx: 79
-  - md: 29
+  - md: 30
   - svg: 23
   - png: 22
   - json: 17
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 59 个文件
+- docs: 60 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 7 个文件
@@ -231,6 +231,10 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-17 b0e4242 docs: PRD-029/T1 上游同步策略 (#5)
+- 2026-10-17 89dba93 docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）
+- 2026-10-17 4cb7064 docs: PRD-029/T1 上游同步策略
+- 2026-10-12 d5ca572 docs: refresh generated site reports
 - 2026-10-05 3aae39b docs: refresh generated site reports
 - 2026-09-28 1f31504 docs: refresh generated site reports
 - 2026-09-21 b60814a docs: refresh generated site reports
@@ -239,7 +243,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-09-02 8d007b2 docs: refresh generated site reports
 - 2026-09-02 3be469e fix(release): 补上三处「绿了但其实没验」的空转 —— 对抗审查结果
 - 2026-08-31 f4ef37f docs: refresh generated site reports
-- 2026-08-24 dd21e4f docs: refresh generated site reports
-- 2026-08-17 2504742 docs: refresh generated site reports
-- 2026-08-10 1a9a1c7 docs: refresh generated site reports
-- 2026-08-06 0f913c3 docs: refresh generated site reports
