@@ -1,4 +1,6 @@
 # 放到企业私有仓的 .github/workflows/release-corp.yml
+# playbook 第 1 章 §3 引用本文件为企业打包流水线的执行步骤规范（品牌挂载点清单见 playbook 第 1 章 §2）。
+# playbook 第 3 章 §2.2 引用本文件为发布流水线规范。
 #
 # 企业品牌桌面版发布流水线 —— macOS（Apple 芯片 arm64 + Intel x64）与 Windows。
 # 以汉化仓 .github/workflows/release.yml 为样板改造，改造点见下方"与样板的差异"。
