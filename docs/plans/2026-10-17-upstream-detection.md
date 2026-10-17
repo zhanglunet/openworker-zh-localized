@@ -29,7 +29,8 @@ python3 scripts/upstream-detect.py --state docs/upstream/sync-state.json --updat
 
 ### 1.1 L1 检测（andrewyng/openworker，源头）
 
-1. `GET /repos/andrewyng/openworker/releases?per_page=100` 取 release 列表，
+1. `GET /repos/andrewyng/openworker/releases?per_page=100` 取 release 列表（过滤 draft，
+   草稿不参与 tag 推进），
    从 `last_synced_tag` 往后找新增 tag（按发布时间排序，遇到已同步 tag 即停）。
 2. 对相邻 tag 逐段 `GET /repos/andrewyng/openworker/compare/{base}...{head}` 取文件级 diff，
    合并去重（同一文件取最后一次变更状态）。
@@ -44,6 +45,7 @@ python3 scripts/upstream-detect.py --state docs/upstream/sync-state.json --updat
    则降级为只看 L1）。
    - 现状（2026-10-17 核对）：L2 最后推送 2026-07-25，已近 3 个月；首次运行大概率直接触发降级，
      这是符合策略的，不是 bug。
+   - `last_synced_sha` 未设定时脚本告警并跳过 L2 diff（与 L1 的 fail-quiet 对齐），不直接调 compare。
 
 ### 1.3 基线锚点（书签）
 

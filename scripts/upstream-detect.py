@@ -80,6 +80,7 @@ def l1_new_releases(since_tag, token):
     releases = gh_get(f"/repos/{L1_OWNER_REPO}/releases?per_page=100", token)
     if isinstance(releases, dict):  # 错误体
         raise SystemExit(f"releases API 异常: {releases.get('message')}")
+    releases = [r for r in releases if not r.get("draft")]  # 草稿不参与 tag 推进，避免干扰基线判断
     new, found = [], since_tag is None
     ordered = sorted(releases, key=lambda r: r.get("published_at") or "")
     for r in ordered:
@@ -152,6 +153,9 @@ def main():
         l2["degraded"] = True
         result["warnings"].append(
             f"L2 已 {stale_days} 天无更新（>{L2_STALE_DAYS} 天），按 T1 修订降级为只看 L1")
+    elif state.get("last_synced_sha") is None:
+        # 首次运行未设基线：告警并跳过 L2 diff（与 L1 的 fail-quiet 对齐），不直接调 compare
+        result["warnings"].append("last_synced_sha 未设定：请按文档 §1.3 先设定基线再跑，已跳过 L2 diff")
     else:
         files, _, trunc = compare_files(
             L2_OWNER_REPO, state.get("last_synced_sha"), "main", args.token)
