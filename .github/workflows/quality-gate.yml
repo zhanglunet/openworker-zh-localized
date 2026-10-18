@@ -1,0 +1,92 @@
+# 中文提示词质量门（PRD-067/T3）
+# PR 触及汉化敏感区时，对变更文件跑术语一致性检查；失败阻断合并（fail-closed）。
+# 规则依据：docs/plans/2026-10-18-quality-gate-cases.md §3.2；脚本 scripts/quality-gate.py（纯标准库）。
+# 注意与 T1 §5 的出入：T1 写"T3 只报告不拦截（PRD 非目标）"，本实现按任务要求改为失败阻断，见 PR 正文。
+
+name: 质量门（中文提示词）
+
+on:
+  pull_request:
+    paths:
+      - 'surfaces/gui/src/**'
+      - 'docs/**'
+    paths-ignore:
+      - 'docs/plans/**'
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 质量门脚本自测（证明门本身没坏）
+        run: python3 scripts/quality-gate.py --self-test
+      - name: 术语一致性检查（仅 PR 变更文件）
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 - <<'PYEOF'
+          import importlib.util, os, subprocess, sys
+
+          spec = importlib.util.spec_from_file_location("qg", "scripts/quality-gate.py")
+          qg = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(qg)
+
+          base = os.environ["PR_BASE_SHA"]
+          out = subprocess.run(
+              ["git", "diff", "--name-only", base + "...HEAD"],
+              capture_output=True, text=True, check=True,
+          ).stdout.splitlines()
+
+          def in_scope(p):
+              # 与 quality-gate.py collect_files() 的范围口径一致
+              if p.startswith("surfaces/gui/src/") and p.endswith((".tsx", ".ts")):
+                  return "test" not in os.path.basename(p).lower()
+              if p.startswith("docs/") and p.endswith(".md"):
+                  return not p.startswith("docs/plans/")
+              return False
+
+          files = {}
+          for p in out:
+              if in_scope(p) and os.path.isfile(p):
+                  try:
+                      with open(p, encoding="utf-8") as f:
+                          files[p] = f.read()
+                  except (OSError, UnicodeDecodeError):
+                      continue
+
+          print("变更文件中在检查范围内：%d 个" % len(files), flush=True)
+          failures = qg.check_terms(files, qg.TERMS)
+
+          lines = ["## 质量门（中文提示词）结果", ""]
+          if failures:
+              lines.append("❌ %d 项失败（阻断合并）" % len(failures))
+              lines.append("")
+              lines.append("| 检查 | 文件 | 行 | 期望 | 说明 |")
+              lines.append("| --- | --- | --- | --- | --- |")
+              for x in failures:
+                  lines.append("| %s | %s | %s | %s | %s |" % (
+                      x["check"], x["file"], x.get("line") or "-",
+                      x["expected"],
+                      x["detail"].replace("|", "\\|").replace("\n", " ")))
+              for x in failures:
+                  print("失败：[%s] %s:%s（期望：%s）" %
+                        (x["check"], x["file"], x.get("line"), x["expected"]))
+          else:
+              lines.append("✅ 术语一致性：%d 个文件，0 失败" % len(files))
+          lines.append("")
+          lines.append("说明：警告（漏翻检查的待人工确认项）不阻断合并；"
+                       "本轮只检查 PR 变更文件，全量基线见 PRD-067/T4。")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write("\n".join(lines) + "\n")
+
+          print("质量门：%d 失败" % len(failures))
+          sys.exit(1 if failures else 0)
+          PYEOF
