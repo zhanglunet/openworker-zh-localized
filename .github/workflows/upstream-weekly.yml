@@ -1,0 +1,126 @@
+# 上游 diff 哨兵周报（PRD-068/T4）
+# 每周一 09:00（北京时间）定时运行 scripts/upstream-weekly.py：
+# 有中文影响 → 新建 issue《上游周报 YYYY-MM-DD》；
+# 本周无事 → 往上期周报 issue 追加评论（quiet_weeks 计数在脚本里）。
+# 规则依据：docs/plans/2026-10-18-diff-monitor-design.md §4；模板 docs/upstream/weekly-template.md。
+# 调度：cron '0 1 * * 1'（周一 01:00 UTC = 09:00 北京时间 CST/UTC+8）。
+# 权限：contents:write（写回水位文件）、issues:write（发 issue/评论），均用 GITHUB_TOKEN，不引入外部 PAT。
+# 水位回写：手写 git 命令直接 commit+push 到 main（main 无分支保护；第三方 auto-commit action 免了，少一个外部依赖）。
+# T5 才做试运行：本 PR 只建 workflow，不手动触发验证。
+
+name: 上游周报（每周哨兵）
+
+on:
+  schedule:
+    - cron: '0 1 * * 1'
+  workflow_dispatch: {}  # 手动触发，供 T5 试运行用
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: upstream-weekly
+  cancel-in-progress: false
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 哨兵自测（证明脚本没坏）
+        run: python3 scripts/upstream-weekly.py --selftest --state /tmp/unused-state.json
+
+      - name: 跑哨兵（检测 → 影响面分析 → 写回水位）
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/upstream-weekly.py \
+            --state docs/upstream/watch-state.json \
+            --update-state > weekly-result.json
+          cat weekly-result.json
+
+      - name: 渲染周报正文
+        run: |
+          python3 - <<'PYEOF'
+          import json
+
+          r = json.load(open("weekly-result.json", encoding="utf-8"))
+          date = r["generated_at"][:10]
+          l1, l2 = r["l1"], r["l2"]
+          total_impact = l1["impacting_commits"] + l2["impacting_commits"]
+          total_new = len(l1["new_commits"]) + len(l2["new_commits"])
+
+          def fmt_commit(c):
+              lines = ["- `%s` %s %s：%s" % (c["sha"][:8], c["date"], c["author"], c["message"])]
+              nt = c.get("needs_translation") or []
+              if nt:
+                  lines.append("  - 需跟进翻译：")
+                  lines.extend("    - %s" % f for f in nt)
+              return "\n".join(lines)
+
+          if total_impact > 0:
+              b = ["# 上游周报 %s" % date, "",
+                   "## 本周上游动态概览",
+                   "- L1 新增 commit：%d（影响中文版 %d）" % (len(l1["new_commits"]), l1["impacting_commits"]),
+                   "- L2 新增 commit：%d（影响中文版 %d）" % (len(l2["new_commits"]), l2["impacting_commits"]),
+                   "- 水位：%s" % r["generated_at"], "",
+                   "## 影响中文版的变更"]
+              for key, name in (("l1", "L1"), ("l2", "L2")):
+                  imp = [c for c in r[key]["new_commits"] if c.get("impacts_zh")]
+                  if imp:
+                      b.append("### %s" % name)
+                      b.extend(fmt_commit(c) for c in imp)
+                      b.append("")
+              b += ["## 无需跟进的变更",
+                    "其余 %d 个 commit 未命中汉化敏感区，无需跟进。" % (total_new - total_impact), "",
+                    "## 下周关注", "（人工填写）", ""]
+              if r.get("warnings"):
+                  b += ["## 警告"] + ["- %s" % w for w in r["warnings"]] + [""]
+              open("weekly-body.md", "w", encoding="utf-8").write("\n".join(b))
+              open("weekly-decision.txt", "w", encoding="utf-8").write("new\n《上游周报 %s》\n" % date)
+          else:
+              open("weekly-body.md", "w", encoding="utf-8").write(
+                  "本周（%s）无事：上游 %d 个 commit，均未命中汉化敏感区。\n" % (date, total_new))
+              open("weekly-decision.txt", "w", encoding="utf-8").write("quiet\n%s\n" % date)
+          print("decision:", open("weekly-decision.txt").read().strip().split("\n")[0])
+          PYEOF
+
+      - name: 发布周报（有影响→新 issue；无事→上期追加评论）
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          decision=$(sed -n '1p' weekly-decision.txt)
+          if [ "$decision" = "new" ]; then
+            title=$(sed -n '2p' weekly-decision.txt)
+            # 幂等去重：同标题 issue 已存在则跳过（防 cron 重跑发重复）
+            if [ -n "$(gh issue list --search "\"$title\" in:title" --json number --jq '.[0].number')" ]; then
+              echo "同标题 issue 已存在，跳过"
+            else
+              gh issue create --title "$title" --body-file weekly-body.md
+            fi
+          else
+            date=$(sed -n '2p' weekly-decision.txt)
+            last=$(gh issue list --search "上游周报 in:title" --state all --limit 1 --json number --jq '.[0].number')
+            if [ -z "$last" ]; then
+              # 边界：历史上从无周报 issue（首次运行即无事）→ 开极简 issue
+              gh issue create --title "《上游周报 $date》" \
+                --body "哨兵已上线。$(cat weekly-body.md)"
+            else
+              gh issue comment "$last" --body-file weekly-body.md
+            fi
+          fi
+
+      - name: 写回水位文件（直推 main）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/upstream/watch-state.json
+          git diff --cached --quiet || git commit -m "chore: 更新上游哨兵水位（PRD-068）"
+          git push origin HEAD:main
