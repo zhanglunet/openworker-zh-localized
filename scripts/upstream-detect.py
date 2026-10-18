@@ -25,11 +25,16 @@ L1_OWNER_REPO = "andrewyng/openworker"
 L2_OWNER_REPO = "Lenovo202409/openworker-zh"
 API = "https://api.github.com"
 
-# 汉化敏感区（owzh 实际结构，2026-10-17 已核对；T1 稿的 locales//i18n/ 写法作废）
-SENSITIVE_PREFIXES = ("surfaces/gui/src/", "docs/", "website/")
-SENSITIVE_EXCLUDE = ("docs/plans/",)  # 本项目工作稿，不计汉化工作量
-SENSITIVE_EXCLUDE_SUFFIXES = (".test.tsx", ".test.ts")  # T5 复盘建议②：测试断言的英文不需要重翻，计入 P0 是噪音
-P0_PREFIXES = ("surfaces/gui/src/",)  # 用户看得见的 UI 字符串
+# 汉化敏感区定义已抽取到 scripts/upstream_common.py（PRD-068/T1 §1，唯一源头）
+from upstream_common import (
+    SENSITIVE_PREFIXES,
+    SENSITIVE_EXCLUDE,
+    SENSITIVE_EXCLUDE_SUFFIXES,
+    P0_PREFIXES,
+    is_sensitive,
+    is_p0,
+)
+
 L2_STALE_DAYS = 90  # T1 修订：L2 连续 3 个月无更新则降级只看 L1
 MONITOR_REVIEW_DAYS = 90  # PRD 风险：监控清单每季度复核
 
@@ -46,18 +51,6 @@ def gh_get(path, token):
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", "replace")[:300]
         raise SystemExit(f"GitHub API {e.code} on {path}: {body}")
-
-
-def is_sensitive(path):
-    if path.startswith(SENSITIVE_EXCLUDE):
-        return False
-    if path.endswith(SENSITIVE_EXCLUDE_SUFFIXES):
-        return False
-    return path.startswith(SENSITIVE_PREFIXES)
-
-
-def is_p0(change, path):
-    return change in ("modified", "removed") and path.startswith(P0_PREFIXES)
 
 
 def classify(files, layer):
