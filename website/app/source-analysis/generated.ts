@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-18T12:18:03+08:00",
+  "generatedAt": "2026-10-18T12:43:18+08:00",
   "branch": "main",
-  "head": "e499626cc570f49d5938922780d476eb2bd786fc",
-  "shortHead": "e499626",
-  "totalFiles": 620,
+  "head": "11156f75b9f8dc05ad6f620ebb5cfdff1a9dee94",
+  "shortHead": "11156f7",
+  "totalFiles": 624,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 42
+      "count": 44
     },
     {
       "name": "svg",
@@ -31,11 +31,11 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 17
+      "count": 18
     },
     {
       "name": "yml",
-      "count": 11
+      "count": 12
     },
     {
       "name": "[none]",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 72
+      "count": 75
     },
     {
       "name": "website",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": ".github",
-      "count": 7
+      "count": 8
     },
     {
       "name": "scripts",
@@ -366,6 +366,41 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "11156f7",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline"
+    },
+    {
+      "hash": "01fd065",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #22 from zhanglunet/trend/prd-068-t3-template"
+    },
+    {
+      "hash": "3f34270",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #21 from zhanglunet/trend/prd-067-t3-ci"
+    },
+    {
+      "hash": "873480b",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-067/T4 质量门基线建立（trend #290）"
+    },
+    {
+      "hash": "c8604fc",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-068/T3 上游周报模板 + 手填示例"
+    },
+    {
+      "hash": "a64f630",
+      "date": "2026-10-18",
+      "subject": "ci: PRD-067/T3 质量门 CI 集成（术语一致性，失败阻断）"
+    },
+    {
+      "hash": "c8cf75e",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "e499626",
       "date": "2026-10-18",
       "subject": "Merge pull request #20 from zhanglunet/trend/prd-068-t2-impact"
@@ -389,44 +424,44 @@ export const repoReport = {
       "hash": "091fe4f",
       "date": "2026-10-18",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1b3859b",
-      "date": "2026-10-18",
-      "subject": "[PRD-067/T1] 质量门测试用例设计（方案 A；术语表已拍板）(#18)"
-    },
-    {
-      "hash": "48c1d20",
-      "date": "2026-10-18",
-      "subject": "[PRD-068/T1] 监控脚本设计：上游 diff 哨兵方案 (#17)"
-    },
-    {
-      "hash": "d18f7aa",
-      "date": "2026-10-18",
-      "subject": "docs: 记录用户拍板结论（方案 A；术语表 25 条已认可）"
-    },
-    {
-      "hash": "7cd5b13",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-067/T1 质量门测试用例设计（现状盘点+三类检查规则+术语表初版）"
-    },
-    {
-      "hash": "8ae8c5e",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-068/T1 上游 diff 监控脚本设计（哨兵方案）"
-    },
-    {
-      "hash": "2edc2c4",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "dd3b1cb",
-      "date": "2026-10-17",
-      "subject": "feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "11156f7",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline"
+    },
+    {
+      "hash": "01fd065",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #22 from zhanglunet/trend/prd-068-t3-template"
+    },
+    {
+      "hash": "3f34270",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #21 from zhanglunet/trend/prd-067-t3-ci"
+    },
+    {
+      "hash": "873480b",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-067/T4 质量门基线建立（trend #290）"
+    },
+    {
+      "hash": "c8604fc",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-068/T3 上游周报模板 + 手填示例"
+    },
+    {
+      "hash": "a64f630",
+      "date": "2026-10-18",
+      "subject": "ci: PRD-067/T3 质量门 CI 集成（术语一致性，失败阻断）"
+    },
+    {
+      "hash": "c8cf75e",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "e499626",
       "date": "2026-10-18",

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-18T12:18:03+08:00
+更新时间：2026-10-18T12:43:18+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：e499626cc570f49d5938922780d476eb2bd786fc
+当前提交：11156f75b9f8dc05ad6f620ebb5cfdff1a9dee94
 
 ## 1. 总体判断
 
@@ -14,17 +14,17 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：620
-- 当前提交：e499626
+- 跟踪文件总数：624
+- 当前提交：11156f7
 - 主要文件类型：
   - py: 268
   - ts: 105
   - tsx: 79
-  - md: 42
+  - md: 44
   - svg: 23
   - png: 22
-  - json: 17
-  - yml: 11
+  - json: 18
+  - yml: 12
   - [none]: 7
   - html: 7
   - sh: 5
@@ -39,10 +39,10 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 72 个文件
+- docs: 75 个文件
 - website: 36 个文件
 - packaging: 10 个文件
-- .github: 7 个文件
+- .github: 8 个文件
 - scripts: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
@@ -232,15 +232,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-18 11156f7 Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline
+- 2026-10-18 01fd065 Merge pull request #22 from zhanglunet/trend/prd-068-t3-template
+- 2026-10-18 3f34270 Merge pull request #21 from zhanglunet/trend/prd-067-t3-ci
+- 2026-10-18 873480b docs: PRD-067/T4 质量门基线建立（trend #290）
+- 2026-10-18 c8604fc docs: PRD-068/T3 上游周报模板 + 手填示例
+- 2026-10-18 a64f630 ci: PRD-067/T3 质量门 CI 集成（术语一致性，失败阻断）
+- 2026-10-18 c8cf75e docs: refresh generated site reports
 - 2026-10-18 e499626 Merge pull request #20 from zhanglunet/trend/prd-068-t2-impact
 - 2026-10-18 fac17ef Merge pull request #19 from zhanglunet/trend/prd-067-t2-suite
 - 2026-10-18 aee92d0 feat: PRD-068/T2 影响面分析实现（upstream_common 抽取 + weekly 哨兵）
 - 2026-10-18 216f49c feat: PRD-067/T2 测试套件实现（三类检查脚本，纯标准库）
 - 2026-10-18 091fe4f docs: refresh generated site reports
-- 2026-10-18 1b3859b [PRD-067/T1] 质量门测试用例设计（方案 A；术语表已拍板）(#18)
-- 2026-10-18 48c1d20 [PRD-068/T1] 监控脚本设计：上游 diff 哨兵方案 (#17)
-- 2026-10-18 d18f7aa docs: 记录用户拍板结论（方案 A；术语表 25 条已认可）
-- 2026-10-18 7cd5b13 docs: PRD-067/T1 质量门测试用例设计（现状盘点+三类检查规则+术语表初版）
-- 2026-10-18 8ae8c5e docs: PRD-068/T1 上游 diff 监控脚本设计（哨兵方案）
-- 2026-10-17 2edc2c4 docs: refresh generated site reports
-- 2026-10-17 dd3b1cb feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)
