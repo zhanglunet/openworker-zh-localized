@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-18T17:11:03+08:00",
+  "generatedAt": "2026-10-19T00:05:39+08:00",
   "branch": "main",
-  "head": "abfcae7fa3ded716fe40cb61da20c4ca1e54f606",
-  "shortHead": "abfcae7",
-  "totalFiles": 626,
+  "head": "904c8df0d6e23639c272a83edd6c9271a5c28a62",
+  "shortHead": "904c8df",
+  "totalFiles": 627,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 45
+      "count": 46
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 76
+      "count": 77
     },
     {
       "name": "website",
@@ -366,6 +366,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "904c8df",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #26 from zhanglunet/trend/prd-068-t5-trial"
+    },
+    {
+      "hash": "e6241fa",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-068/T5 上游周报试运行报告"
+    },
+    {
+      "hash": "e56cb47",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "abfcae7",
       "date": "2026-10-18",
       "subject": "Merge pull request #25 from zhanglunet/trend/prd-067-t5-trial"
@@ -409,24 +424,24 @@ export const repoReport = {
       "hash": "873480b",
       "date": "2026-10-18",
       "subject": "docs: PRD-067/T4 质量门基线建立（trend #290）"
-    },
-    {
-      "hash": "c8604fc",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-068/T3 上游周报模板 + 手填示例"
-    },
-    {
-      "hash": "a64f630",
-      "date": "2026-10-18",
-      "subject": "ci: PRD-067/T3 质量门 CI 集成（术语一致性，失败阻断）"
-    },
-    {
-      "hash": "c8cf75e",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "904c8df",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #26 from zhanglunet/trend/prd-068-t5-trial"
+    },
+    {
+      "hash": "e6241fa",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-068/T5 上游周报试运行报告"
+    },
+    {
+      "hash": "e56cb47",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "abfcae7",
       "date": "2026-10-18",
