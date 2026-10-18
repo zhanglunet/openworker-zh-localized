@@ -1,0 +1,221 @@
+{
+  "meta": {
+    "prd": "PRD-067",
+    "task": "T4 基线建立（trend #290）",
+    "generated_at": "2026-10-18T12:28:08+08:00",
+    "repo": "zhanglunet/openworker-zh-localized",
+    "commit_sha": "c8cf75eb2dedffa29fff570a3c1fb0ed1e1779f2",
+    "scheme": "A（用户 2026-10-18 拍板）",
+    "script": "scripts/quality-gate.py（main 分支版本，纯标准库）",
+    "scan_scope": "surfaces/gui/src/**/*.tsx|ts（不含 *test*）+ docs/**/*.md（不含 docs/plans/）；coworker/ 暂不纳入",
+    "files_scanned": 97,
+    "design_doc": "docs/plans/2026-10-18-quality-gate-cases.md"
+  },
+  "checks": {
+    "漏翻检查": {
+      "failures": 0,
+      "warnings": 0,
+      "items": [],
+      "note": "方案 A 口径为 diff 驱动（需 --upstream 上游增量输入）；静态基线无上游增量，输入为空。T5 试运行以前 N 个上游 commit 做输入验证拦截能力。"
+    },
+    "术语一致性": {
+      "failures": 27,
+      "warnings": 0,
+      "items": [
+        {
+          "file": "surfaces/gui/src/humanize.ts",
+          "line": 141,
+          "expected": "技能",
+          "detail": "英文术语 'Skill' 混入中文字符串未译：'添加 Skill'"
+        },
+        {
+          "file": "surfaces/gui/src/humanize.ts",
+          "line": 141,
+          "expected": "技能",
+          "detail": "英文术语 'Skills' 混入中文字符串未译：'到你的 Skills'"
+        },
+        {
+          "file": "surfaces/gui/src/humanize.ts",
+          "line": 142,
+          "expected": "技能",
+          "detail": "英文术语 'Skill' 混入中文字符串未译：'添加一个 Skill 到你的 Skills'"
+        },
+        {
+          "file": "surfaces/gui/src/App.tsx",
+          "line": 73,
+          "expected": "摘要",
+          "detail": "错误译法 '总结'，应为 '摘要'"
+        },
+        {
+          "file": "surfaces/gui/src/components/SettingsView.tsx",
+          "line": 725,
+          "expected": "摘要",
+          "detail": "同一文件出现两种译法：'摘要' 与 '总结'"
+        },
+        {
+          "file": "surfaces/gui/src/components/SessionIntro.tsx",
+          "line": 17,
+          "expected": "摘要",
+          "detail": "错误译法 '总结'，应为 '摘要'"
+        },
+        {
+          "file": "surfaces/gui/src/components/AutomationQuickstart.tsx",
+          "line": 432,
+          "expected": "智能体",
+          "detail": "错误译法 '代理'，应为 '智能体'"
+        },
+        {
+          "file": "surfaces/gui/src/components/ApprovalCard.tsx",
+          "line": 39,
+          "expected": "技能",
+          "detail": "英文术语 'Skills' 混入中文字符串未译：'添加到我的 Skills'"
+        },
+        {
+          "file": "docs/release-signed-updates.md",
+          "line": 57,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/upstream/scheduler-overlap-race/README.md",
+          "line": 10,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/enterprise/PRD.md",
+          "line": 25,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/enterprise/DEV_PLAN.md",
+          "line": 26,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/enterprise/DEPLOYMENT.md",
+          "line": 435,
+          "expected": "工作流",
+          "detail": "同一文件出现两种译法：'工作流' 与 '流程'"
+        },
+        {
+          "file": "docs/enterprise/CONNECTOR_GUIDE.md",
+          "line": 258,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/enterprise/CONNECTOR_GUIDE.md",
+          "line": 302,
+          "expected": "智能体",
+          "detail": "英文术语 'Agent' 混入中文字符串未译：'Agent 到底动过哪张单'"
+        },
+        {
+          "file": "docs/enterprise/BRANDING_PACKAGING.md",
+          "line": 135,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/enterprise/templates/README.md",
+          "line": 252,
+          "expected": "工作流",
+          "detail": "同一文件出现两种译法：'工作流' 与 '流程'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/excel-ai-analyst/SKILL.md",
+          "line": 3,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/excel-ai-analyst/SKILL.md",
+          "line": 50,
+          "expected": "技能",
+          "detail": "英文术语 'skills' 混入中文字符串未译：'<工作区>/.coworker/skills/'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/excel-ai-analyst/SKILL.md",
+          "line": 50,
+          "expected": "数字同事",
+          "detail": "英文术语 'coworker' 混入中文字符串未译：'<工作区>/.coworker/skills/'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/excel-ai-analyst/SKILL.md",
+          "line": 67,
+          "expected": "技能",
+          "detail": "英文术语 'skills' 混入中文字符串未译：'python3 /Users/你/.config/coworker/skills/excel-ai-analyst/scripts/excel_ai.py'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/excel-ai-analyst/SKILL.md",
+          "line": 67,
+          "expected": "数字同事",
+          "detail": "英文术语 'coworker' 混入中文字符串未译：'python3 /Users/你/.config/coworker/skills/excel-ai-analyst/scripts/excel_ai.py'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/excel-ai-analyst/SKILL.md",
+          "line": 102,
+          "expected": "摘要",
+          "detail": "英文术语 'summary' 混入中文字符串未译：'--summary-words 汇总 合计 小计'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/excel-ai-analyst/references/pitfalls.md",
+          "line": 113,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/enterprise/templates/skills/corp-knowledge/SKILL.md",
+          "line": 3,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        },
+        {
+          "file": "docs/articles/openworker-recommendation.md",
+          "line": 11,
+          "expected": "工作流",
+          "detail": "同一文件出现两种译法：'工作流' 与 '流程'"
+        },
+        {
+          "file": "docs/analysis/openworker-zh-localized-source-analysis.md",
+          "line": 126,
+          "expected": "工作流",
+          "detail": "错误译法 '流程'，应为 '工作流'"
+        }
+      ],
+      "note": "25 条术语表（用户已拍板值）；单复数/大小写归一；品牌词豁免。"
+    },
+    "模板完整性": {
+      "failures": 0,
+      "warnings": 0,
+      "items": [],
+      "note": "humanize.ts 三段式模板中无占位符风格标记（${…} 均为 JS 模板字面量表达式，按 T1 §3.3 规则 3 不纳入）；占位符集合比对暂无可比对项。pre/post 片段英文原样问题见 observations。"
+    }
+  },
+  "known_issues_豁免": [
+    {
+      "file": "surfaces/gui/src/humanize.ts",
+      "lines": [
+        141,
+        142
+      ],
+      "issue": "save_skill 三段式模板混用英文 Skill/Skills（T1 §4 已知问题，待统一）",
+      "hits": 3,
+      "note": "已计入上方 27 个失败（原始数字如实保留），此处单独标注为豁免；T5 对比时以 24（非豁免）为口径。"
+    }
+  ],
+  "todos": [
+    {
+      "item": "coworker/personas/builtin/ops.md 未汉化（全仓唯一 builtin persona，44 行，0 中文字符）",
+      "status": "待汉化",
+      "note": "T1 §5：不算豁免也不算失败，单独列待办；汉化后纳入术语扫描与模板检查。"
+    }
+  ],
+  "observations_基线观察_非检查失败": [
+    {
+      "item": "humanize.ts pre/post 片段 43 个中 35 个为纯英文原文（如 'Send a file to '、'Wanted to run '、'Checked on a background command'），仅 5 个纯中文、3 个中英混杂（即上文豁免项）；与 T1 §1 盘点'已汉化'结论有出入（盘点时只抽查了 save_skill 一例）。建议后续排期复核 humanize.ts 全量汉化。"
+    }
+  ]
+}
