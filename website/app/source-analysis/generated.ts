@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-18T10:11:13+08:00",
+  "generatedAt": "2026-10-18T12:18:03+08:00",
   "branch": "main",
-  "head": "1b3859bec0f2e7af2e6829ade9e0d7fd4cd30bc0",
-  "shortHead": "1b3859b",
-  "totalFiles": 617,
+  "head": "e499626cc570f49d5938922780d476eb2bd786fc",
+  "shortHead": "e499626",
+  "totalFiles": 620,
   "byExt": [
     {
       "name": "py",
-      "count": 265
+      "count": 268
     },
     {
       "name": "ts",
@@ -108,6 +108,10 @@ export const repoReport = {
       "count": 7
     },
     {
+      "name": "scripts",
+      "count": 5
+    },
+    {
       "name": "stt",
       "count": 4
     },
@@ -118,10 +122,6 @@ export const repoReport = {
     {
       "name": "releases",
       "count": 3
-    },
-    {
-      "name": "scripts",
-      "count": 2
     },
     {
       "name": ".gitignore",
@@ -366,6 +366,31 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "e499626",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #20 from zhanglunet/trend/prd-068-t2-impact"
+    },
+    {
+      "hash": "fac17ef",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #19 from zhanglunet/trend/prd-067-t2-suite"
+    },
+    {
+      "hash": "aee92d0",
+      "date": "2026-10-18",
+      "subject": "feat: PRD-068/T2 影响面分析实现（upstream_common 抽取 + weekly 哨兵）"
+    },
+    {
+      "hash": "216f49c",
+      "date": "2026-10-18",
+      "subject": "feat: PRD-067/T2 测试套件实现（三类检查脚本，纯标准库）"
+    },
+    {
+      "hash": "091fe4f",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "1b3859b",
       "date": "2026-10-18",
       "subject": "[PRD-067/T1] 质量门测试用例设计（方案 A；术语表已拍板）(#18)"
@@ -399,34 +424,34 @@ export const repoReport = {
       "hash": "dd3b1cb",
       "date": "2026-10-17",
       "subject": "feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)"
-    },
-    {
-      "hash": "7630087",
-      "date": "2026-10-17",
-      "subject": "feat: T5 复盘建议①②（classify 透出 additions/deletions；敏感区排除测试文件）"
-    },
-    {
-      "hash": "cf1d84e",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9d2cbf8",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T5 定稿与换肤走查 (#14)"
-    },
-    {
-      "hash": "dc56fa7",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T5 试运行复盘 (#13)"
-    },
-    {
-      "hash": "fe012b1",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T4 冲突分级 (#12)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "e499626",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #20 from zhanglunet/trend/prd-068-t2-impact"
+    },
+    {
+      "hash": "fac17ef",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #19 from zhanglunet/trend/prd-067-t2-suite"
+    },
+    {
+      "hash": "aee92d0",
+      "date": "2026-10-18",
+      "subject": "feat: PRD-068/T2 影响面分析实现（upstream_common 抽取 + weekly 哨兵）"
+    },
+    {
+      "hash": "216f49c",
+      "date": "2026-10-18",
+      "subject": "feat: PRD-067/T2 测试套件实现（三类检查脚本，纯标准库）"
+    },
+    {
+      "hash": "091fe4f",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "1b3859b",
       "date": "2026-10-18",
