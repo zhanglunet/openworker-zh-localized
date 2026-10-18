@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-17T16:42:46+08:00",
+  "generatedAt": "2026-10-18T10:11:13+08:00",
   "branch": "main",
-  "head": "dd3b1cb92f66d5bfe31ca6acf6c26fa5a74fa0df",
-  "shortHead": "dd3b1cb",
-  "totalFiles": 615,
+  "head": "1b3859bec0f2e7af2e6829ade9e0d7fd4cd30bc0",
+  "shortHead": "1b3859b",
+  "totalFiles": 617,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 40
+      "count": 42
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 70
+      "count": 72
     },
     {
       "name": "website",
@@ -366,6 +366,36 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "1b3859b",
+      "date": "2026-10-18",
+      "subject": "[PRD-067/T1] 质量门测试用例设计（方案 A；术语表已拍板）(#18)"
+    },
+    {
+      "hash": "48c1d20",
+      "date": "2026-10-18",
+      "subject": "[PRD-068/T1] 监控脚本设计：上游 diff 哨兵方案 (#17)"
+    },
+    {
+      "hash": "d18f7aa",
+      "date": "2026-10-18",
+      "subject": "docs: 记录用户拍板结论（方案 A；术语表 25 条已认可）"
+    },
+    {
+      "hash": "7cd5b13",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-067/T1 质量门测试用例设计（现状盘点+三类检查规则+术语表初版）"
+    },
+    {
+      "hash": "8ae8c5e",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-068/T1 上游 diff 监控脚本设计（哨兵方案）"
+    },
+    {
+      "hash": "2edc2c4",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "dd3b1cb",
       "date": "2026-10-17",
       "subject": "feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)"
@@ -394,39 +424,39 @@ export const repoReport = {
       "hash": "fe012b1",
       "date": "2026-10-17",
       "subject": "docs: PRD-029/T4 冲突分级 (#12)"
-    },
-    {
-      "hash": "7446e58",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（回退演练改为下次试运行，T5 已跑完）"
-    },
-    {
-      "hash": "2ceba58",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T5 定稿与换肤走查（回指写回 + Acme 桌面推演 + 3 处修订）"
-    },
-    {
-      "hash": "2977a54",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T5 试运行复盘报告"
-    },
-    {
-      "hash": "1a30d0a",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T4 冲突分级、处理与回退"
-    },
-    {
-      "hash": "af681ab",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "0cdb8bd",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T4 部署章节正文 (#10)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "1b3859b",
+      "date": "2026-10-18",
+      "subject": "[PRD-067/T1] 质量门测试用例设计（方案 A；术语表已拍板）(#18)"
+    },
+    {
+      "hash": "48c1d20",
+      "date": "2026-10-18",
+      "subject": "[PRD-068/T1] 监控脚本设计：上游 diff 哨兵方案 (#17)"
+    },
+    {
+      "hash": "d18f7aa",
+      "date": "2026-10-18",
+      "subject": "docs: 记录用户拍板结论（方案 A；术语表 25 条已认可）"
+    },
+    {
+      "hash": "7cd5b13",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-067/T1 质量门测试用例设计（现状盘点+三类检查规则+术语表初版）"
+    },
+    {
+      "hash": "8ae8c5e",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-068/T1 上游 diff 监控脚本设计（哨兵方案）"
+    },
+    {
+      "hash": "2edc2c4",
+      "date": "2026-10-17",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "dd3b1cb",
       "date": "2026-10-17",
