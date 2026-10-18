@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-18T12:43:18+08:00",
+  "generatedAt": "2026-10-18T17:11:03+08:00",
   "branch": "main",
-  "head": "11156f75b9f8dc05ad6f620ebb5cfdff1a9dee94",
-  "shortHead": "11156f7",
-  "totalFiles": 624,
+  "head": "abfcae7fa3ded716fe40cb61da20c4ca1e54f606",
+  "shortHead": "abfcae7",
+  "totalFiles": 626,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 44
+      "count": 45
     },
     {
       "name": "svg",
@@ -35,7 +35,7 @@ export const repoReport = {
     },
     {
       "name": "yml",
-      "count": 12
+      "count": 13
     },
     {
       "name": "[none]",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 75
+      "count": 76
     },
     {
       "name": "website",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": ".github",
-      "count": 8
+      "count": 9
     },
     {
       "name": "scripts",
@@ -366,6 +366,31 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "abfcae7",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #25 from zhanglunet/trend/prd-067-t5-trial"
+    },
+    {
+      "hash": "ef61d3f",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #24 from zhanglunet/trend/prd-068-t4-cron"
+    },
+    {
+      "hash": "2e3d4f0",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-067/T5 质量门试运行报告"
+    },
+    {
+      "hash": "6cca6b1",
+      "date": "2026-10-18",
+      "subject": "ci: PRD-068/T4 上游周报 cron 调度"
+    },
+    {
+      "hash": "733191d",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "11156f7",
       "date": "2026-10-18",
       "subject": "Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline"
@@ -399,34 +424,34 @@ export const repoReport = {
       "hash": "c8cf75e",
       "date": "2026-10-18",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "e499626",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #20 from zhanglunet/trend/prd-068-t2-impact"
-    },
-    {
-      "hash": "fac17ef",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #19 from zhanglunet/trend/prd-067-t2-suite"
-    },
-    {
-      "hash": "aee92d0",
-      "date": "2026-10-18",
-      "subject": "feat: PRD-068/T2 影响面分析实现（upstream_common 抽取 + weekly 哨兵）"
-    },
-    {
-      "hash": "216f49c",
-      "date": "2026-10-18",
-      "subject": "feat: PRD-067/T2 测试套件实现（三类检查脚本，纯标准库）"
-    },
-    {
-      "hash": "091fe4f",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "abfcae7",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #25 from zhanglunet/trend/prd-067-t5-trial"
+    },
+    {
+      "hash": "ef61d3f",
+      "date": "2026-10-18",
+      "subject": "Merge pull request #24 from zhanglunet/trend/prd-068-t4-cron"
+    },
+    {
+      "hash": "2e3d4f0",
+      "date": "2026-10-18",
+      "subject": "docs: PRD-067/T5 质量门试运行报告"
+    },
+    {
+      "hash": "6cca6b1",
+      "date": "2026-10-18",
+      "subject": "ci: PRD-068/T4 上游周报 cron 调度"
+    },
+    {
+      "hash": "733191d",
+      "date": "2026-10-18",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "11156f7",
       "date": "2026-10-18",

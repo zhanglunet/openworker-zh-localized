@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-18T12:43:18+08:00
+更新时间：2026-10-18T17:11:03+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：11156f75b9f8dc05ad6f620ebb5cfdff1a9dee94
+当前提交：abfcae7fa3ded716fe40cb61da20c4ca1e54f606
 
 ## 1. 总体判断
 
@@ -14,17 +14,17 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：624
-- 当前提交：11156f7
+- 跟踪文件总数：626
+- 当前提交：abfcae7
 - 主要文件类型：
   - py: 268
   - ts: 105
   - tsx: 79
-  - md: 44
+  - md: 45
   - svg: 23
   - png: 22
   - json: 18
-  - yml: 12
+  - yml: 13
   - [none]: 7
   - html: 7
   - sh: 5
@@ -39,10 +39,10 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 75 个文件
+- docs: 76 个文件
 - website: 36 个文件
 - packaging: 10 个文件
-- .github: 8 个文件
+- .github: 9 个文件
 - scripts: 5 个文件
 - stt: 4 个文件
 - ui-mocks: 4 个文件
@@ -232,6 +232,11 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-18 abfcae7 Merge pull request #25 from zhanglunet/trend/prd-067-t5-trial
+- 2026-10-18 ef61d3f Merge pull request #24 from zhanglunet/trend/prd-068-t4-cron
+- 2026-10-18 2e3d4f0 docs: PRD-067/T5 质量门试运行报告
+- 2026-10-18 6cca6b1 ci: PRD-068/T4 上游周报 cron 调度
+- 2026-10-18 733191d docs: refresh generated site reports
 - 2026-10-18 11156f7 Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline
 - 2026-10-18 01fd065 Merge pull request #22 from zhanglunet/trend/prd-068-t3-template
 - 2026-10-18 3f34270 Merge pull request #21 from zhanglunet/trend/prd-067-t3-ci
@@ -239,8 +244,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-18 c8604fc docs: PRD-068/T3 上游周报模板 + 手填示例
 - 2026-10-18 a64f630 ci: PRD-067/T3 质量门 CI 集成（术语一致性，失败阻断）
 - 2026-10-18 c8cf75e docs: refresh generated site reports
-- 2026-10-18 e499626 Merge pull request #20 from zhanglunet/trend/prd-068-t2-impact
-- 2026-10-18 fac17ef Merge pull request #19 from zhanglunet/trend/prd-067-t2-suite
-- 2026-10-18 aee92d0 feat: PRD-068/T2 影响面分析实现（upstream_common 抽取 + weekly 哨兵）
-- 2026-10-18 216f49c feat: PRD-067/T2 测试套件实现（三类检查脚本，纯标准库）
-- 2026-10-18 091fe4f docs: refresh generated site reports
