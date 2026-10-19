@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-19T12:37:32+08:00
+更新时间：2026-10-19T12:58:23+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：283ff711a2979d1b5d1740cb96db699bb839ca21
+当前提交：fd32b328c6d74a5b5ca6f80d1d19db1a4722a7d0
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：631
-- 当前提交：283ff71
+- 跟踪文件总数：632
+- 当前提交：fd32b32
 - 主要文件类型：
   - py: 269
   - ts: 105
   - tsx: 79
-  - md: 47
+  - md: 48
   - svg: 23
   - png: 22
   - json: 18
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 78 个文件
+- docs: 79 个文件
 - website: 36 个文件
 - .github: 11 个文件
 - packaging: 10 个文件
@@ -232,6 +232,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-19 fd32b32 Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial
+- 2026-10-19 d5b5958 docs: PRD-084/T5 翻译流水线试运行报告
+- 2026-10-19 48282a4 docs: refresh generated site reports
 - 2026-10-19 283ff71 Merge pull request #30 from zhanglunet/trend/prd-084-t4-trigger
 - 2026-10-19 c365bd7 Merge pull request #29 from zhanglunet/trend/prd-084-t3-ci
 - 2026-10-19 167b4ee [PRD-084/T4] 与哨兵联动：一键触发翻译
@@ -241,6 +244,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-19 2751874 feat: PRD-084/T2 翻译流水线实现
 - 2026-10-19 41b7462 docs: refresh generated site reports
 - 2026-10-19 9e17262 Merge pull request #27 from zhanglunet/trend/prd-084-t1-design
-- 2026-10-19 612253d docs: PRD-084/T1 翻译流水线设计稿
-- 2026-10-18 51cd463 docs: refresh generated site reports
-- 2026-10-19 904c8df Merge pull request #26 from zhanglunet/trend/prd-068-t5-trial

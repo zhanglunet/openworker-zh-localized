@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-19T12:37:32+08:00",
+  "generatedAt": "2026-10-19T12:58:23+08:00",
   "branch": "main",
-  "head": "283ff711a2979d1b5d1740cb96db699bb839ca21",
-  "shortHead": "283ff71",
-  "totalFiles": 631,
+  "head": "fd32b328c6d74a5b5ca6f80d1d19db1a4722a7d0",
+  "shortHead": "fd32b32",
+  "totalFiles": 632,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 47
+      "count": 48
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 78
+      "count": 79
     },
     {
       "name": "website",
@@ -366,6 +366,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "fd32b32",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial"
+    },
+    {
+      "hash": "d5b5958",
+      "date": "2026-10-19",
+      "subject": "docs: PRD-084/T5 翻译流水线试运行报告"
+    },
+    {
+      "hash": "48282a4",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "283ff71",
       "date": "2026-10-19",
       "subject": "Merge pull request #30 from zhanglunet/trend/prd-084-t4-trigger"
@@ -409,24 +424,24 @@ export const repoReport = {
       "hash": "9e17262",
       "date": "2026-10-19",
       "subject": "Merge pull request #27 from zhanglunet/trend/prd-084-t1-design"
-    },
-    {
-      "hash": "612253d",
-      "date": "2026-10-19",
-      "subject": "docs: PRD-084/T1 翻译流水线设计稿"
-    },
-    {
-      "hash": "51cd463",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "904c8df",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #26 from zhanglunet/trend/prd-068-t5-trial"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "fd32b32",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial"
+    },
+    {
+      "hash": "d5b5958",
+      "date": "2026-10-19",
+      "subject": "docs: PRD-084/T5 翻译流水线试运行报告"
+    },
+    {
+      "hash": "48282a4",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "283ff71",
       "date": "2026-10-19",
