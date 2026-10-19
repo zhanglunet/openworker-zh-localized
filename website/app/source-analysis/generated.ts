@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-19T12:58:23+08:00",
+  "generatedAt": "2026-10-19T14:02:31+08:00",
   "branch": "main",
-  "head": "fd32b328c6d74a5b5ca6f80d1d19db1a4722a7d0",
-  "shortHead": "fd32b32",
-  "totalFiles": 632,
+  "head": "840408c9c985c8e6bf903e1e76055f7f8cfa15ac",
+  "shortHead": "840408c",
+  "totalFiles": 633,
   "byExt": [
     {
       "name": "py",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 18
+      "count": 19
     },
     {
       "name": "yml",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 79
+      "count": 80
     },
     {
       "name": "website",
@@ -366,6 +366,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "840408c",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check"
+    },
+    {
+      "hash": "7810b75",
+      "date": "2026-10-19",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "023b53a",
+      "date": "2026-10-19",
+      "subject": "fix: self_check_terms fence 感知（F1）"
+    },
+    {
+      "hash": "981513f",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "fd32b32",
       "date": "2026-10-19",
       "subject": "Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial"
@@ -404,29 +424,29 @@ export const repoReport = {
       "hash": "dd40a95",
       "date": "2026-10-19",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "e441847",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #28 from zhanglunet/trend/prd-084-t2-pipeline"
-    },
-    {
-      "hash": "2751874",
-      "date": "2026-10-19",
-      "subject": "feat: PRD-084/T2 翻译流水线实现"
-    },
-    {
-      "hash": "41b7462",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9e17262",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #27 from zhanglunet/trend/prd-084-t1-design"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "840408c",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check"
+    },
+    {
+      "hash": "7810b75",
+      "date": "2026-10-19",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "023b53a",
+      "date": "2026-10-19",
+      "subject": "fix: self_check_terms fence 感知（F1）"
+    },
+    {
+      "hash": "981513f",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "fd32b32",
       "date": "2026-10-19",

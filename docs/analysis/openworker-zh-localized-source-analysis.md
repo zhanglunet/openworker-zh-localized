@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-19T12:58:23+08:00
+更新时间：2026-10-19T14:02:31+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：fd32b328c6d74a5b5ca6f80d1d19db1a4722a7d0
+当前提交：840408c9c985c8e6bf903e1e76055f7f8cfa15ac
 
 ## 1. 总体判断
 
@@ -14,8 +14,8 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：632
-- 当前提交：fd32b32
+- 跟踪文件总数：633
+- 当前提交：840408c
 - 主要文件类型：
   - py: 269
   - ts: 105
@@ -23,7 +23,7 @@
   - md: 48
   - svg: 23
   - png: 22
-  - json: 18
+  - json: 19
   - yml: 15
   - [none]: 7
   - html: 7
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 79 个文件
+- docs: 80 个文件
 - website: 36 个文件
 - .github: 11 个文件
 - packaging: 10 个文件
@@ -232,6 +232,10 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-19 840408c Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check
+- 2026-10-19 7810b75 chore: 更新上游哨兵水位（PRD-068）
+- 2026-10-19 023b53a fix: self_check_terms fence 感知（F1）
+- 2026-10-19 981513f docs: refresh generated site reports
 - 2026-10-19 fd32b32 Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial
 - 2026-10-19 d5b5958 docs: PRD-084/T5 翻译流水线试运行报告
 - 2026-10-19 48282a4 docs: refresh generated site reports
@@ -240,7 +244,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-19 167b4ee [PRD-084/T4] 与哨兵联动：一键触发翻译
 - 2026-10-19 d0a630b [PRD-084/T3] CI 校验：术语锁定 + 链接检查
 - 2026-10-19 dd40a95 docs: refresh generated site reports
-- 2026-10-19 e441847 Merge pull request #28 from zhanglunet/trend/prd-084-t2-pipeline
-- 2026-10-19 2751874 feat: PRD-084/T2 翻译流水线实现
-- 2026-10-19 41b7462 docs: refresh generated site reports
-- 2026-10-19 9e17262 Merge pull request #27 from zhanglunet/trend/prd-084-t1-design
