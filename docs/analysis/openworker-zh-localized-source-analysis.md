@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-19T00:05:39+08:00
+更新时间：2026-10-19T09:30:36+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：904c8df0d6e23639c272a83edd6c9271a5c28a62
+当前提交：9e17262f66e6b4f4b440e52b02cfcaecb70d59f4
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：627
-- 当前提交：904c8df
+- 跟踪文件总数：628
+- 当前提交：9e17262
 - 主要文件类型：
   - py: 268
   - ts: 105
   - tsx: 79
-  - md: 46
+  - md: 47
   - svg: 23
   - png: 22
   - json: 18
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - coworker: 134 个文件
 - tests: 108 个文件
-- docs: 77 个文件
+- docs: 78 个文件
 - website: 36 个文件
 - packaging: 10 个文件
 - .github: 9 个文件
@@ -232,6 +232,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-19 9e17262 Merge pull request #27 from zhanglunet/trend/prd-084-t1-design
+- 2026-10-19 612253d docs: PRD-084/T1 翻译流水线设计稿
+- 2026-10-18 51cd463 docs: refresh generated site reports
 - 2026-10-19 904c8df Merge pull request #26 from zhanglunet/trend/prd-068-t5-trial
 - 2026-10-18 e6241fa docs: PRD-068/T5 上游周报试运行报告
 - 2026-10-18 e56cb47 docs: refresh generated site reports
@@ -241,6 +244,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-18 6cca6b1 ci: PRD-068/T4 上游周报 cron 调度
 - 2026-10-18 733191d docs: refresh generated site reports
 - 2026-10-18 11156f7 Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline
-- 2026-10-18 01fd065 Merge pull request #22 from zhanglunet/trend/prd-068-t3-template
-- 2026-10-18 3f34270 Merge pull request #21 from zhanglunet/trend/prd-067-t3-ci
-- 2026-10-18 873480b docs: PRD-067/T4 质量门基线建立（trend #290）
