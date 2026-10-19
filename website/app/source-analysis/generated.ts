@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-19T09:30:36+08:00",
+  "generatedAt": "2026-10-19T09:38:04+08:00",
   "branch": "main",
-  "head": "9e17262f66e6b4f4b440e52b02cfcaecb70d59f4",
-  "shortHead": "9e17262",
-  "totalFiles": 628,
+  "head": "e4418470cead4f4a095448c6404bf9078fc628fc",
+  "shortHead": "e441847",
+  "totalFiles": 629,
   "byExt": [
     {
       "name": "py",
-      "count": 268
+      "count": 269
     },
     {
       "name": "ts",
@@ -109,7 +109,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 5
+      "count": 6
     },
     {
       "name": "stt",
@@ -366,6 +366,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "e441847",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #28 from zhanglunet/trend/prd-084-t2-pipeline"
+    },
+    {
+      "hash": "2751874",
+      "date": "2026-10-19",
+      "subject": "feat: PRD-084/T2 翻译流水线实现"
+    },
+    {
+      "hash": "41b7462",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "9e17262",
       "date": "2026-10-19",
       "subject": "Merge pull request #27 from zhanglunet/trend/prd-084-t1-design"
@@ -409,24 +424,24 @@ export const repoReport = {
       "hash": "2e3d4f0",
       "date": "2026-10-18",
       "subject": "docs: PRD-067/T5 质量门试运行报告"
-    },
-    {
-      "hash": "6cca6b1",
-      "date": "2026-10-18",
-      "subject": "ci: PRD-068/T4 上游周报 cron 调度"
-    },
-    {
-      "hash": "733191d",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "11156f7",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "e441847",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #28 from zhanglunet/trend/prd-084-t2-pipeline"
+    },
+    {
+      "hash": "2751874",
+      "date": "2026-10-19",
+      "subject": "feat: PRD-084/T2 翻译流水线实现"
+    },
+    {
+      "hash": "41b7462",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "9e17262",
       "date": "2026-10-19",
