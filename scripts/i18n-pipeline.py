@@ -311,13 +311,22 @@ def apply_terms(en_text, zh_text, terms=None):
 def self_check_terms(en_text, zh_text, terms=None):
     """术语锁定自检：后处理后仍有英文术语残留（保护区外）→ failure。
 
-    wrongs 只查“本次涉及的术语”（与 apply_terms 同口径，避免“走 PRD-029 流程”误伤）。
+    wrongs 只查"本次涉及的术语"（与 apply_terms 同口径，避免"走 PRD-029 流程"误伤）；fenced 代码块跨行跳过。
     返回 [failure]，failure={"check","line","expected","detail"}。
     """
     terms = terms if terms is not None else TERMS
     active = involved_terms(en_text, terms)
     failures = []
+    in_fence = False  # F1 修复：跨行跟踪 fenced 代码块，与 apply_terms 保护口径一致
     for lineno, line in enumerate(zh_text.splitlines(), 1):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            if stripped.count("```") >= 2:
+                continue  # 单行内闭合的 ```code```：整行保护，不翻转状态
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
         prose = "".join(seg for p, seg in _split_protected(line) if not p)
         for t in active:
             if re.search(r"\b" + t["en"] + r"\b", prose, re.IGNORECASE):
@@ -649,6 +658,13 @@ def cmd_self_test():
     check("自检干净", self_check_terms("Use provider.", "用服务商。") == [])
     fails = self_check_terms("Use provider.", "用 provider。")
     check("自检残留失败", len(fails) == 1 and fails[0]["expected"] == "服务商",
+          repr(fails))
+    fenced = "# 配置\n```yaml\nprovider: openrouter\nmodel: gpt-4\n```\n这是中文正文。"
+    check("自检跳过 fenced 块", self_check_terms("Use provider.", fenced) == [],
+          repr(self_check_terms("Use provider.", fenced)))
+    fenced_bad = fenced + "\n用 provider 干活。"
+    fails = self_check_terms("Use provider.", fenced_bad)
+    check("块外残留仍报错", len(fails) == 1 and fails[0]["line"] == 7,
           repr(fails))
 
     # 7. 链接：内链断裂报错；存在通过
