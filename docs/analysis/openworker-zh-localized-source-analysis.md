@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-19T14:02:31+08:00
+更新时间：2026-10-19T06:03:03Z
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：840408c9c985c8e6bf903e1e76055f7f8cfa15ac
+当前提交：4f0c32a590696de34d3bc2893f1d4e4ea85542f2
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：633
-- 当前提交：840408c
+- 当前提交：4f0c32a
 - 主要文件类型：
   - py: 269
   - ts: 105
@@ -232,6 +232,7 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-19 4f0c32a docs: refresh generated site reports
 - 2026-10-19 840408c Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check
 - 2026-10-19 7810b75 chore: 更新上游哨兵水位（PRD-068）
 - 2026-10-19 023b53a fix: self_check_terms fence 感知（F1）
@@ -243,4 +244,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-19 c365bd7 Merge pull request #29 from zhanglunet/trend/prd-084-t3-ci
 - 2026-10-19 167b4ee [PRD-084/T4] 与哨兵联动：一键触发翻译
 - 2026-10-19 d0a630b [PRD-084/T3] CI 校验：术语锁定 + 链接检查
-- 2026-10-19 dd40a95 docs: refresh generated site reports

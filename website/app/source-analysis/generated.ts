@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-10-19T14:02:31+08:00",
+  "generatedAt": "2026-10-19T06:03:03Z",
   "branch": "main",
-  "head": "840408c9c985c8e6bf903e1e76055f7f8cfa15ac",
-  "shortHead": "840408c",
+  "head": "4f0c32a590696de34d3bc2893f1d4e4ea85542f2",
+  "shortHead": "4f0c32a",
   "totalFiles": 633,
   "byExt": [
     {
@@ -366,6 +366,11 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "4f0c32a",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "840408c",
       "date": "2026-10-19",
       "subject": "Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check"
@@ -419,14 +424,14 @@ export const repoReport = {
       "hash": "d0a630b",
       "date": "2026-10-19",
       "subject": "[PRD-084/T3] CI 校验：术语锁定 + 链接检查"
-    },
-    {
-      "hash": "dd40a95",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "4f0c32a",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "840408c",
       "date": "2026-10-19",
