@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-19T09:38:04+08:00",
+  "generatedAt": "2026-10-19T12:37:32+08:00",
   "branch": "main",
-  "head": "e4418470cead4f4a095448c6404bf9078fc628fc",
-  "shortHead": "e441847",
-  "totalFiles": 629,
+  "head": "283ff711a2979d1b5d1740cb96db699bb839ca21",
+  "shortHead": "283ff71",
+  "totalFiles": 631,
   "byExt": [
     {
       "name": "py",
@@ -35,7 +35,7 @@ export const repoReport = {
     },
     {
       "name": "yml",
-      "count": 13
+      "count": 15
     },
     {
       "name": "[none]",
@@ -100,12 +100,12 @@ export const repoReport = {
       "count": 36
     },
     {
-      "name": "packaging",
-      "count": 10
+      "name": ".github",
+      "count": 11
     },
     {
-      "name": ".github",
-      "count": 9
+      "name": "packaging",
+      "count": 10
     },
     {
       "name": "scripts",
@@ -366,6 +366,31 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "283ff71",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #30 from zhanglunet/trend/prd-084-t4-trigger"
+    },
+    {
+      "hash": "c365bd7",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #29 from zhanglunet/trend/prd-084-t3-ci"
+    },
+    {
+      "hash": "167b4ee",
+      "date": "2026-10-19",
+      "subject": "[PRD-084/T4] 与哨兵联动：一键触发翻译"
+    },
+    {
+      "hash": "d0a630b",
+      "date": "2026-10-19",
+      "subject": "[PRD-084/T3] CI 校验：术语锁定 + 链接检查"
+    },
+    {
+      "hash": "dd40a95",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "e441847",
       "date": "2026-10-19",
       "subject": "Merge pull request #28 from zhanglunet/trend/prd-084-t2-pipeline"
@@ -399,34 +424,34 @@ export const repoReport = {
       "hash": "904c8df",
       "date": "2026-10-19",
       "subject": "Merge pull request #26 from zhanglunet/trend/prd-068-t5-trial"
-    },
-    {
-      "hash": "e6241fa",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-068/T5 上游周报试运行报告"
-    },
-    {
-      "hash": "e56cb47",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "abfcae7",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #25 from zhanglunet/trend/prd-067-t5-trial"
-    },
-    {
-      "hash": "ef61d3f",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #24 from zhanglunet/trend/prd-068-t4-cron"
-    },
-    {
-      "hash": "2e3d4f0",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-067/T5 质量门试运行报告"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "283ff71",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #30 from zhanglunet/trend/prd-084-t4-trigger"
+    },
+    {
+      "hash": "c365bd7",
+      "date": "2026-10-19",
+      "subject": "Merge pull request #29 from zhanglunet/trend/prd-084-t3-ci"
+    },
+    {
+      "hash": "167b4ee",
+      "date": "2026-10-19",
+      "subject": "[PRD-084/T4] 与哨兵联动：一键触发翻译"
+    },
+    {
+      "hash": "d0a630b",
+      "date": "2026-10-19",
+      "subject": "[PRD-084/T3] CI 校验：术语锁定 + 链接检查"
+    },
+    {
+      "hash": "dd40a95",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "e441847",
       "date": "2026-10-19",
