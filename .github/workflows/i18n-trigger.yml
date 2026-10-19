@@ -1,0 +1,169 @@
+# 翻译流水线手动触发器（PRD-084/T4）
+#
+# 用法：Actions 页 → "翻译流水线（一键翻译）" → Run workflow，
+# 贴哨兵 needs_translation JSON（示例见 PR body / 设计稿 §4），
+# 可选填溯源 source_ref（如"上游周报 2026-10-19"）与留言目标 issue 号。
+#
+# 流程：校验输入 → 检查密钥 → 跑 scripts/i18n-pipeline.py →
+#       上传产出物（翻译 diff / PR-BODY.md / report.json）→ 写 run 摘要（+可选 issue 留言）。
+# 产出物下载后，人工按设计稿 §7 审校闸门开 [i18n] PR（本 workflow 不自动开 PR、不自动合并）。
+#
+# 口径依据：docs/plans/2026-10-19-i18n-pipeline-design.md §4（哨兵接口）§7（人工闸门）。
+# 第一期只做手动触发；二期（哨兵周报 → 自动开 [i18n] PR）留白见文件末尾注释。
+# 密钥只从 secrets.I18N_GATEWAY_API_KEY 读，不在任何地方硬编码。
+
+name: 翻译流水线（一键翻译）
+
+on:
+  workflow_dispatch:
+    inputs:
+      needs_translation_json:
+        description: '哨兵清单 JSON（items[].path/status/upstream_sha，示例见 PR body）'
+        required: true
+        type: string
+      source_ref:
+        description: '溯源（写进产出物，如"上游周报 2026-10-19"）'
+        required: false
+        default: 'manual'
+        type: string
+      issue_number:
+        description: '汇总留言的目标 issue 号（可选；不填则只写 run 摘要）'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: i18n-trigger
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 检查密钥
+        run: |
+          if [ -z "${{ secrets.I18N_GATEWAY_API_KEY }}" ]; then
+            echo "::error::缺少 I18N_GATEWAY_API_KEY secret" >&2
+            echo "解决办法：仓库 Settings → Secrets and variables → Actions → New repository secret，" >&2
+            echo "新建名为 I18N_GATEWAY_API_KEY 的 secret（值为 SiliconForge 网关 API key），然后重新 Run workflow。" >&2
+            exit 1
+          fi
+          echo "I18N_GATEWAY_API_KEY 已配置。"
+
+      - name: 写输入 JSON 并校验
+        run: |
+          cat > /tmp/needs_translation.json <<'JSONEOF'
+          ${{ inputs.needs_translation_json }}
+          JSONEOF
+          python3 - <<'PYEOF'
+          import json, os, sys
+          try:
+              d = json.load(open("/tmp/needs_translation.json", encoding="utf-8"))
+          except Exception as e:
+              print("::error::输入不是合法 JSON：%s" % e)
+              sys.exit(1)
+          if not isinstance(d, dict) or not isinstance(d.get("items"), list):
+              print("::error::输入 JSON 必须含 items 数组（示例见设计稿 §4）")
+              sys.exit(1)
+          ref = os.environ.get("SOURCE_REF", "")
+          if ref and "source_ref" not in d:
+              d["source_ref"] = ref
+              json.dump(d, open("/tmp/needs_translation.json", "w", encoding="utf-8"),
+                        ensure_ascii=False, indent=2)
+          print("输入 OK：%d 条待翻译" % len(d["items"]))
+          PYEOF
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+
+      - name: 跑翻译流水线
+        id: pipeline
+        env:
+          I18N_GATEWAY_API_KEY: ${{ secrets.I18N_GATEWAY_API_KEY }}
+        run: |
+          set +e
+          python3 scripts/i18n-pipeline.py \
+            --input /tmp/needs_translation.json \
+            --out-dir i18n-out > /tmp/pipeline.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          echo "---- 流水线日志（尾 30 行） ----"
+          tail -30 /tmp/pipeline.log
+          exit $code
+
+      - name: 上传产出物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i18n-output
+          path: i18n-out/
+          if-no-files-found: warn
+
+      - name: 写汇总
+        if: always()
+        env:
+          EXIT_CODE: ${{ steps.pipeline.outputs.exit_code }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os
+          lines = ["# 翻译流水线汇总", ""]
+          ran = os.path.exists("/tmp/pipeline.log")
+          rp = "i18n-out/report.json"
+          if os.path.exists(rp):
+              r = json.load(open(rp, encoding="utf-8"))
+              res, warns = r.get("results", []), r.get("warnings", [])
+              lines.append("- 溯源：%s" % (r.get("source_ref") or r.get("source") or "-"))
+              lines.append("- 模型：%s；术语表：%s（%s）" % (
+                  r.get("model"), r.get("terms"), r.get("terms_source")))
+              lines.append("- 翻译成功：%d 个文件" % len(res))
+              for it in res:
+                  lines.append("  - %s（%s）" % (it.get("path"), it.get("status")))
+              lines.append("- 警告：%d 条（外链/锚点等，不阻断）" % len(warns))
+              for w in warns[:20]:
+                  lines.append("  - %s" % w)
+          else:
+              lines.append("- 未产出 report.json（流水线中途失败或未运行）")
+          code = os.environ.get("EXIT_CODE", "").strip()
+          if not ran:
+              lines.append("- 状态：流水线未运行（前置步骤失败，见上）")
+          elif code != "0":
+              lines.append("- **失败**：流水线退出码 %s" % code)
+              log = open("/tmp/pipeline.log", encoding="utf-8",
+                         errors="replace").read() if ran else ""
+              if "术语" in log:
+                  lines.append("  - 原因疑似：术语锁定拦截（译法与拍板值不一致）")
+              elif "内链" in log:
+                  lines.append("  - 原因疑似：内链断裂阻断")
+              tail = "\n".join(log.strip().splitlines()[-8:])
+              if tail:
+                  lines += ["", "<details><summary>日志尾部</summary>",
+                            "", "```", tail, "```", "</details>"]
+          else:
+              lines.append("- 状态：成功")
+          md = "\n".join(lines) + "\n"
+          open("/tmp/summary.md", "w", encoding="utf-8").write(md)
+          step = os.environ.get("GITHUB_STEP_SUMMARY")
+          if step:
+              open(step, "a", encoding="utf-8").write(md)
+          print(md)
+          PYEOF
+
+      - name: 往 issue 留言汇总
+        if: always() && inputs.issue_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh issue comment "${{ inputs.issue_number }}" --body-file /tmp/summary.md
+
+# ---- 二期留白（不做，只记方向） ----
+# 自动触发：upstream-weekly.yml 跑完后，若 needs_translation 非空，
+#   用 gh workflow run 触发本 workflow 并把清单 JSON 传进来；
+#   再由本 workflow 的产出物自动开 [i18n] PR（gh pr create --body-file i18n-out/PR-BODY.md）。
+# 人工闸门保持：[i18n] PR 默认不自动合并（设计稿 §7，PRD-084 验收标准第 4 条）。
