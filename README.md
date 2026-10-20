@@ -1,5 +1,11 @@
 # OpenWorker 全量汉化版（中文 GUI + macOS 桌面客户端）
 
+<p align="center"><a href="./README.md">中文</a> | <a href="./README.en.md">English</a></p>
+
+<p align="center"><strong>英文的 AI 桌面助手，中文的打开方式。</strong></p>
+
+<p align="center"><sub>8 大界面模块全汉化 · 前端 + 桌面壳 2 层本地化 · 3 种运行方式 · 1 个 DMG 开箱即用</sub></p>
+
 > 本仓库地址：**https://github.com/zhanglunet/openworker-zh-localized**
 >
 > 基于 [Lenovo202409/openworker-zh](https://github.com/Lenovo202409/openworker-zh) 二次整理，与上游 [andrewyng/openworker](https://github.com/andrewyng/openworker) 保持功能一致，仅对界面进行了中文本地化。
