@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-19T06:03:03Z",
+  "generatedAt": "2026-10-20T15:38:39+08:00",
   "branch": "main",
-  "head": "4f0c32a590696de34d3bc2893f1d4e4ea85542f2",
-  "shortHead": "4f0c32a",
-  "totalFiles": 633,
+  "head": "af2094519ae5d7e3a4090b7a66fb155ae67686cc",
+  "shortHead": "af20945",
+  "totalFiles": 634,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 48
+      "count": 49
     },
     {
       "name": "svg",
@@ -141,6 +141,10 @@ export const repoReport = {
     },
     {
       "name": "pyproject.toml",
+      "count": 1
+    },
+    {
+      "name": "README.en.md",
       "count": 1
     },
     {
@@ -366,6 +370,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "af20945",
+      "date": "2026-10-20",
+      "subject": "Merge PR #37: PRD-102/T3 README 双语示范改造"
+    },
+    {
+      "hash": "a3c4b6f",
+      "date": "2026-10-20",
+      "subject": "docs: PRD-102/T3 新增英文 README（同结构浓缩版，英文技术描述）"
+    },
+    {
+      "hash": "7f33922",
+      "date": "2026-10-20",
+      "subject": "docs: PRD-102/T3 README 顶部五层双语改造（语言切换 + slogan + 数字副标语）"
+    },
+    {
+      "hash": "8b85bbb",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "4f0c32a",
       "date": "2026-10-19",
       "subject": "docs: refresh generated site reports"
@@ -404,29 +428,29 @@ export const repoReport = {
       "hash": "48282a4",
       "date": "2026-10-19",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "283ff71",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #30 from zhanglunet/trend/prd-084-t4-trigger"
-    },
-    {
-      "hash": "c365bd7",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #29 from zhanglunet/trend/prd-084-t3-ci"
-    },
-    {
-      "hash": "167b4ee",
-      "date": "2026-10-19",
-      "subject": "[PRD-084/T4] 与哨兵联动：一键触发翻译"
-    },
-    {
-      "hash": "d0a630b",
-      "date": "2026-10-19",
-      "subject": "[PRD-084/T3] CI 校验：术语锁定 + 链接检查"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "af20945",
+      "date": "2026-10-20",
+      "subject": "Merge PR #37: PRD-102/T3 README 双语示范改造"
+    },
+    {
+      "hash": "a3c4b6f",
+      "date": "2026-10-20",
+      "subject": "docs: PRD-102/T3 新增英文 README（同结构浓缩版，英文技术描述）"
+    },
+    {
+      "hash": "7f33922",
+      "date": "2026-10-20",
+      "subject": "docs: PRD-102/T3 README 顶部五层双语改造（语言切换 + slogan + 数字副标语）"
+    },
+    {
+      "hash": "8b85bbb",
+      "date": "2026-10-19",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "4f0c32a",
       "date": "2026-10-19",
@@ -826,11 +850,6 @@ export const repoReport = {
       "hash": "4cb7064",
       "date": "2026-10-17",
       "subject": "docs: PRD-029/T1 上游同步策略"
-    },
-    {
-      "hash": "d5ca572",
-      "date": "2026-10-12",
-      "subject": "docs: refresh generated site reports"
     }
   ]
 } as const;

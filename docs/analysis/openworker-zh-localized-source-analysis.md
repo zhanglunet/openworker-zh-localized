@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-19T06:03:03Z
+更新时间：2026-10-20T15:38:39+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：4f0c32a590696de34d3bc2893f1d4e4ea85542f2
+当前提交：af2094519ae5d7e3a4090b7a66fb155ae67686cc
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：633
-- 当前提交：4f0c32a
+- 跟踪文件总数：634
+- 当前提交：af20945
 - 主要文件类型：
   - py: 269
   - ts: 105
   - tsx: 79
-  - md: 48
+  - md: 49
   - svg: 23
   - png: 22
   - json: 19
@@ -52,6 +52,7 @@
 - LICENSE: 1 个文件
 - openworker-zh-test-report.md: 1 个文件
 - pyproject.toml: 1 个文件
+- README.en.md: 1 个文件
 - README.md: 1 个文件
 - start-openworker-gui.sh: 1 个文件
 - start-openworker-server.sh: 1 个文件
@@ -232,6 +233,10 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-20 af20945 Merge PR #37: PRD-102/T3 README 双语示范改造
+- 2026-10-20 a3c4b6f docs: PRD-102/T3 新增英文 README（同结构浓缩版，英文技术描述）
+- 2026-10-20 7f33922 docs: PRD-102/T3 README 顶部五层双语改造（语言切换 + slogan + 数字副标语）
+- 2026-10-19 8b85bbb docs: refresh generated site reports
 - 2026-10-19 4f0c32a docs: refresh generated site reports
 - 2026-10-19 840408c Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check
 - 2026-10-19 7810b75 chore: 更新上游哨兵水位（PRD-068）
@@ -240,7 +245,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-19 fd32b32 Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial
 - 2026-10-19 d5b5958 docs: PRD-084/T5 翻译流水线试运行报告
 - 2026-10-19 48282a4 docs: refresh generated site reports
-- 2026-10-19 283ff71 Merge pull request #30 from zhanglunet/trend/prd-084-t4-trigger
-- 2026-10-19 c365bd7 Merge pull request #29 from zhanglunet/trend/prd-084-t3-ci
-- 2026-10-19 167b4ee [PRD-084/T4] 与哨兵联动：一键触发翻译
-- 2026-10-19 d0a630b [PRD-084/T3] CI 校验：术语锁定 + 链接检查
