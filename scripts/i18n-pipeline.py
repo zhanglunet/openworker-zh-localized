@@ -367,7 +367,7 @@ def _anchor_ok(text, anchor):
 
 
 def check_links(zh_text, file_path, repo_root, urlopen=None):
-    """返回 (errors, warnings)。内链文件缺失→error；外链不可达→warning；锚点疑似缺失→warning。"""
+    """返回 (errors, warnings)。内链文件或目录缺失→error；外链不可达→warning；锚点疑似缺失→warning。"""
     urlopen = urlopen or urllib.request.urlopen
     errors, warnings = [], []
     seen_external = set()
@@ -402,7 +402,7 @@ def check_links(zh_text, file_path, repo_root, urlopen=None):
         else:
             p, _, anchor = target.partition("#")
             full = os.path.normpath(os.path.join(file_dir, p))
-            if not os.path.isfile(full):
+            if not (os.path.isfile(full) or os.path.isdir(full)):
                 errors.append("内链断裂: %s（%s 中）" % (target, file_path))
             elif anchor and os.path.isfile(full):
                 try:
@@ -676,6 +676,16 @@ def cmd_self_test():
         check("内链存在", e == [] and w == [], repr((e, w)))
         e, w = check_links("[a](missing.md)", "docs/b.md", td)
         check("内链断裂报错", len(e) == 1, repr(e))
+
+    # GitHub renders existing repository directories as valid link targets.
+    with tempfile.TemporaryDirectory() as td:
+        for directory in ("website", "docs/analysis", "docs/updates", "docs/enterprise"):
+            os.makedirs(os.path.join(td, directory))
+            for target in (directory, directory + "/"):
+                e, w = check_links("[directory](%s)" % target, "README.en.md", td)
+                check("目录内链存在: " + target, e == [] and w == [], repr((e, w)))
+        e, w = check_links("[missing](docs/missing/)", "README.en.md", td)
+        check("缺失目录仍阻断", len(e) == 1, repr(e))
 
     # 8. 外链只警告（mock 不可达）
     import unittest.mock as mock
