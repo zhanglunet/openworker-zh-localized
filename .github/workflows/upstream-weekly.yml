@@ -110,7 +110,7 @@ jobs:
             last=$(gh issue list --search "上游周报 in:title" --state all --limit 1 --json number --jq '.[0].number')
             if [ -z "$last" ]; then
               # 边界：历史上从无周报 issue（首次运行即无事）→ 开极简 issue
-              gh issue create --title "《上游周报 $date》" \
+              gh issue create --title "《上游周报 ${date}》" \
                 --body "哨兵已上线。$(cat weekly-body.md)"
             else
               gh issue comment "$last" --body-file weekly-body.md
