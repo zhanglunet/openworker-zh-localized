@@ -10,8 +10,9 @@ on:
     paths:
       - 'surfaces/gui/src/**'
       - 'docs/**'
-    paths-ignore:
-      - 'docs/plans/**'
+      - '.github/workflows/quality-gate.yml'
+      # A single ordered paths list includes sensitive files, then excludes plans.
+      - '!docs/plans/**'
 
 permissions:
   contents: read

@@ -98,3 +98,28 @@ def test_non_bash_steps_are_skipped_not_parsed():
     shells = {shell for _, _, shell, _ in _steps(tmpl)}
     assert "pwsh" in shells, "模板里应当有 pwsh 步骤，否则这条断言失去意义"
     assert BASH_SHELLS & shells, "模板里也应当有 bash 步骤"
+
+
+@pytest.mark.parametrize("path", WORKFLOWS, ids=lambda p: str(p.relative_to(ROOT)))
+def test_event_path_filters_are_not_mutually_exclusive(path):
+    """GitHub rejects an event with both paths and paths-ignore before jobs exist."""
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    # PyYAML's YAML 1.1 loader reads the unquoted Actions `on` key as True.
+    events = doc.get("on", doc.get(True, {}))
+    if not isinstance(events, dict):
+        return
+    for event, config in events.items():
+        if isinstance(config, dict):
+            assert not {"paths", "paths-ignore"} <= config.keys(), (
+                f"{path.relative_to(ROOT)} :: {event}: use ordered negative paths "
+                "instead of combining paths and paths-ignore"
+            )
+
+
+def test_quality_gate_keeps_sensitive_paths_and_excludes_only_plans():
+    doc = yaml.safe_load((ROOT / ".github/workflows/quality-gate.yml").read_text(encoding="utf-8"))
+    event = doc.get("on", doc.get(True))["pull_request"]
+    assert event["paths"] == [
+        "surfaces/gui/src/**", "docs/**",
+        ".github/workflows/quality-gate.yml", "!docs/plans/**",
+    ]
