@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "meta": { "generator": "demo" },
+  "session": {
+    "role_name": "样例角色-运营助手",
+    "session_title": "整理本周趋势日报摘要",
+    "model": "<示例模型名>",
+    "provider": "<示例服务商>",
+    "started_at": "2026-10-23T09:00:00+08:00"
+  },
+  "capabilities": {
+    "skills": [
+      { "name": "日报摘要", "source": "内置样例" },
+      { "name": "周报归档", "source": "内置样例" }
+    ],
+    "connectors": [
+      { "kind": "github", "account": "<占位符-账号>" },
+      { "kind": "slack", "account": "<占位符-账号>" }
+    ],
+    "tools": [
+      { "name": "web_search" },
+      { "name": "file_read" }
+    ],
+    "approval_policy": "敏感操作需人工审批"
+  },
+  "context_composition": {
+    "system":     { "tokens": 3200, "share": 0.31 },
+    "tools":      { "tokens": 2800, "share": 0.27 },
+    "skills":     { "tokens": 1900, "share": 0.18 },
+    "connectors": { "tokens": 1200, "share": 0.12 },
+    "history":    { "tokens": 1200, "share": 0.12 }
+  },
+  "timeline": [
+    { "at": "09:00", "kind": "user", "label": "帮我整理这周的日报要点" },
+    { "at": "09:00", "kind": "tool_call", "label": "web_search", "status": "ok", "tokens_in": 640, "tokens_out": 210 },
+    { "at": "09:01", "kind": "connector_call", "connector": "github", "label": "读取示例仓库周报", "status": "ok" },
+    { "at": "09:02", "kind": "approval", "label": "写入共享文档前需确认", "status": "ok" },
+    { "at": "09:03", "kind": "assistant", "label": "已生成 5 条要点摘要", "tokens_out": 880 }
+  ]
+}
