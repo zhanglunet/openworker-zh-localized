@@ -48,3 +48,4 @@
 - 回归：`tests/test_panel_fixture_selfcheck.py`（T2/T3 自查 13 例，继续全绿）
 - 全量：`.venv` 下 `pytest tests -q` → **1476 passed, 4 skipped, 2 failed**；2 例失败（`test_cli_bridge.py::test_environment_is_not_inherited_wholesale`、`test_shell_i18n_hazards.py::test_no_bare_variable_immediately_before_a_wide_character[.github/workflows/upstream-weekly.yml]`）经在 main 分支复跑确认**与本 PR 无关**（main 上同样失败，环境相关预存问题）。
 - 运行方式：`.venv` 下 `pytest tests/test_panel_acceptance_t5.py tests/test_panel_docs.py tests/test_panel_fixture_selfcheck.py -q` → 28 passed
+- 收尾复核（2026-10-25）：面板三件套复跑 → 28 passed、本测试文件 `python3` 直跑 → 12/12；全量 `pytest tests -q` 复跑 → **1475 passed, 4 skipped, 3 failed**——除上述 2 例外，另 1 例 `test_ui_refresh_e2e.py::test_ui_refresh_cross_cutting_e2e` 在全量并发下偶发时序失败（Slack 适配器消息条数竞态断言），单测隔离复跑 main 3/3、本分支 5/5 全通过；本 PR 仅改文档/测试/截图、不触碰生产代码，判定为既有 flaky 用例，与本 PR 无关。
