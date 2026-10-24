@@ -14,14 +14,14 @@
 1. **打开面板**：仓库根目录双击 `ui-mocks/dsh-context-panel.html`（零依赖、无需安装、仅本机浏览器打开；`file://` 下自动回退页内同源演示数据副本）。
 2. **切换主题**：右上角切换亮/暗主题（`data-theme`）。
 3. **看组成**：默认落在页签①，读占比条与合计 token（标注「本地聚合」口径）。
-4. **看演进**：点页签②，用 ◀ ▶ 步进关键节点或点「自动回放」；点击任一节点看详情卡。
+4. **看演进**：点页签②，点击任一节点看详情卡（默认已选中首节点，详情即时可见；键盘 ←/→ 可在两页签间切换）。*(T5 勘误：原「◀ ▶ 步进/自动回放」与 T3 实现不符，实际交互为点击节点——见验收记录。)*
 5. **换数据**：面板只认 `panel-data v1` 契约（`ui-mocks/fixtures/panel-demo-data.json`）；demo 适配器先行动，真实 coworker 适配器留桩（对齐三规则：直连/映射/缺字段不造假数）。
 
-![能力组成页签](docs/assets/context-panel-composition.png)
-*（截图占位：T5 验收补真实截图）*
+![能力组成页签](assets/context-panel-composition.png)
+*（真实截图：页签① 能力组成，T5 验收补）*
 
-![调用演进页签](docs/assets/context-panel-timeline.png)
-*（截图占位：T5 验收补真实截图）*
+![调用演进页签](assets/context-panel-timeline.png)
+*（真实截图：页签② 调用演进 + 失败节点详情卡，T5 验收补）*
 
 ## 红线
 
@@ -30,5 +30,6 @@
 
 ## 与其他文档的联动
 
+- T5 验收记录（逐步计时、密钥扫描、勘误）见 [docs/context-panel-acceptance.md](context-panel-acceptance.md)。
 - 安装动线见 `install-zh.sh` / README §4~§6（PRD-121，PR #38）。
 - 双语 README 的英文同步在 `README.en.md`（PRD-122，PR #39 合并后补面板小节英文版）。
