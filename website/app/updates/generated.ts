@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-20T15:38:39+08:00",
+  "generatedAt": "2026-10-24T13:08:05+08:00",
   "branch": "main",
-  "head": "af2094519ae5d7e3a4090b7a66fb155ae67686cc",
-  "shortHead": "af20945",
-  "totalFiles": 634,
+  "head": "64cfee96f4c2791da875cf4738cab81f83a237f1",
+  "shortHead": "64cfee9",
+  "totalFiles": 635,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 49
+      "count": 50
     },
     {
       "name": "svg",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 80
+      "count": 81
     },
     {
       "name": "website",
@@ -370,6 +370,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "64cfee9",
+      "date": "2026-10-24",
+      "subject": "docs: 记录汉化版定位、目标与愿景 (#45)"
+    },
+    {
+      "hash": "d7c8bbc",
+      "date": "2026-10-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "af20945",
       "date": "2026-10-20",
       "subject": "Merge PR #37: PRD-102/T3 README 双语示范改造"
@@ -418,19 +428,19 @@ export const repoReport = {
       "hash": "fd32b32",
       "date": "2026-10-19",
       "subject": "Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial"
-    },
-    {
-      "hash": "d5b5958",
-      "date": "2026-10-19",
-      "subject": "docs: PRD-084/T5 翻译流水线试运行报告"
-    },
-    {
-      "hash": "48282a4",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "64cfee9",
+      "date": "2026-10-24",
+      "subject": "docs: 记录汉化版定位、目标与愿景 (#45)"
+    },
+    {
+      "hash": "d7c8bbc",
+      "date": "2026-10-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "af20945",
       "date": "2026-10-20",
@@ -840,16 +850,6 @@ export const repoReport = {
       "hash": "89dba93",
       "date": "2026-10-17",
       "subject": "docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）"
-    },
-    {
-      "hash": "dff313e",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲"
-    },
-    {
-      "hash": "4cb7064",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T1 上游同步策略"
     }
   ]
 } as const;
