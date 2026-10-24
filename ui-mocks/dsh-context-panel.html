@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenWorker 上下文面板</title>
+<!-- PRD-155/T2：中文上下文可视化面板——能力组成区（演示数据）。
+     形态沿用 ui-mocks/ 既有静态样机约定：零依赖（无构建、无 npm）、Tailwind CDN、
+     data-theme 明暗双主题，双击即开（file:// 直接可读）。
+     借鉴声明：面板形态借鉴自 bowenliang123/dsh-context（Apache-2.0），见页脚。 -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: ['selector', '[data-theme="dark"]'],
+    theme: {
+      extend: {
+        colors: {
+          paper: 'var(--paper)', panel: 'var(--panel)', ink: 'var(--ink)', muted: 'var(--muted)',
+          faint: 'var(--faint)', line: 'var(--line)', lineStrong: 'var(--line-strong)',
+          accent: 'var(--accent)', accentSoft: 'var(--accent-soft)', ok: 'var(--ok)',
+          okSoft: 'var(--ok-soft)', okLine: 'var(--ok-line)', warnInk: 'var(--warn-ink)',
+          warnSoft: 'var(--warn-soft)', danger: 'var(--danger)', tealInk: 'var(--teal-ink)',
+          tealSoft: 'var(--teal-soft)', tealLine: 'var(--teal-line)', solid: 'var(--solid)',
+          onSolid: 'var(--on-solid)',
+        },
+        fontFamily: {
+          sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Inter', 'system-ui', 'sans-serif'],
+          mono: ['SF Mono', 'JetBrains Mono', 'Menlo', 'monospace'],
+        },
+        borderRadius: { xl2: '14px' },
+      },
+    },
+  };
+</script>
+<style>
+  :root{
+    --paper:#f5f6f7; --panel:#ffffff; --ink:#17191c; --muted:#5b616b; --faint:#9aa1aa;
+    --line:#e8eaed; --line-strong:#d8dce1; --accent:#2563eb; --accent-soft:#e9f0fd;
+    --ok:#2f7d57; --ok-soft:#eef6f0; --ok-line:#cfe6d6; --warn-ink:#b45309; --warn-soft:#fef3c7;
+    --danger:#b91c1c; --teal-ink:#0f766e; --teal-line:#cfebea; --teal-soft:#edfafa;
+    --solid:#17191c; --on-solid:#fff;
+  }
+  html[data-theme="dark"]{
+    --paper:#131417; --panel:#1c1e22; --ink:#e6e8eb; --muted:#9aa1ab; --faint:#62686f;
+    --line:#2a2d33; --line-strong:#3a3e46; --accent:#4c8dff; --accent-soft:#1c2a44;
+    --ok:#58b07f; --ok-soft:#1a2b21; --ok-line:#2c4736; --warn-ink:#e8b04b; --warn-soft:#36280f;
+    --danger:#f07067; --teal-ink:#46c0b2; --teal-line:#1f4a45; --teal-soft:#11302d;
+    --solid:#2e3138; --on-solid:#e6e8eb;
+  }
+  body{ background:var(--paper); color:var(--ink); }
+  /* 连接器品牌色（与 ui-mocks/redesign.html 同一套，仅供品牌小圆点与徽标） */
+  [data-brand="github"] { --brand:#1f2328; --brand-soft:#eef0f2; }
+  [data-brand="slack"]  { --brand:#611f69; --brand-soft:#f4ecf5; }
+  [data-brand="default"]{ --brand:#6b7280; --brand-soft:#eef0f2; }
+  html[data-theme="dark"] [data-brand="github"] { --brand:#e6e8eb; --brand-soft:#26282d; }
+  html[data-theme="dark"] [data-brand="slack"]  { --brand-soft:#2a1430; }
+  html[data-theme="dark"] [data-brand="default"]{ --brand-soft:#26282d; }
+  /* 上下文构成：占位条 */
+  .comp-bar{ height:8px; border-radius:9999px; background:var(--paper); border:1px solid var(--line); overflow:hidden; }
+  .comp-bar > i{ display:block; height:100%; border-radius:9999px; }
+  /* 页签（② 调用演进为本期禁用占位：T3 在同页落位） */
+  .tab{ padding:6px 14px; border-radius:10px; font-size:13.5px; }
+  .tab[aria-selected="true"]{ background:var(--panel); box-shadow:0 1px 2px rgba(0,0,0,.06); color:var(--ink); font-weight:600; }
+  .tab[disabled]{ opacity:.45; cursor:not-allowed; }
+</style>
+</head>
+<body class="font-sans antialiased text-[14px] min-h-screen flex flex-col">
+
+<!-- ============ 页头：标题 + 角色/会话 + 常驻「演示数据」徽标（代码强制显示） ============ -->
+<header class="bg-panel border-b border-line">
+  <div class="max-w-3xl mx-auto px-6 pt-5 pb-4">
+    <div class="flex items-start gap-3">
+      <div class="min-w-0">
+        <h1 class="text-[18px] font-semibold tracking-tight">OpenWorker <span data-label="panel.title"></span></h1>
+        <p class="text-[12.5px] text-muted mt-1 leading-relaxed">
+          <span data-label="panel.subtitle.role"></span>「<span id="hdRole"></span>」· <span data-label="panel.subtitle.session"></span>「<span id="hdSession"></span>」
+        </p>
+      </div>
+      <div class="ml-auto flex items-center gap-2 shrink-0">
+        <!-- 红线（T1 §4.3-2）：meta.generator=demo 时由渲染层强制显示，数据文件关不掉 -->
+        <span id="demoBadge" hidden class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warnSoft text-warnInk border border-warnInk/20 text-[11.5px] font-semibold"></span>
+        <button id="themeBtn" class="w-7 h-7 grid place-items-center rounded-md border border-line bg-paper hover:border-lineStrong text-muted" aria-label="theme">&#9708;</button>
+      </div>
+    </div>
+    <!-- 警示与说明（T1 §3.4） -->
+    <p class="text-[11.5px] text-faint mt-2">
+      <span data-label="warn.demo_note"></span> · <span data-label="warn.placeholder_note"></span>
+    </p>
+  </div>
+  <!-- 页签：默认落在①；② 为 T3（issue #777）落位占位，本期禁用 -->
+  <div class="max-w-3xl mx-auto px-6">
+    <nav class="inline-flex items-center gap-1 -mb-px" role="tablist">
+      <button id="tabComposition" class="tab" role="tab" aria-selected="true">&#9312; <span data-label="panel.tab.composition"></span></button>
+      <button id="tabTimeline" class="tab" role="tab" aria-selected="false" disabled>&#9313; <span data-label="panel.tab.timeline"></span></button>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ 主体 ============ -->
+<main class="flex-1">
+  <div class="max-w-3xl mx-auto px-6 py-6 space-y-5">
+
+    <!-- 契约失败态：schema_version ≠ 1 → 不渲染任何区（T1 §4.1） -->
+    <div id="panelError" hidden class="rounded-xl2 border border-warnInk/25 bg-warnSoft/60 px-4 py-3 text-[13.5px] text-warnInk"></div>
+
+    <!-- ① 能力组成（T2 交付） -->
+    <section id="view-composition" class="space-y-5" role="tabpanel">
+
+      <!-- 装配清单：这个数字同事装了什么能力（只读） -->
+      <div class="rounded-xl2 border border-line bg-panel overflow-hidden">
+        <div class="px-4 py-3 border-b border-line flex items-center gap-2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-muted"><path d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 12h18"/></svg>
+          <h2 class="text-[13.5px] font-semibold">装配清单</h2>
+        </div>
+        <div id="assemblyList"></div>
+      </div>
+
+      <!-- 上下文构成：上下文被什么占着（token 占比，悬停看 token 数） -->
+      <div class="rounded-xl2 border border-line bg-panel overflow-hidden">
+        <div class="px-4 py-3 border-b border-line flex items-baseline justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-muted"><path d="M4 19V5M4 19h16M8 16v-5M13 16V8M18 16v-9"/></svg>
+            <h2 class="text-[13.5px] font-semibold" data-label="comp.context.title"></h2>
+          </div>
+          <span id="ctxTotal" class="text-[12px] text-faint"></span>
+        </div>
+        <div id="ctxComposition" class="px-4 py-3 space-y-2.5"></div>
+      </div>
+
+    </section>
+
+  </div>
+</main>
+
+<!-- ============ 页脚：借鉴声明（Apache-2.0）+ 演示数据说明 ============ -->
+<footer class="bg-panel border-t border-line">
+  <div class="max-w-3xl mx-auto px-6 py-3 text-[11.5px] text-faint">
+    <span data-label="panel.footer.attribution"></span> · <span data-label="warn.demo_note"></span>
+  </div>
+</footer>
+
+<!-- ============ 演示数据页内副本（file:// 双击回退用；tests 保证与 fixtures 文件一致） ============ -->
+<script type="application/json" id="panel-demo-fallback">
+{
+  "schema_version": 1,
+  "meta": { "generator": "demo" },
+  "session": {
+    "role_name": "样例角色-运营助手",
+    "session_title": "整理本周趋势日报摘要",
+    "model": "<示例模型名>",
+    "provider": "<示例服务商>",
+    "started_at": "2026-10-23T09:00:00+08:00"
+  },
+  "capabilities": {
+    "skills": [
+      { "name": "日报摘要", "source": "内置样例" },
+      { "name": "周报归档", "source": "内置样例" }
+    ],
+    "connectors": [
+      { "kind": "github", "account": "<占位符-账号>" },
+      { "kind": "slack", "account": "<占位符-账号>" }
+    ],
+    "tools": [
+      { "name": "web_search" },
+      { "name": "file_read" }
+    ],
+    "approval_policy": "敏感操作需人工审批"
+  },
+  "context_composition": {
+    "system":     { "tokens": 3200, "share": 0.31 },
+    "tools":      { "tokens": 2800, "share": 0.27 },
+    "skills":     { "tokens": 1900, "share": 0.18 },
+    "connectors": { "tokens": 1200, "share": 0.12 },
+    "history":    { "tokens": 1200, "share": 0.12 }
+  },
+  "timeline": [
+    { "at": "09:00", "kind": "user", "label": "帮我整理这周的日报要点" },
+    { "at": "09:00", "kind": "tool_call", "label": "web_search", "status": "ok", "tokens_in": 640, "tokens_out": 210 },
+    { "at": "09:01", "kind": "connector_call", "connector": "github", "label": "读取示例仓库周报", "status": "ok" },
+    { "at": "09:02", "kind": "approval", "label": "写入共享文档前需确认", "status": "ok" },
+    { "at": "09:03", "kind": "assistant", "label": "已生成 5 条要点摘要", "tokens_out": 880 }
+  ]
+}
+</script>
+
+<script>
+'use strict';
+/* =========================================================================
+ * PRD-155/T2 中文上下文面板——渲染层 + 适配层（T1 §4/§5）
+ *
+ * 数据通道（T1 §5，上游 API 变更影响面压到单个适配器）：
+ *   [ coworker 后端原始 API ] → [ coworker 适配器（本期仅桩） ] → panel-data v1 → 渲染层
+ *   [ ui-mocks/fixtures 样例 ] → [ demo 适配器（默认）       ] → panel-data v1 → 渲染层
+ * 渲染层只认 panel-data v1（loadPanelData 出来的对象），不感知任何上游接口。
+ * ========================================================================= */
+
+/* -------------------------------------------------------------------------
+ * 文案表（T1 §3，文档键非运行时查表 key：ui-mocks 阶段作页内常量，
+ * 后续进 surfaces/gui 时按仓库惯例内嵌）。11 条新术语已随 T1 评审定稿。
+ * tl.*（调用演进区）T3（issue #777）启用，先随表落位。
+ * ------------------------------------------------------------------------- */
+const LABELS = {
+  // §3.1 面板框架
+  'panel.title':            '上下文面板',
+  'panel.subtitle.role':    '角色',
+  'panel.subtitle.session': '会话',
+  'panel.badge.demo':       '演示数据',
+  'panel.tab.composition':  '能力组成',
+  'panel.tab.timeline':     '调用演进',
+  'panel.footer.attribution': '面板形态借鉴自 bowenliang123/dsh-context（Apache-2.0）',
+  // §3.2 能力组成区
+  'comp.group.model':      '模型',
+  'comp.group.provider':   '服务商',
+  'comp.group.persona':    '角色',
+  'comp.group.skills':     '技能',
+  'comp.group.connectors': '连接器',
+  'comp.group.tools':      '工具',
+  'comp.group.approvals':  '审批',
+  'comp.approval_policy':  '审批策略',
+  'comp.context.title':    '上下文构成',
+  'comp.context.system':    '系统提示',
+  'comp.context.tools':     '工具定义',
+  'comp.context.skills':    '技能注入',
+  'comp.context.connectors': '连接器说明',
+  'comp.context.history':   '历史会话串',
+  'comp.count':  '共 {count} 项',
+  'comp.empty':  '尚未装配任何能力',
+  // §3.3 调用演进区（T3 渲染）
+  'tl.node.user':          '用户消息',
+  'tl.node.assistant':     '智能体回复',
+  'tl.node.tool_call':     '工具调用',
+  'tl.node.connector_call': '连接器调用',
+  'tl.node.approval':      '审批',
+  'tl.status.ok':     '成功',
+  'tl.status.failed': '失败',
+  'tl.status.retried': '已重试',
+  'tl.tokens.in':  '输入 token',
+  'tl.tokens.out': '输出 token',
+  'tl.detail.duration': '耗时',
+  'tl.empty': '该运行暂无调用记录',
+  // §3.4 警示与说明
+  'warn.demo_note':         '当前为演示数据，非真实运行',
+  'warn.provider_missing':  '未配置模型服务商',
+  'warn.placeholder_note':  '敏感信息已用占位符代替',
+};
+
+/* 契约固定文案（T1 §4.1 / §5.3，非 §3 文案表项） */
+const CONTRACT_TEXT = {
+  unsupported: '数据源版本不支持',   // schema_version ≠ 1 → 显示后不渲染
+  notProvided: '数据源未提供',       // 缺字段 → 对应区块显示，不造假数
+};
+
+// 静态标签一次性上屏（data-label 锚点）
+document.querySelectorAll('[data-label]').forEach(el => { el.textContent = LABELS[el.dataset.label] || ''; });
+
+/* -------------------------------------------------------------------------
+ * panel-data v1 契约校验（T1 §4.1）：唯一硬闸是 schema_version；
+ * 其余字段缺失由渲染层按区块显示「数据源未提供」，不在这里炸。
+ * ------------------------------------------------------------------------- */
+const PANEL_SCHEMA_VERSION = 1;
+function validatePanelData(data) {
+  if (!data || typeof data !== 'object' ||
+      data.schema_version !== PANEL_SCHEMA_VERSION) {
+    const err = new Error(CONTRACT_TEXT.unsupported);
+    err.code = 'UNSUPPORTED';
+    return err;
+  }
+  return null;
+}
+
+/* -------------------------------------------------------------------------
+ * 适配器（T1 §5）：渲染层唯一数据入口 loadPanelData()，按名选适配器。
+ * ------------------------------------------------------------------------- */
+
+// demo 适配器（默认）：零网络优先——先试同目录 fixtures 文件（http 服务时生效），
+// file:// 双击打开时 fetch 受限，回退到页内同源副本（tests 保证两份一致）。
+async function demoAdapter() {
+  try {
+    const res = await fetch('fixtures/panel-demo-data.json');
+    if (res.ok) return await res.json();
+  } catch (e) { /* file:// 或离线：走页内副本 */ }
+  return JSON.parse(document.getElementById('panel-demo-fallback').textContent);
+}
+
+// coworker 适配器：本期仅桩（T1 §5.2）。端点形状不预设（不猜地址、不猜字段），
+// 等 T4 后对上游实测再定；对接时沿用既有本机凭据机制，仅绑回环地址，不新增凭据体系。
+async function coworkerAdapter() {
+  throw new Error('coworker 适配器尚未实现（T1 §5.2 桩）：T4 后对上游实测再定');
+}
+
+const ADAPTERS = { demo: demoAdapter, coworker: coworkerAdapter };
+
+async function loadPanelData(adapterName) {
+  const adapter = ADAPTERS[adapterName] || ADAPTERS.demo;
+  const data = await adapter();
+  const invalid = validatePanelData(data);
+  if (invalid) throw invalid;
+  return data;
+}
+
+/* -------------------------------------------------------------------------
+ * 渲染层（只认 panel-data v1）
+ * ------------------------------------------------------------------------- */
+const esc = (s) => String(s).replace(/[&<>"']/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const countLabel = (n) => LABELS['comp.count'].replace('{count}', n);
+const fmtNum = (n) => Number(n).toLocaleString('en-US');
+
+// 已知连接器品牌展示名（数据里的 kind 是小写标识；品牌词豁免于术语检查）
+const CONNECTOR_LABELS = { github: 'GitHub', slack: 'Slack' };
+const connectorLabel = (kind) => CONNECTOR_LABELS[kind] || kind;
+
+function showError(msg) {
+  const box = document.getElementById('panelError');
+  box.textContent = msg;
+  box.hidden = false;
+  document.getElementById('view-composition').hidden = true;
+}
+
+function renderHeader(data) {
+  const s = (data && data.session) || {};
+  document.getElementById('hdRole').textContent = s.role_name || CONTRACT_TEXT.notProvided;
+  document.getElementById('hdSession').textContent = s.session_title || CONTRACT_TEXT.notProvided;
+  // 红线（T1 §4.3-2）：徽标由代码按 meta.generator 强制显示，数据文件关不掉
+  const badge = document.getElementById('demoBadge');
+  badge.textContent = LABELS['panel.badge.demo'];
+  if (data && data.meta && data.meta.generator === 'demo') badge.hidden = false;
+}
+
+// 装配清单行：label + html 内容
+function row(label, html) {
+  return `<div class="flex items-baseline gap-4 px-4 py-2.5 border-t border-line">
+    <div class="w-14 shrink-0 text-[12px] text-faint">${esc(label)}</div>
+    <div class="flex-1 min-w-0 text-[13.5px] leading-relaxed break-words">${html}</div>
+  </div>`;
+}
+const notProvidedHtml = `<span class="text-faint">${esc(CONTRACT_TEXT.notProvided)}</span>`;
+
+function renderAssembly(data) {
+  const box = document.getElementById('assemblyList');
+  const caps = data && data.capabilities;
+  if (!caps) { box.innerHTML = row(LABELS['comp.group.persona'], notProvidedHtml); return; }
+  const s = (data.session) || {};
+
+  // 模型 / 服务商（缺服务商 → warn.provider_missing）
+  let modelHtml;
+  if (!s.model && !s.provider) modelHtml = notProvidedHtml;
+  else modelHtml = [
+    s.model ? `<span class="font-medium">${esc(s.model)}</span>` : '',
+    s.provider
+      ? `<span class="text-muted">（${esc(LABELS['comp.group.provider'])}：${esc(s.provider)}）</span>`
+      : `<span class="inline-flex items-center ml-1 px-1.5 py-0.5 rounded bg-warnSoft/70 text-warnInk text-[11.5px]">${esc(LABELS['warn.provider_missing'])}</span>`,
+  ].filter(Boolean).join(' ');
+
+  // 角色
+  const personaHtml = s.role_name ? `<span class="font-medium">${esc(s.role_name)}</span>` : notProvidedHtml;
+
+  // 技能：名称（来源）
+  const skills = Array.isArray(caps.skills) ? caps.skills : null;
+  const skillsHtml = !skills ? notProvidedHtml
+    : skills.length === 0 ? `<span class="text-faint">${esc(LABELS['comp.empty'])}</span>`
+    : `<span class="text-faint">${esc(countLabel(skills.length))}：</span>` +
+      skills.map((x) => `<span class="font-medium">${esc(x.name || '')}</span>` +
+        (x.source ? `<span class="text-faint">（${esc(x.source)}）</span>` : '')).join('<span class="text-faint"> · </span>');
+
+  // 连接器：品牌名（账号为占位符）
+  const conns = Array.isArray(caps.connectors) ? caps.connectors : null;
+  const connsHtml = !conns ? notProvidedHtml
+    : conns.length === 0 ? `<span class="text-faint">${esc(LABELS['comp.empty'])}</span>`
+    : `<span class="text-faint">${esc(countLabel(conns.length))}：</span>` +
+      conns.map((x) => `<span class="whitespace-nowrap"><span data-brand="${esc(x.kind || 'default')}" class="inline-block w-2 h-2 rounded-full mr-1 align-middle" style="background:var(--brand)"></span><span class="font-medium">${esc(connectorLabel(x.kind || ''))}</span><span class="text-faint">（${esc(x.account || '')}）</span></span>`).join('<span class="text-faint"> · </span>');
+
+  // 工具：等宽名
+  const tools = Array.isArray(caps.tools) ? caps.tools : null;
+  const toolsHtml = !tools ? notProvidedHtml
+    : tools.length === 0 ? `<span class="text-faint">${esc(LABELS['comp.empty'])}</span>`
+    : `<span class="text-faint">${esc(countLabel(tools.length))}：</span>` +
+      tools.map((x) => `<code class="font-mono text-[12.5px] px-1 rounded bg-paper border border-line">${esc(x.name || '')}</code>`).join('<span class="text-faint"> · </span>');
+
+  // 审批：审批策略直接展示（中文短语来自数据）
+  const approvalHtml = caps.approval_policy
+    ? `<span class="text-faint">${esc(LABELS['comp.approval_policy'])}：</span>${esc(caps.approval_policy)}`
+    : notProvidedHtml;
+
+  box.innerHTML = [
+    row(LABELS['comp.group.model'], modelHtml),
+    row(LABELS['comp.group.persona'], personaHtml),
+    row(LABELS['comp.group.skills'], skillsHtml),
+    row(LABELS['comp.group.connectors'], connsHtml),
+    row(LABELS['comp.group.tools'], toolsHtml),
+    row(LABELS['comp.group.approvals'], approvalHtml),
+  ].join('');
+}
+
+// 上下文构成：5 段占比条；share 由契约算好，面板不二次归一（T1 §4.1）
+const CTX_SEGMENTS = [
+  { key: 'system',     label: 'comp.context.system',     color: 'var(--accent)' },
+  { key: 'tools',      label: 'comp.context.tools',      color: 'var(--teal-ink)' },
+  { key: 'skills',     label: 'comp.context.skills',     color: 'var(--ok)' },
+  { key: 'connectors', label: 'comp.context.connectors', color: 'var(--warn-ink)' },
+  { key: 'history',    label: 'comp.context.history',    color: 'var(--muted)' },
+];
+
+function renderContextComposition(data) {
+  const box = document.getElementById('ctxComposition');
+  const totalEl = document.getElementById('ctxTotal');
+  const comp = data && data.context_composition;
+  if (!comp) {
+    totalEl.textContent = '';
+    box.innerHTML = `<div class="text-[13px] text-faint">${esc(CONTRACT_TEXT.notProvided)}</div>`;
+    return;
+  }
+  let total = 0;
+  const rows = CTX_SEGMENTS.map((seg) => {
+    const item = comp[seg.key];
+    if (!item) {
+      return `<div class="flex items-center gap-3 text-[13px]">
+        <div class="w-20 shrink-0 text-muted">${esc(LABELS[seg.label])}</div>
+        <div class="flex-1 text-faint text-[12.5px]">${esc(CONTRACT_TEXT.notProvided)}</div>
+      </div>`;
+    }
+    total += Number(item.tokens) || 0;
+    const pct = Math.round((Number(item.share) || 0) * 100);
+    const tokText = `${fmtNum(item.tokens)} tok`;
+    return `<div class="group flex items-center gap-3">
+      <div class="w-20 shrink-0 text-[13px] text-muted">${esc(LABELS[seg.label])}</div>
+      <div class="comp-bar flex-1"><i style="width:${pct}%;background:${seg.color}"></i></div>
+      <div class="w-10 shrink-0 text-right text-[12.5px] text-muted tabular-nums">${pct}%</div>
+      <div class="w-20 shrink-0 text-right text-[11.5px] text-faint tabular-nums opacity-0 group-hover:opacity-100 transition-opacity" title="${esc(tokText)}">${esc(tokText)}</div>
+    </div>`;
+  });
+  box.innerHTML = rows.join('');
+  totalEl.textContent = `（token 占比，合计 ${fmtNum(total)}）`;
+}
+
+/* -------------------------------------------------------------------------
+ * 主题切换（data-theme 双主题，与 ui-mocks 既有样机一致）
+ * ------------------------------------------------------------------------- */
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const html = document.documentElement;
+  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+
+/* -------------------------------------------------------------------------
+ * 启动：默认 demo 适配器（零网络，file:// 直接可开）
+ * ------------------------------------------------------------------------- */
+(async function boot() {
+  try {
+    const data = await loadPanelData('demo');
+    renderHeader(data);
+    renderAssembly(data);
+    renderContextComposition(data);
+  } catch (e) {
+    showError(e && e.code === 'UNSUPPORTED' ? CONTRACT_TEXT.unsupported : (e && e.message) || CONTRACT_TEXT.unsupported);
+  }
+})();
+</script>
+</body>
+</html>
