@@ -21,15 +21,16 @@
 - 中文站：[https://oaosf.cn](https://oaosf.cn)
 - macOS Apple Silicon DMG：[OpenWorker-CN-0.1.7-aarch64.dmg](https://github.com/zhanglunet/openworker-zh-localized/raw/main/releases/OpenWorker-CN-0.1.7-aarch64.dmg)
 - GitHub Release：[v0.1.7-zh](https://github.com/zhanglunet/openworker-zh-localized/releases/tag/v0.1.7-zh)
-- 网站源码：[website/](website/)
-- 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/](docs/analysis/)）
-- 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/](docs/updates/)）
-- 企业定制版全套准备文档（PRD、开发计划、三仓同步、部署、换肤打包）：[docs/enterprise/](docs/enterprise/)
+- 网站源码：[website/README.md](website/README.md)
+- 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/openworker-zh-localized-source-analysis.md](docs/analysis/openworker-zh-localized-source-analysis.md)）
+- 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/CHANGELOG.md](docs/updates/CHANGELOG.md)、[docs/updates/WEEKLY.md](docs/updates/WEEKLY.md)）
+- 定位、目标与愿景：[docs/positioning.md](docs/positioning.md)
+- 企业定制版全套准备文档（PRD、开发计划、三仓同步、部署、换肤打包）：[docs/enterprise/README.md](docs/enterprise/README.md)
 - 正式签名、公证与自动更新发布指南：[docs/release-signed-updates.md](docs/release-signed-updates.md)
 - 签名材料暂缓申请记录：[docs/release-signing-deferred-plan.md](docs/release-signing-deferred-plan.md)
 - 上游项目源码：[andrewyng/openworker](https://github.com/andrewyng/openworker)
 
-中文站汇总了产品能力、工作流程、模型与连接器、源码架构分析、安全边界、交互式信息图、自动更新日志和每周周报。网站明确标注上游项目归属，并链接回本仓库。
+中文站汇总了产品能力、工作流、模型与连接器、源码架构分析、安全边界、交互式信息图、自动更新日志和每周周报。网站明确标注上游项目归属，并链接回本仓库。
 
 ![OpenWorker 中文站截图](docs/assets/oaosf-cn-home.png)
 
@@ -107,7 +108,7 @@
 2. **Tauri 桌面客户端（开发模式）** —— 真正的桌面应用，带系统托盘、快捷键、语音输入等。
 3. **macOS DMG 安装包** —— 适合 Apple Silicon Mac 用户直接下载体验中文版桌面 App。
 
-> 注意：当前 DMG 为未公证的本地化构建，适合个人本机试用。0.1.7 起中文版 App 的自动更新源已切换到本仓库，避免更新时安装官方英文包；正式签名、公证与自动更新发布流程见 [docs/release-signed-updates.md](docs/release-signed-updates.md)。
+> 注意：当前 DMG 为未公证的本地化构建，适合个人本机试用。0.1.7 起中文版 App 的自动更新源已切换到本仓库，避免更新时安装官方英文包；正式签名、公证与自动更新发布工作流见 [docs/release-signed-updates.md](docs/release-signed-updates.md)。
 
 ---
 
