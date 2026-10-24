@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-24T13:08:05+08:00",
+  "generatedAt": "2026-10-24T23:59:08+08:00",
   "branch": "main",
-  "head": "64cfee96f4c2791da875cf4738cab81f83a237f1",
-  "shortHead": "64cfee9",
-  "totalFiles": 635,
+  "head": "cee346b2bbc9946a227dd1e78f8da4a65857eb7b",
+  "shortHead": "cee346b",
+  "totalFiles": 641,
   "byExt": [
     {
       "name": "py",
-      "count": 269
+      "count": 271
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 50
+      "count": 52
     },
     {
       "name": "svg",
@@ -31,18 +31,18 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 19
+      "count": 20
     },
     {
       "name": "yml",
       "count": 15
     },
     {
-      "name": "[none]",
-      "count": 7
+      "name": "html",
+      "count": 8
     },
     {
-      "name": "html",
+      "name": "[none]",
       "count": 7
     },
     {
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 108
+      "count": 110
     },
     {
       "name": "docs",
-      "count": 81
+      "count": 83
     },
     {
       "name": "website",
@@ -112,11 +112,11 @@ export const repoReport = {
       "count": 6
     },
     {
-      "name": "stt",
-      "count": 4
+      "name": "ui-mocks",
+      "count": 6
     },
     {
-      "name": "ui-mocks",
+      "name": "stt",
       "count": 4
     },
     {
@@ -370,9 +370,54 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "cee346b",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #46 from zhanglunet/trend/prd-155-t4-dsh-context-zh-panel"
+    },
+    {
+      "hash": "d9e6731",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #44 from zhanglunet/trend/prd-155-t3-dsh-context-zh-panel"
+    },
+    {
+      "hash": "546297f",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #43 from zhanglunet/trend/prd-155-t2-dsh-context-zh-panel"
+    },
+    {
+      "hash": "c046465",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #42 from zhanglunet/trend/prd-155-t1-dsh-context-zh-panel"
+    },
+    {
+      "hash": "ab0b985",
+      "date": "2026-10-24",
+      "subject": "docs: PRD-155/T4 开箱文档——README §9 + 使用指南 + 截图占位（Refs #778）"
+    },
+    {
+      "hash": "cc1c28f",
+      "date": "2026-10-24",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "64cfee9",
       "date": "2026-10-24",
       "subject": "docs: 记录汉化版定位、目标与愿景 (#45)"
+    },
+    {
+      "hash": "4b550ac",
+      "date": "2026-10-24",
+      "subject": "feat: PRD-155/T3 调用演进时间线（页签②点亮）"
+    },
+    {
+      "hash": "4ecc6fc",
+      "date": "2026-10-24",
+      "subject": "feat: PRD-155/T2 能力组成视图（演示数据）"
+    },
+    {
+      "hash": "d64f866",
+      "date": "2026-10-23",
+      "subject": "docs: PRD-155/T1 中文面板信息架构与文案表"
     },
     {
       "hash": "d7c8bbc",
@@ -383,58 +428,58 @@ export const repoReport = {
       "hash": "af20945",
       "date": "2026-10-20",
       "subject": "Merge PR #37: PRD-102/T3 README 双语示范改造"
-    },
-    {
-      "hash": "a3c4b6f",
-      "date": "2026-10-20",
-      "subject": "docs: PRD-102/T3 新增英文 README（同结构浓缩版，英文技术描述）"
-    },
-    {
-      "hash": "7f33922",
-      "date": "2026-10-20",
-      "subject": "docs: PRD-102/T3 README 顶部五层双语改造（语言切换 + slogan + 数字副标语）"
-    },
-    {
-      "hash": "8b85bbb",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "4f0c32a",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "840408c",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check"
-    },
-    {
-      "hash": "7810b75",
-      "date": "2026-10-19",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "023b53a",
-      "date": "2026-10-19",
-      "subject": "fix: self_check_terms fence 感知（F1）"
-    },
-    {
-      "hash": "981513f",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "fd32b32",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial"
     }
   ],
   "weeklyCommits": [
     {
+      "hash": "cee346b",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #46 from zhanglunet/trend/prd-155-t4-dsh-context-zh-panel"
+    },
+    {
+      "hash": "d9e6731",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #44 from zhanglunet/trend/prd-155-t3-dsh-context-zh-panel"
+    },
+    {
+      "hash": "546297f",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #43 from zhanglunet/trend/prd-155-t2-dsh-context-zh-panel"
+    },
+    {
+      "hash": "c046465",
+      "date": "2026-10-24",
+      "subject": "Merge pull request #42 from zhanglunet/trend/prd-155-t1-dsh-context-zh-panel"
+    },
+    {
+      "hash": "ab0b985",
+      "date": "2026-10-24",
+      "subject": "docs: PRD-155/T4 开箱文档——README §9 + 使用指南 + 截图占位（Refs #778）"
+    },
+    {
+      "hash": "cc1c28f",
+      "date": "2026-10-24",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "64cfee9",
       "date": "2026-10-24",
       "subject": "docs: 记录汉化版定位、目标与愿景 (#45)"
+    },
+    {
+      "hash": "4b550ac",
+      "date": "2026-10-24",
+      "subject": "feat: PRD-155/T3 调用演进时间线（页签②点亮）"
+    },
+    {
+      "hash": "4ecc6fc",
+      "date": "2026-10-24",
+      "subject": "feat: PRD-155/T2 能力组成视图（演示数据）"
+    },
+    {
+      "hash": "d64f866",
+      "date": "2026-10-23",
+      "subject": "docs: PRD-155/T1 中文面板信息架构与文案表"
     },
     {
       "hash": "d7c8bbc",
@@ -680,176 +725,6 @@ export const repoReport = {
       "hash": "8ae8c5e",
       "date": "2026-10-18",
       "subject": "docs: PRD-068/T1 上游 diff 监控脚本设计（哨兵方案）"
-    },
-    {
-      "hash": "2edc2c4",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "dd3b1cb",
-      "date": "2026-10-17",
-      "subject": "feat: PRD-029/T5 增强①②（additions 透出 + 测试文件排除）(#15)"
-    },
-    {
-      "hash": "7630087",
-      "date": "2026-10-17",
-      "subject": "feat: T5 复盘建议①②（classify 透出 additions/deletions；敏感区排除测试文件）"
-    },
-    {
-      "hash": "cf1d84e",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9d2cbf8",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T5 定稿与换肤走查 (#14)"
-    },
-    {
-      "hash": "dc56fa7",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T5 试运行复盘 (#13)"
-    },
-    {
-      "hash": "fe012b1",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T4 冲突分级 (#12)"
-    },
-    {
-      "hash": "7446e58",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（回退演练改为下次试运行，T5 已跑完）"
-    },
-    {
-      "hash": "2ceba58",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T5 定稿与换肤走查（回指写回 + Acme 桌面推演 + 3 处修订）"
-    },
-    {
-      "hash": "2977a54",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T5 试运行复盘报告"
-    },
-    {
-      "hash": "1a30d0a",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T4 冲突分级、处理与回退"
-    },
-    {
-      "hash": "af681ab",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "0cdb8bd",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T4 部署章节正文 (#10)"
-    },
-    {
-      "hash": "a0da1b6",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T3 三仓同步章节正文 (#8)"
-    },
-    {
-      "hash": "6868257",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T2 换肤打包章节正文 (#9)"
-    },
-    {
-      "hash": "be43494",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b8c055b",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T3 汉化 diff 报告模板 (#11)"
-    },
-    {
-      "hash": "87358ba",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（对应表版本号注明为 version 非 tag）"
-    },
-    {
-      "hash": "e5aa520",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（macos-15-intel 可用性以 GitHub 公告为准）"
-    },
-    {
-      "hash": "492f514",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（示例 P0 口径、渲染器 additions 判定、模板 P0 来源）"
-    },
-    {
-      "hash": "a3dc967",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T3 汉化 diff 报告模板（模板说明+渲染器+真实示例）"
-    },
-    {
-      "hash": "f602080",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "2af441a",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T2 上游变更检测方案 (#7)"
-    },
-    {
-      "hash": "c96e33e",
-      "date": "2026-10-17",
-      "subject": "fix: 评审修订（L2 无基线 guard 对齐 fail-quiet；releases 过滤 draft）"
-    },
-    {
-      "hash": "0c7d5dd",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T4 部署章节正文"
-    },
-    {
-      "hash": "0c23a90",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T2 换肤打包章节正文"
-    },
-    {
-      "hash": "1fba9a3",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T3 三仓同步章节正文"
-    },
-    {
-      "hash": "5c4eb16",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T2 上游变更检测方案（设计稿+检测脚本草稿）"
-    },
-    {
-      "hash": "86dbfe8",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "8628a7e",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-030/T1 企业定制版 playbook 大纲 (#6)"
-    },
-    {
-      "hash": "2c46738",
-      "date": "2026-10-17",
-      "subject": "docs: 填实 PRD-030/T1 playbook 章节↔docs/enterprise/ 文件对应关系"
-    },
-    {
-      "hash": "cf7aabe",
-      "date": "2026-10-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b0e4242",
-      "date": "2026-10-17",
-      "subject": "docs: PRD-029/T1 上游同步策略 (#5)"
-    },
-    {
-      "hash": "89dba93",
-      "date": "2026-10-17",
-      "subject": "docs: 修订 PRD-029/T1 上游同步策略（P0 告警归属/双周标题/L2 停更降级）"
     }
   ]
 } as const;

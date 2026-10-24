@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-24T13:08:05+08:00
+更新时间：2026-10-24T23:59:08+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：64cfee96f4c2791da875cf4738cab81f83a237f1
+当前提交：cee346b2bbc9946a227dd1e78f8da4a65857eb7b
 
 ## 1. 总体判断
 
@@ -14,19 +14,19 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：635
-- 当前提交：64cfee9
+- 跟踪文件总数：641
+- 当前提交：cee346b
 - 主要文件类型：
-  - py: 269
+  - py: 271
   - ts: 105
   - tsx: 79
-  - md: 50
+  - md: 52
   - svg: 23
   - png: 22
-  - json: 19
+  - json: 20
   - yml: 15
+  - html: 8
   - [none]: 7
-  - html: 7
   - sh: 5
   - css: 4
   - mjs: 4
@@ -38,14 +38,14 @@
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 108 个文件
-- docs: 81 个文件
+- tests: 110 个文件
+- docs: 83 个文件
 - website: 36 个文件
 - .github: 11 个文件
 - packaging: 10 个文件
 - scripts: 6 个文件
+- ui-mocks: 6 个文件
 - stt: 4 个文件
-- ui-mocks: 4 个文件
 - releases: 3 个文件
 - .gitignore: 1 个文件
 - BUILD_LOG.md: 1 个文件
@@ -233,15 +233,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-24 cee346b Merge pull request #46 from zhanglunet/trend/prd-155-t4-dsh-context-zh-panel
+- 2026-10-24 d9e6731 Merge pull request #44 from zhanglunet/trend/prd-155-t3-dsh-context-zh-panel
+- 2026-10-24 546297f Merge pull request #43 from zhanglunet/trend/prd-155-t2-dsh-context-zh-panel
+- 2026-10-24 c046465 Merge pull request #42 from zhanglunet/trend/prd-155-t1-dsh-context-zh-panel
+- 2026-10-24 ab0b985 docs: PRD-155/T4 开箱文档——README §9 + 使用指南 + 截图占位（Refs #778）
+- 2026-10-24 cc1c28f docs: refresh generated site reports
 - 2026-10-24 64cfee9 docs: 记录汉化版定位、目标与愿景 (#45)
+- 2026-10-24 4b550ac feat: PRD-155/T3 调用演进时间线（页签②点亮）
+- 2026-10-24 4ecc6fc feat: PRD-155/T2 能力组成视图（演示数据）
+- 2026-10-23 d64f866 docs: PRD-155/T1 中文面板信息架构与文案表
 - 2026-10-20 d7c8bbc docs: refresh generated site reports
 - 2026-10-20 af20945 Merge PR #37: PRD-102/T3 README 双语示范改造
-- 2026-10-20 a3c4b6f docs: PRD-102/T3 新增英文 README（同结构浓缩版，英文技术描述）
-- 2026-10-20 7f33922 docs: PRD-102/T3 README 顶部五层双语改造（语言切换 + slogan + 数字副标语）
-- 2026-10-19 8b85bbb docs: refresh generated site reports
-- 2026-10-19 4f0c32a docs: refresh generated site reports
-- 2026-10-19 840408c Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check
-- 2026-10-19 7810b75 chore: 更新上游哨兵水位（PRD-068）
-- 2026-10-19 023b53a fix: self_check_terms fence 感知（F1）
-- 2026-10-19 981513f docs: refresh generated site reports
-- 2026-10-19 fd32b32 Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial
