@@ -2,7 +2,7 @@
 
 - 记录日期：2026-10-24
 - 读者：想知道「这个仓库是什么、近期做什么、长期往哪走」的维护者与企业定制同事
-- 依据：仓库 [README.md](../README.md)、[README.en.md](../README.en.md)、[docs/enterprise/](enterprise/)、[PRD-029 上游同步策略](plans/2026-10-17-upstream-sync-policy.md)、[翻译流水线设计](plans/2026-10-19-i18n-pipeline-design.md)、[正式发布指南](release-signed-updates.md)、[签名暂缓记录](release-signing-deferred-plan.md)
+- 依据：仓库 [README.md](../README.md)、[README.en.md](../README.en.md)、[docs/enterprise/README.md](enterprise/README.md)、[PRD-029 上游同步策略](plans/2026-10-17-upstream-sync-policy.md)、[翻译流水线设计](plans/2026-10-19-i18n-pipeline-design.md)、[正式发布指南](release-signed-updates.md)、[签名暂缓记录](release-signing-deferred-plan.md)
 
 仓库现有文档没有单独的「愿景」章。第 3 节是对上述材料的**归纳**，用来对齐口径，不另立产品决议。
 
@@ -49,7 +49,7 @@ README 差异表里相对上游多出的「自定义 API」和「阶跃星辰 St
   - 质量门：[PRD-067](plans/2026-10-18-quality-gate-cases.md)
   - 翻译流水线：[PRD-084](plans/2026-10-19-i18n-pipeline-design.md)。设计稿的口径是第一期只做英→中
 - **双语对外。** 中文是主文档。英文入口已有；全章节英文 README 归 PRD-122。翻译流水线（PRD-084）的范围是英→中初稿。
-- **企业可复用。** [docs/enterprise/](enterprise/) 是企业定制的准备文档（目标、同步、部署、换肤打包）。本仓库保持为那条链路的中文基线。
+- **企业可复用。** [docs/enterprise/README.md](enterprise/README.md) 是企业定制的准备文档（目标、同步、部署、换肤打包）。本仓库保持为那条链路的中文基线。
 - **正式发布。** 签名、公证与自动更新的做法写在 [release-signed-updates.md](release-signed-updates.md)。Apple Developer 与证书材料暂缓，见 [release-signing-deferred-plan.md](release-signing-deferred-plan.md)。README 第 10 节仍把「发布首个正式签名、公证版本」列为未完成项。当前公开 DMG 是未公证的本地化构建。
 
 企业版自己的目标（员工开箱、数据不出内网、大表哥、一周内合入上游、多平台包）写在 [企业 PRD 第 1.2 节](enterprise/PRD.md)，不在本页展开。
