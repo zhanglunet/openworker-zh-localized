@@ -1,4 +1,4 @@
-"""PRD-155/T2：上下文面板演示数据自查断言（T1 §4.3 红线）。
+"""PRD-155/T2+T3：上下文面板演示数据与渲染自查断言（T1 §4.3 红线）。
 
 依据：docs/plans/2026-10-23-dsh-context-zh-panel.md（T1）§4.3：
   1. 键名或字符串值命中敏感模式
@@ -11,10 +11,16 @@
 扫描对象：``ui-mocks/fixtures/panel-demo-data.json``（键名 + 字符串值，递归）
 与 ``ui-mocks/dsh-context-panel.html``（全文，含页内回退副本与文案常量）。
 
-另附两条一致性守卫：
+另附一致性守卫：
   - 页内回退副本（file:// 双击打开时 demo 适配器的回退数据源）必须与 fixtures
     文件深度一致，防止两份数据漂移；
   - T1 §3 定稿的 11 条新术语必须在面板文案中逐字出现，防止文案漂移。
+
+T3（issue #777，调用演进时间线）新增：
+  - timeline 节点必填字段（at/kind/label）完备、可选数值字段类型正确、按发生顺序；
+  - 演示数据可演示：5 种节点 kind 与 3 种 status 全覆盖，含 token 与耗时样例；
+  - 页签②已启用（T2 的禁用占位撤除），时间线视图/节点列/详情容器在场；
+  - T1 §3.3 调用演进区 12 条文案在面板中逐字在场。
 
 可直接 ``python3 tests/test_panel_fixture_selfcheck.py`` 独立运行（无 pytest 环境
 也能当门禁脚本用），也随 ``pytest tests -q`` 一起跑。
@@ -53,6 +59,22 @@ FINALIZED_NEW_TERMS = [
     "成功",          # tl.status.ok
     "输入 token",    # tl.tokens.in
     "输出 token",    # tl.tokens.out
+]
+
+# T1 §3.3 调用演进区 12 条文案（T3 渲染，必须逐字在场，防文案漂移）
+TIMELINE_TERMS = [
+    "用户消息",          # tl.node.user
+    "智能体回复",        # tl.node.assistant
+    "工具调用",          # tl.node.tool_call
+    "连接器调用",        # tl.node.connector_call
+    "审批",              # tl.node.approval
+    "成功",              # tl.status.ok
+    "失败",              # tl.status.failed
+    "已重试",            # tl.status.retried
+    "输入 token",        # tl.tokens.in
+    "输出 token",        # tl.tokens.out
+    "耗时",              # tl.detail.duration
+    "该运行暂无调用记录",  # tl.empty
 ]
 
 
@@ -121,6 +143,63 @@ def test_timeline_enum_fields_follow_contract():
             assert ev["status"] in TIMELINE_STATUSES, (
                 f"timeline[{i}].status={ev['status']!r} 不在契约枚举内"
             )
+
+
+def test_timeline_nodes_have_required_fields():
+    """T3：每个节点必有 at/kind/label（非空字符串），可选数值字段为非负整数（T1 §4.1）。"""
+    timeline = _load_fixture()["timeline"]
+    assert isinstance(timeline, list) and timeline, "演示 timeline 应为非空数组"
+    for i, ev in enumerate(timeline):
+        for req in ("at", "kind", "label"):
+            assert isinstance(ev.get(req), str) and ev[req].strip(), (
+                f"timeline[{i}] 缺必填字段 {req!r} 或为空（T1 §4.1）"
+            )
+        for num in ("tokens_in", "tokens_out", "duration_ms"):
+            if num in ev:
+                assert isinstance(ev[num], int) and not isinstance(ev[num], bool) and ev[num] >= 0, (
+                    f"timeline[{i}].{num} 应为非负整数，实测 {ev[num]!r}（T1 §4.1）"
+                )
+
+
+def test_timeline_demo_is_demonstrable():
+    """T3 验收「时间线可演示」：5 种 kind 与 3 种 status 全覆盖，token/耗时样例在场，
+    且按发生顺序排列（T1 §2：时间倒序不需要）。"""
+    timeline = _load_fixture()["timeline"]
+    kinds = {ev["kind"] for ev in timeline}
+    statuses = {ev["status"] for ev in timeline if "status" in ev}
+    assert kinds == TIMELINE_KINDS, (
+        f"演示节点应覆盖契约全部 5 种 kind，实测 {sorted(kinds)}"
+    )
+    assert statuses == TIMELINE_STATUSES, (
+        f"演示状态应覆盖 ok/failed/retried 三态，实测 {sorted(statuses)}"
+    )
+    assert any("tokens_in" in ev and "tokens_out" in ev for ev in timeline), (
+        "演示数据应含输入/输出 token 样例（详情区可演示）"
+    )
+    assert any("duration_ms" in ev for ev in timeline), "演示数据应含耗时样例（详情区可演示）"
+    ats = [ev["at"] for ev in timeline]
+    assert ats == sorted(ats), f"timeline 应按发生顺序排列（T1 §2），实测 {ats}"
+
+
+def test_timeline_tab_enabled_and_view_present():
+    """T3：页签②点亮——禁用占位撤除，时间线视图/节点列/详情容器在场且默认隐藏（默认落在①）。"""
+    html = PANEL_HTML.read_text(encoding="utf-8")
+    m = re.search(r'<button id="tabTimeline"[^>]*>', html)
+    assert m, "缺少页签②按钮 #tabTimeline"
+    assert "disabled" not in m.group(0), "T3 起页签②应启用（T2 占位禁用应已撤除）"
+    section = re.search(r'<section id="view-timeline"[^>]*>', html)
+    assert section, "缺少调用演进视图容器 #view-timeline"
+    assert "hidden" in section.group(0), "调用演进视图默认应隐藏（默认页签为①）"
+    assert 'id="tlRail"' in html, "缺少时间线节点列容器 #tlRail"
+    assert 'id="tlDetail"' in html, "缺少节点详情容器 #tlDetail"
+    assert "renderTimeline" in html, "渲染层缺少时间线渲染入口 renderTimeline"
+
+
+def test_timeline_labels_present_verbatim():
+    """T1 §3.3 调用演进区 12 条文案必须在面板中逐字在场（防文案漂移）。"""
+    html = PANEL_HTML.read_text(encoding="utf-8")
+    missing = [t for t in TIMELINE_TERMS if t not in html]
+    assert not missing, f"面板缺少调用演进文案：{missing}"
 
 
 def test_embedded_fallback_matches_fixture():

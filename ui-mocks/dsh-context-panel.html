@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>OpenWorker 上下文面板</title>
-<!-- PRD-155/T2：中文上下文可视化面板——能力组成区（演示数据）。
+<!-- PRD-155/T2+T3：中文上下文可视化面板——① 能力组成（T2）+ ② 调用演进（T3，issue #777）。
      形态沿用 ui-mocks/ 既有静态样机约定：零依赖（无构建、无 npm）、Tailwind CDN、
      data-theme 明暗双主题，双击即开（file:// 直接可读）。
      借鉴声明：面板形态借鉴自 bowenliang123/dsh-context（Apache-2.0），见页脚。 -->
@@ -58,10 +58,41 @@
   /* 上下文构成：占位条 */
   .comp-bar{ height:8px; border-radius:9999px; background:var(--paper); border:1px solid var(--line); overflow:hidden; }
   .comp-bar > i{ display:block; height:100%; border-radius:9999px; }
-  /* 页签（② 调用演进为本期禁用占位：T3 在同页落位） */
+  /* 页签（② 调用演进 T3 起启用） */
   .tab{ padding:6px 14px; border-radius:10px; font-size:13.5px; }
   .tab[aria-selected="true"]{ background:var(--panel); box-shadow:0 1px 2px rgba(0,0,0,.06); color:var(--ink); font-weight:600; }
-  .tab[disabled]{ opacity:.45; cursor:not-allowed; }
+  /* ② 调用演进：节点列（T1 §2——● 消息/工具/回复，◆ 连接器/审批；颜色=状态） */
+  .tl-rail-inner{ display:flex; align-items:flex-start; min-width:100%; }
+  .tl-node{ position:relative; flex:1 0 92px; display:flex; flex-direction:column; align-items:center;
+    padding:6px 4px 8px; border-radius:10px; text-align:center; }
+  .tl-node:hover{ background:var(--paper); }
+  .tl-node[aria-pressed="true"]{ background:var(--accent-soft); }
+  .tl-node:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .tl-time{ height:16px; font-size:11px; line-height:16px; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .tl-kind{ margin-top:5px; font-size:11.5px; color:var(--muted); }
+  .tl-label{ margin-top:2px; font-size:11.5px; line-height:1.45; color:var(--ink);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  /* 节点间连线：穿过节点中线（时间行 16px + 间距 6px + 圆点半径 13px → 中线 40px） */
+  .tl-node + .tl-node::before, .tl-node:not(:last-child)::after{
+    content:''; position:absolute; top:40px; height:2px; background:var(--line-strong); }
+  .tl-node + .tl-node::before{ left:0; right:50%; }
+  .tl-node:not(:last-child)::after{ left:50%; right:0; }
+  .tl-dot{ position:relative; z-index:1; display:grid; place-items:center; width:26px; height:26px; margin-top:6px;
+    border:2px solid var(--line-strong); border-radius:9999px; background:var(--panel);
+    color:var(--ink); font-size:12.5px; line-height:1; }
+  .tl-dot > i{ font-style:normal; }
+  .tl-diamond{ border-radius:5px; transform:rotate(45deg); }
+  .tl-diamond > i{ transform:rotate(-45deg); }
+  .tl-st-none{ border-color:var(--accent); background:var(--accent-soft); }
+  .tl-st-ok{ border-color:var(--ok); color:var(--ok); background:var(--ok-soft); }
+  .tl-st-retried{ border-color:var(--warn-ink); color:var(--warn-ink); background:var(--warn-soft); }
+  .tl-st-failed{ border-color:var(--danger); color:var(--danger); background:color-mix(in srgb, var(--danger) 10%, var(--panel)); }
+  /* 状态徽标（详情区） */
+  .tl-badge{ display:inline-flex; align-items:center; padding:1px 8px; border-radius:9999px;
+    font-size:11.5px; font-weight:600; border:1px solid var(--line-strong); background:var(--paper); color:var(--muted); }
+  .tl-badge-ok{ background:var(--ok-soft); color:var(--ok); border-color:var(--ok-line); }
+  .tl-badge-retried{ background:var(--warn-soft); color:var(--warn-ink); border-color:color-mix(in srgb, var(--warn-ink) 30%, transparent); }
+  .tl-badge-failed{ background:color-mix(in srgb, var(--danger) 10%, transparent); color:var(--danger); border-color:color-mix(in srgb, var(--danger) 35%, transparent); }
 </style>
 </head>
 <body class="font-sans antialiased text-[14px] min-h-screen flex flex-col">
@@ -87,11 +118,11 @@
       <span data-label="warn.demo_note"></span> · <span data-label="warn.placeholder_note"></span>
     </p>
   </div>
-  <!-- 页签：默认落在①；② 为 T3（issue #777）落位占位，本期禁用 -->
+  <!-- 页签：默认落在①；② 调用演进 T3（issue #777）起启用 -->
   <div class="max-w-3xl mx-auto px-6">
     <nav class="inline-flex items-center gap-1 -mb-px" role="tablist">
       <button id="tabComposition" class="tab" role="tab" aria-selected="true">&#9312; <span data-label="panel.tab.composition"></span></button>
-      <button id="tabTimeline" class="tab" role="tab" aria-selected="false" disabled>&#9313; <span data-label="panel.tab.timeline"></span></button>
+      <button id="tabTimeline" class="tab" role="tab" aria-selected="false">&#9313; <span data-label="panel.tab.timeline"></span></button>
     </nav>
   </div>
 </header>
@@ -126,6 +157,24 @@
         </div>
         <div id="ctxComposition" class="px-4 py-3 space-y-2.5"></div>
       </div>
+
+    </section>
+
+    <!-- ② 调用演进（T3 交付，issue #777）：节点列按发生顺序（T1 §2：不做时间倒序），
+         窄屏横向滚动；点击任一节点 → 下方详情（状态/输入输出 token/耗时） -->
+    <section id="view-timeline" class="space-y-5" role="tabpanel" hidden>
+
+      <!-- 节点列：一次运行里调用怎么发生、哪步失败/重试 -->
+      <div class="rounded-xl2 border border-line bg-panel overflow-hidden">
+        <div class="px-4 py-3 border-b border-line flex items-center gap-2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-muted"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+          <h2 class="text-[13.5px] font-semibold" data-label="panel.tab.timeline"></h2>
+        </div>
+        <div id="tlRail" class="overflow-x-auto px-2 pb-1"></div>
+      </div>
+
+      <!-- 节点详情：该步状态（成功/失败/已重试）、输入/输出 token、耗时 -->
+      <div id="tlDetail" class="rounded-xl2 border border-line bg-panel overflow-hidden" hidden></div>
 
     </section>
 
@@ -175,10 +224,12 @@
   },
   "timeline": [
     { "at": "09:00", "kind": "user", "label": "帮我整理这周的日报要点" },
-    { "at": "09:00", "kind": "tool_call", "label": "web_search", "status": "ok", "tokens_in": 640, "tokens_out": 210 },
-    { "at": "09:01", "kind": "connector_call", "connector": "github", "label": "读取示例仓库周报", "status": "ok" },
-    { "at": "09:02", "kind": "approval", "label": "写入共享文档前需确认", "status": "ok" },
-    { "at": "09:03", "kind": "assistant", "label": "已生成 5 条要点摘要", "tokens_out": 880 }
+    { "at": "09:00", "kind": "tool_call", "label": "web_search", "status": "ok", "tokens_in": 640, "tokens_out": 210, "duration_ms": 1500 },
+    { "at": "09:01", "kind": "connector_call", "connector": "github", "label": "读取示例仓库周报", "status": "ok", "duration_ms": 1800 },
+    { "at": "09:01", "kind": "tool_call", "label": "file_read", "status": "failed", "tokens_in": 520, "duration_ms": 400 },
+    { "at": "09:01", "kind": "tool_call", "label": "file_read", "status": "retried", "tokens_in": 520, "tokens_out": 90, "duration_ms": 600 },
+    { "at": "09:02", "kind": "approval", "label": "写入共享文档前需确认", "status": "ok", "duration_ms": 35000 },
+    { "at": "09:03", "kind": "assistant", "label": "已生成 5 条要点摘要", "tokens_out": 880, "duration_ms": 5600 }
   ]
 }
 </script>
@@ -186,18 +237,19 @@
 <script>
 'use strict';
 /* =========================================================================
- * PRD-155/T2 中文上下文面板——渲染层 + 适配层（T1 §4/§5）
+ * PRD-155/T2+T3 中文上下文面板——渲染层 + 适配层（T1 §4/§5）
  *
  * 数据通道（T1 §5，上游 API 变更影响面压到单个适配器）：
  *   [ coworker 后端原始 API ] → [ coworker 适配器（本期仅桩） ] → panel-data v1 → 渲染层
  *   [ ui-mocks/fixtures 样例 ] → [ demo 适配器（默认）       ] → panel-data v1 → 渲染层
  * 渲染层只认 panel-data v1（loadPanelData 出来的对象），不感知任何上游接口。
+ * T2：① 能力组成；T3（issue #777）：② 调用演进时间线（节点列 + 节点详情）。
  * ========================================================================= */
 
 /* -------------------------------------------------------------------------
  * 文案表（T1 §3，文档键非运行时查表 key：ui-mocks 阶段作页内常量，
  * 后续进 surfaces/gui 时按仓库惯例内嵌）。11 条新术语已随 T1 评审定稿。
- * tl.*（调用演进区）T3（issue #777）启用，先随表落位。
+ * tl.*（调用演进区）随 T3（issue #777）启用渲染。
  * ------------------------------------------------------------------------- */
 const LABELS = {
   // §3.1 面板框架
@@ -315,6 +367,7 @@ function showError(msg) {
   box.textContent = msg;
   box.hidden = false;
   document.getElementById('view-composition').hidden = true;
+  document.getElementById('view-timeline').hidden = true;
 }
 
 function renderHeader(data) {
@@ -434,6 +487,147 @@ function renderContextComposition(data) {
 }
 
 /* -------------------------------------------------------------------------
+ * 页签切换（T3 起②启用）：① 默认；② 调用演进。左右方向键也可切换。
+ * ------------------------------------------------------------------------- */
+const TABS = {
+  composition: document.getElementById('tabComposition'),
+  timeline: document.getElementById('tabTimeline'),
+};
+const TAB_VIEWS = {
+  composition: document.getElementById('view-composition'),
+  timeline: document.getElementById('view-timeline'),
+};
+
+function selectTab(name) {
+  Object.keys(TABS).forEach((k) => {
+    TABS[k].setAttribute('aria-selected', k === name ? 'true' : 'false');
+    TAB_VIEWS[k].hidden = k !== name;
+  });
+}
+
+Object.entries(TABS).forEach(([name, btn], _i, entries) => {
+  btn.addEventListener('click', () => selectTab(name));
+  btn.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const [otherName, otherBtn] = entries.find(([, b]) => b !== btn);
+    otherBtn.focus();
+    selectTab(otherName);
+  });
+});
+
+/* -------------------------------------------------------------------------
+ * ② 调用演进（T3，issue #777）：节点列（按发生顺序，窄屏横向滚动）+ 节点详情。
+ * 形态按 T1 §2：● 用户消息/工具调用/智能体回复，◆ 连接器调用/审批；
+ * 节点颜色/内嵌符号 = 状态（✓成功 ✕失败 ↻已重试，无状态为消息类节点）。
+ * ------------------------------------------------------------------------- */
+const TL_KIND_KEY = {
+  user: 'tl.node.user',
+  assistant: 'tl.node.assistant',
+  tool_call: 'tl.node.tool_call',
+  connector_call: 'tl.node.connector_call',
+  approval: 'tl.node.approval',
+};
+const TL_DIAMOND_KINDS = { connector_call: true, approval: true }; // T1 §2：◆
+const TL_STATUS_GLYPH = { ok: '✓', failed: '✕', retried: '↻' };
+
+let timelineNodes = null;   // null = 数据源未提供；[] = 该运行暂无调用记录
+let timelineSelected = -1;
+
+// 耗时展示：<1s 毫秒；<60s 秒（一位小数）；≥60s 分秒
+function fmtDuration(ms) {
+  const n = Number(ms) || 0;
+  if (n < 1000) return `${n} 毫秒`;
+  const sec = n / 1000;
+  if (sec < 60) return `${Math.round(sec * 10) / 10} 秒`;
+  const min = Math.floor(sec / 60);
+  return `${min} 分 ${Math.round(sec % 60)} 秒`;
+}
+
+const tlKindLabel = (kind) => LABELS[TL_KIND_KEY[kind]] || kind || '';
+const brandDotHtml = (connector) =>
+  `<span data-brand="${esc(connector || 'default')}" class="inline-block w-1.5 h-1.5 rounded-full mr-0.5 align-middle" style="background:var(--brand)"></span>`;
+
+function tlNodeHtml(ev, i) {
+  const st = ev.status && TL_STATUS_GLYPH[ev.status] ? ev.status : null;
+  const shapeCls = TL_DIAMOND_KINDS[ev.kind] ? ' tl-diamond' : '';
+  const stCls = st ? ` tl-st-${st}` : ' tl-st-none';
+  const glyph = st ? `<i>${TL_STATUS_GLYPH[st]}</i>` : '';
+  const brand = ev.kind === 'connector_call' && ev.connector ? brandDotHtml(ev.connector) : '';
+  return `<button type="button" class="tl-node" data-i="${i}" aria-pressed="${i === timelineSelected}">
+    <span class="tl-time">${esc(ev.at || '')}</span>
+    <span class="tl-dot${shapeCls}${stCls}">${glyph}</span>
+    <span class="tl-kind">${esc(tlKindLabel(ev.kind))}</span>
+    <span class="tl-label" title="${esc(ev.label || '')}">${brand}${esc(ev.label || '')}</span>
+  </button>`;
+}
+
+function tlStatusBadge(status) {
+  if (!status) return `<span class="text-[12px] text-faint">—</span>`;
+  return `<span class="tl-badge tl-badge-${esc(status)}">${esc(LABELS['tl.status.' + status] || status)}</span>`;
+}
+
+function renderTimelineDetail(ev) {
+  const box = document.getElementById('tlDetail');
+  const brandChip = ev.kind === 'connector_call' && ev.connector
+    ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-paper border border-line text-[11.5px] text-muted">${brandDotHtml(ev.connector)}${esc(connectorLabel(ev.connector))}</span>`
+    : '';
+  // 契约可选字段缺失 → 显示「—」（不造假数，T1 §5.3）
+  const metric = (labelKey, v) => `<div>
+    <div class="text-[11.5px] text-faint">${esc(LABELS[labelKey])}</div>
+    <div class="mt-0.5 text-[14px] tabular-nums ${v == null ? 'text-faint' : 'font-medium'}">${v == null ? '—' : esc(v)}</div>
+  </div>`;
+  const tokensIn = ev.tokens_in == null ? null : fmtNum(ev.tokens_in);
+  const tokensOut = ev.tokens_out == null ? null : fmtNum(ev.tokens_out);
+  const duration = ev.duration_ms == null ? null : fmtDuration(ev.duration_ms);
+  box.innerHTML = `
+    <div class="px-4 py-3 border-b border-line flex items-center gap-2 flex-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-muted shrink-0"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span class="font-mono text-[12px] text-faint tabular-nums">${esc(ev.at || '')}</span>
+      <span class="px-1.5 py-0.5 rounded bg-paper border border-line text-[11.5px] text-muted">${esc(tlKindLabel(ev.kind))}</span>
+      ${brandChip}
+      <span class="text-[13.5px] font-medium break-words">${esc(ev.label || '')}</span>
+      <span class="ml-auto shrink-0">${tlStatusBadge(ev.status)}</span>
+    </div>
+    <div class="px-4 py-3 grid grid-cols-3 gap-2 text-center">
+      ${metric('tl.tokens.in', tokensIn)}
+      ${metric('tl.tokens.out', tokensOut)}
+      ${metric('tl.detail.duration', duration)}
+    </div>`;
+  box.hidden = false;
+}
+
+function selectTimelineNode(i) {
+  if (!timelineNodes || i < 0 || i >= timelineNodes.length) return;
+  timelineSelected = i;
+  document.querySelectorAll('#tlRail .tl-node').forEach((btn) => {
+    btn.setAttribute('aria-pressed', Number(btn.dataset.i) === i ? 'true' : 'false');
+  });
+  renderTimelineDetail(timelineNodes[i]);
+}
+
+function renderTimeline(data) {
+  const rail = document.getElementById('tlRail');
+  const detail = document.getElementById('tlDetail');
+  timelineSelected = -1;
+  timelineNodes = Array.isArray(data && data.timeline) ? data.timeline : null;
+  detail.hidden = true;
+  if (!timelineNodes) { // 缺字段 → 数据源未提供，不造假数（T1 §5.3）
+    rail.innerHTML = `<div class="px-4 py-6 text-[13px] text-faint">${esc(CONTRACT_TEXT.notProvided)}</div>`;
+    return;
+  }
+  if (timelineNodes.length === 0) { // 空运行 → tl.empty
+    rail.innerHTML = `<div class="px-4 py-6 text-[13px] text-faint">${esc(LABELS['tl.empty'])}</div>`;
+    return;
+  }
+  rail.innerHTML = `<div class="tl-rail-inner">${timelineNodes.map(tlNodeHtml).join('')}</div>`;
+  rail.querySelectorAll('.tl-node').forEach((btn) => {
+    btn.addEventListener('click', () => selectTimelineNode(Number(btn.dataset.i)));
+  });
+  selectTimelineNode(0); // 默认选中首节点，详情即时可见（可点任意节点切换）
+}
+
+/* -------------------------------------------------------------------------
  * 主题切换（data-theme 双主题，与 ui-mocks 既有样机一致）
  * ------------------------------------------------------------------------- */
 document.getElementById('themeBtn').addEventListener('click', () => {
@@ -450,6 +644,7 @@ document.getElementById('themeBtn').addEventListener('click', () => {
     renderHeader(data);
     renderAssembly(data);
     renderContextComposition(data);
+    renderTimeline(data);
   } catch (e) {
     showError(e && e.code === 'UNSUPPORTED' ? CONTRACT_TEXT.unsupported : (e && e.message) || CONTRACT_TEXT.unsupported);
   }
