@@ -1,6 +1,7 @@
 # role-packs/terms.txt — 中文职业角色包领域术语追加表
 #
-# 消费方：scripts/quality-gate.py 的 --terms-file（PRD-183/T3 接线）。
+# 消费方：scripts/release-gate-role-packs.py（PRD-183/T3 发行门；内部复用
+# scripts/quality-gate.py 的 check_terms，词条口径与其 --terms-file 一致）。
 # 格式约定（沿用 quality-gate --terms-file）：每行 `英文=中文`，`#` 开头为注释行。
 #
 # 合并语义（T1 §5.3，勿改）：只追加、不覆盖。
@@ -34,6 +35,8 @@ job description=岗位说明
 # 首次出现括注约定：NDA 首现写「保密协议（NDA）」；岗位说明首现写「岗位说明（JD）」。
 #
 # ---- 豁免留痕区（PRD-183 风险「误杀可豁免但留痕」）----
-# 行格式：# exempt: <相对路径> :: <英文术语> :: <理由> :: YYYY-MM-DD
-# 约束：豁免条目必须同时写进当次 PR 描述（文件内 + PR 双重留痕），T3 解析本区放行。
-# T2 首版暂无豁免条目。
+# 行格式：# exempt: <相对路径（仓库根）> :: <英文术语> :: <理由> :: YYYY-MM-DD
+# 约束：豁免条目必须同时写进当次 PR 描述（文件内 + PR 双重留痕），
+# 发行门（scripts/release-gate-role-packs.py）解析本区逐条放行并在输出留痕；
+# 行残缺、日期非法或术语不在基表+追加表内一律失败（fail-closed）。
+# T2/T3 首版暂无豁免条目。
