@@ -69,7 +69,7 @@ bilingual: 见文末「英文摘要」段
 <!-- ≥3 句英文摘要 + 指向英文 README 入口：英文读者先看摘要，再决定是否读中文全文。
      不做全文翻译，避免双写。发布前必填。 -->
 
-<占位符-3 句以上英文摘要，讲清做成了什么、产物在哪> See [README.en.md](../../README.en.md) for the English entry.
+<占位符-3 句以上英文摘要，讲清做成了什么、产物在哪> See [README.en.md](../../../README.en.md) for the English entry.
 
 ## 相关阅读
 
