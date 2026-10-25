@@ -67,10 +67,11 @@
   - [8. 已汉化的内容](#8-已汉化的内容)
     - [8.1 前端 GUI](#81-前端-gui)
     - [8.2 Tauri 桌面壳](#82-tauri-桌面壳)
-  - [9. 仓库结构](#9-仓库结构)
-  - [10. 已知问题与后续计划](#10-已知问题与后续计划)
-  - [10.1 正式签名、公证与自动更新](#101-正式签名公证与自动更新)
-  - [11. 贡献与许可](#11-贡献与许可)
+  - [9. 开箱加餐：中文上下文面板（PRD-155）](#9-开箱加餐中文上下文面板prd-155)
+  - [10. 仓库结构](#10-仓库结构)
+  - [11. 已知问题与后续计划](#11-已知问题与后续计划)
+  - [11.1 正式签名、公证与自动更新](#111-正式签名公证与自动更新)
+  - [12. 贡献与许可](#12-贡献与许可)
 
 ---
 
@@ -450,12 +451,12 @@ npm run tauri dev
 4. 演示数据全虚构（`ui-mocks/fixtures/panel-demo-data.json`），可替换为真实适配器输出。
 
 ![中文上下文面板](docs/assets/context-panel-zh.png)
-*（截图占位：T5 验收时补真实截图）*
+*（页签① 能力组成真实截图；页签② 调用演进截图见使用指南）*
 
-详细步骤与字段说明见 [docs/context-panel-guide.md](docs/context-panel-guide.md)。
+详细步骤与字段说明见 [docs/context-panel-guide.md](docs/context-panel-guide.md)，T5 验收记录见 [docs/context-panel-acceptance.md](docs/context-panel-acceptance.md)。
 
 
-## 9. 仓库结构
+## 10. 仓库结构
 
 ```
 openworker-zh-localized/
@@ -477,7 +478,7 @@ openworker-zh-localized/
 
 ---
 
-## 10. 已知问题与后续计划
+## 11. 已知问题与后续计划
 
 ### 已知问题
 
@@ -489,7 +490,7 @@ openworker-zh-localized/
    - Apple Developer ID 证书、App Store Connect Notary API Key 和 Tauri updater 私钥不能提交到仓库。
    - 当前决定暂缓申请；记录见 [docs/release-signing-deferred-plan.md](docs/release-signing-deferred-plan.md)，配置方式见 [docs/release-signed-updates.md](docs/release-signed-updates.md)。
 
-### 10.1 正式签名、公证与自动更新
+### 11.1 正式签名、公证与自动更新
 
 本仓库已经准备好正式发布流水线：
 
@@ -510,7 +511,7 @@ openworker-zh-localized/
 
 ---
 
-## 11. 贡献与许可
+## 12. 贡献与许可
 
 - 本汉化版基于 [andrewyng/openworker](https://github.com/andrewyng/openworker) 和 [Lenovo202409/openworker-zh](https://github.com/Lenovo202409/openworker-zh)
 - 遵循 MIT 许可证，详见 [LICENSE](LICENSE)
