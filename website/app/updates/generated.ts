@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-24T23:59:08+08:00",
+  "generatedAt": "2026-10-25T11:57:16+08:00",
   "branch": "main",
-  "head": "cee346b2bbc9946a227dd1e78f8da4a65857eb7b",
-  "shortHead": "cee346b",
-  "totalFiles": 641,
+  "head": "3f83eba70446f57e738d9bf4a3ac7833e4d1be18",
+  "shortHead": "3f83eba",
+  "totalFiles": 646,
   "byExt": [
     {
       "name": "py",
-      "count": 271
+      "count": 272
     },
     {
       "name": "ts",
@@ -19,15 +19,15 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 52
+      "count": 53
+    },
+    {
+      "name": "png",
+      "count": 25
     },
     {
       "name": "svg",
       "count": 23
-    },
-    {
-      "name": "png",
-      "count": 22
     },
     {
       "name": "json",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 110
+      "count": 111
     },
     {
       "name": "docs",
-      "count": 83
+      "count": 87
     },
     {
       "name": "website",
@@ -370,6 +370,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "3f83eba",
+      "date": "2026-10-25",
+      "subject": "Merge pull request #47 from zhanglunet/trend/prd-155-t5-dsh-context-zh-panel"
+    },
+    {
+      "hash": "b7c94bc",
+      "date": "2026-10-25",
+      "subject": "test: PRD-155/T5 收尾复核——全量回归复跑入档（flaky 用例判定，Refs #779）"
+    },
+    {
+      "hash": "a2836cb",
+      "date": "2026-10-25",
+      "subject": "test: PRD-155/T5 面板开箱验收——走查记录+验收测试+真实截图+文档收尾（Refs #779）"
+    },
+    {
+      "hash": "376bd42",
+      "date": "2026-10-24",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "cee346b",
       "date": "2026-10-24",
       "subject": "Merge pull request #46 from zhanglunet/trend/prd-155-t4-dsh-context-zh-panel"
@@ -408,29 +428,29 @@ export const repoReport = {
       "hash": "4b550ac",
       "date": "2026-10-24",
       "subject": "feat: PRD-155/T3 调用演进时间线（页签②点亮）"
-    },
-    {
-      "hash": "4ecc6fc",
-      "date": "2026-10-24",
-      "subject": "feat: PRD-155/T2 能力组成视图（演示数据）"
-    },
-    {
-      "hash": "d64f866",
-      "date": "2026-10-23",
-      "subject": "docs: PRD-155/T1 中文面板信息架构与文案表"
-    },
-    {
-      "hash": "d7c8bbc",
-      "date": "2026-10-20",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "af20945",
-      "date": "2026-10-20",
-      "subject": "Merge PR #37: PRD-102/T3 README 双语示范改造"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "3f83eba",
+      "date": "2026-10-25",
+      "subject": "Merge pull request #47 from zhanglunet/trend/prd-155-t5-dsh-context-zh-panel"
+    },
+    {
+      "hash": "b7c94bc",
+      "date": "2026-10-25",
+      "subject": "test: PRD-155/T5 收尾复核——全量回归复跑入档（flaky 用例判定，Refs #779）"
+    },
+    {
+      "hash": "a2836cb",
+      "date": "2026-10-25",
+      "subject": "test: PRD-155/T5 面板开箱验收——走查记录+验收测试+真实截图+文档收尾（Refs #779）"
+    },
+    {
+      "hash": "376bd42",
+      "date": "2026-10-24",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "cee346b",
       "date": "2026-10-24",
@@ -685,46 +705,6 @@ export const repoReport = {
       "hash": "fac17ef",
       "date": "2026-10-18",
       "subject": "Merge pull request #19 from zhanglunet/trend/prd-067-t2-suite"
-    },
-    {
-      "hash": "aee92d0",
-      "date": "2026-10-18",
-      "subject": "feat: PRD-068/T2 影响面分析实现（upstream_common 抽取 + weekly 哨兵）"
-    },
-    {
-      "hash": "216f49c",
-      "date": "2026-10-18",
-      "subject": "feat: PRD-067/T2 测试套件实现（三类检查脚本，纯标准库）"
-    },
-    {
-      "hash": "091fe4f",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1b3859b",
-      "date": "2026-10-18",
-      "subject": "[PRD-067/T1] 质量门测试用例设计（方案 A；术语表已拍板）(#18)"
-    },
-    {
-      "hash": "48c1d20",
-      "date": "2026-10-18",
-      "subject": "[PRD-068/T1] 监控脚本设计：上游 diff 哨兵方案 (#17)"
-    },
-    {
-      "hash": "d18f7aa",
-      "date": "2026-10-18",
-      "subject": "docs: 记录用户拍板结论（方案 A；术语表 25 条已认可）"
-    },
-    {
-      "hash": "7cd5b13",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-067/T1 质量门测试用例设计（现状盘点+三类检查规则+术语表初版）"
-    },
-    {
-      "hash": "8ae8c5e",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-068/T1 上游 diff 监控脚本设计（哨兵方案）"
     }
   ]
 } as const;
