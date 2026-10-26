@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-10-26T08:57:57+08:00",
+  "generatedAt": "2026-10-26T05:50:09Z",
   "branch": "main",
-  "head": "6b00b3aacbad502e6d256661716b629daaec5472",
-  "shortHead": "6b00b3a",
+  "head": "58323a74521c05be574837f7d1787825d8472712",
+  "shortHead": "58323a7",
   "totalFiles": 668,
   "byExt": [
     {
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "58323a7",
+      "date": "2026-10-26",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "5d40e59",
+      "date": "2026-10-26",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "6b00b3a",
       "date": "2026-10-26",
       "subject": "Merge pull request #53 from zhanglunet/trend/prd-184-t3-build-in-public-template"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "bdf907b",
       "date": "2026-10-25",
       "subject": "feat: PRD-183/T2 中文销售/法务/人力三包最小集（Refs zhanglunet/trend#916）"
-    },
-    {
-      "hash": "aaccd1d",
-      "date": "2026-10-25",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3f83eba",
-      "date": "2026-10-25",
-      "subject": "Merge pull request #47 from zhanglunet/trend/prd-155-t5-dsh-context-zh-panel"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "58323a7",
+      "date": "2026-10-26",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "5d40e59",
+      "date": "2026-10-26",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "6b00b3a",
       "date": "2026-10-26",
@@ -589,96 +599,6 @@ export const repoReport = {
       "hash": "7f33922",
       "date": "2026-10-20",
       "subject": "docs: PRD-102/T3 README 顶部五层双语改造（语言切换 + slogan + 数字副标语）"
-    },
-    {
-      "hash": "8b85bbb",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "4f0c32a",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "840408c",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #32 from zhanglunet/trend/fix-084-f1-fence-check"
-    },
-    {
-      "hash": "7810b75",
-      "date": "2026-10-19",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "023b53a",
-      "date": "2026-10-19",
-      "subject": "fix: self_check_terms fence 感知（F1）"
-    },
-    {
-      "hash": "981513f",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "fd32b32",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #31 from zhanglunet/trend/prd-084-t5-trial"
-    },
-    {
-      "hash": "d5b5958",
-      "date": "2026-10-19",
-      "subject": "docs: PRD-084/T5 翻译流水线试运行报告"
-    },
-    {
-      "hash": "48282a4",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "283ff71",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #30 from zhanglunet/trend/prd-084-t4-trigger"
-    },
-    {
-      "hash": "c365bd7",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #29 from zhanglunet/trend/prd-084-t3-ci"
-    },
-    {
-      "hash": "167b4ee",
-      "date": "2026-10-19",
-      "subject": "[PRD-084/T4] 与哨兵联动：一键触发翻译"
-    },
-    {
-      "hash": "d0a630b",
-      "date": "2026-10-19",
-      "subject": "[PRD-084/T3] CI 校验：术语锁定 + 链接检查"
-    },
-    {
-      "hash": "dd40a95",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "e441847",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #28 from zhanglunet/trend/prd-084-t2-pipeline"
-    },
-    {
-      "hash": "2751874",
-      "date": "2026-10-19",
-      "subject": "feat: PRD-084/T2 翻译流水线实现"
-    },
-    {
-      "hash": "41b7462",
-      "date": "2026-10-19",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9e17262",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #27 from zhanglunet/trend/prd-084-t1-design"
     }
   ]
 } as const;
