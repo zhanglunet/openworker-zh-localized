@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-25T11:57:16+08:00",
+  "generatedAt": "2026-10-26T08:57:57+08:00",
   "branch": "main",
-  "head": "3f83eba70446f57e738d9bf4a3ac7833e4d1be18",
-  "shortHead": "3f83eba",
-  "totalFiles": 646,
+  "head": "6b00b3aacbad502e6d256661716b629daaec5472",
+  "shortHead": "6b00b3a",
+  "totalFiles": 668,
   "byExt": [
     {
       "name": "py",
-      "count": 272
+      "count": 276
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 53
+      "count": 70
     },
     {
       "name": "png",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 111
+      "count": 114
     },
     {
       "name": "docs",
-      "count": 87
+      "count": 94
     },
     {
       "name": "website",
@@ -104,12 +104,16 @@ export const repoReport = {
       "count": 11
     },
     {
+      "name": "role-packs",
+      "count": 11
+    },
+    {
       "name": "packaging",
       "count": 10
     },
     {
       "name": "scripts",
-      "count": 6
+      "count": 7
     },
     {
       "name": "ui-mocks",
@@ -370,71 +374,136 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "6b00b3a",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #53 from zhanglunet/trend/prd-184-t3-build-in-public-template"
+    },
+    {
+      "hash": "d2abaf7",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #52 from zhanglunet/trend/prd-183-t3-zh-role-packs"
+    },
+    {
+      "hash": "32da465",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #51 from zhanglunet/trend/prd-184-t2-build-in-public-template"
+    },
+    {
+      "hash": "d40bf1f",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #50 from zhanglunet/trend/prd-183-t2-zh-role-packs"
+    },
+    {
+      "hash": "d371746",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #49 from zhanglunet/trend/prd-184-t1-zh-build-in-public"
+    },
+    {
+      "hash": "18ad9e7",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #48 from zhanglunet/trend/prd-183-t1-zh-role-skill-pack"
+    },
+    {
+      "hash": "80aadb9",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-184/T3 构建实录首篇发布 + 2 篇草案大纲（Refs zhanglunet/trend#922）"
+    },
+    {
+      "hash": "ea09499",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-183/T3 角色包发行门——质量门未过不可发行（Refs zhanglunet/trend#917）"
+    },
+    {
+      "hash": "c831a55",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-184/T2 构建实录首更模板与栏目索引骨架（Refs zhanglunet/trend#921）"
+    },
+    {
+      "hash": "bdf907b",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-183/T2 中文销售/法务/人力三包最小集（Refs zhanglunet/trend#916）"
+    },
+    {
+      "hash": "aaccd1d",
+      "date": "2026-10-25",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "3f83eba",
       "date": "2026-10-25",
       "subject": "Merge pull request #47 from zhanglunet/trend/prd-155-t5-dsh-context-zh-panel"
-    },
-    {
-      "hash": "b7c94bc",
-      "date": "2026-10-25",
-      "subject": "test: PRD-155/T5 收尾复核——全量回归复跑入档（flaky 用例判定，Refs #779）"
-    },
-    {
-      "hash": "a2836cb",
-      "date": "2026-10-25",
-      "subject": "test: PRD-155/T5 面板开箱验收——走查记录+验收测试+真实截图+文档收尾（Refs #779）"
-    },
-    {
-      "hash": "376bd42",
-      "date": "2026-10-24",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "cee346b",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #46 from zhanglunet/trend/prd-155-t4-dsh-context-zh-panel"
-    },
-    {
-      "hash": "d9e6731",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #44 from zhanglunet/trend/prd-155-t3-dsh-context-zh-panel"
-    },
-    {
-      "hash": "546297f",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #43 from zhanglunet/trend/prd-155-t2-dsh-context-zh-panel"
-    },
-    {
-      "hash": "c046465",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #42 from zhanglunet/trend/prd-155-t1-dsh-context-zh-panel"
-    },
-    {
-      "hash": "ab0b985",
-      "date": "2026-10-24",
-      "subject": "docs: PRD-155/T4 开箱文档——README §9 + 使用指南 + 截图占位（Refs #778）"
-    },
-    {
-      "hash": "cc1c28f",
-      "date": "2026-10-24",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "64cfee9",
-      "date": "2026-10-24",
-      "subject": "docs: 记录汉化版定位、目标与愿景 (#45)"
-    },
-    {
-      "hash": "4b550ac",
-      "date": "2026-10-24",
-      "subject": "feat: PRD-155/T3 调用演进时间线（页签②点亮）"
     }
   ],
   "weeklyCommits": [
     {
+      "hash": "6b00b3a",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #53 from zhanglunet/trend/prd-184-t3-build-in-public-template"
+    },
+    {
+      "hash": "d2abaf7",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #52 from zhanglunet/trend/prd-183-t3-zh-role-packs"
+    },
+    {
+      "hash": "32da465",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #51 from zhanglunet/trend/prd-184-t2-build-in-public-template"
+    },
+    {
+      "hash": "d40bf1f",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #50 from zhanglunet/trend/prd-183-t2-zh-role-packs"
+    },
+    {
+      "hash": "d371746",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #49 from zhanglunet/trend/prd-184-t1-zh-build-in-public"
+    },
+    {
+      "hash": "18ad9e7",
+      "date": "2026-10-26",
+      "subject": "Merge pull request #48 from zhanglunet/trend/prd-183-t1-zh-role-skill-pack"
+    },
+    {
+      "hash": "80aadb9",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-184/T3 构建实录首篇发布 + 2 篇草案大纲（Refs zhanglunet/trend#922）"
+    },
+    {
+      "hash": "ea09499",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-183/T3 角色包发行门——质量门未过不可发行（Refs zhanglunet/trend#917）"
+    },
+    {
+      "hash": "c831a55",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-184/T2 构建实录首更模板与栏目索引骨架（Refs zhanglunet/trend#921）"
+    },
+    {
+      "hash": "bdf907b",
+      "date": "2026-10-25",
+      "subject": "feat: PRD-183/T2 中文销售/法务/人力三包最小集（Refs zhanglunet/trend#916）"
+    },
+    {
+      "hash": "aaccd1d",
+      "date": "2026-10-25",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "3f83eba",
       "date": "2026-10-25",
       "subject": "Merge pull request #47 from zhanglunet/trend/prd-155-t5-dsh-context-zh-panel"
+    },
+    {
+      "hash": "560b526",
+      "date": "2026-10-25",
+      "subject": "docs: PRD-184/T1 栏目信息架构与更新节奏"
+    },
+    {
+      "hash": "fa5aa8f",
+      "date": "2026-10-25",
+      "subject": "docs: PRD-183/T1 中文角色包规范与术语表"
     },
     {
       "hash": "b7c94bc",
@@ -610,101 +679,6 @@ export const repoReport = {
       "hash": "9e17262",
       "date": "2026-10-19",
       "subject": "Merge pull request #27 from zhanglunet/trend/prd-084-t1-design"
-    },
-    {
-      "hash": "612253d",
-      "date": "2026-10-19",
-      "subject": "docs: PRD-084/T1 翻译流水线设计稿"
-    },
-    {
-      "hash": "51cd463",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "904c8df",
-      "date": "2026-10-19",
-      "subject": "Merge pull request #26 from zhanglunet/trend/prd-068-t5-trial"
-    },
-    {
-      "hash": "e6241fa",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-068/T5 上游周报试运行报告"
-    },
-    {
-      "hash": "e56cb47",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "abfcae7",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #25 from zhanglunet/trend/prd-067-t5-trial"
-    },
-    {
-      "hash": "ef61d3f",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #24 from zhanglunet/trend/prd-068-t4-cron"
-    },
-    {
-      "hash": "2e3d4f0",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-067/T5 质量门试运行报告"
-    },
-    {
-      "hash": "6cca6b1",
-      "date": "2026-10-18",
-      "subject": "ci: PRD-068/T4 上游周报 cron 调度"
-    },
-    {
-      "hash": "733191d",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "11156f7",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #23 from zhanglunet/trend/prd-067-t4-baseline"
-    },
-    {
-      "hash": "01fd065",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #22 from zhanglunet/trend/prd-068-t3-template"
-    },
-    {
-      "hash": "3f34270",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #21 from zhanglunet/trend/prd-067-t3-ci"
-    },
-    {
-      "hash": "873480b",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-067/T4 质量门基线建立（trend #290）"
-    },
-    {
-      "hash": "c8604fc",
-      "date": "2026-10-18",
-      "subject": "docs: PRD-068/T3 上游周报模板 + 手填示例"
-    },
-    {
-      "hash": "a64f630",
-      "date": "2026-10-18",
-      "subject": "ci: PRD-067/T3 质量门 CI 集成（术语一致性，失败阻断）"
-    },
-    {
-      "hash": "c8cf75e",
-      "date": "2026-10-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "e499626",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #20 from zhanglunet/trend/prd-068-t2-impact"
-    },
-    {
-      "hash": "fac17ef",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #19 from zhanglunet/trend/prd-067-t2-suite"
     }
   ]
 } as const;

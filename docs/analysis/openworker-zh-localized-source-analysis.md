@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-25T11:57:16+08:00
+更新时间：2026-10-26T08:57:57+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：3f83eba70446f57e738d9bf4a3ac7833e4d1be18
+当前提交：6b00b3aacbad502e6d256661716b629daaec5472
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：646
-- 当前提交：3f83eba
+- 跟踪文件总数：668
+- 当前提交：6b00b3a
 - 主要文件类型：
-  - py: 272
+  - py: 276
   - ts: 105
   - tsx: 79
-  - md: 53
+  - md: 70
   - png: 25
   - svg: 23
   - json: 20
@@ -38,12 +38,13 @@
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 111 个文件
-- docs: 87 个文件
+- tests: 114 个文件
+- docs: 94 个文件
 - website: 36 个文件
 - .github: 11 个文件
+- role-packs: 11 个文件
 - packaging: 10 个文件
-- scripts: 6 个文件
+- scripts: 7 个文件
 - ui-mocks: 6 个文件
 - stt: 4 个文件
 - releases: 3 个文件
@@ -233,15 +234,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-26 6b00b3a Merge pull request #53 from zhanglunet/trend/prd-184-t3-build-in-public-template
+- 2026-10-26 d2abaf7 Merge pull request #52 from zhanglunet/trend/prd-183-t3-zh-role-packs
+- 2026-10-26 32da465 Merge pull request #51 from zhanglunet/trend/prd-184-t2-build-in-public-template
+- 2026-10-26 d40bf1f Merge pull request #50 from zhanglunet/trend/prd-183-t2-zh-role-packs
+- 2026-10-26 d371746 Merge pull request #49 from zhanglunet/trend/prd-184-t1-zh-build-in-public
+- 2026-10-26 18ad9e7 Merge pull request #48 from zhanglunet/trend/prd-183-t1-zh-role-skill-pack
+- 2026-10-25 80aadb9 feat: PRD-184/T3 构建实录首篇发布 + 2 篇草案大纲（Refs zhanglunet/trend#922）
+- 2026-10-25 ea09499 feat: PRD-183/T3 角色包发行门——质量门未过不可发行（Refs zhanglunet/trend#917）
+- 2026-10-25 c831a55 feat: PRD-184/T2 构建实录首更模板与栏目索引骨架（Refs zhanglunet/trend#921）
+- 2026-10-25 bdf907b feat: PRD-183/T2 中文销售/法务/人力三包最小集（Refs zhanglunet/trend#916）
+- 2026-10-25 aaccd1d docs: refresh generated site reports
 - 2026-10-25 3f83eba Merge pull request #47 from zhanglunet/trend/prd-155-t5-dsh-context-zh-panel
-- 2026-10-25 b7c94bc test: PRD-155/T5 收尾复核——全量回归复跑入档（flaky 用例判定，Refs #779）
-- 2026-10-25 a2836cb test: PRD-155/T5 面板开箱验收——走查记录+验收测试+真实截图+文档收尾（Refs #779）
-- 2026-10-24 376bd42 docs: refresh generated site reports
-- 2026-10-24 cee346b Merge pull request #46 from zhanglunet/trend/prd-155-t4-dsh-context-zh-panel
-- 2026-10-24 d9e6731 Merge pull request #44 from zhanglunet/trend/prd-155-t3-dsh-context-zh-panel
-- 2026-10-24 546297f Merge pull request #43 from zhanglunet/trend/prd-155-t2-dsh-context-zh-panel
-- 2026-10-24 c046465 Merge pull request #42 from zhanglunet/trend/prd-155-t1-dsh-context-zh-panel
-- 2026-10-24 ab0b985 docs: PRD-155/T4 开箱文档——README §9 + 使用指南 + 截图占位（Refs #778）
-- 2026-10-24 cc1c28f docs: refresh generated site reports
-- 2026-10-24 64cfee9 docs: 记录汉化版定位、目标与愿景 (#45)
-- 2026-10-24 4b550ac feat: PRD-155/T3 调用演进时间线（页签②点亮）
