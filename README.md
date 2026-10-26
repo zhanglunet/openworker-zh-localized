@@ -24,6 +24,7 @@
 - 网站源码：[website/README.md](website/README.md)
 - 源码深度分析：[https://oaosf.cn/source-analysis](https://oaosf.cn/source-analysis)（仓库内同步保存于 [docs/analysis/openworker-zh-localized-source-analysis.md](docs/analysis/openworker-zh-localized-source-analysis.md)）
 - 更新日志与周报：[https://oaosf.cn/updates](https://oaosf.cn/updates)（仓库内同步保存于 [docs/updates/CHANGELOG.md](docs/updates/CHANGELOG.md)、[docs/updates/WEEKLY.md](docs/updates/WEEKLY.md)）
+- 构建实录（Build in Public）：一天天用 agent 造出来的中文版，过程也给你看（仓库内同步保存于 [docs/articles/build-in-public/README.md](docs/articles/build-in-public/README.md)）
 - 定位、目标与愿景：[docs/positioning.md](docs/positioning.md)
 - 企业定制版全套准备文档（PRD、开发计划、三仓同步、部署、换肤打包）：[docs/enterprise/README.md](docs/enterprise/README.md)
 - 正式签名、公证与自动更新发布指南：[docs/release-signed-updates.md](docs/release-signed-updates.md)
