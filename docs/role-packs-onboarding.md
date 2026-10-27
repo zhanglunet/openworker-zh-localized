@@ -19,16 +19,25 @@
 
 ### 2. 安装（2 分钟）
 
-用 OpenWorker 的本地目录安装入口指向 `role-packs/<pack>` 目录
-（`install_from_dir`；**git URL 安装在本仓不可用**——克隆即扫会撞同一
-约束，走本地目录是唯一动线）。装完在技能列表确认出现包内技能。
+两步都走本地目录动线（**git URL 安装在本仓不可用**——克隆即扫会撞包根
+约束，见步骤 1）：
+
+- **装技能**：把 `role-packs/<pack>/skills/<技能名>/` 整个目录拷入全局技能
+  目录（state_dir 下的 `skills/`），或项目 `.coworker/skills/`；也可以把技能
+  目录打包成 zip，走设置页技能上传（暂存 → 预览 → 确认）。
+- **装角色**：用 OpenWorker 的本地目录安装入口（`install_from_dir`）指向
+  `role-packs/<pack>` 目录，核对中文授权摘要后确认启用。
+  注意 `install_from_dir` 只装角色本体，不装包内技能——技能须按上一步单独拷入。
 
 ### 3. 验证（3 分钟）
 
 - 技能列表出现该包全部成员技能；
-- 触发一次角色技能（如 hr 的入职清单），确认中文提示词按 persona 生效；
-- 可选：跑 `python3 scripts/quality-gate.py --terms-file role-packs/terms.txt`
-  自查术语一致性（发版前为强制门，见 §5）。
+- 触发一次角色技能（如 hr 的《岗位说明（JD）》草稿：对角色说
+  「帮我写个 JD」），确认中文提示词按 persona 生效；
+- 可选：跑 `python3 scripts/release-gate-role-packs.py` 自查
+  （质量门自测 + 三包全量术语一致性；发版前为强制门，见 §5。
+  注意 `quality-gate.py --root` 只扫 surfaces/docs，不覆盖 role-packs/，
+  三包术语自查以发行门为准）。
 
 ### 4. 迭代/卸载（1 分钟）
 
