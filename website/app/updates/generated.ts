@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-27T08:45:39+08:00",
+  "generatedAt": "2026-10-27T20:56:51+08:00",
   "branch": "main",
-  "head": "78340c1ddfcdf5baf12e14bcf300da37bee1c0bc",
-  "shortHead": "78340c1",
-  "totalFiles": 671,
+  "head": "209c7f7b1b2bcbfc29bab3f30a7af87bddbd2f4d",
+  "shortHead": "209c7f7",
+  "totalFiles": 675,
   "byExt": [
     {
       "name": "py",
-      "count": 278
+      "count": 280
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 71
+      "count": 73
     },
     {
       "name": "png",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 116
+      "count": 118
     },
     {
       "name": "docs",
-      "count": 95
+      "count": 97
     },
     {
       "name": "website",
@@ -374,6 +374,31 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "209c7f7",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #62 from zhanglunet/trend/prd-184-t5-acceptance"
+    },
+    {
+      "hash": "efcbdb0",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #61 from zhanglunet/trend/prd-183-t5-acceptance"
+    },
+    {
+      "hash": "23c5d2e",
+      "date": "2026-10-27",
+      "subject": "test: PRD-184/T5 构建实录栏目验收——可浏览走查、隐私扫描、术语统一（Refs zhanglunet/trend#924）"
+    },
+    {
+      "hash": "d819ec9",
+      "date": "2026-10-27",
+      "subject": "test: PRD-183/T5 三包验收——演示走查、质量门报告齐全、无密钥（Refs zhanglunet/trend#919）"
+    },
+    {
+      "hash": "3788cb3",
+      "date": "2026-10-27",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "78340c1",
       "date": "2026-10-27",
       "subject": "Merge pull request #55 from zhanglunet/trend/prd-184-t4-bilingual-links"
@@ -407,34 +432,34 @@ export const repoReport = {
       "hash": "5d40e59",
       "date": "2026-10-26",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6b00b3a",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #53 from zhanglunet/trend/prd-184-t3-build-in-public-template"
-    },
-    {
-      "hash": "d2abaf7",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #52 from zhanglunet/trend/prd-183-t3-zh-role-packs"
-    },
-    {
-      "hash": "32da465",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #51 from zhanglunet/trend/prd-184-t2-build-in-public-template"
-    },
-    {
-      "hash": "d40bf1f",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #50 from zhanglunet/trend/prd-183-t2-zh-role-packs"
-    },
-    {
-      "hash": "d371746",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #49 from zhanglunet/trend/prd-184-t1-zh-build-in-public"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "209c7f7",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #62 from zhanglunet/trend/prd-184-t5-acceptance"
+    },
+    {
+      "hash": "efcbdb0",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #61 from zhanglunet/trend/prd-183-t5-acceptance"
+    },
+    {
+      "hash": "23c5d2e",
+      "date": "2026-10-27",
+      "subject": "test: PRD-184/T5 构建实录栏目验收——可浏览走查、隐私扫描、术语统一（Refs zhanglunet/trend#924）"
+    },
+    {
+      "hash": "d819ec9",
+      "date": "2026-10-27",
+      "subject": "test: PRD-183/T5 三包验收——演示走查、质量门报告齐全、无密钥（Refs zhanglunet/trend#919）"
+    },
+    {
+      "hash": "3788cb3",
+      "date": "2026-10-27",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "78340c1",
       "date": "2026-10-27",
@@ -604,26 +629,6 @@ export const repoReport = {
       "hash": "d64f866",
       "date": "2026-10-23",
       "subject": "docs: PRD-155/T1 中文面板信息架构与文案表"
-    },
-    {
-      "hash": "d7c8bbc",
-      "date": "2026-10-20",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "af20945",
-      "date": "2026-10-20",
-      "subject": "Merge PR #37: PRD-102/T3 README 双语示范改造"
-    },
-    {
-      "hash": "a3c4b6f",
-      "date": "2026-10-20",
-      "subject": "docs: PRD-102/T3 新增英文 README（同结构浓缩版，英文技术描述）"
-    },
-    {
-      "hash": "7f33922",
-      "date": "2026-10-20",
-      "subject": "docs: PRD-102/T3 README 顶部五层双语改造（语言切换 + slogan + 数字副标语）"
     }
   ]
 } as const;
