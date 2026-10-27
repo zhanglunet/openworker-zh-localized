@@ -43,3 +43,7 @@
 ## 形态借鉴声明
 
 角色包发行形态（按职业角色发包、包内声明定位与边界红线、包集合配总览清单）借鉴自 anthropics/knowledge-work-plugins（Apache-2.0）。目录与字段实现为本仓库原生角色 / 技能体系，未复制上游任何文件；若未来拷贝上游文件，将附 Apache-2.0 许可证并注明来源与 commit。
+
+## 开箱指南
+
+10 分钟跟做版见 [docs/role-packs-onboarding.md](../docs/role-packs-onboarding.md)（取包→安装→验证→迭代→发版前门）。
