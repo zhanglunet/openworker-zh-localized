@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-26T05:50:09Z",
+  "generatedAt": "2026-10-27T08:45:39+08:00",
   "branch": "main",
-  "head": "58323a74521c05be574837f7d1787825d8472712",
-  "shortHead": "58323a7",
-  "totalFiles": 668,
+  "head": "78340c1ddfcdf5baf12e14bcf300da37bee1c0bc",
+  "shortHead": "78340c1",
+  "totalFiles": 671,
   "byExt": [
     {
       "name": "py",
-      "count": 276
+      "count": 278
     },
     {
       "name": "ts",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 70
+      "count": 71
     },
     {
       "name": "png",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 114
+      "count": 116
     },
     {
       "name": "docs",
-      "count": 94
+      "count": 95
     },
     {
       "name": "website",
@@ -374,9 +374,34 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "78340c1",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #55 from zhanglunet/trend/prd-184-t4-bilingual-links"
+    },
+    {
+      "hash": "2426aa7",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #54 from zhanglunet/trend/prd-183-t4-release-gate-ci"
+    },
+    {
+      "hash": "8f079f8",
+      "date": "2026-10-26",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "58323a7",
       "date": "2026-10-26",
       "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "71dace6",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-184/T4 双语传播交叉链接——中英入口在本目录汇合（Refs #923）"
+    },
+    {
+      "hash": "8af13b1",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-183/T4 角色包开箱指南（对接 PRD-121，10 分钟跟做）（Refs #918）"
     },
     {
       "hash": "5d40e59",
@@ -407,38 +432,38 @@ export const repoReport = {
       "hash": "d371746",
       "date": "2026-10-26",
       "subject": "Merge pull request #49 from zhanglunet/trend/prd-184-t1-zh-build-in-public"
-    },
-    {
-      "hash": "18ad9e7",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #48 from zhanglunet/trend/prd-183-t1-zh-role-skill-pack"
-    },
-    {
-      "hash": "80aadb9",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-184/T3 构建实录首篇发布 + 2 篇草案大纲（Refs zhanglunet/trend#922）"
-    },
-    {
-      "hash": "ea09499",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-183/T3 角色包发行门——质量门未过不可发行（Refs zhanglunet/trend#917）"
-    },
-    {
-      "hash": "c831a55",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-184/T2 构建实录首更模板与栏目索引骨架（Refs zhanglunet/trend#921）"
-    },
-    {
-      "hash": "bdf907b",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-183/T2 中文销售/法务/人力三包最小集（Refs zhanglunet/trend#916）"
     }
   ],
   "weeklyCommits": [
     {
+      "hash": "78340c1",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #55 from zhanglunet/trend/prd-184-t4-bilingual-links"
+    },
+    {
+      "hash": "2426aa7",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #54 from zhanglunet/trend/prd-183-t4-release-gate-ci"
+    },
+    {
+      "hash": "8f079f8",
+      "date": "2026-10-26",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "58323a7",
       "date": "2026-10-26",
       "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "71dace6",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-184/T4 双语传播交叉链接——中英入口在本目录汇合（Refs #923）"
+    },
+    {
+      "hash": "8af13b1",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-183/T4 角色包开箱指南（对接 PRD-121，10 分钟跟做）（Refs #918）"
     },
     {
       "hash": "5d40e59",
