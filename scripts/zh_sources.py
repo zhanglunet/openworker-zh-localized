@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""PRD-268/T2（trend #1341）：中文公开源能力层——注册表 + 健康状态机 + doctor 最小实现。
+"""PRD-268/T2+T3（trend #1341 / #1342）：中文公开源能力层——注册表 + 健康状态机 + doctor + 主备切换审计。
 
 按 PRD-268/T1 设计（docs/plans/2026-10-28-prd-268-zh-sources.md）实现 T2 范围：
   zh-source-v1 注册表校验：auth 只许 "none"、data_class 只许 "public"、
@@ -8,7 +8,13 @@
   **平台级限流预算**：同平台全部源共享 requests_per_min 预算（平台维度限流器）；
   健康四态：healthy→degraded→failed；429 throttled 分列；
   doctor：中文界面人读表格 + JSON（字段名英文——机读纪律）。
-  零网络（只消费调用方喂入的结果码）。被拒来源 disallowed 停用语义 T3 深化。
+  零网络（只消费调用方喂入的结果码）。
+T3（本分支）主备切换与审计（T1 §3.2）：
+  failover(source_id, at)：主源 failed 自动切第一个非 failed 的已注册备源
+  （standby_in_use 更新 + 审计事件 zh_source_failover）；disallowed 备源不参与切换；
+  restore(source_id, at)：主源恢复探测（healthy）通过后切回留痕 zh_source_restore；
+  export_events()：审计事件导出（纯 dict/str/int，可 JSON 序列化）。
+  切换不清零任何计数（consecutive_failures/used_per_min 原样保留，供复盘与限流连续性）。
 示例全虚构（example.com 占位）。
 """
 from __future__ import annotations
@@ -21,6 +27,9 @@ SCHEMA = "zh-source-v1"
 PLATFORMS = ("bilibili", "xiaohongshu", "generic-rss")
 STATES = ("healthy", "degraded", "failed", "throttled", "disallowed")
 DEFAULT_BUDGET_PER_PLATFORM = 2  # 中文平台默认保守值：2 req/min
+AUDIT_FAILOVER = "zh_source_failover"   # T3 审计事件：主源 failed 切备
+AUDIT_RESTORE = "zh_source_restore"     # T3 审计事件：主源恢复切回
+FAILOVER_EXCLUDE = ("failed", "disallowed")  # 备源参与切换的健康门槛（disallowed 不对抗）
 
 
 class SourceRejected(ValueError):
@@ -56,12 +65,14 @@ class ZhSourceLayer:
         self._sources: dict[str, dict[str, Any]] = {}
         self._health: dict[str, dict[str, Any]] = {}
         self._budgets: dict[str, int] = {}
+        self._events: list[dict[str, Any]] = []  # T3 审计事件流
         for entry in entries:
             validate_source(entry)
             sid = entry["source_id"]
             self._sources[sid] = entry
             self._health[sid] = {"state": "healthy", "consecutive_failures": 0,
-                                  "last_error_class": None, "used_per_min": 0}
+                                  "last_error_class": None, "used_per_min": 0,
+                                  "standby_in_use": None}
             platform = entry["platform"]
             # 平台级预算：默认保守值；同平台共享
             self._budgets.setdefault(platform,
@@ -108,6 +119,62 @@ class ZhSourceLayer:
                 h["state"] = "healthy"
         return h["state"]
 
+    def standbys_of(self, source_id: str) -> list[str]:
+        """备源清单：entry.standbys 为同层已注册源的 source_id 引用列表。"""
+        return list(self._sources[source_id].get("standbys") or [])
+
+    def active_source(self, source_id: str) -> str:
+        """当前实际服务源：未切换即主源，已切换即在用备源。"""
+        return self._health[source_id].get("standby_in_use") or source_id
+
+    def _emit(self, event: dict[str, Any]) -> dict[str, Any]:
+        event["seq"] = len(self._events) + 1
+        self._events.append(event)
+        return event
+
+    def failover(self, source_id: str, at: str) -> dict[str, Any] | None:
+        """主源 failed -> 切第一个非 failed 的备源（T1 §3.2）。
+
+        门槛：主源必须处于 failed 且尚未切换；备源按声明顺序取第一个
+        非 failed 且非 disallowed 的**已注册**源（disallowed 停用语义不参与、
+        未注册的 standbys 引用跳过）。任一门槛不满足即 no-op（返回 None，
+        **不产审计事件**）。切换只改 standby_in_use，不清零任何计数。
+        """
+        h = self._health[source_id]
+        if h["state"] != "failed" or h.get("standby_in_use"):
+            return None
+        for cand in self.standbys_of(source_id):
+            if cand == source_id or cand not in self._health:
+                continue
+            if self._health[cand]["state"] in FAILOVER_EXCLUDE:
+                continue
+            h["standby_in_use"] = cand
+            return self._emit({
+                "type": AUDIT_FAILOVER, "at": at, "source_id": source_id,
+                "from": source_id, "to": cand,
+                "reason": f"primary failed ({h['last_error_class']})",
+            })
+        return None
+
+    def restore(self, source_id: str, at: str) -> dict[str, Any] | None:
+        """主源恢复探测通过（healthy）-> 切回并留痕 zh_source_restore（T1 §3.2）。
+
+        未在切换态或主源尚未恢复 healthy 时 no-op（返回 None，不产事件）。
+        """
+        h = self._health[source_id]
+        standby = h.get("standby_in_use")
+        if not standby or h["state"] != "healthy":
+            return None
+        h["standby_in_use"] = None
+        return self._emit({
+            "type": AUDIT_RESTORE, "at": at, "source_id": source_id,
+            "from": standby, "to": source_id, "reason": "primary recovered",
+        })
+
+    def export_events(self) -> list[dict[str, Any]]:
+        """审计事件导出：浅拷贝列表，元素均为 str/int，可直接 JSON 序列化。"""
+        return [dict(e) for e in self._events]
+
     def doctor_json(self) -> dict[str, Any]:
         per_source = []
         for sid, entry in self._sources.items():
@@ -119,6 +186,7 @@ class ZhSourceLayer:
                           "platform_budget_per_min": self._budgets[entry["platform"]]},
                 "last_error_class": h["last_error_class"],
                 "tos_url": entry["primary"]["tos_url"],
+                "standby_in_use": h.get("standby_in_use"),
             })
         return {
             "schema": "zh-doctor-report-v1",
