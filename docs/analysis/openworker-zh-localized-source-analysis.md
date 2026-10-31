@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-27T20:56:51+08:00
+更新时间：2026-10-31T13:04:41+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：209c7f7b1b2bcbfc29bab3f30a7af87bddbd2f4d
+当前提交：7ecfb4ff37aeff9dad4a8174cdd6d224c95e29dc
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：675
-- 当前提交：209c7f7
+- 跟踪文件总数：704
+- 当前提交：7ecfb4f
 - 主要文件类型：
-  - py: 280
+  - py: 298
   - ts: 105
+  - md: 84
   - tsx: 79
-  - md: 73
   - png: 25
   - svg: 23
   - json: 20
@@ -38,13 +38,13 @@
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 118 个文件
-- docs: 97 个文件
+- tests: 130 个文件
+- docs: 108 个文件
 - website: 36 个文件
+- scripts: 13 个文件
 - .github: 11 个文件
 - role-packs: 11 个文件
 - packaging: 10 个文件
-- scripts: 7 个文件
 - ui-mocks: 6 个文件
 - stt: 4 个文件
 - releases: 3 个文件
@@ -234,15 +234,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
-- 2026-10-27 209c7f7 Merge pull request #62 from zhanglunet/trend/prd-184-t5-acceptance
-- 2026-10-27 efcbdb0 Merge pull request #61 from zhanglunet/trend/prd-183-t5-acceptance
-- 2026-10-27 23c5d2e test: PRD-184/T5 构建实录栏目验收——可浏览走查、隐私扫描、术语统一（Refs zhanglunet/trend#924）
-- 2026-10-27 d819ec9 test: PRD-183/T5 三包验收——演示走查、质量门报告齐全、无密钥（Refs zhanglunet/trend#919）
-- 2026-10-27 3788cb3 docs: refresh generated site reports
-- 2026-10-27 78340c1 Merge pull request #55 from zhanglunet/trend/prd-184-t4-bilingual-links
-- 2026-10-27 2426aa7 Merge pull request #54 from zhanglunet/trend/prd-183-t4-release-gate-ci
-- 2026-10-26 8f079f8 docs: refresh generated site reports
-- 2026-10-26 58323a7 chore: 更新上游哨兵水位（PRD-068）
-- 2026-10-26 71dace6 docs: PRD-184/T4 双语传播交叉链接——中英入口在本目录汇合（Refs #923）
-- 2026-10-26 8af13b1 docs: PRD-183/T4 角色包开箱指南（对接 PRD-121，10 分钟跟做）（Refs #918）
-- 2026-10-26 5d40e59 docs: refresh generated site reports
+- 2026-10-31 7ecfb4f Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance
+- 2026-10-31 eca50e8 Merge pull request #72 from zhanglunet/trend/prd-268-t5-acceptance
+- 2026-10-31 df5e9eb Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance
+- 2026-10-31 556d861 Merge pull request #69 from zhanglunet/trend/prd-267-t4-intake-gate
+- 2026-10-31 24c5dd0 Merge pull request #70 from zhanglunet/trend/prd-268-t4-boundary-doc
+- 2026-10-31 acb0c29 Merge pull request #76 from zhanglunet/trend/prd-285-t4-local-only-assertions
+- 2026-10-31 7b6fad2 Merge pull request #67 from zhanglunet/trend/prd-267-t3-zh-skills
+- 2026-10-31 cb28c89 Merge pull request #68 from zhanglunet/trend/prd-268-t3-zh-sources
+- 2026-10-31 96be411 Merge pull request #75 from zhanglunet/trend/prd-285-t3-spotcheck-archive
+- 2026-10-31 356c9a9 Merge pull request #65 from zhanglunet/trend/prd-267-t2-zh-skills
+- 2026-10-31 0f7da6b Merge pull request #66 from zhanglunet/trend/prd-268-t2-zh-sources
+- 2026-10-31 79374ca Merge pull request #74 from zhanglunet/trend/prd-285-t2-skillpack-snapshot

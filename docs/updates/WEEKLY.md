@@ -1,17 +1,17 @@
 # OpenWorker 中文站周报
 
-生成时间：2026-10-27T20:56:51+08:00
+生成时间：2026-10-31T13:04:41+09:00
 
 ## 本周概览
 
-- 2026-10-27 209c7f7 Merge pull request #62 from zhanglunet/trend/prd-184-t5-acceptance
-- 2026-10-27 efcbdb0 Merge pull request #61 from zhanglunet/trend/prd-183-t5-acceptance
-- 2026-10-27 23c5d2e test: PRD-184/T5 构建实录栏目验收——可浏览走查、隐私扫描、术语统一（Refs zhanglunet/trend#924）
-- 2026-10-27 d819ec9 test: PRD-183/T5 三包验收——演示走查、质量门报告齐全、无密钥（Refs zhanglunet/trend#919）
-- 2026-10-27 3788cb3 docs: refresh generated site reports
-- 2026-10-27 78340c1 Merge pull request #55 from zhanglunet/trend/prd-184-t4-bilingual-links
-- 2026-10-27 2426aa7 Merge pull request #54 from zhanglunet/trend/prd-183-t4-release-gate-ci
-- 2026-10-26 8f079f8 docs: refresh generated site reports
+- 2026-10-31 7ecfb4f Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance
+- 2026-10-31 eca50e8 Merge pull request #72 from zhanglunet/trend/prd-268-t5-acceptance
+- 2026-10-31 df5e9eb Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance
+- 2026-10-31 556d861 Merge pull request #69 from zhanglunet/trend/prd-267-t4-intake-gate
+- 2026-10-31 24c5dd0 Merge pull request #70 from zhanglunet/trend/prd-268-t4-boundary-doc
+- 2026-10-31 acb0c29 Merge pull request #76 from zhanglunet/trend/prd-285-t4-local-only-assertions
+- 2026-10-31 7b6fad2 Merge pull request #67 from zhanglunet/trend/prd-267-t3-zh-skills
+- 2026-10-31 cb28c89 Merge pull request #68 from zhanglunet/trend/prd-268-t3-zh-sources
 
 ## 维护建议
 

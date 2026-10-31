@@ -1,25 +1,25 @@
 export const repoReport = {
-  "generatedAt": "2026-10-27T20:56:51+08:00",
+  "generatedAt": "2026-10-31T13:04:41+09:00",
   "branch": "main",
-  "head": "209c7f7b1b2bcbfc29bab3f30a7af87bddbd2f4d",
-  "shortHead": "209c7f7",
-  "totalFiles": 675,
+  "head": "7ecfb4ff37aeff9dad4a8174cdd6d224c95e29dc",
+  "shortHead": "7ecfb4f",
+  "totalFiles": 704,
   "byExt": [
     {
       "name": "py",
-      "count": 280
+      "count": 298
     },
     {
       "name": "ts",
       "count": 105
     },
     {
-      "name": "tsx",
-      "count": 79
+      "name": "md",
+      "count": 84
     },
     {
-      "name": "md",
-      "count": 73
+      "name": "tsx",
+      "count": 79
     },
     {
       "name": "png",
@@ -89,15 +89,19 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 118
+      "count": 130
     },
     {
       "name": "docs",
-      "count": 97
+      "count": 108
     },
     {
       "name": "website",
       "count": 36
+    },
+    {
+      "name": "scripts",
+      "count": 13
     },
     {
       "name": ".github",
@@ -110,10 +114,6 @@ export const repoReport = {
     {
       "name": "packaging",
       "count": 10
-    },
-    {
-      "name": "scripts",
-      "count": 7
     },
     {
       "name": "ui-mocks",
@@ -374,68 +374,248 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
-      "hash": "209c7f7",
-      "date": "2026-10-27",
-      "subject": "Merge pull request #62 from zhanglunet/trend/prd-184-t5-acceptance"
+      "hash": "7ecfb4f",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance"
     },
     {
-      "hash": "efcbdb0",
-      "date": "2026-10-27",
-      "subject": "Merge pull request #61 from zhanglunet/trend/prd-183-t5-acceptance"
+      "hash": "eca50e8",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #72 from zhanglunet/trend/prd-268-t5-acceptance"
     },
     {
-      "hash": "23c5d2e",
-      "date": "2026-10-27",
-      "subject": "test: PRD-184/T5 构建实录栏目验收——可浏览走查、隐私扫描、术语统一（Refs zhanglunet/trend#924）"
+      "hash": "df5e9eb",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance"
     },
     {
-      "hash": "d819ec9",
-      "date": "2026-10-27",
-      "subject": "test: PRD-183/T5 三包验收——演示走查、质量门报告齐全、无密钥（Refs zhanglunet/trend#919）"
+      "hash": "556d861",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #69 from zhanglunet/trend/prd-267-t4-intake-gate"
     },
     {
-      "hash": "3788cb3",
-      "date": "2026-10-27",
-      "subject": "docs: refresh generated site reports"
+      "hash": "24c5dd0",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #70 from zhanglunet/trend/prd-268-t4-boundary-doc"
     },
     {
-      "hash": "78340c1",
-      "date": "2026-10-27",
-      "subject": "Merge pull request #55 from zhanglunet/trend/prd-184-t4-bilingual-links"
+      "hash": "acb0c29",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #76 from zhanglunet/trend/prd-285-t4-local-only-assertions"
     },
     {
-      "hash": "2426aa7",
-      "date": "2026-10-27",
-      "subject": "Merge pull request #54 from zhanglunet/trend/prd-183-t4-release-gate-ci"
+      "hash": "7b6fad2",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #67 from zhanglunet/trend/prd-267-t3-zh-skills"
     },
     {
-      "hash": "8f079f8",
-      "date": "2026-10-26",
-      "subject": "docs: refresh generated site reports"
+      "hash": "cb28c89",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #68 from zhanglunet/trend/prd-268-t3-zh-sources"
     },
     {
-      "hash": "58323a7",
-      "date": "2026-10-26",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+      "hash": "96be411",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #75 from zhanglunet/trend/prd-285-t3-spotcheck-archive"
     },
     {
-      "hash": "71dace6",
-      "date": "2026-10-26",
-      "subject": "docs: PRD-184/T4 双语传播交叉链接——中英入口在本目录汇合（Refs #923）"
+      "hash": "356c9a9",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #65 from zhanglunet/trend/prd-267-t2-zh-skills"
     },
     {
-      "hash": "8af13b1",
-      "date": "2026-10-26",
-      "subject": "docs: PRD-183/T4 角色包开箱指南（对接 PRD-121，10 分钟跟做）（Refs #918）"
+      "hash": "0f7da6b",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #66 from zhanglunet/trend/prd-268-t2-zh-sources"
     },
     {
-      "hash": "5d40e59",
-      "date": "2026-10-26",
-      "subject": "docs: refresh generated site reports"
+      "hash": "79374ca",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #74 from zhanglunet/trend/prd-285-t2-skillpack-snapshot"
     }
   ],
   "weeklyCommits": [
     {
+      "hash": "7ecfb4f",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance"
+    },
+    {
+      "hash": "eca50e8",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #72 from zhanglunet/trend/prd-268-t5-acceptance"
+    },
+    {
+      "hash": "df5e9eb",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance"
+    },
+    {
+      "hash": "556d861",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #69 from zhanglunet/trend/prd-267-t4-intake-gate"
+    },
+    {
+      "hash": "24c5dd0",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #70 from zhanglunet/trend/prd-268-t4-boundary-doc"
+    },
+    {
+      "hash": "acb0c29",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #76 from zhanglunet/trend/prd-285-t4-local-only-assertions"
+    },
+    {
+      "hash": "7b6fad2",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #67 from zhanglunet/trend/prd-267-t3-zh-skills"
+    },
+    {
+      "hash": "cb28c89",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #68 from zhanglunet/trend/prd-268-t3-zh-sources"
+    },
+    {
+      "hash": "96be411",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #75 from zhanglunet/trend/prd-285-t3-spotcheck-archive"
+    },
+    {
+      "hash": "356c9a9",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #65 from zhanglunet/trend/prd-267-t2-zh-skills"
+    },
+    {
+      "hash": "0f7da6b",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #66 from zhanglunet/trend/prd-268-t2-zh-sources"
+    },
+    {
+      "hash": "79374ca",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #74 from zhanglunet/trend/prd-285-t2-skillpack-snapshot"
+    },
+    {
+      "hash": "05398fd",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #39 from zhanglunet/docs/prd-122-t1-readme-en"
+    },
+    {
+      "hash": "6f7a746",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #57 from zhanglunet/trend/prd-211-t1-howto-design"
+    },
+    {
+      "hash": "e7352d1",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #58 from zhanglunet/trend/prd-239-t1-layering-design"
+    },
+    {
+      "hash": "1d77b7f",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #59 from zhanglunet/trend/prd-212-t1-pi"
+    },
+    {
+      "hash": "2fbbef6",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #60 from zhanglunet/trend/prd-240-t1-pi"
+    },
+    {
+      "hash": "31d2e42",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #63 from zhanglunet/trend/prd-267-t1-zh-skills"
+    },
+    {
+      "hash": "44937c6",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #64 from zhanglunet/trend/prd-268-t1-zh-sources"
+    },
+    {
+      "hash": "d3a89fe",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #73 from zhanglunet/trend/prd-285-t1-skillpack-upgrade-snapshot"
+    },
+    {
+      "hash": "60d0825",
+      "date": "2026-10-30",
+      "subject": "test: PRD-285/T5 中文技能包升级快照验收试运行（全流程演练 snapshot→包面损坏→抽查检出→自动回滚→旧包+抽查落档+指纹校验+本地断言，8 例）（trend #1430）"
+    },
+    {
+      "hash": "4873ff6",
+      "date": "2026-10-29",
+      "subject": "test: PRD-285/T4 本地处理断言（快照/回滚/抽查全链零网络：AST import 扫描 + 源码网络字面量扫描 + socket/urllib/http.client 封桩运行期三道，6 例）"
+    },
+    {
+      "hash": "2ef3cb9",
+      "date": "2026-10-29",
+      "subject": "feat: PRD-285/T3 抽查记录落档与升级流程（spotcheck-record-v1 六字段固定·计数一致 fail-close/append-only JSONL 落档+全量读回坏行带行号拒绝/upgrade_flow_with_check 升级→抽查→failed>0 自动回滚（restore_fn 注入式）·回滚可再回滚/确定性同输入同记录同字节/与 T2 松耦合端到端 spot_check+restore/10 例）（trend #1428）"
+    },
+    {
+      "hash": "d55af45",
+      "date": "2026-10-29",
+      "subject": "feat: PRD-285/T2 中文技能包升级快照最小实现"
+    },
+    {
+      "hash": "1aa0736",
+      "date": "2026-10-29",
+      "subject": "docs: PRD-285/T1 中文技能包升级快照设计（skillpack-snapshot-v1 schema：包目录+manifest/目录两枚指纹·按指纹承载身份/restore 单槽位上一版·fail-close·可再回滚/spot_check 抽样校验五项·抽查与回滚记录一并落档 audit.jsonl/全链零网络 AST 断言红线/与 PRD-267 划界：267 管来源 285 管升级可逆/T2–T5 拆分与中文虚构演练样本）（trend #1426）"
+    },
+    {
+      "hash": "f0c3a89",
+      "date": "2026-10-28",
+      "subject": "test: PRD-268/T5 中文公开源验收试运行（12 例：故障时间线 degraded→failed→failover 事件断言/429 throttled 分列/disallowed 停用不参与切换/恢复切回留痕/违规条目拒载 auth≠none·robots≠true·缺 tos/平台预算叠加不超/doctor 英文 JSON+中文文本/零网络 AST 断言/无登录墙绕过代码路径断言/零密钥扫描）（Refs zhanglunet/trend#1344）"
+    },
+    {
+      "hash": "8a63998",
+      "date": "2026-10-28",
+      "subject": "test: PRD-267/T5 中文技能录制验收试运行（12 例：虚构中文任务回放时间线 say_zh 在场/Z-1 全角手机号阻断/canonical+colloquial>=3 语料溯源/触发演示命中与不命中/未 review 入库拒/冲突复检拒/三条件过收 0.1.0/本地零网络 AST 断言/密钥扫描/确定性）（Refs zhanglunet/trend#1339）"
+    },
+    {
+      "hash": "1062496",
+      "date": "2026-10-28",
+      "subject": "docs: PRD-268/T4 与 PRD-184/211 边界文档（184 管栏目叙事/268 管来源健康·(source_handle,health_meta) 对接不自建请求/211 素材人工采集审核不变·268 不自动下载图片/ASCII 分层图/边界一句话·占位符纪律，7 例）（trend #1343）"
+    },
+    {
+      "hash": "3a6cd66",
+      "date": "2026-10-28",
+      "subject": "feat: PRD-267/T4 人 review 入库门（review.state=approved+reviewer/decided_at 齐签硬拒/触发词冲突复检重叠率>0.5/Z-1~Z-2 正文与 frontmatter 复扫/任一失败 admitted=False+原因可读/入库 version 0.1.0 起，9 例）（trend #1338）"
+    },
+    {
+      "hash": "f498485",
+      "date": "2026-10-28",
+      "subject": "feat: PRD-268/T3 主备切换与审计（failed 自动切备 standby_in_use+zh_source_failover/恢复探测切回 zh_source_restore/disallowed 备源不参与/切换不清零计数/export_events 可序列化，7 例）（trend #1342）"
+    },
+    {
+      "hash": "15fe5e7",
+      "date": "2026-10-28",
+      "subject": "feat: PRD-267/T3 中文技能草稿与口语化触发词（say_zh 原句截取 8-24 字/colloquial>=3 不足 action_zh 补足/语料不足拒产不编造/冲突检查交集并集>0.5/触发演示 trigger_match，17 例）（trend #1337）"
+    },
+    {
+      "hash": "587e29f",
+      "date": "2026-10-28",
+      "subject": "feat: PRD-268/T2 中文公开源能力层最小实现（zh-source-v1 robots 必填校验/平台级限流预算/健康四态含 disallowed/doctor 中英分离，13 例）（trend #1341）"
+    },
+    {
+      "hash": "2279e04",
+      "date": "2026-10-28",
+      "subject": "feat: PRD-267/T2 中文实操录制管线最小实现（zh-capture-v1 含 say_zh 口语字段/Z-1 全半角/Z-3 替换类/值类禁录 FORBIDDEN，12 例）（trend #1336）"
+    },
+    {
+      "hash": "722a9af",
+      "date": "2026-10-28",
+      "subject": "docs: PRD-268/T1 中文公开源能力层设计（zh-source-v1 平台枚举/平台级限流预算/robots+disallowed 停用语义/184-211 边界）"
+    },
+    {
+      "hash": "b2632af",
+      "date": "2026-10-28",
+      "subject": "docs: PRD-267/T1 中文实操转中文技能设计（zh-capture-v1 含 say_zh 解说字段/Z 四维全半角脱敏/口语化触发词 canonical+colloquial 双层规范/冲突检查）"
+    },
+    {
+      "hash": "3512df1",
+      "date": "2026-10-27",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "209c7f7",
       "date": "2026-10-27",
       "subject": "Merge pull request #62 from zhanglunet/trend/prd-184-t5-acceptance"
@@ -469,6 +649,26 @@ export const repoReport = {
       "hash": "2426aa7",
       "date": "2026-10-27",
       "subject": "Merge pull request #54 from zhanglunet/trend/prd-183-t4-release-gate-ci"
+    },
+    {
+      "hash": "57a7ed3",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-240/T1 中文结构化知识引擎"
+    },
+    {
+      "hash": "500e039",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-212/T1 中文 skill 跨工具同步清单"
+    },
+    {
+      "hash": "278f3ea",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-239/T1 中文角色包盘点与分场景映射设计"
+    },
+    {
+      "hash": "889a6c7",
+      "date": "2026-10-26",
+      "subject": "docs: PRD-211/T1 图解上手指南信息架构与图解规范（设计草稿）"
     },
     {
       "hash": "8f079f8",
@@ -614,21 +814,6 @@ export const repoReport = {
       "hash": "64cfee9",
       "date": "2026-10-24",
       "subject": "docs: 记录汉化版定位、目标与愿景 (#45)"
-    },
-    {
-      "hash": "4b550ac",
-      "date": "2026-10-24",
-      "subject": "feat: PRD-155/T3 调用演进时间线（页签②点亮）"
-    },
-    {
-      "hash": "4ecc6fc",
-      "date": "2026-10-24",
-      "subject": "feat: PRD-155/T2 能力组成视图（演示数据）"
-    },
-    {
-      "hash": "d64f866",
-      "date": "2026-10-23",
-      "subject": "docs: PRD-155/T1 中文面板信息架构与文案表"
     }
   ]
 } as const;
