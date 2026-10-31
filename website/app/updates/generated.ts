@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-31T19:20:06+09:00",
+  "generatedAt": "2026-10-31T22:46:24+09:00",
   "branch": "main",
-  "head": "fedc5ab5965b280a61dbb2ea1613e388970b5642",
-  "shortHead": "fedc5ab",
-  "totalFiles": 709,
+  "head": "a4132cfa3e30d3547e2cb6b5afc63cbda0091d15",
+  "shortHead": "a4132cf",
+  "totalFiles": 713,
   "byExt": [
     {
       "name": "py",
-      "count": 301
+      "count": 304
     },
     {
       "name": "ts",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 85
+      "count": 86
     },
     {
       "name": "tsx",
@@ -89,11 +89,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 132
+      "count": 134
     },
     {
       "name": "docs",
-      "count": 109
+      "count": 110
     },
     {
       "name": "website",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 15
+      "count": 16
     },
     {
       "name": ".github",
@@ -374,6 +374,31 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "a4132cf",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #81 from zhanglunet/trend/prd-212-t3-probe"
+    },
+    {
+      "hash": "ad404a1",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #80 from zhanglunet/trend/prd-211-t3-templates"
+    },
+    {
+      "hash": "f5136c4",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-212/T3 中文触发词可用性抽查（14 条样本集/注入式唤起/三层通过标准/probe CSV 记录完整可回溯，8 例）（trend #1062）"
+    },
+    {
+      "hash": "8e57f36",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-211/T3 中文模板库（配置/首任务/角色包/会话续跑/纠正反馈五类，TOML 实测解析+键名对齐仓库样例+占位符规范+零密钥形态，6 例）（trend #1057）"
+    },
+    {
+      "hash": "891d4f4",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "fedc5ab",
       "date": "2026-10-31",
       "subject": "Merge pull request #79 from zhanglunet/trend/prd-212-t2-sync-checklist"
@@ -407,34 +432,34 @@ export const repoReport = {
       "hash": "c0c686a",
       "date": "2026-10-31",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "438fb3a",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #38 from zhanglunet/cursor/prd-121-t1-install-e933"
-    },
-    {
-      "hash": "99e7afd",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "7ecfb4f",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance"
-    },
-    {
-      "hash": "eca50e8",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #72 from zhanglunet/trend/prd-268-t5-acceptance"
-    },
-    {
-      "hash": "df5e9eb",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "a4132cf",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #81 from zhanglunet/trend/prd-212-t3-probe"
+    },
+    {
+      "hash": "ad404a1",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #80 from zhanglunet/trend/prd-211-t3-templates"
+    },
+    {
+      "hash": "f5136c4",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-212/T3 中文触发词可用性抽查（14 条样本集/注入式唤起/三层通过标准/probe CSV 记录完整可回溯，8 例）（trend #1062）"
+    },
+    {
+      "hash": "8e57f36",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-211/T3 中文模板库（配置/首任务/角色包/会话续跑/纠正反馈五类，TOML 实测解析+键名对齐仓库样例+占位符规范+零密钥形态，6 例）（trend #1057）"
+    },
+    {
+      "hash": "891d4f4",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "fedc5ab",
       "date": "2026-10-31",
