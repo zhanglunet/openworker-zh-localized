@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-10-31T13:10:25+09:00",
+  "generatedAt": "2026-10-31T18:29:37+09:00",
   "branch": "main",
-  "head": "438fb3aea636909618b1cfb989f0f6577729d320",
-  "shortHead": "438fb3a",
-  "totalFiles": 706,
+  "head": "d2a505b528531e92889f08ced747334e161d1d1f",
+  "shortHead": "d2a505b",
+  "totalFiles": 707,
   "byExt": [
     {
       "name": "py",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 84
+      "count": 85
     },
     {
       "name": "tsx",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 108
+      "count": 109
     },
     {
       "name": "website",
@@ -374,6 +374,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d2a505b",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #78 from zhanglunet/trend/prd-211-t2-howto"
+    },
+    {
+      "hash": "f3d7769",
+      "date": "2026-10-31",
+      "subject": "fix: PRD-211/T2 场景表命令改写避免术语混排 + 修复 upstream-weekly $date 全角邻接隐患"
+    },
+    {
+      "hash": "4769544",
+      "date": "2026-10-31",
+      "subject": "docs: PRD-211/T2 中文图解上手指南（安装→首任务→场景→下一步）"
+    },
+    {
+      "hash": "c0c686a",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "438fb3a",
       "date": "2026-10-31",
       "subject": "Merge pull request #38 from zhanglunet/cursor/prd-121-t1-install-e933"
@@ -412,29 +432,29 @@ export const repoReport = {
       "hash": "acb0c29",
       "date": "2026-10-31",
       "subject": "Merge pull request #76 from zhanglunet/trend/prd-285-t4-local-only-assertions"
-    },
-    {
-      "hash": "7b6fad2",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #67 from zhanglunet/trend/prd-267-t3-zh-skills"
-    },
-    {
-      "hash": "cb28c89",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #68 from zhanglunet/trend/prd-268-t3-zh-sources"
-    },
-    {
-      "hash": "96be411",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #75 from zhanglunet/trend/prd-285-t3-spotcheck-archive"
-    },
-    {
-      "hash": "356c9a9",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #65 from zhanglunet/trend/prd-267-t2-zh-skills"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d2a505b",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #78 from zhanglunet/trend/prd-211-t2-howto"
+    },
+    {
+      "hash": "f3d7769",
+      "date": "2026-10-31",
+      "subject": "fix: PRD-211/T2 场景表命令改写避免术语混排 + 修复 upstream-weekly $date 全角邻接隐患"
+    },
+    {
+      "hash": "4769544",
+      "date": "2026-10-31",
+      "subject": "docs: PRD-211/T2 中文图解上手指南（安装→首任务→场景→下一步）"
+    },
+    {
+      "hash": "c0c686a",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "438fb3a",
       "date": "2026-10-31",
@@ -814,16 +834,6 @@ export const repoReport = {
       "hash": "ab0b985",
       "date": "2026-10-24",
       "subject": "docs: PRD-155/T4 开箱文档——README §9 + 使用指南 + 截图占位（Refs #778）"
-    },
-    {
-      "hash": "cc1c28f",
-      "date": "2026-10-24",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "64cfee9",
-      "date": "2026-10-24",
-      "subject": "docs: 记录汉化版定位、目标与愿景 (#45)"
     }
   ]
 } as const;
