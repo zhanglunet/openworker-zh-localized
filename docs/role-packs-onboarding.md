@@ -57,3 +57,8 @@
   sales 管"转化"），越界需求不接；
 - 术语以 `role-packs/terms.txt` + `scripts/quality-gate.py` TERMS 为准；
 - 文档与示例全虚构占位，无真实主机名/IP/账号/密钥。
+
+## 手册互链
+
+- 图解上手手册：`docs/guides/quick-start.md`（安装 → 首个任务 → 常用场景）
+- 模板库：`docs/guides/templates.md`（可直接复制的提示/配置模板）

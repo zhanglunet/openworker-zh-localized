@@ -32,3 +32,7 @@ owzh status
 
 - 详细配置见 `docs/config.example.toml`
 - 角色包见 `skills/` 目录
+
+## 开箱叙事（跟做指南）
+
+想按场景跟做一遍？见 `docs/role-packs-onboarding.md`（角色包 10 分钟开箱指南，对接 PRD-121 中文开箱动线）；本手册配套的模板见 `docs/guides/templates.md`。
