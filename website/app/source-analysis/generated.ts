@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-01T01:28:28+09:00",
+  "generatedAt": "2026-11-01T01:36:14+09:00",
   "branch": "main",
-  "head": "d920ddc74f332ca08e046cbe2a8ee86e488e3112",
-  "shortHead": "d920ddc",
-  "totalFiles": 715,
+  "head": "a6ac61a748b0d7fc573ff5fbda6cf12d2b1953e7",
+  "shortHead": "a6ac61a",
+  "totalFiles": 716,
   "byExt": [
     {
       "name": "py",
-      "count": 305
+      "count": 306
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 135
+      "count": 136
     },
     {
       "name": "coworker",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "a6ac61a",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #82 from zhanglunet/trend/prd-211-t4-crosslink"
+    },
+    {
+      "hash": "2950a26",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-211/T4 与 PRD-121 开箱叙事互链（叙事页与手册页双向可达/链接不悬空/术语预检零失败，4 例）（trend #1058）"
+    },
+    {
+      "hash": "cc33ad8",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "d920ddc",
       "date": "2026-11-01",
       "subject": "Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "fedc5ab",
       "date": "2026-10-31",
       "subject": "Merge pull request #79 from zhanglunet/trend/prd-212-t2-sync-checklist"
-    },
-    {
-      "hash": "af87a22",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-212/T2 中文技能包跨工具同步检查脚本（CN-SYNC-01~09，只读）（trend #1061）"
-    },
-    {
-      "hash": "4ddc3b6",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d2a505b",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #78 from zhanglunet/trend/prd-211-t2-howto"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "a6ac61a",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #82 from zhanglunet/trend/prd-211-t4-crosslink"
+    },
+    {
+      "hash": "2950a26",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-211/T4 与 PRD-121 开箱叙事互链（叙事页与手册页双向可达/链接不悬空/术语预检零失败，4 例）（trend #1058）"
+    },
+    {
+      "hash": "cc33ad8",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "d920ddc",
       "date": "2026-11-01",
