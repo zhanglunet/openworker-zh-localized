@@ -78,3 +78,8 @@ enabled = false
 owzh run "【占位：任务】"
 owzh status
 ```
+
+## 互链
+
+- 上手路径：`docs/guides/quick-start.md`（安装 → 首个任务 → 常用场景）
+- 开箱叙事（跟做指南）：`docs/role-packs-onboarding.md`
