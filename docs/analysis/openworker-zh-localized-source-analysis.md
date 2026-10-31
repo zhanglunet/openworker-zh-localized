@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-31T22:46:24+09:00
+更新时间：2026-11-01T01:28:28+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：a4132cfa3e30d3547e2cb6b5afc63cbda0091d15
+当前提交：d920ddc74f332ca08e046cbe2a8ee86e488e3112
 
 ## 1. 总体判断
 
@@ -14,12 +14,12 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：713
-- 当前提交：a4132cf
+- 跟踪文件总数：715
+- 当前提交：d920ddc
 - 主要文件类型：
-  - py: 304
+  - py: 305
   - ts: 105
-  - md: 86
+  - md: 87
   - tsx: 79
   - png: 25
   - svg: 23
@@ -37,9 +37,9 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
+- tests: 135 个文件
 - coworker: 134 个文件
-- tests: 134 个文件
-- docs: 110 个文件
+- docs: 111 个文件
 - website: 36 个文件
 - scripts: 16 个文件
 - .github: 11 个文件
@@ -234,6 +234,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-01 d920ddc Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide
+- 2026-10-31 d699329 feat: PRD-212/T4 漂移修复指引（CN-SYNC-01~12 全编号覆盖/状态枚举对齐 T2/诊断命令引真实脚本/术语预检零失败，4 例）（trend #1063）
+- 2026-10-31 8035b12 docs: refresh generated site reports
 - 2026-10-31 a4132cf Merge pull request #81 from zhanglunet/trend/prd-212-t3-probe
 - 2026-10-31 ad404a1 Merge pull request #80 from zhanglunet/trend/prd-211-t3-templates
 - 2026-10-31 f5136c4 feat: PRD-212/T3 中文触发词可用性抽查（14 条样本集/注入式唤起/三层通过标准/probe CSV 记录完整可回溯，8 例）（trend #1062）
@@ -243,6 +246,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-31 af87a22 feat: PRD-212/T2 中文技能包跨工具同步检查脚本（CN-SYNC-01~09，只读）（trend #1061）
 - 2026-10-31 4ddc3b6 docs: refresh generated site reports
 - 2026-10-31 d2a505b Merge pull request #78 from zhanglunet/trend/prd-211-t2-howto
-- 2026-10-31 f3d7769 fix: PRD-211/T2 场景表命令改写避免术语混排 + 修复 upstream-weekly $date 全角邻接隐患
-- 2026-10-31 4769544 docs: PRD-211/T2 中文图解上手指南（安装→首任务→场景→下一步）
-- 2026-10-31 c0c686a docs: refresh generated site reports

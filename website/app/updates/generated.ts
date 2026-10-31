@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-31T22:46:24+09:00",
+  "generatedAt": "2026-11-01T01:28:28+09:00",
   "branch": "main",
-  "head": "a4132cfa3e30d3547e2cb6b5afc63cbda0091d15",
-  "shortHead": "a4132cf",
-  "totalFiles": 713,
+  "head": "d920ddc74f332ca08e046cbe2a8ee86e488e3112",
+  "shortHead": "d920ddc",
+  "totalFiles": 715,
   "byExt": [
     {
       "name": "py",
-      "count": 304
+      "count": 305
     },
     {
       "name": "ts",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 86
+      "count": 87
     },
     {
       "name": "tsx",
@@ -84,16 +84,16 @@ export const repoReport = {
       "count": 229
     },
     {
+      "name": "tests",
+      "count": 135
+    },
+    {
       "name": "coworker",
       "count": 134
     },
     {
-      "name": "tests",
-      "count": 134
-    },
-    {
       "name": "docs",
-      "count": 110
+      "count": 111
     },
     {
       "name": "website",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d920ddc",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide"
+    },
+    {
+      "hash": "d699329",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-212/T4 漂移修复指引（CN-SYNC-01~12 全编号覆盖/状态枚举对齐 T2/诊断命令引真实脚本/术语预检零失败，4 例）（trend #1063）"
+    },
+    {
+      "hash": "8035b12",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "a4132cf",
       "date": "2026-10-31",
       "subject": "Merge pull request #81 from zhanglunet/trend/prd-212-t3-probe"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "d2a505b",
       "date": "2026-10-31",
       "subject": "Merge pull request #78 from zhanglunet/trend/prd-211-t2-howto"
-    },
-    {
-      "hash": "f3d7769",
-      "date": "2026-10-31",
-      "subject": "fix: PRD-211/T2 场景表命令改写避免术语混排 + 修复 upstream-weekly $date 全角邻接隐患"
-    },
-    {
-      "hash": "4769544",
-      "date": "2026-10-31",
-      "subject": "docs: PRD-211/T2 中文图解上手指南（安装→首任务→场景→下一步）"
-    },
-    {
-      "hash": "c0c686a",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d920ddc",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide"
+    },
+    {
+      "hash": "d699329",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-212/T4 漂移修复指引（CN-SYNC-01~12 全编号覆盖/状态枚举对齐 T2/诊断命令引真实脚本/术语预检零失败，4 例）（trend #1063）"
+    },
+    {
+      "hash": "8035b12",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "a4132cf",
       "date": "2026-10-31",
@@ -844,36 +859,6 @@ export const repoReport = {
       "hash": "a2836cb",
       "date": "2026-10-25",
       "subject": "test: PRD-155/T5 面板开箱验收——走查记录+验收测试+真实截图+文档收尾（Refs #779）"
-    },
-    {
-      "hash": "376bd42",
-      "date": "2026-10-24",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "cee346b",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #46 from zhanglunet/trend/prd-155-t4-dsh-context-zh-panel"
-    },
-    {
-      "hash": "d9e6731",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #44 from zhanglunet/trend/prd-155-t3-dsh-context-zh-panel"
-    },
-    {
-      "hash": "546297f",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #43 from zhanglunet/trend/prd-155-t2-dsh-context-zh-panel"
-    },
-    {
-      "hash": "c046465",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #42 from zhanglunet/trend/prd-155-t1-dsh-context-zh-panel"
-    },
-    {
-      "hash": "ab0b985",
-      "date": "2026-10-24",
-      "subject": "docs: PRD-155/T4 开箱文档——README §9 + 使用指南 + 截图占位（Refs #778）"
     }
   ]
 } as const;
