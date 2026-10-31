@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-31T18:29:37+09:00
+更新时间：2026-10-31T19:20:06+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：d2a505b528531e92889f08ced747334e161d1d1f
+当前提交：fedc5ab5965b280a61dbb2ea1613e388970b5642
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：707
-- 当前提交：d2a505b
+- 跟踪文件总数：709
+- 当前提交：fedc5ab
 - 主要文件类型：
-  - py: 299
+  - py: 301
   - ts: 105
   - md: 85
   - tsx: 79
@@ -38,10 +38,10 @@
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 131 个文件
+- tests: 132 个文件
 - docs: 109 个文件
 - website: 36 个文件
-- scripts: 14 个文件
+- scripts: 15 个文件
 - .github: 11 个文件
 - role-packs: 11 个文件
 - packaging: 10 个文件
@@ -234,6 +234,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-31 fedc5ab Merge pull request #79 from zhanglunet/trend/prd-212-t2-sync-checklist
+- 2026-10-31 af87a22 feat: PRD-212/T2 中文技能包跨工具同步检查脚本（CN-SYNC-01~09，只读）（trend #1061）
+- 2026-10-31 4ddc3b6 docs: refresh generated site reports
 - 2026-10-31 d2a505b Merge pull request #78 from zhanglunet/trend/prd-211-t2-howto
 - 2026-10-31 f3d7769 fix: PRD-211/T2 场景表命令改写避免术语混排 + 修复 upstream-weekly $date 全角邻接隐患
 - 2026-10-31 4769544 docs: PRD-211/T2 中文图解上手指南（安装→首任务→场景→下一步）
@@ -243,6 +246,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-31 7ecfb4f Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance
 - 2026-10-31 eca50e8 Merge pull request #72 from zhanglunet/trend/prd-268-t5-acceptance
 - 2026-10-31 df5e9eb Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance
-- 2026-10-31 556d861 Merge pull request #69 from zhanglunet/trend/prd-267-t4-intake-gate
-- 2026-10-31 24c5dd0 Merge pull request #70 from zhanglunet/trend/prd-268-t4-boundary-doc
-- 2026-10-31 acb0c29 Merge pull request #76 from zhanglunet/trend/prd-285-t4-local-only-assertions

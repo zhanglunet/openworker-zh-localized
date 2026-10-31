@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-31T18:29:37+09:00",
+  "generatedAt": "2026-10-31T19:20:06+09:00",
   "branch": "main",
-  "head": "d2a505b528531e92889f08ced747334e161d1d1f",
-  "shortHead": "d2a505b",
-  "totalFiles": 707,
+  "head": "fedc5ab5965b280a61dbb2ea1613e388970b5642",
+  "shortHead": "fedc5ab",
+  "totalFiles": 709,
   "byExt": [
     {
       "name": "py",
-      "count": 299
+      "count": 301
     },
     {
       "name": "ts",
@@ -89,7 +89,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 131
+      "count": 132
     },
     {
       "name": "docs",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 14
+      "count": 15
     },
     {
       "name": ".github",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "fedc5ab",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #79 from zhanglunet/trend/prd-212-t2-sync-checklist"
+    },
+    {
+      "hash": "af87a22",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-212/T2 中文技能包跨工具同步检查脚本（CN-SYNC-01~09，只读）（trend #1061）"
+    },
+    {
+      "hash": "4ddc3b6",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "d2a505b",
       "date": "2026-10-31",
       "subject": "Merge pull request #78 from zhanglunet/trend/prd-211-t2-howto"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "df5e9eb",
       "date": "2026-10-31",
       "subject": "Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance"
-    },
-    {
-      "hash": "556d861",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #69 from zhanglunet/trend/prd-267-t4-intake-gate"
-    },
-    {
-      "hash": "24c5dd0",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #70 from zhanglunet/trend/prd-268-t4-boundary-doc"
-    },
-    {
-      "hash": "acb0c29",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #76 from zhanglunet/trend/prd-285-t4-local-only-assertions"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "fedc5ab",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #79 from zhanglunet/trend/prd-212-t2-sync-checklist"
+    },
+    {
+      "hash": "af87a22",
+      "date": "2026-10-31",
+      "subject": "feat: PRD-212/T2 中文技能包跨工具同步检查脚本（CN-SYNC-01~09，只读）（trend #1061）"
+    },
+    {
+      "hash": "4ddc3b6",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "d2a505b",
       "date": "2026-10-31",
