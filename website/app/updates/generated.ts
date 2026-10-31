@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-01T02:22:09+09:00",
+  "generatedAt": "2026-11-01T02:25:59+09:00",
   "branch": "main",
-  "head": "5140b3215c63ed2dadc32c9ab576680f0ac3978e",
-  "shortHead": "5140b32",
-  "totalFiles": 717,
+  "head": "5d8853f15cfeb69938518bbe8ba94aa2914b9613",
+  "shortHead": "5d8853f",
+  "totalFiles": 718,
   "byExt": [
     {
       "name": "py",
-      "count": 307
+      "count": 308
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 137
+      "count": 138
     },
     {
       "name": "coworker",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "5d8853f",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #85 from zhanglunet/trend/prd-211-t5-acceptance"
+    },
+    {
+      "hash": "65621f6",
+      "date": "2026-10-31",
+      "subject": "test: PRD-211/T5 验收——真人 15 分钟上手实测（手册四页齐全/全路径/导航/模板实测/术语干净，5 例）（trend #1059）"
+    },
+    {
+      "hash": "8ea0da4",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "5140b32",
       "date": "2026-11-01",
       "subject": "Merge pull request #84 from zhanglunet/trend/prd-212-t5-acceptance"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "8035b12",
       "date": "2026-10-31",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "a4132cf",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #81 from zhanglunet/trend/prd-212-t3-probe"
-    },
-    {
-      "hash": "ad404a1",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #80 from zhanglunet/trend/prd-211-t3-templates"
-    },
-    {
-      "hash": "f5136c4",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-212/T3 中文触发词可用性抽查（14 条样本集/注入式唤起/三层通过标准/probe CSV 记录完整可回溯，8 例）（trend #1062）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "5d8853f",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #85 from zhanglunet/trend/prd-211-t5-acceptance"
+    },
+    {
+      "hash": "65621f6",
+      "date": "2026-10-31",
+      "subject": "test: PRD-211/T5 验收——真人 15 分钟上手实测（手册四页齐全/全路径/导航/模板实测/术语干净，5 例）（trend #1059）"
+    },
+    {
+      "hash": "8ea0da4",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "5140b32",
       "date": "2026-11-01",

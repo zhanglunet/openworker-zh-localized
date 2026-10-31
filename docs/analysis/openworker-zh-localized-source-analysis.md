@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-01T02:22:09+09:00
+更新时间：2026-11-01T02:25:59+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：5140b3215c63ed2dadc32c9ab576680f0ac3978e
+当前提交：5d8853f15cfeb69938518bbe8ba94aa2914b9613
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：717
-- 当前提交：5140b32
+- 跟踪文件总数：718
+- 当前提交：5d8853f
 - 主要文件类型：
-  - py: 307
+  - py: 308
   - ts: 105
   - md: 87
   - tsx: 79
@@ -37,7 +37,7 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 137 个文件
+- tests: 138 个文件
 - coworker: 134 个文件
 - docs: 111 个文件
 - website: 36 个文件
@@ -234,6 +234,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-01 5d8853f Merge pull request #85 from zhanglunet/trend/prd-211-t5-acceptance
+- 2026-10-31 65621f6 test: PRD-211/T5 验收——真人 15 分钟上手实测（手册四页齐全/全路径/导航/模板实测/术语干净，5 例）（trend #1059）
+- 2026-10-31 8ea0da4 docs: refresh generated site reports
 - 2026-11-01 5140b32 Merge pull request #84 from zhanglunet/trend/prd-212-t5-acceptance
 - 2026-10-31 97db0dc test: PRD-212/T5 验收试运行——多工具环境记录完整（四工具 fixture/全量状态表/probe CSV/修复指引可达，3 例）（trend #1064）
 - 2026-10-31 c3ba05a docs: refresh generated site reports
@@ -243,6 +246,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-01 d920ddc Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide
 - 2026-10-31 d699329 feat: PRD-212/T4 漂移修复指引（CN-SYNC-01~12 全编号覆盖/状态枚举对齐 T2/诊断命令引真实脚本/术语预检零失败，4 例）（trend #1063）
 - 2026-10-31 8035b12 docs: refresh generated site reports
-- 2026-10-31 a4132cf Merge pull request #81 from zhanglunet/trend/prd-212-t3-probe
-- 2026-10-31 ad404a1 Merge pull request #80 from zhanglunet/trend/prd-211-t3-templates
-- 2026-10-31 f5136c4 feat: PRD-212/T3 中文触发词可用性抽查（14 条样本集/注入式唤起/三层通过标准/probe CSV 记录完整可回溯，8 例）（trend #1062）
