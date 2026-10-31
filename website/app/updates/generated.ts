@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-10-31T13:04:41+09:00",
+  "generatedAt": "2026-10-31T13:10:25+09:00",
   "branch": "main",
-  "head": "7ecfb4ff37aeff9dad4a8174cdd6d224c95e29dc",
-  "shortHead": "7ecfb4f",
-  "totalFiles": 704,
+  "head": "438fb3aea636909618b1cfb989f0f6577729d320",
+  "shortHead": "438fb3a",
+  "totalFiles": 706,
   "byExt": [
     {
       "name": "py",
-      "count": 298
+      "count": 299
     },
     {
       "name": "ts",
@@ -47,7 +47,7 @@ export const repoReport = {
     },
     {
       "name": "sh",
-      "count": 5
+      "count": 6
     },
     {
       "name": "css",
@@ -89,7 +89,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 130
+      "count": 131
     },
     {
       "name": "docs",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 13
+      "count": 14
     },
     {
       "name": ".github",
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "438fb3a",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #38 from zhanglunet/cursor/prd-121-t1-install-e933"
+    },
+    {
+      "hash": "99e7afd",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "7ecfb4f",
       "date": "2026-10-31",
       "subject": "Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "356c9a9",
       "date": "2026-10-31",
       "subject": "Merge pull request #65 from zhanglunet/trend/prd-267-t2-zh-skills"
-    },
-    {
-      "hash": "0f7da6b",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #66 from zhanglunet/trend/prd-268-t2-zh-sources"
-    },
-    {
-      "hash": "79374ca",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #74 from zhanglunet/trend/prd-285-t2-skillpack-snapshot"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "438fb3a",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #38 from zhanglunet/cursor/prd-121-t1-install-e933"
+    },
+    {
+      "hash": "99e7afd",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "7ecfb4f",
       "date": "2026-10-31",

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-10-31T13:04:41+09:00
+更新时间：2026-10-31T13:10:25+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：7ecfb4ff37aeff9dad4a8174cdd6d224c95e29dc
+当前提交：438fb3aea636909618b1cfb989f0f6577729d320
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：704
-- 当前提交：7ecfb4f
+- 跟踪文件总数：706
+- 当前提交：438fb3a
 - 主要文件类型：
-  - py: 298
+  - py: 299
   - ts: 105
   - md: 84
   - tsx: 79
@@ -27,7 +27,7 @@
   - yml: 15
   - html: 8
   - [none]: 7
-  - sh: 5
+  - sh: 6
   - css: 4
   - mjs: 4
   - rs: 4
@@ -38,10 +38,10 @@
 
 - surfaces: 229 个文件
 - coworker: 134 个文件
-- tests: 130 个文件
+- tests: 131 个文件
 - docs: 108 个文件
 - website: 36 个文件
-- scripts: 13 个文件
+- scripts: 14 个文件
 - .github: 11 个文件
 - role-packs: 11 个文件
 - packaging: 10 个文件
@@ -234,6 +234,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-10-31 438fb3a Merge pull request #38 from zhanglunet/cursor/prd-121-t1-install-e933
+- 2026-10-31 99e7afd docs: refresh generated site reports
 - 2026-10-31 7ecfb4f Merge pull request #71 from zhanglunet/trend/prd-267-t5-acceptance
 - 2026-10-31 eca50e8 Merge pull request #72 from zhanglunet/trend/prd-268-t5-acceptance
 - 2026-10-31 df5e9eb Merge pull request #77 from zhanglunet/trend/prd-285-t5-acceptance
@@ -244,5 +246,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-31 cb28c89 Merge pull request #68 from zhanglunet/trend/prd-268-t3-zh-sources
 - 2026-10-31 96be411 Merge pull request #75 from zhanglunet/trend/prd-285-t3-spotcheck-archive
 - 2026-10-31 356c9a9 Merge pull request #65 from zhanglunet/trend/prd-267-t2-zh-skills
-- 2026-10-31 0f7da6b Merge pull request #66 from zhanglunet/trend/prd-268-t2-zh-sources
-- 2026-10-31 79374ca Merge pull request #74 from zhanglunet/trend/prd-285-t2-skillpack-snapshot
