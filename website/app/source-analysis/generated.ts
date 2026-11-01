@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-01T02:25:59+09:00",
+  "generatedAt": "2026-11-01T14:18:24+09:00",
   "branch": "main",
-  "head": "5d8853f15cfeb69938518bbe8ba94aa2914b9613",
-  "shortHead": "5d8853f",
+  "head": "45cd15f0f54fef60a33779f984788c44a548402e",
+  "shortHead": "45cd15f",
   "totalFiles": 718,
   "byExt": [
     {
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "45cd15f",
+      "date": "2026-11-01",
+      "subject": "fix: brace $date before the fullwidth title bracket (#41)"
+    },
+    {
+      "hash": "c3d23dc",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "5d8853f",
       "date": "2026-11-01",
       "subject": "Merge pull request #85 from zhanglunet/trend/prd-211-t5-acceptance"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "d920ddc",
       "date": "2026-11-01",
       "subject": "Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide"
-    },
-    {
-      "hash": "d699329",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-212/T4 漂移修复指引（CN-SYNC-01~12 全编号覆盖/状态枚举对齐 T2/诊断命令引真实脚本/术语预检零失败，4 例）（trend #1063）"
-    },
-    {
-      "hash": "8035b12",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "45cd15f",
+      "date": "2026-11-01",
+      "subject": "fix: brace $date before the fullwidth title bracket (#41)"
+    },
+    {
+      "hash": "c3d23dc",
+      "date": "2026-10-31",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "5d8853f",
       "date": "2026-11-01",
@@ -874,36 +884,6 @@ export const repoReport = {
       "hash": "bdf907b",
       "date": "2026-10-25",
       "subject": "feat: PRD-183/T2 中文销售/法务/人力三包最小集（Refs zhanglunet/trend#916）"
-    },
-    {
-      "hash": "aaccd1d",
-      "date": "2026-10-25",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3f83eba",
-      "date": "2026-10-25",
-      "subject": "Merge pull request #47 from zhanglunet/trend/prd-155-t5-dsh-context-zh-panel"
-    },
-    {
-      "hash": "560b526",
-      "date": "2026-10-25",
-      "subject": "docs: PRD-184/T1 栏目信息架构与更新节奏"
-    },
-    {
-      "hash": "fa5aa8f",
-      "date": "2026-10-25",
-      "subject": "docs: PRD-183/T1 中文角色包规范与术语表"
-    },
-    {
-      "hash": "b7c94bc",
-      "date": "2026-10-25",
-      "subject": "test: PRD-155/T5 收尾复核——全量回归复跑入档（flaky 用例判定，Refs #779）"
-    },
-    {
-      "hash": "a2836cb",
-      "date": "2026-10-25",
-      "subject": "test: PRD-155/T5 面板开箱验收——走查记录+验收测试+真实截图+文档收尾（Refs #779）"
     }
   ]
 } as const;
