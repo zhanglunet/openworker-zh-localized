@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-01T14:18:24+09:00
+更新时间：2026-11-01T15:59:25+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：45cd15f0f54fef60a33779f984788c44a548402e
+当前提交：63a6ddd6fdcf3d862649d6be0c821aa26d0a918c
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：718
-- 当前提交：45cd15f
+- 跟踪文件总数：720
+- 当前提交：63a6ddd
 - 主要文件类型：
-  - py: 308
+  - py: 310
   - ts: 105
   - md: 87
   - tsx: 79
@@ -37,11 +37,11 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 138 个文件
+- tests: 139 个文件
 - coworker: 134 个文件
 - docs: 111 个文件
 - website: 36 个文件
-- scripts: 16 个文件
+- scripts: 17 个文件
 - .github: 11 个文件
 - role-packs: 11 个文件
 - packaging: 10 个文件
@@ -234,6 +234,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-01 63a6ddd Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks
+- 2026-11-01 83765f0 feat: PRD-239/T2 中文技能包按场景分包（workplace/legal-contract/sales-marketing 三场景+每包一句话定位，3 例）（trend #1196）
+- 2026-11-01 5789796 docs: refresh generated site reports
 - 2026-11-01 45cd15f fix: brace $date before the fullwidth title bracket (#41)
 - 2026-10-31 c3d23dc docs: refresh generated site reports
 - 2026-11-01 5d8853f Merge pull request #85 from zhanglunet/trend/prd-211-t5-acceptance
@@ -243,6 +246,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-10-31 97db0dc test: PRD-212/T5 验收试运行——多工具环境记录完整（四工具 fixture/全量状态表/probe CSV/修复指引可达，3 例）（trend #1064）
 - 2026-10-31 c3ba05a docs: refresh generated site reports
 - 2026-11-01 a6ac61a Merge pull request #82 from zhanglunet/trend/prd-211-t4-crosslink
-- 2026-10-31 2950a26 feat: PRD-211/T4 与 PRD-121 开箱叙事互链（叙事页与手册页双向可达/链接不悬空/术语预检零失败，4 例）（trend #1058）
-- 2026-10-31 cc33ad8 docs: refresh generated site reports
-- 2026-11-01 d920ddc Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide

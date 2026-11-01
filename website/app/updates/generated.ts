@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-01T14:18:24+09:00",
+  "generatedAt": "2026-11-01T15:59:25+09:00",
   "branch": "main",
-  "head": "45cd15f0f54fef60a33779f984788c44a548402e",
-  "shortHead": "45cd15f",
-  "totalFiles": 718,
+  "head": "63a6ddd6fdcf3d862649d6be0c821aa26d0a918c",
+  "shortHead": "63a6ddd",
+  "totalFiles": 720,
   "byExt": [
     {
       "name": "py",
-      "count": 308
+      "count": 310
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 138
+      "count": 139
     },
     {
       "name": "coworker",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 16
+      "count": 17
     },
     {
       "name": ".github",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "63a6ddd",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks"
+    },
+    {
+      "hash": "83765f0",
+      "date": "2026-11-01",
+      "subject": "feat: PRD-239/T2 中文技能包按场景分包（workplace/legal-contract/sales-marketing 三场景+每包一句话定位，3 例）（trend #1196）"
+    },
+    {
+      "hash": "5789796",
+      "date": "2026-11-01",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "45cd15f",
       "date": "2026-11-01",
       "subject": "fix: brace $date before the fullwidth title bracket (#41)"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "a6ac61a",
       "date": "2026-11-01",
       "subject": "Merge pull request #82 from zhanglunet/trend/prd-211-t4-crosslink"
-    },
-    {
-      "hash": "2950a26",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-211/T4 与 PRD-121 开箱叙事互链（叙事页与手册页双向可达/链接不悬空/术语预检零失败，4 例）（trend #1058）"
-    },
-    {
-      "hash": "cc33ad8",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d920ddc",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "63a6ddd",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks"
+    },
+    {
+      "hash": "83765f0",
+      "date": "2026-11-01",
+      "subject": "feat: PRD-239/T2 中文技能包按场景分包（workplace/legal-contract/sales-marketing 三场景+每包一句话定位，3 例）（trend #1196）"
+    },
+    {
+      "hash": "5789796",
+      "date": "2026-11-01",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "45cd15f",
       "date": "2026-11-01",
