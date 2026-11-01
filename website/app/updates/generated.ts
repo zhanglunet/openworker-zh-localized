@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-01T15:59:25+09:00",
+  "generatedAt": "2026-11-01T16:05:35+09:00",
   "branch": "main",
-  "head": "63a6ddd6fdcf3d862649d6be0c821aa26d0a918c",
-  "shortHead": "63a6ddd",
-  "totalFiles": 720,
+  "head": "d63dd586b7094845d819363989b4664e5f54dc9e",
+  "shortHead": "d63dd58",
+  "totalFiles": 722,
   "byExt": [
     {
       "name": "py",
-      "count": 310
+      "count": 312
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 139
+      "count": 140
     },
     {
       "name": "coworker",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 17
+      "count": 18
     },
     {
       "name": ".github",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d63dd58",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration"
+    },
+    {
+      "hash": "c19a2a3",
+      "date": "2026-11-01",
+      "subject": "feat: PRD-240/T2 存量中文知识条目迁移（三层重组规则+知识+原文/可查可回指，4 例）（trend #1201）"
+    },
+    {
+      "hash": "91bbdb3",
+      "date": "2026-11-01",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "63a6ddd",
       "date": "2026-11-01",
       "subject": "Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "5140b32",
       "date": "2026-11-01",
       "subject": "Merge pull request #84 from zhanglunet/trend/prd-212-t5-acceptance"
-    },
-    {
-      "hash": "97db0dc",
-      "date": "2026-10-31",
-      "subject": "test: PRD-212/T5 验收试运行——多工具环境记录完整（四工具 fixture/全量状态表/probe CSV/修复指引可达，3 例）（trend #1064）"
-    },
-    {
-      "hash": "c3ba05a",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "a6ac61a",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #82 from zhanglunet/trend/prd-211-t4-crosslink"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d63dd58",
+      "date": "2026-11-01",
+      "subject": "Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration"
+    },
+    {
+      "hash": "c19a2a3",
+      "date": "2026-11-01",
+      "subject": "feat: PRD-240/T2 存量中文知识条目迁移（三层重组规则+知识+原文/可查可回指，4 例）（trend #1201）"
+    },
+    {
+      "hash": "91bbdb3",
+      "date": "2026-11-01",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "63a6ddd",
       "date": "2026-11-01",
@@ -894,11 +909,6 @@ export const repoReport = {
       "hash": "c831a55",
       "date": "2026-10-25",
       "subject": "feat: PRD-184/T2 构建实录首更模板与栏目索引骨架（Refs zhanglunet/trend#921）"
-    },
-    {
-      "hash": "bdf907b",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-183/T2 中文销售/法务/人力三包最小集（Refs zhanglunet/trend#916）"
     }
   ]
 } as const;
