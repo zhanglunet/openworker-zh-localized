@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-01T16:05:35+09:00",
+  "generatedAt": "2026-11-02T07:21:58Z",
   "branch": "main",
-  "head": "d63dd586b7094845d819363989b4664e5f54dc9e",
-  "shortHead": "d63dd58",
+  "head": "793b9819e2c3d78a4d25d4938697cf494c8214c3",
+  "shortHead": "793b981",
   "totalFiles": 722,
   "byExt": [
     {
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "793b981",
+      "date": "2026-11-02",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "485b922",
+      "date": "2026-11-01",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "d63dd58",
       "date": "2026-11-01",
       "subject": "Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "65621f6",
       "date": "2026-10-31",
       "subject": "test: PRD-211/T5 验收——真人 15 分钟上手实测（手册四页齐全/全路径/导航/模板实测/术语干净，5 例）（trend #1059）"
-    },
-    {
-      "hash": "8ea0da4",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "5140b32",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #84 from zhanglunet/trend/prd-212-t5-acceptance"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "793b981",
+      "date": "2026-11-02",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "485b922",
+      "date": "2026-11-01",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "d63dd58",
       "date": "2026-11-01",
@@ -839,76 +849,6 @@ export const repoReport = {
       "hash": "889a6c7",
       "date": "2026-10-26",
       "subject": "docs: PRD-211/T1 图解上手指南信息架构与图解规范（设计草稿）"
-    },
-    {
-      "hash": "8f079f8",
-      "date": "2026-10-26",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "58323a7",
-      "date": "2026-10-26",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "71dace6",
-      "date": "2026-10-26",
-      "subject": "docs: PRD-184/T4 双语传播交叉链接——中英入口在本目录汇合（Refs #923）"
-    },
-    {
-      "hash": "8af13b1",
-      "date": "2026-10-26",
-      "subject": "docs: PRD-183/T4 角色包开箱指南（对接 PRD-121，10 分钟跟做）（Refs #918）"
-    },
-    {
-      "hash": "5d40e59",
-      "date": "2026-10-26",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6b00b3a",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #53 from zhanglunet/trend/prd-184-t3-build-in-public-template"
-    },
-    {
-      "hash": "d2abaf7",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #52 from zhanglunet/trend/prd-183-t3-zh-role-packs"
-    },
-    {
-      "hash": "32da465",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #51 from zhanglunet/trend/prd-184-t2-build-in-public-template"
-    },
-    {
-      "hash": "d40bf1f",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #50 from zhanglunet/trend/prd-183-t2-zh-role-packs"
-    },
-    {
-      "hash": "d371746",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #49 from zhanglunet/trend/prd-184-t1-zh-build-in-public"
-    },
-    {
-      "hash": "18ad9e7",
-      "date": "2026-10-26",
-      "subject": "Merge pull request #48 from zhanglunet/trend/prd-183-t1-zh-role-skill-pack"
-    },
-    {
-      "hash": "80aadb9",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-184/T3 构建实录首篇发布 + 2 篇草案大纲（Refs zhanglunet/trend#922）"
-    },
-    {
-      "hash": "ea09499",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-183/T3 角色包发行门——质量门未过不可发行（Refs zhanglunet/trend#917）"
-    },
-    {
-      "hash": "c831a55",
-      "date": "2026-10-25",
-      "subject": "feat: PRD-184/T2 构建实录首更模板与栏目索引骨架（Refs zhanglunet/trend#921）"
     }
   ]
 } as const;

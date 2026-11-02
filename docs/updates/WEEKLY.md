@@ -1,17 +1,17 @@
 # OpenWorker 中文站周报
 
-生成时间：2026-11-01T16:05:35+09:00
+生成时间：2026-11-02T07:21:58Z
 
 ## 本周概览
 
+- 2026-11-02 793b981 chore: 更新上游哨兵水位（PRD-068）
+- 2026-11-01 485b922 docs: refresh generated site reports
 - 2026-11-01 d63dd58 Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration
 - 2026-11-01 c19a2a3 feat: PRD-240/T2 存量中文知识条目迁移（三层重组规则+知识+原文/可查可回指，4 例）（trend #1201）
 - 2026-11-01 91bbdb3 docs: refresh generated site reports
 - 2026-11-01 63a6ddd Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks
 - 2026-11-01 83765f0 feat: PRD-239/T2 中文技能包按场景分包（workplace/legal-contract/sales-marketing 三场景+每包一句话定位，3 例）（trend #1196）
 - 2026-11-01 5789796 docs: refresh generated site reports
-- 2026-11-01 45cd15f fix: brace $date before the fullwidth title bracket (#41)
-- 2026-10-31 c3d23dc docs: refresh generated site reports
 
 ## 维护建议
 
