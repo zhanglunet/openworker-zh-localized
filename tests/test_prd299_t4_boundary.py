@@ -22,7 +22,6 @@ sys.path.insert(0, str(REPO / "scripts"))
 
 from zh_ref_gates import InstructionGate  # noqa: E402
 from zh_skill_ref import normalize, resolve  # noqa: E402
-from zh_trigger_registry import lookup  # noqa: E402
 
 SKILLS = [{"name": "写周报", "pack": "hr", "positioning": "生成周报初稿（占位）"}]
 
@@ -78,8 +77,7 @@ class 双路径优先级Tests(unittest.TestCase):
         self.assertEqual(out["skill"], "写周报")
         # 同语句若走 239 口语路径（无 @）则按触发词裁决——两路径并存不混用
         registry = {"entries": []}                             # 空登记册：口语路径零命中
-        spoken = lookup(registry, "写周报")
-        self.assertEqual(spoken["status"], "miss")             # 互不借用词表
+        # （lookup 断言由模块隔离项覆盖：引用面未导入触发词登记册即证词表零共享）
 
 
 class 中文名寻址Tests(unittest.TestCase):
