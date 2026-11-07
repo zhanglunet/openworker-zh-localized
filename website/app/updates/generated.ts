@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T19:20:22+09:00",
+  "generatedAt": "2026-11-07T19:36:22+09:00",
   "branch": "main",
-  "head": "adb405955c5a24340501f88c519ed1ee624c6a30",
-  "shortHead": "adb4059",
-  "totalFiles": 725,
+  "head": "34b60804dbe46ac006a217882a1c5d5bab724360",
+  "shortHead": "34b6080",
+  "totalFiles": 729,
   "byExt": [
     {
       "name": "py",
-      "count": 314
+      "count": 318
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 141
+      "count": 144
     },
     {
       "name": "coworker",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 19
+      "count": 20
     },
     {
       "name": ".github",
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "34b6080",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-299/T5 验收试运行——中文口语指令 @引用 全链回放（6 例，trend #1500） (#99)"
+    },
+    {
+      "hash": "782113b",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "adb4059",
       "date": "2026-11-07",
       "subject": "PRD-299/T2 引用解析最小实现：@中文技能名（归一/歧义候选/人工消歧留痕） (#96)"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "63a6ddd",
       "date": "2026-11-01",
       "subject": "Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks"
-    },
-    {
-      "hash": "83765f0",
-      "date": "2026-11-01",
-      "subject": "feat: PRD-239/T2 中文技能包按场景分包（workplace/legal-contract/sales-marketing 三场景+每包一句话定位，3 例）（trend #1196）"
-    },
-    {
-      "hash": "5789796",
-      "date": "2026-11-01",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "34b6080",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-299/T5 验收试运行——中文口语指令 @引用 全链回放（6 例，trend #1500） (#99)"
+    },
+    {
+      "hash": "782113b",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "adb4059",
       "date": "2026-11-07",
@@ -584,11 +594,6 @@ export const repoReport = {
       "hash": "8e57f36",
       "date": "2026-10-31",
       "subject": "feat: PRD-211/T3 中文模板库（配置/首任务/角色包/会话续跑/纠正反馈五类，TOML 实测解析+键名对齐仓库样例+占位符规范+零密钥形态，6 例）（trend #1057）"
-    },
-    {
-      "hash": "891d4f4",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
     }
   ]
 } as const;
