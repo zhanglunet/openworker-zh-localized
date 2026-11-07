@@ -50,6 +50,8 @@ ERROR_CODES = (
     "REPLAY_INPUT_MISMATCH",
     "REPLAY_MISMATCH",
     "REPLAY_LEDGER_NOT_APPENDABLE",
+    # T3 闸门码（trend #1578）：重放产物进决策面前的唯一放行口径
+    "REPLAY_GATE_REFUSED",
 )
 
 
@@ -274,3 +276,44 @@ def verify_zh_replay(
     result = lookup_fn(registry, pack["input"]["inputs"]["utterance"])
     view = output_view_of_zh_invoke(result)
     return verify_replay(pack, lambda _inputs, _decision: view)
+
+# ---------------------------------------------------------------------------
+# T3 重放校验闸门（trend 1578）：消费 T2 verify 产物，一票否决进决策面
+# ---------------------------------------------------------------------------
+
+#: 闸门放行的唯一状态
+GATE_ALLOWED_STATUS = REPLAY_MATCH
+
+
+def replay_gate(verify_result: dict[str, Any]) -> dict[str, Any]:
+    """重放校验闸门：**决策面在消费账本/重放产物前必须过本闸**。
+
+    规则（一票否决）：status == MATCH → 放行；其余（MISMATCH/被篡改/未知
+    status）→ 拒绝，且拒绝时**不得使用任何账本或重放数据**（调用方改走人工
+    或拒绝路径）。拒绝本身显形（code=REPLAY_GATE_REFUSED + 原始 evidence），
+    不静默给新数——账本/重放对不上时，失败证据就是失败证据，不伪造成功。
+    """
+    if not isinstance(verify_result, dict) or "status" not in verify_result:
+        return {"allow": False, "code": "REPLAY_GATE_REFUSED",
+                "status": None,
+                "evidence": {"reason": "verify 产物缺失或非 dict（闸门宁拒勿漏）"}}
+    status = verify_result.get("status")
+    if status == GATE_ALLOWED_STATUS:
+        return {"allow": True, "code": None, "status": status,
+                "action": verify_result.get("action"),
+                "fingerprint": verify_result.get("input_snapshot_fingerprint")}
+    return {"allow": False, "code": "REPLAY_GATE_REFUSED", "status": status,
+            "evidence": verify_result.get("evidence"),
+            "fingerprint": verify_result.get("input_snapshot_fingerprint")}
+
+
+def require_gate(verify_result: dict[str, Any]) -> dict[str, Any]:
+    """闸门的异常形态：拒绝即抛 ReplayPackError(REPLAY_GATE_REFUSED)——
+    供以异常为纪律的决策面使用；放行原样返回 verify_result。"""
+    verdict = replay_gate(verify_result)
+    if not verdict["allow"]:
+        raise ReplayPackError("REPLAY_GATE_REFUSED",
+                              json.dumps({"status": verdict.get("status"),
+                                          "evidence": verdict.get("evidence")},
+                                         ensure_ascii=False))
+    return verify_result
