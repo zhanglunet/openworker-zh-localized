@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-11-08T01:56:10+09:00
+更新时间：2026-11-08T02:30:09+09:00
 
 ## 最近提交
 
+- 2026-11-08 184bb22 test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)
+- 2026-11-07 3ead2ab docs: refresh generated site reports
 - 2026-11-08 50a969d fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)
 - 2026-11-07 d3a7538 docs: refresh generated site reports
 - 2026-11-08 7434add feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)
@@ -14,5 +16,3 @@
 - 2026-11-07 c2340ce docs: refresh generated site reports
 - 2026-11-07 ce720cc docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)
 - 2026-11-07 992fd0f docs: refresh generated site reports
-- 2026-11-07 02ab6be PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)
-- 2026-11-07 2348e77 PRD-239/T5 验收试运行：中文口语指令抽样 (#93)

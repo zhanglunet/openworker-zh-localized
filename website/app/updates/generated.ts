@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-08T01:56:10+09:00",
+  "generatedAt": "2026-11-08T02:30:09+09:00",
   "branch": "main",
-  "head": "50a969dc94dfcca40c3f033311c9d72f06da6b58",
-  "shortHead": "50a969d",
-  "totalFiles": 745,
+  "head": "184bb222a935ef425fe1b1d3cf47a5afb11da97c",
+  "shortHead": "184bb22",
+  "totalFiles": 746,
   "byExt": [
     {
       "name": "py",
-      "count": 332
+      "count": 333
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 153
+      "count": 154
     },
     {
       "name": "coworker",
@@ -378,6 +378,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "184bb22",
+      "date": "2026-11-08",
+      "subject": "test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)"
+    },
+    {
+      "hash": "3ead2ab",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "50a969d",
       "date": "2026-11-08",
       "subject": "fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)"
@@ -426,19 +436,19 @@ export const repoReport = {
       "hash": "992fd0f",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "02ab6be",
-      "date": "2026-11-07",
-      "subject": "PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)"
-    },
-    {
-      "hash": "2348e77",
-      "date": "2026-11-07",
-      "subject": "PRD-239/T5 验收试运行：中文口语指令抽样 (#93)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "184bb22",
+      "date": "2026-11-08",
+      "subject": "test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)"
+    },
+    {
+      "hash": "3ead2ab",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "50a969d",
       "date": "2026-11-08",
@@ -623,36 +633,6 @@ export const repoReport = {
       "hash": "45cd15f",
       "date": "2026-11-01",
       "subject": "fix: brace $date before the fullwidth title bracket (#41)"
-    },
-    {
-      "hash": "c3d23dc",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "5d8853f",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #85 from zhanglunet/trend/prd-211-t5-acceptance"
-    },
-    {
-      "hash": "65621f6",
-      "date": "2026-10-31",
-      "subject": "test: PRD-211/T5 验收——真人 15 分钟上手实测（手册四页齐全/全路径/导航/模板实测/术语干净，5 例）（trend #1059）"
-    },
-    {
-      "hash": "8ea0da4",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "5140b32",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #84 from zhanglunet/trend/prd-212-t5-acceptance"
-    },
-    {
-      "hash": "97db0dc",
-      "date": "2026-10-31",
-      "subject": "test: PRD-212/T5 验收试运行——多工具环境记录完整（四工具 fixture/全量状态表/probe CSV/修复指引可达，3 例）（trend #1064）"
     }
   ]
 } as const;
