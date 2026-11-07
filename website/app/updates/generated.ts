@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T22:46:07+09:00",
+  "generatedAt": "2026-11-07T23:48:38+09:00",
   "branch": "main",
-  "head": "7248db7a04f8fad56d8a83b78eb795a18ec0f22b",
-  "shortHead": "7248db7",
-  "totalFiles": 740,
+  "head": "189ef7f43bf8bbc3e263d11f12062c9e6cf7f8fd",
+  "shortHead": "189ef7f",
+  "totalFiles": 742,
   "byExt": [
     {
       "name": "py",
-      "count": 328
+      "count": 330
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 150
+      "count": 151
     },
     {
       "name": "coworker",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 24
+      "count": 25
     },
     {
       "name": ".github",
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "189ef7f",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-313/T2 中文 skill 调用重放包最小实现——replay-pack/v1+登记册指纹+append-only 账本+verify_zh_replay 二值校验（11 例，trend #1577） (#101)"
+    },
+    {
+      "hash": "dcb5d51",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "7248db7",
       "date": "2026-11-07",
       "subject": "fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "eefaa32",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b64c3b6",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-240/T3 规则层计算接口——validate_rule §5 全字段（id 格式/词表/封闭类型/kb_refs 非空不悬空 §6.3/strict）+ evaluate_rule 可算执行（§5.1 四条钉死：纯函数/类型封闭/precondition 不满足统一 not_applicable/可重放）+ 三形态 expr（ast 白名单求值：算术/比较/逻辑/条件/min-max-abs 其余拒绝）/table 判定表/formula 算术，script 拒绝执行须沙箱评审 + 回指原文依据（evidence.sources 经 T2 trace_to_source 到 raw_text）（18 例，trend #1202） (#90)"
-    },
-    {
-      "hash": "380fbac",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "189ef7f",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-313/T2 中文 skill 调用重放包最小实现——replay-pack/v1+登记册指纹+append-only 账本+verify_zh_replay 二值校验（11 例，trend #1577） (#101)"
+    },
+    {
+      "hash": "dcb5d51",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "7248db7",
       "date": "2026-11-07",
@@ -649,11 +659,6 @@ export const repoReport = {
       "hash": "d699329",
       "date": "2026-10-31",
       "subject": "feat: PRD-212/T4 漂移修复指引（CN-SYNC-01~12 全编号覆盖/状态枚举对齐 T2/诊断命令引真实脚本/术语预检零失败，4 例）（trend #1063）"
-    },
-    {
-      "hash": "8035b12",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
     }
   ]
 } as const;

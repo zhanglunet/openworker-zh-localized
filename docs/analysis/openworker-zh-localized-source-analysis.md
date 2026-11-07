@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-07T22:46:07+09:00
+更新时间：2026-11-07T23:48:38+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：7248db7a04f8fad56d8a83b78eb795a18ec0f22b
+当前提交：189ef7f43bf8bbc3e263d11f12062c9e6cf7f8fd
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：740
-- 当前提交：7248db7
+- 跟踪文件总数：742
+- 当前提交：189ef7f
 - 主要文件类型：
-  - py: 328
+  - py: 330
   - ts: 105
   - md: 89
   - tsx: 79
@@ -37,11 +37,11 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 150 个文件
+- tests: 151 个文件
 - coworker: 134 个文件
 - docs: 113 个文件
 - website: 36 个文件
-- scripts: 24 个文件
+- scripts: 25 个文件
 - .github: 11 个文件
 - role-packs: 11 个文件
 - packaging: 10 个文件
@@ -234,6 +234,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-07 189ef7f feat: PRD-313/T2 中文 skill 调用重放包最小实现——replay-pack/v1+登记册指纹+append-only 账本+verify_zh_replay 二值校验（11 例，trend #1577） (#101)
+- 2026-11-07 dcb5d51 docs: refresh generated site reports
 - 2026-11-07 7248db7 fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过
 - 2026-11-07 c2340ce docs: refresh generated site reports
 - 2026-11-07 ce720cc docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)
@@ -244,5 +246,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-07 ff4eb47 feat: PRD-240/T4 一致性校验——consistency_check.py check_consistency 三方对齐（E-DANGLING-REF 悬空引用规则 kb_refs/知识回指原文、E-CIRCULAR-REF 知识→规则反向引用禁止、E-ORPHAN-SOURCE 孤儿原文提示级）+ issues 机读清单（code/location/detail）+ summary errors/warnings/aligned（5 例，trend #1203） (#92)
 - 2026-11-07 bfaf6bc feat: PRD-239/T4 按包加载与检索适配——pack_loader.py load_skills_for_runtime（目录形态加载 role-packs/*/skills/*/SKILL.md 与既有 store.py 同构，现有使用方式不断链不依赖登记资产）+ search_skills 检索（description/name 子串 OR/短词拒绝/确定性）（4 例，trend #1198） (#91)
 - 2026-11-07 eefaa32 docs: refresh generated site reports
-- 2026-11-07 b64c3b6 feat: PRD-240/T3 规则层计算接口——validate_rule §5 全字段（id 格式/词表/封闭类型/kb_refs 非空不悬空 §6.3/strict）+ evaluate_rule 可算执行（§5.1 四条钉死：纯函数/类型封闭/precondition 不满足统一 not_applicable/可重放）+ 三形态 expr（ast 白名单求值：算术/比较/逻辑/条件/min-max-abs 其余拒绝）/table 判定表/formula 算术，script 拒绝执行须沙箱评审 + 回指原文依据（evidence.sources 经 T2 trace_to_source 到 raw_text）（18 例，trend #1202） (#90)
-- 2026-11-07 380fbac feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)
