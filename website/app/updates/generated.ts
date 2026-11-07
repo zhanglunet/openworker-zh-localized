@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T23:48:38+09:00",
+  "generatedAt": "2026-11-08T00:59:17+09:00",
   "branch": "main",
-  "head": "189ef7f43bf8bbc3e263d11f12062c9e6cf7f8fd",
-  "shortHead": "189ef7f",
-  "totalFiles": 742,
+  "head": "7434add0cce9922266f0a3506e407010b4f6f3f3",
+  "shortHead": "7434add",
+  "totalFiles": 743,
   "byExt": [
     {
       "name": "py",
-      "count": 330
+      "count": 331
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 151
+      "count": 152
     },
     {
       "name": "coworker",
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "7434add",
+      "date": "2026-11-08",
+      "subject": "feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)"
+    },
+    {
+      "hash": "b2f3329",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "189ef7f",
       "date": "2026-11-07",
       "subject": "feat: PRD-313/T2 中文 skill 调用重放包最小实现——replay-pack/v1+登记册指纹+append-only 账本+verify_zh_replay 二值校验（11 例，trend #1577） (#101)"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "ff4eb47",
       "date": "2026-11-07",
       "subject": "feat: PRD-240/T4 一致性校验——consistency_check.py check_consistency 三方对齐（E-DANGLING-REF 悬空引用规则 kb_refs/知识回指原文、E-CIRCULAR-REF 知识→规则反向引用禁止、E-ORPHAN-SOURCE 孤儿原文提示级）+ issues 机读清单（code/location/detail）+ summary errors/warnings/aligned（5 例，trend #1203） (#92)"
-    },
-    {
-      "hash": "bfaf6bc",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-239/T4 按包加载与检索适配——pack_loader.py load_skills_for_runtime（目录形态加载 role-packs/*/skills/*/SKILL.md 与既有 store.py 同构，现有使用方式不断链不依赖登记资产）+ search_skills 检索（description/name 子串 OR/短词拒绝/确定性）（4 例，trend #1198） (#91)"
-    },
-    {
-      "hash": "eefaa32",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "7434add",
+      "date": "2026-11-08",
+      "subject": "feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)"
+    },
+    {
+      "hash": "b2f3329",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "189ef7f",
       "date": "2026-11-07",
@@ -654,11 +664,6 @@ export const repoReport = {
       "hash": "d920ddc",
       "date": "2026-11-01",
       "subject": "Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide"
-    },
-    {
-      "hash": "d699329",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-212/T4 漂移修复指引（CN-SYNC-01~12 全编号覆盖/状态枚举对齐 T2/诊断命令引真实脚本/术语预检零失败，4 例）（trend #1063）"
     }
   ]
 } as const;
