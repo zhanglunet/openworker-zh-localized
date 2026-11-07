@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T21:41:12+09:00",
+  "generatedAt": "2026-11-07T22:46:07+09:00",
   "branch": "main",
-  "head": "ce720cc98257558600ad95adbd2733bc534796d6",
-  "shortHead": "ce720cc",
+  "head": "7248db7a04f8fad56d8a83b78eb795a18ec0f22b",
+  "shortHead": "7248db7",
   "totalFiles": 740,
   "byExt": [
     {
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "7248db7",
+      "date": "2026-11-07",
+      "subject": "fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过"
+    },
+    {
+      "hash": "c2340ce",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "ce720cc",
       "date": "2026-11-07",
       "subject": "docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "380fbac",
       "date": "2026-11-07",
       "subject": "feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)"
-    },
-    {
-      "hash": "df71490",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "7f6ae90",
-      "date": "2026-11-07",
-      "subject": "PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "7248db7",
+      "date": "2026-11-07",
+      "subject": "fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过"
+    },
+    {
+      "hash": "c2340ce",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "ce720cc",
       "date": "2026-11-07",
@@ -644,26 +654,6 @@ export const repoReport = {
       "hash": "8035b12",
       "date": "2026-10-31",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "a4132cf",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #81 from zhanglunet/trend/prd-212-t3-probe"
-    },
-    {
-      "hash": "ad404a1",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #80 from zhanglunet/trend/prd-211-t3-templates"
-    },
-    {
-      "hash": "f5136c4",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-212/T3 中文触发词可用性抽查（14 条样本集/注入式唤起/三层通过标准/probe CSV 记录完整可回溯，8 例）（trend #1062）"
-    },
-    {
-      "hash": "8e57f36",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-211/T3 中文模板库（配置/首任务/角色包/会话续跑/纠正反馈五类，TOML 实测解析+键名对齐仓库样例+占位符规范+零密钥形态，6 例）（trend #1057）"
     }
   ]
 } as const;
