@@ -1,9 +1,12 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-11-07T19:36:22+09:00
+更新时间：2026-11-07T19:43:26+09:00
 
 ## 最近提交
 
+- 2026-11-07 7f6ae90 PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)
+- 2026-11-07 4df6157 PRD-299/T3 引用解析歧义闸门：候选列表请用户选，人工消歧留痕 (#97)
+- 2026-11-07 d101d6f docs: refresh generated site reports
 - 2026-11-07 34b6080 feat: PRD-299/T5 验收试运行——中文口语指令 @引用 全链回放（6 例，trend #1500） (#99)
 - 2026-11-07 782113b docs: refresh generated site reports
 - 2026-11-07 adb4059 PRD-299/T2 引用解析最小实现：@中文技能名（归一/歧义候选/人工消歧留痕） (#96)
@@ -13,6 +16,3 @@
 - 2026-11-02 793b981 chore: 更新上游哨兵水位（PRD-068）
 - 2026-11-01 485b922 docs: refresh generated site reports
 - 2026-11-01 d63dd58 Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration
-- 2026-11-01 c19a2a3 feat: PRD-240/T2 存量中文知识条目迁移（三层重组规则+知识+原文/可查可回指，4 例）（trend #1201）
-- 2026-11-01 91bbdb3 docs: refresh generated site reports
-- 2026-11-01 63a6ddd Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks

@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T19:36:22+09:00",
+  "generatedAt": "2026-11-07T19:43:26+09:00",
   "branch": "main",
-  "head": "34b60804dbe46ac006a217882a1c5d5bab724360",
-  "shortHead": "34b6080",
+  "head": "7f6ae90f492c141adcc6c7f3ee177f53cd9c7381",
+  "shortHead": "7f6ae90",
   "totalFiles": 729,
   "byExt": [
     {
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "7f6ae90",
+      "date": "2026-11-07",
+      "subject": "PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)"
+    },
+    {
+      "hash": "4df6157",
+      "date": "2026-11-07",
+      "subject": "PRD-299/T3 引用解析歧义闸门：候选列表请用户选，人工消歧留痕 (#97)"
+    },
+    {
+      "hash": "d101d6f",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "34b6080",
       "date": "2026-11-07",
       "subject": "feat: PRD-299/T5 验收试运行——中文口语指令 @引用 全链回放（6 例，trend #1500） (#99)"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "d63dd58",
       "date": "2026-11-01",
       "subject": "Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration"
-    },
-    {
-      "hash": "c19a2a3",
-      "date": "2026-11-01",
-      "subject": "feat: PRD-240/T2 存量中文知识条目迁移（三层重组规则+知识+原文/可查可回指，4 例）（trend #1201）"
-    },
-    {
-      "hash": "91bbdb3",
-      "date": "2026-11-01",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "63a6ddd",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "7f6ae90",
+      "date": "2026-11-07",
+      "subject": "PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)"
+    },
+    {
+      "hash": "4df6157",
+      "date": "2026-11-07",
+      "subject": "PRD-299/T3 引用解析歧义闸门：候选列表请用户选，人工消歧留痕 (#97)"
+    },
+    {
+      "hash": "d101d6f",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "34b6080",
       "date": "2026-11-07",
