@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-07T19:43:26+09:00
+更新时间：2026-11-07T20:21:23+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：7f6ae90f492c141adcc6c7f3ee177f53cd9c7381
+当前提交：b64c3b618e5762581508035056694cf341032708
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：729
-- 当前提交：7f6ae90
+- 跟踪文件总数：733
+- 当前提交：b64c3b6
 - 主要文件类型：
-  - py: 318
+  - py: 322
   - ts: 105
   - md: 88
   - tsx: 79
@@ -37,11 +37,11 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 144 个文件
+- tests: 146 个文件
 - coworker: 134 个文件
 - docs: 112 个文件
 - website: 36 个文件
-- scripts: 20 个文件
+- scripts: 22 个文件
 - .github: 11 个文件
 - role-packs: 11 个文件
 - packaging: 10 个文件
@@ -234,6 +234,9 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-07 b64c3b6 feat: PRD-240/T3 规则层计算接口——validate_rule §5 全字段（id 格式/词表/封闭类型/kb_refs 非空不悬空 §6.3/strict）+ evaluate_rule 可算执行（§5.1 四条钉死：纯函数/类型封闭/precondition 不满足统一 not_applicable/可重放）+ 三形态 expr（ast 白名单求值：算术/比较/逻辑/条件/min-max-abs 其余拒绝）/table 判定表/formula 算术，script 拒绝执行须沙箱评审 + 回指原文依据（evidence.sources 经 T2 trace_to_source 到 raw_text）（18 例，trend #1202） (#90)
+- 2026-11-07 380fbac feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)
+- 2026-11-07 df71490 docs: refresh generated site reports
 - 2026-11-07 7f6ae90 PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)
 - 2026-11-07 4df6157 PRD-299/T3 引用解析歧义闸门：候选列表请用户选，人工消歧留痕 (#97)
 - 2026-11-07 d101d6f docs: refresh generated site reports
@@ -243,6 +246,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-07 182be98 docs: refresh generated site reports
 - 2026-11-07 1ac0d58 docs: PRD-299/T1 中文指令 @中文技能名引用解析设计——中文 @语法与禁止形态（版本后缀/通配/中间空白不归一）/ref-resolution/v1 schema（meta_summary 定位+触发词计数零正文读取）/确定性归一四规则显形（全半角/繁简固定映射/去首尾空白——归一是规范化不是模糊匹配）/四错误码封闭词表（歧义列候选含一句话定位请用户选不按频次挑；chosen_from_candidates 人工消歧留痕）/与 239/T3 触发词登记册双路径划界（显式 @ 引用优先级高于口语命中，T4 断言预埋）/与 PRD-267/285 划界表（trend #1496） (#95)
 - 2026-11-02 7034f06 docs: refresh generated site reports
-- 2026-11-02 793b981 chore: 更新上游哨兵水位（PRD-068）
-- 2026-11-01 485b922 docs: refresh generated site reports
-- 2026-11-01 d63dd58 Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration

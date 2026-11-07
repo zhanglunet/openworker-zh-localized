@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T19:43:26+09:00",
+  "generatedAt": "2026-11-07T20:21:23+09:00",
   "branch": "main",
-  "head": "7f6ae90f492c141adcc6c7f3ee177f53cd9c7381",
-  "shortHead": "7f6ae90",
-  "totalFiles": 729,
+  "head": "b64c3b618e5762581508035056694cf341032708",
+  "shortHead": "b64c3b6",
+  "totalFiles": 733,
   "byExt": [
     {
       "name": "py",
-      "count": 318
+      "count": 322
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 144
+      "count": 146
     },
     {
       "name": "coworker",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 20
+      "count": 22
     },
     {
       "name": ".github",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "b64c3b6",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-240/T3 规则层计算接口——validate_rule §5 全字段（id 格式/词表/封闭类型/kb_refs 非空不悬空 §6.3/strict）+ evaluate_rule 可算执行（§5.1 四条钉死：纯函数/类型封闭/precondition 不满足统一 not_applicable/可重放）+ 三形态 expr（ast 白名单求值：算术/比较/逻辑/条件/min-max-abs 其余拒绝）/table 判定表/formula 算术，script 拒绝执行须沙箱评审 + 回指原文依据（evidence.sources 经 T2 trace_to_source 到 raw_text）（18 例，trend #1202） (#90)"
+    },
+    {
+      "hash": "380fbac",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)"
+    },
+    {
+      "hash": "df71490",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "7f6ae90",
       "date": "2026-11-07",
       "subject": "PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "7034f06",
       "date": "2026-11-02",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "793b981",
-      "date": "2026-11-02",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "485b922",
-      "date": "2026-11-01",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d63dd58",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "b64c3b6",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-240/T3 规则层计算接口——validate_rule §5 全字段（id 格式/词表/封闭类型/kb_refs 非空不悬空 §6.3/strict）+ evaluate_rule 可算执行（§5.1 四条钉死：纯函数/类型封闭/precondition 不满足统一 not_applicable/可重放）+ 三形态 expr（ast 白名单求值：算术/比较/逻辑/条件/min-max-abs 其余拒绝）/table 判定表/formula 算术，script 拒绝执行须沙箱评审 + 回指原文依据（evidence.sources 经 T2 trace_to_source 到 raw_text）（18 例，trend #1202） (#90)"
+    },
+    {
+      "hash": "380fbac",
+      "date": "2026-11-07",
+      "subject": "feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)"
+    },
+    {
+      "hash": "df71490",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "7f6ae90",
       "date": "2026-11-07",
