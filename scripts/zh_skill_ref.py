@@ -27,6 +27,10 @@ import re
 from typing import Any
 
 REF_SCHEMA = "ref-resolution/v1"
+
+#: 错误码封闭词表（PRD-299/T3，trend #1198）：refused 的 error_code 只能取自本表，
+#: 新增错误必须先改词表（穷举防漂移；测试做封闭性机判）。
+ERROR_CODES = ("REF_AMBIGUOUS", "REF_NOT_FOUND", "REF_SYNTAX_ERROR")
 #: 繁→简固定映射表（小表内嵌，T1 §9 开放问题 1 的 T2 落法）
 _S2T_TABLE = {"報": "报", "響": "响", "語": "语", "義": "义",
               "術": "术", "據": "据", "數": "数", "寫": "写"}
