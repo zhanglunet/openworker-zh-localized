@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-08T00:59:17+09:00",
+  "generatedAt": "2026-11-08T01:56:10+09:00",
   "branch": "main",
-  "head": "7434add0cce9922266f0a3506e407010b4f6f3f3",
-  "shortHead": "7434add",
-  "totalFiles": 743,
+  "head": "50a969dc94dfcca40c3f033311c9d72f06da6b58",
+  "shortHead": "50a969d",
+  "totalFiles": 745,
   "byExt": [
     {
       "name": "py",
-      "count": 331
+      "count": 332
     },
     {
       "name": "ts",
@@ -66,15 +66,15 @@ export const repoReport = {
       "count": 4
     },
     {
+      "name": "lock",
+      "count": 3
+    },
+    {
       "name": "dmg",
       "count": 2
     },
     {
       "name": "js",
-      "count": 2
-    },
-    {
-      "name": "jsonc",
       "count": 2
     }
   ],
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 152
+      "count": 153
     },
     {
       "name": "coworker",
@@ -161,6 +161,10 @@ export const repoReport = {
     },
     {
       "name": "start-openworker-server.sh",
+      "count": 1
+    },
+    {
+      "name": "uv.lock",
       "count": 1
     }
   ],
@@ -374,6 +378,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "50a969d",
+      "date": "2026-11-08",
+      "subject": "fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)"
+    },
+    {
+      "hash": "d3a7538",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "7434add",
       "date": "2026-11-08",
       "subject": "feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)"
@@ -422,19 +436,19 @@ export const repoReport = {
       "hash": "2348e77",
       "date": "2026-11-07",
       "subject": "PRD-239/T5 验收试运行：中文口语指令抽样 (#93)"
-    },
-    {
-      "hash": "71321c8",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ff4eb47",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-240/T4 一致性校验——consistency_check.py check_consistency 三方对齐（E-DANGLING-REF 悬空引用规则 kb_refs/知识回指原文、E-CIRCULAR-REF 知识→规则反向引用禁止、E-ORPHAN-SOURCE 孤儿原文提示级）+ issues 机读清单（code/location/detail）+ summary errors/warnings/aligned（5 例，trend #1203） (#92)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "50a969d",
+      "date": "2026-11-08",
+      "subject": "fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)"
+    },
+    {
+      "hash": "d3a7538",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "7434add",
       "date": "2026-11-08",
@@ -639,31 +653,6 @@ export const repoReport = {
       "hash": "97db0dc",
       "date": "2026-10-31",
       "subject": "test: PRD-212/T5 验收试运行——多工具环境记录完整（四工具 fixture/全量状态表/probe CSV/修复指引可达，3 例）（trend #1064）"
-    },
-    {
-      "hash": "c3ba05a",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "a6ac61a",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #82 from zhanglunet/trend/prd-211-t4-crosslink"
-    },
-    {
-      "hash": "2950a26",
-      "date": "2026-10-31",
-      "subject": "feat: PRD-211/T4 与 PRD-121 开箱叙事互链（叙事页与手册页双向可达/链接不悬空/术语预检零失败，4 例）（trend #1058）"
-    },
-    {
-      "hash": "cc33ad8",
-      "date": "2026-10-31",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d920ddc",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #83 from zhanglunet/trend/prd-212-t4-remediation-guide"
     }
   ]
 } as const;

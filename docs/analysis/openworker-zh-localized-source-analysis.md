@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-08T00:59:17+09:00
+更新时间：2026-11-08T01:56:10+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：7434add0cce9922266f0a3506e407010b4f6f3f3
+当前提交：50a969dc94dfcca40c3f033311c9d72f06da6b58
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：743
-- 当前提交：7434add
+- 跟踪文件总数：745
+- 当前提交：50a969d
 - 主要文件类型：
-  - py: 331
+  - py: 332
   - ts: 105
   - md: 89
   - tsx: 79
@@ -32,12 +32,12 @@
   - mjs: 4
   - rs: 4
   - toml: 4
-  - dmg: 2
+  - lock: 3
 
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 152 个文件
+- tests: 153 个文件
 - coworker: 134 个文件
 - docs: 113 个文件
 - website: 36 个文件
@@ -57,6 +57,7 @@
 - README.md: 1 个文件
 - start-openworker-gui.sh: 1 个文件
 - start-openworker-server.sh: 1 个文件
+- uv.lock: 1 个文件
 
 ## 4. 核心模块
 
@@ -234,6 +235,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-08 50a969d fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)
+- 2026-11-07 d3a7538 docs: refresh generated site reports
 - 2026-11-08 7434add feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)
 - 2026-11-07 b2f3329 docs: refresh generated site reports
 - 2026-11-07 189ef7f feat: PRD-313/T2 中文 skill 调用重放包最小实现——replay-pack/v1+登记册指纹+append-only 账本+verify_zh_replay 二值校验（11 例，trend #1577） (#101)
@@ -244,5 +247,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-07 992fd0f docs: refresh generated site reports
 - 2026-11-07 02ab6be PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)
 - 2026-11-07 2348e77 PRD-239/T5 验收试运行：中文口语指令抽样 (#93)
-- 2026-11-07 71321c8 docs: refresh generated site reports
-- 2026-11-07 ff4eb47 feat: PRD-240/T4 一致性校验——consistency_check.py check_consistency 三方对齐（E-DANGLING-REF 悬空引用规则 kb_refs/知识回指原文、E-CIRCULAR-REF 知识→规则反向引用禁止、E-ORPHAN-SOURCE 孤儿原文提示级）+ issues 机读清单（code/location/detail）+ summary errors/warnings/aligned（5 例，trend #1203） (#92)
