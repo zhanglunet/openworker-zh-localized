@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T20:28:54+09:00",
+  "generatedAt": "2026-11-07T21:41:12+09:00",
   "branch": "main",
-  "head": "02ab6bec52d8183ff5deaab95ba0d708fbfb29e3",
-  "shortHead": "02ab6be",
-  "totalFiles": 739,
+  "head": "ce720cc98257558600ad95adbd2733bc534796d6",
+  "shortHead": "ce720cc",
+  "totalFiles": 740,
   "byExt": [
     {
       "name": "py",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 88
+      "count": 89
     },
     {
       "name": "tsx",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 112
+      "count": 113
     },
     {
       "name": "website",
@@ -374,6 +374,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "ce720cc",
+      "date": "2026-11-07",
+      "subject": "docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)"
+    },
+    {
+      "hash": "992fd0f",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "02ab6be",
       "date": "2026-11-07",
       "subject": "PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)"
@@ -422,19 +432,19 @@ export const repoReport = {
       "hash": "7f6ae90",
       "date": "2026-11-07",
       "subject": "PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)"
-    },
-    {
-      "hash": "4df6157",
-      "date": "2026-11-07",
-      "subject": "PRD-299/T3 引用解析歧义闸门：候选列表请用户选，人工消歧留痕 (#97)"
-    },
-    {
-      "hash": "d101d6f",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "ce720cc",
+      "date": "2026-11-07",
+      "subject": "docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)"
+    },
+    {
+      "hash": "992fd0f",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "02ab6be",
       "date": "2026-11-07",

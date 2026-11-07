@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-11-07T20:28:54+09:00
+更新时间：2026-11-07T21:41:12+09:00
 
 ## 最近提交
 
+- 2026-11-07 ce720cc docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)
+- 2026-11-07 992fd0f docs: refresh generated site reports
 - 2026-11-07 02ab6be PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)
 - 2026-11-07 2348e77 PRD-239/T5 验收试运行：中文口语指令抽样 (#93)
 - 2026-11-07 71321c8 docs: refresh generated site reports
@@ -14,5 +16,3 @@
 - 2026-11-07 380fbac feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)
 - 2026-11-07 df71490 docs: refresh generated site reports
 - 2026-11-07 7f6ae90 PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)
-- 2026-11-07 4df6157 PRD-299/T3 引用解析歧义闸门：候选列表请用户选，人工消歧留痕 (#97)
-- 2026-11-07 d101d6f docs: refresh generated site reports
