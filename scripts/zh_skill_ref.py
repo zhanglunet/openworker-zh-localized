@@ -27,8 +27,6 @@ import re
 from typing import Any
 
 REF_SCHEMA = "ref-resolution/v1"
-#: 错误码封闭词表（T1 §5 三码）
-ERROR_CODES = ("REF_SYNTAX_ERROR", "REF_NOT_FOUND", "REF_AMBIGUOUS")
 #: 繁→简固定映射表（小表内嵌，T1 §9 开放问题 1 的 T2 落法）
 _S2T_TABLE = {"報": "报", "響": "响", "語": "语", "義": "义",
               "術": "术", "據": "据", "數": "数", "寫": "写"}

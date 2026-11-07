@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-02T07:21:58Z
+更新时间：2026-11-07T19:36:22+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：793b9819e2c3d78a4d25d4938697cf494c8214c3
+当前提交：34b60804dbe46ac006a217882a1c5d5bab724360
 
 ## 1. 总体判断
 
@@ -14,12 +14,12 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：722
-- 当前提交：793b981
+- 跟踪文件总数：729
+- 当前提交：34b6080
 - 主要文件类型：
-  - py: 312
+  - py: 318
   - ts: 105
-  - md: 87
+  - md: 88
   - tsx: 79
   - png: 25
   - svg: 23
@@ -37,11 +37,11 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 140 个文件
+- tests: 144 个文件
 - coworker: 134 个文件
-- docs: 111 个文件
+- docs: 112 个文件
 - website: 36 个文件
-- scripts: 18 个文件
+- scripts: 20 个文件
 - .github: 11 个文件
 - role-packs: 11 个文件
 - packaging: 10 个文件
@@ -234,15 +234,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-07 34b6080 feat: PRD-299/T5 验收试运行——中文口语指令 @引用 全链回放（6 例，trend #1500） (#99)
+- 2026-11-07 782113b docs: refresh generated site reports
+- 2026-11-07 adb4059 PRD-299/T2 引用解析最小实现：@中文技能名（归一/歧义候选/人工消歧留痕） (#96)
+- 2026-11-07 182be98 docs: refresh generated site reports
+- 2026-11-07 1ac0d58 docs: PRD-299/T1 中文指令 @中文技能名引用解析设计——中文 @语法与禁止形态（版本后缀/通配/中间空白不归一）/ref-resolution/v1 schema（meta_summary 定位+触发词计数零正文读取）/确定性归一四规则显形（全半角/繁简固定映射/去首尾空白——归一是规范化不是模糊匹配）/四错误码封闭词表（歧义列候选含一句话定位请用户选不按频次挑；chosen_from_candidates 人工消歧留痕）/与 239/T3 触发词登记册双路径划界（显式 @ 引用优先级高于口语命中，T4 断言预埋）/与 PRD-267/285 划界表（trend #1496） (#95)
+- 2026-11-02 7034f06 docs: refresh generated site reports
 - 2026-11-02 793b981 chore: 更新上游哨兵水位（PRD-068）
 - 2026-11-01 485b922 docs: refresh generated site reports
 - 2026-11-01 d63dd58 Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration
 - 2026-11-01 c19a2a3 feat: PRD-240/T2 存量中文知识条目迁移（三层重组规则+知识+原文/可查可回指，4 例）（trend #1201）
 - 2026-11-01 91bbdb3 docs: refresh generated site reports
 - 2026-11-01 63a6ddd Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks
-- 2026-11-01 83765f0 feat: PRD-239/T2 中文技能包按场景分包（workplace/legal-contract/sales-marketing 三场景+每包一句话定位，3 例）（trend #1196）
-- 2026-11-01 5789796 docs: refresh generated site reports
-- 2026-11-01 45cd15f fix: brace $date before the fullwidth title bracket (#41)
-- 2026-10-31 c3d23dc docs: refresh generated site reports
-- 2026-11-01 5d8853f Merge pull request #85 from zhanglunet/trend/prd-211-t5-acceptance
-- 2026-10-31 65621f6 test: PRD-211/T5 验收——真人 15 分钟上手实测（手册四页齐全/全路径/导航/模板实测/术语干净，5 例）（trend #1059）
