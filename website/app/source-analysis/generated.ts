@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-07T20:24:35+09:00",
+  "generatedAt": "2026-11-07T20:28:54+09:00",
   "branch": "main",
-  "head": "ff4eb47d3ee803acf9c54d8b1275fdcd250937e2",
-  "shortHead": "ff4eb47",
-  "totalFiles": 737,
+  "head": "02ab6bec52d8183ff5deaab95ba0d708fbfb29e3",
+  "shortHead": "02ab6be",
+  "totalFiles": 739,
   "byExt": [
     {
       "name": "py",
-      "count": 326
+      "count": 328
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 148
+      "count": 150
     },
     {
       "name": "coworker",
@@ -374,6 +374,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "02ab6be",
+      "date": "2026-11-07",
+      "subject": "PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)"
+    },
+    {
+      "hash": "2348e77",
+      "date": "2026-11-07",
+      "subject": "PRD-239/T5 验收试运行：中文口语指令抽样 (#93)"
+    },
+    {
+      "hash": "71321c8",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "ff4eb47",
       "date": "2026-11-07",
       "subject": "feat: PRD-240/T4 一致性校验——consistency_check.py check_consistency 三方对齐（E-DANGLING-REF 悬空引用规则 kb_refs/知识回指原文、E-CIRCULAR-REF 知识→规则反向引用禁止、E-ORPHAN-SOURCE 孤儿原文提示级）+ issues 机读清单（code/location/detail）+ summary errors/warnings/aligned（5 例，trend #1203） (#92)"
@@ -417,24 +432,24 @@ export const repoReport = {
       "hash": "d101d6f",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "34b6080",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-299/T5 验收试运行——中文口语指令 @引用 全链回放（6 例，trend #1500） (#99)"
-    },
-    {
-      "hash": "782113b",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "adb4059",
-      "date": "2026-11-07",
-      "subject": "PRD-299/T2 引用解析最小实现：@中文技能名（归一/歧义候选/人工消歧留痕） (#96)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "02ab6be",
+      "date": "2026-11-07",
+      "subject": "PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)"
+    },
+    {
+      "hash": "2348e77",
+      "date": "2026-11-07",
+      "subject": "PRD-239/T5 验收试运行：中文口语指令抽样 (#93)"
+    },
+    {
+      "hash": "71321c8",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "ff4eb47",
       "date": "2026-11-07",
