@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-11-08T10:31:42+09:00",
+  "generatedAt": "2026-11-08T14:11:25+09:00",
   "branch": "main",
-  "head": "9c682a20b851788f6727a0c6f7bd4404b8665a7c",
-  "shortHead": "9c682a2",
-  "totalFiles": 747,
+  "head": "e8de9c5137dbdbeb70f5c2df145bb4085057106b",
+  "shortHead": "e8de9c5",
+  "totalFiles": 749,
   "byExt": [
     {
       "name": "py",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 90
+      "count": 91
     },
     {
       "name": "tsx",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 20
+      "count": 21
     },
     {
       "name": "yml",
@@ -126,6 +126,10 @@ export const repoReport = {
     {
       "name": "releases",
       "count": 3
+    },
+    {
+      "name": "skills",
+      "count": 2
     },
     {
       "name": ".gitignore",
@@ -378,6 +382,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "e8de9c5",
+      "date": "2026-11-08",
+      "subject": "feat: PRD-327/T2 国际化技能包——双语 SKILL.md + manifest（trend #670） (#106)"
+    },
+    {
+      "hash": "7dbae91",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "9c682a2",
       "date": "2026-11-08",
       "subject": "docs: PRD-327/T1 设计——国际化形态（trend #1606） (#105)"
@@ -426,19 +440,19 @@ export const repoReport = {
       "hash": "dcb5d51",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "7248db7",
-      "date": "2026-11-07",
-      "subject": "fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过"
-    },
-    {
-      "hash": "c2340ce",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "e8de9c5",
+      "date": "2026-11-08",
+      "subject": "feat: PRD-327/T2 国际化技能包——双语 SKILL.md + manifest（trend #670） (#106)"
+    },
+    {
+      "hash": "7dbae91",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "9c682a2",
       "date": "2026-11-08",

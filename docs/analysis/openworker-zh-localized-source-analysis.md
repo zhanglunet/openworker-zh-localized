@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-08T10:31:42+09:00
+更新时间：2026-11-08T14:11:25+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：9c682a20b851788f6727a0c6f7bd4404b8665a7c
+当前提交：e8de9c5137dbdbeb70f5c2df145bb4085057106b
 
 ## 1. 总体判断
 
@@ -14,16 +14,16 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：747
-- 当前提交：9c682a2
+- 跟踪文件总数：749
+- 当前提交：e8de9c5
 - 主要文件类型：
   - py: 333
   - ts: 105
-  - md: 90
+  - md: 91
   - tsx: 79
   - png: 25
   - svg: 23
-  - json: 20
+  - json: 21
   - yml: 15
   - html: 8
   - [none]: 7
@@ -48,6 +48,7 @@
 - ui-mocks: 6 个文件
 - stt: 4 个文件
 - releases: 3 个文件
+- skills: 2 个文件
 - .gitignore: 1 个文件
 - BUILD_LOG.md: 1 个文件
 - LICENSE: 1 个文件
@@ -235,6 +236,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-08 e8de9c5 feat: PRD-327/T2 国际化技能包——双语 SKILL.md + manifest（trend #670） (#106)
+- 2026-11-08 7dbae91 docs: refresh generated site reports
 - 2026-11-08 9c682a2 docs: PRD-327/T1 设计——国际化形态（trend #1606） (#105)
 - 2026-11-07 c0323b3 docs: refresh generated site reports
 - 2026-11-08 184bb22 test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)
@@ -245,5 +248,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-07 b2f3329 docs: refresh generated site reports
 - 2026-11-07 189ef7f feat: PRD-313/T2 中文 skill 调用重放包最小实现——replay-pack/v1+登记册指纹+append-only 账本+verify_zh_replay 二值校验（11 例，trend #1577） (#101)
 - 2026-11-07 dcb5d51 docs: refresh generated site reports
-- 2026-11-07 7248db7 fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过
-- 2026-11-07 c2340ce docs: refresh generated site reports
