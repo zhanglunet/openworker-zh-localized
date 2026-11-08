@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-08T14:11:25+09:00",
+  "generatedAt": "2026-11-09T00:07:08+09:00",
   "branch": "main",
-  "head": "e8de9c5137dbdbeb70f5c2df145bb4085057106b",
-  "shortHead": "e8de9c5",
-  "totalFiles": 749,
+  "head": "9a9920774590172cac82eb7648ef3b10a27e573b",
+  "shortHead": "9a99207",
+  "totalFiles": 751,
   "byExt": [
     {
       "name": "py",
-      "count": 333
+      "count": 335
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 154
+      "count": 155
     },
     {
       "name": "coworker",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 25
+      "count": 26
     },
     {
       "name": ".github",
@@ -382,6 +382,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "9a99207",
+      "date": "2026-11-09",
+      "subject": "feat: PRD-327/T3 国际化技能包发布闸门（7 例，trend #1604 区段） (#107)"
+    },
+    {
+      "hash": "0f31bd8",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "e8de9c5",
       "date": "2026-11-08",
       "subject": "feat: PRD-327/T2 国际化技能包——双语 SKILL.md + manifest（trend #670） (#106)"
@@ -430,19 +440,19 @@ export const repoReport = {
       "hash": "b2f3329",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "189ef7f",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-313/T2 中文 skill 调用重放包最小实现——replay-pack/v1+登记册指纹+append-only 账本+verify_zh_replay 二值校验（11 例，trend #1577） (#101)"
-    },
-    {
-      "hash": "dcb5d51",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "9a99207",
+      "date": "2026-11-09",
+      "subject": "feat: PRD-327/T3 国际化技能包发布闸门（7 例，trend #1604 区段） (#107)"
+    },
+    {
+      "hash": "0f31bd8",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "e8de9c5",
       "date": "2026-11-08",
@@ -617,46 +627,6 @@ export const repoReport = {
       "hash": "793b981",
       "date": "2026-11-02",
       "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "485b922",
-      "date": "2026-11-01",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d63dd58",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #87 from zhanglunet/trend/prd-240-t2-knowledge-migration"
-    },
-    {
-      "hash": "c19a2a3",
-      "date": "2026-11-01",
-      "subject": "feat: PRD-240/T2 存量中文知识条目迁移（三层重组规则+知识+原文/可查可回指，4 例）（trend #1201）"
-    },
-    {
-      "hash": "91bbdb3",
-      "date": "2026-11-01",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "63a6ddd",
-      "date": "2026-11-01",
-      "subject": "Merge pull request #86 from zhanglunet/trend/prd-239-t2-subpacks"
-    },
-    {
-      "hash": "83765f0",
-      "date": "2026-11-01",
-      "subject": "feat: PRD-239/T2 中文技能包按场景分包（workplace/legal-contract/sales-marketing 三场景+每包一句话定位，3 例）（trend #1196）"
-    },
-    {
-      "hash": "5789796",
-      "date": "2026-11-01",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "45cd15f",
-      "date": "2026-11-01",
-      "subject": "fix: brace $date before the fullwidth title bracket (#41)"
     }
   ]
 } as const;
