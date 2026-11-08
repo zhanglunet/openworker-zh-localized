@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-08T02:30:09+09:00
+更新时间：2026-11-08T10:31:42+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：184bb222a935ef425fe1b1d3cf47a5afb11da97c
+当前提交：9c682a20b851788f6727a0c6f7bd4404b8665a7c
 
 ## 1. 总体判断
 
@@ -14,12 +14,12 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：746
-- 当前提交：184bb22
+- 跟踪文件总数：747
+- 当前提交：9c682a2
 - 主要文件类型：
   - py: 333
   - ts: 105
-  - md: 89
+  - md: 90
   - tsx: 79
   - png: 25
   - svg: 23
@@ -39,7 +39,7 @@
 - surfaces: 229 个文件
 - tests: 154 个文件
 - coworker: 134 个文件
-- docs: 113 个文件
+- docs: 114 个文件
 - website: 36 个文件
 - scripts: 25 个文件
 - .github: 11 个文件
@@ -235,6 +235,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-08 9c682a2 docs: PRD-327/T1 设计——国际化形态（trend #1606） (#105)
+- 2026-11-07 c0323b3 docs: refresh generated site reports
 - 2026-11-08 184bb22 test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)
 - 2026-11-07 3ead2ab docs: refresh generated site reports
 - 2026-11-08 50a969d fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)
@@ -245,5 +247,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-07 dcb5d51 docs: refresh generated site reports
 - 2026-11-07 7248db7 fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过
 - 2026-11-07 c2340ce docs: refresh generated site reports
-- 2026-11-07 ce720cc docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)
-- 2026-11-07 992fd0f docs: refresh generated site reports

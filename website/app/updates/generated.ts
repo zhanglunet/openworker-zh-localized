@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-11-08T02:30:09+09:00",
+  "generatedAt": "2026-11-08T10:31:42+09:00",
   "branch": "main",
-  "head": "184bb222a935ef425fe1b1d3cf47a5afb11da97c",
-  "shortHead": "184bb22",
-  "totalFiles": 746,
+  "head": "9c682a20b851788f6727a0c6f7bd4404b8665a7c",
+  "shortHead": "9c682a2",
+  "totalFiles": 747,
   "byExt": [
     {
       "name": "py",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 89
+      "count": 90
     },
     {
       "name": "tsx",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 113
+      "count": 114
     },
     {
       "name": "website",
@@ -378,6 +378,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "9c682a2",
+      "date": "2026-11-08",
+      "subject": "docs: PRD-327/T1 设计——国际化形态（trend #1606） (#105)"
+    },
+    {
+      "hash": "c0323b3",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "184bb22",
       "date": "2026-11-08",
       "subject": "test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)"
@@ -426,19 +436,19 @@ export const repoReport = {
       "hash": "c2340ce",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ce720cc",
-      "date": "2026-11-07",
-      "subject": "docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)"
-    },
-    {
-      "hash": "992fd0f",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "9c682a2",
+      "date": "2026-11-08",
+      "subject": "docs: PRD-327/T1 设计——国际化形态（trend #1606） (#105)"
+    },
+    {
+      "hash": "c0323b3",
+      "date": "2026-11-07",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "184bb22",
       "date": "2026-11-08",

@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-11-08T02:30:09+09:00
+更新时间：2026-11-08T10:31:42+09:00
 
 ## 最近提交
 
+- 2026-11-08 9c682a2 docs: PRD-327/T1 设计——国际化形态（trend #1606） (#105)
+- 2026-11-07 c0323b3 docs: refresh generated site reports
 - 2026-11-08 184bb22 test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)
 - 2026-11-07 3ead2ab docs: refresh generated site reports
 - 2026-11-08 50a969d fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)
@@ -14,5 +16,3 @@
 - 2026-11-07 dcb5d51 docs: refresh generated site reports
 - 2026-11-07 7248db7 fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过
 - 2026-11-07 c2340ce docs: refresh generated site reports
-- 2026-11-07 ce720cc docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)
-- 2026-11-07 992fd0f docs: refresh generated site reports
