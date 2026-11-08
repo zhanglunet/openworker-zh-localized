@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-09T00:07:08+09:00
+更新时间：2026-11-09T00:09:32+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：9a9920774590172cac82eb7648ef3b10a27e573b
+当前提交：0f68ecdaf865013c3c4fe048ff0802568b781491
 
 ## 1. 总体判断
 
@@ -14,10 +14,10 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：751
-- 当前提交：9a99207
+- 跟踪文件总数：752
+- 当前提交：0f68ecd
 - 主要文件类型：
-  - py: 335
+  - py: 336
   - ts: 105
   - md: 91
   - tsx: 79
@@ -37,7 +37,7 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 155 个文件
+- tests: 156 个文件
 - coworker: 134 个文件
 - docs: 114 个文件
 - website: 36 个文件
@@ -236,6 +236,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-09 0f68ecd test: PRD-327/T4+T5 i18n 发布闸门划界断言 + 验收试运行（6 例，trend #1604 区段） (#108)
+- 2026-11-08 5d588d5 docs: refresh generated site reports
 - 2026-11-09 9a99207 feat: PRD-327/T3 国际化技能包发布闸门（7 例，trend #1604 区段） (#107)
 - 2026-11-08 0f31bd8 docs: refresh generated site reports
 - 2026-11-08 e8de9c5 feat: PRD-327/T2 国际化技能包——双语 SKILL.md + manifest（trend #670） (#106)
@@ -246,5 +248,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-07 3ead2ab docs: refresh generated site reports
 - 2026-11-08 50a969d fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)
 - 2026-11-07 d3a7538 docs: refresh generated site reports
-- 2026-11-08 7434add feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)
-- 2026-11-07 b2f3329 docs: refresh generated site reports

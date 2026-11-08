@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-09T00:07:08+09:00",
+  "generatedAt": "2026-11-09T00:09:32+09:00",
   "branch": "main",
-  "head": "9a9920774590172cac82eb7648ef3b10a27e573b",
-  "shortHead": "9a99207",
-  "totalFiles": 751,
+  "head": "0f68ecdaf865013c3c4fe048ff0802568b781491",
+  "shortHead": "0f68ecd",
+  "totalFiles": 752,
   "byExt": [
     {
       "name": "py",
-      "count": 335
+      "count": 336
     },
     {
       "name": "ts",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 155
+      "count": 156
     },
     {
       "name": "coworker",
@@ -382,6 +382,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "0f68ecd",
+      "date": "2026-11-09",
+      "subject": "test: PRD-327/T4+T5 i18n 发布闸门划界断言 + 验收试运行（6 例，trend #1604 区段） (#108)"
+    },
+    {
+      "hash": "5d588d5",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "9a99207",
       "date": "2026-11-09",
       "subject": "feat: PRD-327/T3 国际化技能包发布闸门（7 例，trend #1604 区段） (#107)"
@@ -430,19 +440,19 @@ export const repoReport = {
       "hash": "d3a7538",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "7434add",
-      "date": "2026-11-08",
-      "subject": "feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)"
-    },
-    {
-      "hash": "b2f3329",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "0f68ecd",
+      "date": "2026-11-09",
+      "subject": "test: PRD-327/T4+T5 i18n 发布闸门划界断言 + 验收试运行（6 例，trend #1604 区段） (#108)"
+    },
+    {
+      "hash": "5d588d5",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "9a99207",
       "date": "2026-11-09",
