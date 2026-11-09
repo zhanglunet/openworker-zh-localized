@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-09T00:09:32+09:00",
+  "generatedAt": "2026-11-09T07:42:42Z",
   "branch": "main",
-  "head": "0f68ecdaf865013c3c4fe048ff0802568b781491",
-  "shortHead": "0f68ecd",
+  "head": "20fb91f5a13782c79d83f891d024e3128952b231",
+  "shortHead": "20fb91f",
   "totalFiles": 752,
   "byExt": [
     {
@@ -382,6 +382,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "20fb91f",
+      "date": "2026-11-09",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "194cf36",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "0f68ecd",
       "date": "2026-11-09",
       "subject": "test: PRD-327/T4+T5 i18n 发布闸门划界断言 + 验收试运行（6 例，trend #1604 区段） (#108)"
@@ -430,19 +440,19 @@ export const repoReport = {
       "hash": "3ead2ab",
       "date": "2026-11-07",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "50a969d",
-      "date": "2026-11-08",
-      "subject": "fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)"
-    },
-    {
-      "hash": "d3a7538",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "20fb91f",
+      "date": "2026-11-09",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "194cf36",
+      "date": "2026-11-08",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "0f68ecd",
       "date": "2026-11-09",
@@ -627,16 +637,6 @@ export const repoReport = {
       "hash": "1ac0d58",
       "date": "2026-11-07",
       "subject": "docs: PRD-299/T1 中文指令 @中文技能名引用解析设计——中文 @语法与禁止形态（版本后缀/通配/中间空白不归一）/ref-resolution/v1 schema（meta_summary 定位+触发词计数零正文读取）/确定性归一四规则显形（全半角/繁简固定映射/去首尾空白——归一是规范化不是模糊匹配）/四错误码封闭词表（歧义列候选含一句话定位请用户选不按频次挑；chosen_from_candidates 人工消歧留痕）/与 239/T3 触发词登记册双路径划界（显式 @ 引用优先级高于口语命中，T4 断言预埋）/与 PRD-267/285 划界表（trend #1496） (#95)"
-    },
-    {
-      "hash": "7034f06",
-      "date": "2026-11-02",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "793b981",
-      "date": "2026-11-02",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
     }
   ]
 } as const;
