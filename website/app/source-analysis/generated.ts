@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-11T19:41:40+08:00",
+  "generatedAt": "2026-11-11T21:11:32+08:00",
   "branch": "main",
-  "head": "9d33f91a326762241059c544e137d193b4748485",
-  "shortHead": "9d33f91",
+  "head": "c52467978c95fa98a8985f1be7f8990d89763ef8",
+  "shortHead": "c524679",
   "totalFiles": 774,
   "byExt": [
     {
@@ -382,6 +382,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "c524679",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #126 from zhanglunet/trend/baseline-fix-owzh"
+    },
+    {
+      "hash": "1e1090a",
+      "date": "2026-11-11",
+      "subject": "fix: owzh main baseline — read PRD-341 design doc from local main copy instead of un-fetched branch"
+    },
+    {
+      "hash": "2055054",
+      "date": "2026-11-11",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "9d33f91",
       "date": "2026-11-11",
       "subject": "Merge pull request #125 from zhanglunet/trend/prd-369-t5-decision-inbox-acceptance"
@@ -425,24 +440,24 @@ export const repoReport = {
       "hash": "246ef31",
       "date": "2026-11-11",
       "subject": "Merge pull request #117 from zhanglunet/trend/prd-369-t1-decision-inbox"
-    },
-    {
-      "hash": "fa5ef8f",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #116 from zhanglunet/trend/prd-355-t1-zh-call-replay"
-    },
-    {
-      "hash": "86a396a",
-      "date": "2026-11-11",
-      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
-    },
-    {
-      "hash": "6d09d34",
-      "date": "2026-11-11",
-      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "c524679",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #126 from zhanglunet/trend/baseline-fix-owzh"
+    },
+    {
+      "hash": "1e1090a",
+      "date": "2026-11-11",
+      "subject": "fix: owzh main baseline — read PRD-341 design doc from local main copy instead of un-fetched branch"
+    },
+    {
+      "hash": "2055054",
+      "date": "2026-11-11",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "9d33f91",
       "date": "2026-11-11",
