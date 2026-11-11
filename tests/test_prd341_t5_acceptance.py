@@ -10,7 +10,7 @@
   batch_gate；manual 附答留痕后 READY_FOR_HUMAN；回放可复现；
 ② 失败演练——机检 fail → BLOCKED 显形 / manual 未答 → PENDING_MANUAL
   零视为通过 / manual 被篡改 → TAMPERED 拒绝；
-③ 文档无密钥——T1 设计文档（T1 分支）零密钥/零 IP/外链仅 github 与
+③ 文档无密钥——T1 设计文档（main 本地副本）零密钥/零 IP/外链仅 github 与
   example 域。
 零网络；全合成占位。
 """
@@ -89,13 +89,11 @@ class TestFailureDrill:
 
 class TestDocNoSecrets:
     def test_design_doc_no_secrets(self):
-        """③ 文档无密钥：T1 设计文档（T1 分支）零密钥/零 IP/外链仅
+        """③ 文档无密钥：T1 设计文档（main 本地副本）零密钥/零 IP/外链仅
         github 与 example 域。"""
-        import subprocess
-        doc = subprocess.run(
-            ["git", "show", "origin/trend/prd-341-t1-12factors-design:docs/plans/"
-             "2026-11-09-prd-341-twelve-factors-design.md"],
-            capture_output=True, text=True, check=True).stdout
+        doc = (Path(__file__).resolve().parents[1]
+               / "docs/plans/2026-11-09-prd-341-twelve-factors-design.md"
+               ).read_text(encoding="utf-8")
         for token in ("password", "secret", "api_key", "AKIA", "Bearer ",
                       "BEGIN RSA"):
             assert token.lower() not in doc.lower(), token
