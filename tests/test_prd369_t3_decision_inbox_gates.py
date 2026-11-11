@@ -12,6 +12,7 @@ gate_summary 一票否决；与 T2 串联（真实 add/approve(CHOICE)/reject �
 """
 import ast
 import sys
+import unittest
 from pathlib import Path
 
 import pytest
