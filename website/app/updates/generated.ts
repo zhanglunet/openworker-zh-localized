@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-10T08:16:30+08:00",
+  "generatedAt": "2026-11-11T19:41:40+08:00",
   "branch": "main",
-  "head": "00f9c5dc4a8cdd2adcb08c96c3f70f738cb63f8d",
-  "shortHead": "00f9c5d",
-  "totalFiles": 760,
+  "head": "9d33f91a326762241059c544e137d193b4748485",
+  "shortHead": "9d33f91",
+  "totalFiles": 774,
   "byExt": [
     {
       "name": "py",
-      "count": 342
+      "count": 354
     },
     {
       "name": "ts",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 93
+      "count": 95
     },
     {
       "name": "tsx",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 160
+      "count": 168
     },
     {
       "name": "coworker",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 116
+      "count": 118
     },
     {
       "name": "website",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 28
+      "count": 32
     },
     {
       "name": ".github",
@@ -382,67 +382,182 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
-      "hash": "00f9c5d",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #115 from zhanglunet/trend/prd-341-t5-acceptance"
+      "hash": "9d33f91",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #125 from zhanglunet/trend/prd-369-t5-decision-inbox-acceptance"
     },
     {
-      "hash": "de236fe",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #114 from zhanglunet/trend/prd-341-t4-boundary"
+      "hash": "316ebf0",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #124 from zhanglunet/trend/prd-355-t5-zh-call-replay-acceptance"
     },
     {
-      "hash": "4063e59",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #113 from zhanglunet/trend/prd-341-t3-gate"
+      "hash": "34a0ffc",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #123 from zhanglunet/trend/prd-369-t4-decision-inbox-boundary"
     },
     {
-      "hash": "040aab4",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #112 from zhanglunet/trend/prd-341-t2-checklist-impl"
+      "hash": "b5cfc72",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #122 from zhanglunet/trend/prd-355-t4-zh-call-replay-boundary"
     },
     {
-      "hash": "dd8a640",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #111 from zhanglunet/trend/prd-341-t1-12factors-design"
+      "hash": "c816e1a",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #121 from zhanglunet/trend/prd-355-t3-zh-call-replay-gate"
     },
     {
-      "hash": "413e399",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #109 from zhanglunet/trend/prd-341-t1-design"
+      "hash": "2a91bc1",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #120 from zhanglunet/trend/prd-369-t3-decision-inbox-gate"
     },
     {
-      "hash": "9a05b1e",
-      "date": "2026-11-09",
-      "subject": "test: PRD-341/T5 十二原则 checklist 验收试运行——test_prd341_t5_acceptance.py（7 例全绿，链上 T2–T4 33 例仍绿）①真实 skill 全量试运行（十二项全跑 机检 9 过+manual 3 附答留痕→READY_FOR_HUMAN 闸门零替人拍板+双 skill batch_gate 汇总逐 skill 裁决平列+回放逐字节可复现）②失败演练三路全显形（机检 fail→BLOCKED 未过项显形零视为通过/manual 未附答→PENDING_MANUAL 问题清单显形/manual 项被篡改为 pass→TAMPERED R4 复核拒绝）③文档无密钥（T1 设计文档经 git show origin/trend/prd-341-t1-12factors-design 扫描零密钥/零 IP/外链仅 github 与 example 域）（trend #1620 的 T5 环节）"
+      "hash": "a07c9e7",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #119 from zhanglunet/trend/prd-369-t2-decision-inbox-impl"
     },
     {
-      "hash": "5c68185",
-      "date": "2026-11-09",
-      "subject": "test: PRD-341/T4 十二原则 checklist 划界断言——test_prd341_t4_boundary.py（7 例全绿）R3 数据驱动断言（run_checklist/checklist_gate 源码零原则 id 零机检器名复钉/gate 的 MANUAL_IDS is 数据模块同一 frozenset 单向引用/增补原则演练：运行时向 CHECKLIST 追加 P13 后 run_checklist 即覆盖新条目零改引擎代码 finally 还原零残留）+R2 零复用抽样断言（十二条 principle 全中文原创含 CJK 零英文 factor 术语/两模块 AST 零 humanlayer/12-factor/swe-agent 借鉴仓符号）+R1 复钉（check_ref 全部指向 scripts/ 既有模块）+与 199/227/303 划界（checklist_gate 单向只读消费零机检器模块导入）+与 PRD-303 重放包划界钉值（trend #1620 的 T4 环节）"
+      "hash": "9d0546b",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #118 from zhanglunet/trend/prd-355-t2-zh-call-replay-impl"
     },
     {
-      "hash": "f9e7a1a",
-      "date": "2026-11-09",
-      "subject": "feat: PRD-341/T3 十二原则 checklist 通过闸门——checklist_gate.py GATE_CODES 四码封闭（READY_FOR_HUMAN/PENDING_MANUAL/BLOCKED/TAMPERED）+checklist_gate 单 skill 通过闸门（机检 fail→BLOCKED failing 显形/机检全过 manual 未附答→PENDING_MANUAL 问题清单显形零视为通过 R4/全备→READY_FOR_HUMAN 荐人工拍板闸门零替人拍板/manual 项状态被篡改为 pass/fail→TAMPERED 显形拒绝 R4 复核 manual 只能是 manual）+batch_gate 全库汇总归重（消费 T2 summarize/任一非 READY 整库归重/逐 skill 裁决平列人工逐个拍板）+与 T2 串联三种真实产物逐一过闸+AST 只读消费零网络零机检器导入（10 例全绿，T2 16 例仍绿，trend #1620 的 T3 环节）"
+      "hash": "246ef31",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #117 from zhanglunet/trend/prd-369-t1-decision-inbox"
     },
     {
-      "hash": "9b2b02f",
-      "date": "2026-11-09",
-      "subject": "feat: PRD-341/T2 十二原则 checklist 最小实现——CHECKLIST 声明式数据（check_ref 全部指向 scripts/ 既有模块 zh_trigger_registry/zh_sources/consistency_check/zh_skill_ref/skillpack_snapshot/cn_skill_sync_check/trigger_probe/zh_intake_gate 零新建判定逻辑 R1）+run_checklist 每 skill 一份（§6.1 裁决）+机检器反射注入适配器 honest 三态映射（None=clean/真值 pass/假值 fail 带 reason/异常 fail 显形/未注册 fail 显形——零视为通过 R4）+manual JSON 附答只留痕不改状态非法指向显形拒绝（§6.2 裁决）+summarize 全库汇总视图 failing 清单+引擎零硬编码 R3（数据与逻辑分离 T4 预埋）+模块 stdlib-only R2 零复用预埋（16 例 pytest 全绿）（trend #1620)"
+      "hash": "fa5ef8f",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #116 from zhanglunet/trend/prd-355-t1-zh-call-replay"
     },
     {
-      "hash": "af53436",
-      "date": "2026-11-09",
-      "subject": "docs: refresh generated site reports"
+      "hash": "86a396a",
+      "date": "2026-11-11",
+      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
     },
     {
-      "hash": "20fb91f",
-      "date": "2026-11-09",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+      "hash": "6d09d34",
+      "date": "2026-11-11",
+      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "9d33f91",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #125 from zhanglunet/trend/prd-369-t5-decision-inbox-acceptance"
+    },
+    {
+      "hash": "316ebf0",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #124 from zhanglunet/trend/prd-355-t5-zh-call-replay-acceptance"
+    },
+    {
+      "hash": "34a0ffc",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #123 from zhanglunet/trend/prd-369-t4-decision-inbox-boundary"
+    },
+    {
+      "hash": "b5cfc72",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #122 from zhanglunet/trend/prd-355-t4-zh-call-replay-boundary"
+    },
+    {
+      "hash": "c816e1a",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #121 from zhanglunet/trend/prd-355-t3-zh-call-replay-gate"
+    },
+    {
+      "hash": "2a91bc1",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #120 from zhanglunet/trend/prd-369-t3-decision-inbox-gate"
+    },
+    {
+      "hash": "a07c9e7",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #119 from zhanglunet/trend/prd-369-t2-decision-inbox-impl"
+    },
+    {
+      "hash": "9d0546b",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #118 from zhanglunet/trend/prd-355-t2-zh-call-replay-impl"
+    },
+    {
+      "hash": "246ef31",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #117 from zhanglunet/trend/prd-369-t1-decision-inbox"
+    },
+    {
+      "hash": "fa5ef8f",
+      "date": "2026-11-11",
+      "subject": "Merge pull request #116 from zhanglunet/trend/prd-355-t1-zh-call-replay"
+    },
+    {
+      "hash": "86a396a",
+      "date": "2026-11-11",
+      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
+    },
+    {
+      "hash": "6d09d34",
+      "date": "2026-11-11",
+      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
+    },
+    {
+      "hash": "873c603",
+      "date": "2026-11-11",
+      "subject": "test(prd-369): T5 验收试运行——人工决策收件箱全链周期演练（收→批→拒→重复裁决→AUTO_EXEC→CHOICE_REQUIRED）确定性可复现+链复跑子进程实测（含 T3 双缺陷订正后全链）+文档无密钥"
+    },
+    {
+      "hash": "4e6dc32",
+      "date": "2026-11-11",
+      "subject": "test(prd-355): T5 验收试运行——中文调用重放全链回放确定性可复现+MISMATCH/INPUT_DRIFT 演练（三重指纹区分漂移来源）+链复跑子进程实测+文档无密钥"
+    },
+    {
+      "hash": "f990b29",
+      "date": "2026-11-11",
+      "subject": "fix+test(prd-369): T3 双缺陷订正（ERROR_CODES 导出+测试 unittest 导入）+ T4 人工决策收件箱划界断言"
+    },
+    {
+      "hash": "9641ffe",
+      "date": "2026-11-11",
+      "subject": "test(prd-355): T4 中文调用重放划界断言——重放面与升级快照/解析器/机检双向模块隔离+lookup_fn 注入唯一耦合钉值+R1/R2/R3/R4 红线钉值"
+    },
+    {
+      "hash": "064f553",
+      "date": "2026-11-11",
+      "subject": "feat: PRD-355/T3 中文 skill 调用重放闸门——zh_call_replay_gates.py ledger_gate 账本一致性复核（verdict/evidence/指纹与账本最后入账逐字节一致 VERDICT_MISMATCH 显形）+mark_baseline+append_only_gate append-only 复核（基线锚删除与首条改写 LEDGER_DRIFT 显形）+pack_gate 别包冒充 PACK_STALE 显形+gate_summary 多闸一票否决+ERROR_CODES 随模块导出（348 教训）+与 T2 串联（真实 make_pack+replay(lookup)+ReplayLedger 产物三闸全过）+重放零执行 AST 零网络+闸门只读（16 例全绿，355 链+369 链仍绿，trend #1634 的 T3 环节）"
+    },
+    {
+      "hash": "0e29857",
+      "date": "2026-11-11",
+      "subject": "feat: PRD-369/T3 人工拍板收件箱批阅闸门——decision_inbox_gates.py mark_baseline+append_only_gate events 只增不删复核（基线锚删除与首事件改写 LEDGER_DRIFT 显形）+state_gate 条目状态与 events 双向对账（直接改写/回滚/删除三破坏 STATE_INCONSISTENT 显形——裁决必须双向一致 R1 落地）+gate_summary 多闸一票否决+ERROR_CODES 随模块导出（348 教训）+与 T2 串联（真实 add/approve(CHOICE)/reject 产物过闸全 pass）+闸门只读消费（零裁决调用 零网络）（13 例全绿，369 链+341 链仍绿，trend #1648 的 T3 环节）"
+    },
+    {
+      "hash": "2fad6e0",
+      "date": "2026-11-10",
+      "subject": "feat: PRD-369/T2 人工拍板收件箱最小实现——decision_inbox.py collect 三源只读汇聚（manual_review/answer_confirm/zh_disambiguation 词表封闭/五件套缺一 INBOX_ITEM_INCOMPLETE 防御分支显形拒绝入箱/manual questions 引用 341 问题清单+answers_ref 引用附答留痕）+InboxLedger 状态机（approve/reject 人批留痕/重复裁决 INBOX_DOUBLE_DECIDE/未知 id/携带 checklist 写/注册表写/附答代填载荷 INBOX_AUTO_EXEC_ATTEMPT 显形拒绝——零 checklist 状态改写零代填 R1 TAMPERED 红线继续 §6.1 零代填裁决/歧义项 approve 必带选中候选且须在列表内 INBOX_CHOICE_REQUIRED）+append-only events+view kind 过滤+与 PRD-341 run_checklist P10–P12 真实串联+AST 零网络零子进程（11 例全绿，341 链 33 例+355 链仍绿，trend #1648 的 T2 环节）"
+    },
+    {
+      "hash": "85cc04b",
+      "date": "2026-11-10",
+      "subject": "feat: PRD-355/T2 中文 skill 调用重放包最小实现——zh_call_replay.py make_pack（决策 utterance/resolved_skill/status/candidates 投影/原文+归一化+登记册三重指纹+rules_version/length 齐校验；缺任一 PACK_INCOMPLETE）+replay 重放三步（三重指纹分别复核 INPUT_DRIFT 且漂移来源线索可区分——指令原文/登记册变/归一化变/lookup_fn 深拷贝解析层复算与 zh_trigger_registry.lookup+build_registry 真实串联零 skill 执行 R2/decisions 逐字节比对 MISMATCH 首分歧条显形含候选零静默 R3）+ReplayLedger append-only（R4）+AST 零网络零子进程（9 例全绿，341 链 33 例仍绿，trend #1634 的 T2 环节）"
+    },
+    {
+      "hash": "45d1080",
+      "date": "2026-11-10",
+      "subject": "docs: PRD-369/T1 人工拍板收件箱设计——三类人工项统一收口（manual_review/answer_confirm/zh_disambiguation 词表封闭 R2）+证据四件套（fingerprint+questions/candidates 引用 341 附答留痕 R3）+零 checklist 状态改写零注册表写零附答代填（R1 AUTO_EXEC 拒绝——TAMPERED 红线继续）+歧义项 CHOICE_REQUIRED+append-only 拒绝留痕（R4）+plannotator/t3code 实测只借控制面形态+与 341/299 划界（trend #1648）"
+    },
+    {
+      "hash": "eb40ee1",
+      "date": "2026-11-10",
+      "subject": "docs: PRD-355/T1 中文 skill 调用重放包设计——三件套（中文指令原文+归一化+注册表三重指纹/解析与歧义候选处理/结果摘要 R1）+重放零 skill 执行红线（只复算 lookup/resolve R2）+MISMATCH 含归一化差异线索显形零静默（R3）+append-only（R4）+AiSOC/OpenBot MIT 实测只借形态+与 285 升级快照/267 技能来源/341 checklist 划界（trend #1634）"
+    },
+    {
+      "hash": "52def00",
+      "date": "2026-11-10",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "00f9c5d",
       "date": "2026-11-10",
