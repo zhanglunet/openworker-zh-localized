@@ -432,7 +432,7 @@ audit_forward_timeout = 5
 
 按 [BRANDING_PACKAGING.md](BRANDING_PACKAGING.md) 完成品牌化后：
 
-1. 配置企业仓 Secrets：`APPLE_CERTIFICATE(_PASSWORD)`、`APPLE_SIGNING_IDENTITY`、`APPLE_API_KEY(_CONTENT)`、`APPLE_API_ISSUER`、`TAURI_SIGNING_PRIVATE_KEY(_PASSWORD)`（详细流程照 `docs/release-signed-updates.md`）
+1. 配置企业仓 Secrets：`APPLE_CERTIFICATE(_PASSWORD)`、`APPLE_SIGNING_IDENTITY`、`APPLE_API_KEY(_CONTENT)`、`APPLE_API_ISSUER`、`TAURI_SIGNING_PRIVATE_KEY(_PASSWORD)`（详细步骤见 `docs/release-signed-updates.md`）
 2. 先确认 `surfaces/gui/src-tauri/tauri.conf.json` 的 `version`（如 `0.1.7`），再打同号 tag `corp-v0.1.7` → `release-corp.yml` 矩阵构建 macOS arm64 / macOS x64 / Windows 三产物并签名公证。tag 格式为 `corp-vX.Y.Z` 或 `corp-vX.Y.Z-<corp>.n`；去掉 `corp-v` 前缀及第一个 `-` 起的后缀后，必须与配置中的 `version` 完全一致，否则预检失败（见 [templates/release-corp.yml](templates/release-corp.yml) 与 [playbook 第 1 章 §3.1](../plans/2026-10-17-playbook-ch1-rebranding.md#31-打-tag)）。
 3. 产物 + `latest-corp.json` 发布到企业托管（形态 A：企业站/Release 反代；形态 B：内网静态服务器）
 4. 企业站下载页更新三平台链接与 SHA-256

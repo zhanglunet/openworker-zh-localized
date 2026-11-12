@@ -23,7 +23,7 @@
 | 0.1 | 镜像建私有仓 `<corp>/openworker-enterprise`（`git push --mirror`，保共同祖先） | — | 私有仓可克隆，历史完整 | 0.5d |
 | 0.2 | 建 `enterprise/` 目录骨架 + `sync-localized.yml` + `release-corp.yml` 空跑 | — | 手动触发同步显示 already-synced | 1d |
 | 0.3 | 企业定制冒烟测试框架（`enterprise/tests/`，接入 CI 必过） | — | 技能加载/品牌字段/Provider 构建三类断言跑通 | 1.5d |
-| 0.4 | 证书流程启动：Apple Developer 组织账号、Windows 签名证书申请（外部周期长，第 1 天就发起） | F6 | 申请提交回执 | 0.5d |
+| 0.4 | 启动证书申请：Apple Developer 组织账号、Windows 签名证书申请（外部周期长，第 1 天就发起） | F6 | 申请提交回执 | 0.5d |
 | 0.5 | 企业站雏形：`website/` 品牌化副本部署到企业域名（形态 A 或 B） | F14 | 企业域名可访问占位站 | 1.5d |
 | 0.6 | Tauri updater 企业密钥对生成入库 Secrets | F6 | 密钥对生成，公钥待写入配置 | 0.5d |
 
@@ -44,7 +44,7 @@
 | 1.8 | 三平台首构建：macOS arm64/x64 + Windows 出包（可暂未签名），内测群分发 | F5/F6 | tag `corp-vX.Y.Z` 走 `release-corp.yml`，`X.Y.Z` 与 `tauri.conf.json` 的 `version` 一致（见 [DEPLOYMENT.md §6](DEPLOYMENT.md#6-桌面端构建签名与分发)） | 1d |
 | 1.9 | 内测反馈通道与问题清单机制 | — | Issue 模板 + 每日 triage | 0.5d |
 
-**出口条件**：PRD 3.5 验收场景（表格分析全流程）+ 断公网对话验收通过；内测 ≥10 人安装成功。
+**出口条件**：PRD 3.5 验收场景（表格分析完整过程）+ 断公网对话验收通过；内测 ≥10 人安装成功。
 
 ## 4. M2 · 试点版（第 4-5 周，P1）
 
@@ -78,7 +78,7 @@
 
 - **同步节拍**：自动同步 PR 随到随审（预算每周 ≤2h，超预算即触发挂载点瘦身复盘）
 - **技能包迭代**：企业技能独立版本号，每两周一版
-- **上游大版本**：冻结-集中合并-冒烟流程（UPSTREAM_SYNC.md 第 4 节）
+- **上游大版本**：冻结-集中合并-冒烟步骤（UPSTREAM_SYNC.md 第 4 节）
 - **季度安全复查**：密钥轮换、依赖审计、审计日志抽查
 
 ## 7. 团队分工建议

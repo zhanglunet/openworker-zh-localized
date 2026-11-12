@@ -132,7 +132,7 @@ powershell -ExecutionPolicy Bypass -File packaging/build_windows.ps1
 | 更新包签名 | Tauri updater minisign 密钥对（**企业自建，勿沿用汉化版公钥**：`npm run tauri signer generate`） | 私钥进 Secrets：`TAURI_SIGNING_PRIVATE_KEY`(+`_PASSWORD`)；公钥写入 `tauri.conf.json > plugins.updater.pubkey` |
 | Windows 代码签名 | OV/EV 代码签名证书（CA 购买；EV 免 SmartScreen 冷启动信誉期） | 证书接入 `build_windows.ps1`/CI（signtool），可后补——未签名包配合企业域内白名单也可分发 |
 
-流程细节（Keychain 导入、公证提交、`latest-zh.json` 生成与回写）已在 `docs/release-signed-updates.md` 完整文档化，release.yml 在 tag 发布时强制校验上述 Secrets 存在。企业版沿用该管线，仅替换 Secrets 与命名。
+操作细节（Keychain 导入、公证提交、`latest-zh.json` 生成与回写）已在 `docs/release-signed-updates.md` 完整文档化，release.yml 在 tag 发布时强制校验上述 Secrets 存在。企业版沿用该管线，仅替换 Secrets 与命名。
 
 ### 2.4 自动更新改企业源
 
