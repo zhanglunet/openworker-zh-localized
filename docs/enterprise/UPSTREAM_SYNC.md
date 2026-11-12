@@ -150,7 +150,9 @@ jobs:
 
 ### 3.3 版本与标签策略
 
-- 企业版本号：`<汉化版基线>-corp.<n>`，如 `0.1.7-corp.3`；tag 触发企业发布流水线
+- 企业发布以 `surfaces/gui/src-tauri/tauri.conf.json` 的 `version` 为准，如 `0.1.7`；汉化版基线单独记录，不用企业后缀拼进配置版本。
+- 发布 tag：`corp-vX.Y.Z` 或 `corp-vX.Y.Z-<corp>.n`，如 `corp-v0.1.7` 或 `corp-v0.1.7-acme.3`；`X.Y.Z` 必须等于配置中的 `version`。流水线去掉 `corp-v` 前缀及第一个 `-` 起的后缀后比对，规则见 [templates/release-corp.yml](templates/release-corp.yml)。
+- 同一配置版本只换 tag 后缀不会提高客户端版本；要验证自动更新，需递增配置版本并打对应 tag（如 `0.1.7` / `corp-v0.1.7` → `0.1.8` / `corp-v0.1.8`）。
 - 每次合并同步 PR 后，在 PR 描述记录消化到的汉化版 SHA，便于追溯"企业版含上游哪一天的功能"
 
 ### 3.4 防覆盖的最后一道闸：企业定制冒烟测试

@@ -10,7 +10,7 @@
 
 ```
 第1周   M0 地基     私有仓 + 同步流水线 + 冒烟闸门 + 企业站雏形
-第2-3周 M1 内测版   P0 全部落地 → 0.x-corp.1（内部试用）
+第2-3周 M1 内测版   P0 全部落地 → 首个企业内测版（内部试用）
 第4-5周 M2 试点版   P1 落地 → 试点部门推广
 第6-8周 M3 正式版   P2 落地 + 硬化 → 全员发布
 贯穿    每日上游同步消化（M0 后自动化，冲突随到随处理）
@@ -23,7 +23,7 @@
 | 0.1 | 镜像建私有仓 `<corp>/openworker-enterprise`（`git push --mirror`，保共同祖先） | — | 私有仓可克隆，历史完整 | 0.5d |
 | 0.2 | 建 `enterprise/` 目录骨架 + `sync-localized.yml` + `release-corp.yml` 空跑 | — | 手动触发同步显示 already-synced | 1d |
 | 0.3 | 企业定制冒烟测试框架（`enterprise/tests/`，接入 CI 必过） | — | 技能加载/品牌字段/Provider 构建三类断言跑通 | 1.5d |
-| 0.4 | 证书流程启动：Apple Developer 组织账号、Windows 签名证书申请（外部周期长，第 1 天就发起） | F6 | 申请提交回执 | 0.5d |
+| 0.4 | 启动证书申请：Apple Developer 组织账号、Windows 签名证书申请（外部周期长，第 1 天就发起） | F6 | 申请提交回执 | 0.5d |
 | 0.5 | 企业站雏形：`website/` 品牌化副本部署到企业域名（形态 A 或 B） | F14 | 企业域名可访问占位站 | 1.5d |
 | 0.6 | Tauri updater 企业密钥对生成入库 Secrets | F6 | 密钥对生成，公钥待写入配置 | 0.5d |
 
@@ -41,10 +41,10 @@
 | 1.5 | 大表哥 L2：前端「表格助手」入口。快赢路径：`SessionIntro.tsx` 加一张任务卡（onPrefill 预填提示词触发技能，半天）；完整路径：App.tsx 的 surface 联合类型 + 渲染链加 `sheets` 分支 + `Sidebar.tsx` 回调（参照 IntegrationsView 模式）新整页面板 | F4 | `surfaces/gui/src/`（无路由库，surface 状态机挂载） | 3d |
 | 1.6 | 品牌换肤：`enterprise/branding/theme.css`（亮/暗）、图标全套（`tauri icon` 生成）、productName/identifier/publisher、DMG 背景、Info.plist/lib.rs 品牌词 | F5 | 见 BRANDING_PACKAGING.md 清单 | 2d |
 | 1.7 | 企业更新源：updater endpoints/pubkey 改企业值，`make_update_manifest.py` 出 `latest-corp.json`，托管打通 | F6 | `tauri.conf.json` + `release-corp.yml` | 2d |
-| 1.8 | 三平台首构建：macOS arm64/x64 + Windows 出包（可暂未签名），内测群分发 | F5/F6 | tag `v0.x-corp.1` 走 `release-corp.yml` | 1d |
+| 1.8 | 三平台首构建：macOS arm64/x64 + Windows 出包（可暂未签名），内测群分发 | F5/F6 | tag `corp-vX.Y.Z` 走 `release-corp.yml`，`X.Y.Z` 与 `tauri.conf.json` 的 `version` 一致（见 [DEPLOYMENT.md §6](DEPLOYMENT.md#6-桌面端构建签名与分发)） | 1d |
 | 1.9 | 内测反馈通道与问题清单机制 | — | Issue 模板 + 每日 triage | 0.5d |
 
-**出口条件**：PRD 3.5 验收场景（表格分析全流程）+ 断公网对话验收通过；内测 ≥10 人安装成功。
+**出口条件**：PRD 3.5 验收场景（表格分析完整过程）+ 断公网对话验收通过；内测 ≥10 人安装成功。
 
 ## 4. M2 · 试点版（第 4-5 周，P1）
 
@@ -78,7 +78,7 @@
 
 - **同步节拍**：自动同步 PR 随到随审（预算每周 ≤2h，超预算即触发挂载点瘦身复盘）
 - **技能包迭代**：企业技能独立版本号，每两周一版
-- **上游大版本**：冻结-集中合并-冒烟流程（UPSTREAM_SYNC.md 第 4 节）
+- **上游大版本**：冻结-集中合并-冒烟步骤（UPSTREAM_SYNC.md 第 4 节）
 - **季度安全复查**：密钥轮换、依赖审计、审计日志抽查
 
 ## 7. 团队分工建议

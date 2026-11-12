@@ -132,7 +132,7 @@ powershell -ExecutionPolicy Bypass -File packaging/build_windows.ps1
 | 更新包签名 | Tauri updater minisign 密钥对（**企业自建，勿沿用汉化版公钥**：`npm run tauri signer generate`） | 私钥进 Secrets：`TAURI_SIGNING_PRIVATE_KEY`(+`_PASSWORD`)；公钥写入 `tauri.conf.json > plugins.updater.pubkey` |
 | Windows 代码签名 | OV/EV 代码签名证书（CA 购买；EV 免 SmartScreen 冷启动信誉期） | 证书接入 `build_windows.ps1`/CI（signtool），可后补——未签名包配合企业域内白名单也可分发 |
 
-流程细节（Keychain 导入、公证提交、`latest-zh.json` 生成与回写）已在 `docs/release-signed-updates.md` 完整文档化，release.yml 在 tag 发布时强制校验上述 Secrets 存在。企业版沿用该管线，仅替换 Secrets 与命名。
+操作细节（Keychain 导入、公证提交、`latest-zh.json` 生成与回写）已在 `docs/release-signed-updates.md` 完整文档化，release.yml 在 tag 发布时强制校验上述 Secrets 存在。企业版沿用该管线，仅替换 Secrets 与命名。
 
 ### 2.4 自动更新改企业源
 
@@ -145,10 +145,10 @@ powershell -ExecutionPolicy Bypass -File packaging/build_windows.ps1
    - 私有 GitHub Release 直链（客户端可匿名访问不了私有仓——需在企业站放反代或用内网静态服务器托管 `latest-corp.json` 与更新包）；
    - **推荐**：企业内网/企业站静态托管 `https://apps.<corp>.com/openworker/latest-corp.json` + 更新包文件
 2. `make_update_manifest.py` 输出清单中的下载 URL 改为企业托管地址
-3. pubkey 换企业密钥（见 2.3）；版本号采用 `0.x.y-corp.n`
-4. 发布流水线（`release-corp.yml`，企业仓独立文件）在 tag 时构建 → 签名/公证 → 上传企业托管 → 刷新清单
+3. pubkey 换企业密钥（见 2.3）；`tauri.conf.json` 的 `version` 使用配置版本（如 `0.1.7`），发布 tag 使用 `corp-v0.1.7`（完整比对规则见 [UPSTREAM_SYNC.md §3.3](UPSTREAM_SYNC.md#33-版本与标签策略)）。
+4. 发布流水线（`release-corp.yml`，企业仓独立文件）在 `corp-v*` tag 时构建 → 签名/公证 → 上传企业托管 → 刷新清单
 
-验收：安装 `0.1.7-corp.1` → 发布 `0.1.7-corp.2` → 客户端收到更新提示并完成升级，签名校验通过。
+验收：安装 `0.1.7`（tag `corp-v0.1.7`）→ 将配置版本递增为 `0.1.8` 并发布 tag `corp-v0.1.8` → 客户端收到更新提示并完成升级，签名校验通过。仅改变 tag 的企业内部序号不会提高客户端版本。
 
 ---
 
