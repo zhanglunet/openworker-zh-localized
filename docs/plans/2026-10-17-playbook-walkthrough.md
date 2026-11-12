@@ -7,6 +7,13 @@
 > 无真实企业客户、无真实签名证书、无真实构建运行；所有"执行"均为按文档
 > 逐步推演 + 对仓库现状的 API 核对。时间均为估算。
 
+> **后续勘误（[#16](https://github.com/zhanglunet/openworker-zh-localized/issues/16)）**：
+> 下文保留原始走查记录，其中 §2 / §5 将 `X.Y.Z-corp.n` 认作配置 version 的结论有误。
+> 现行 `release-corp.yml` 先剥离 tag 的 `corp-v` 前缀及第一个 `-` 起的后缀，再与配置 version
+> 精确比较；操作口径已统一为配置版本 `X.Y.Z`、发布 tag `corp-vX.Y.Z` 或
+> `corp-vX.Y.Z-<corp>.n`，见 [UPSTREAM_SYNC.md §3.3](../enterprise/UPSTREAM_SYNC.md#33-版本与标签策略)。
+> §4 第 4 项的旧 tag 示例也已在 `DEPLOYMENT.md` §6 修正；本次仅核验文档与预检，未实际发布。
+
 ## 0. 推演设定
 
 - 模拟企业：**Acme（艾克米科技）**，`CORP_ID=acme`，`CORP_NAME=AcmeWorker`，

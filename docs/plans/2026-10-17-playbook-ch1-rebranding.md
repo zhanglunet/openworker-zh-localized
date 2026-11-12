@@ -204,11 +204,11 @@ Windows hosted runner（`.gitlab-ci.yml`，见 `docs/windows-gitlab-ci.md`）。
    - 私有 GitHub Release 直链（客户端匿名访问不了私有仓——需在企业站放反代或内网静态服务器托管）；
    - **推荐**：企业内网/企业站静态托管 `https://apps.<corp>.com/openworker/latest-corp.json` + 更新包文件。
 2. `packaging/make_update_manifest.py` 输出清单中的下载 URL 改为企业托管地址。
-3. `pubkey` 换企业密钥（见 §3.4）；版本号采用 `0.x.y-corp.n`。
+3. `pubkey` 换企业密钥（见 §3.4）；`tauri.conf.json` 的 `version` 使用配置版本（如 `0.1.7`），发布 tag 使用 `corp-v0.1.7`（比对规则见 §3.1）。
 4. **断链提醒**：若企业版承接已安装的汉化版用户，更换 `pubkey` 后旧客户端无法验证新更新包——
    需要先发布一个用户手动安装的"桥接版本"（详见 `docs/release-signed-updates.md`）；企业全新装机不受影响。
 
-验收标准：安装 `0.1.7-corp.1` → 发布 `0.1.7-corp.2` → 客户端收到更新提示并完成升级，签名校验通过。
+验收标准：安装 `0.1.7`（tag `corp-v0.1.7`）→ 将配置版本递增为 `0.1.8` 并发布 tag `corp-v0.1.8` → 客户端收到更新提示并完成升级，签名校验通过。仅改变 tag 的企业内部序号不会提高客户端版本。
 （此项留到 T5 走查时真实演练。）
 
 ## 4. 验证清单（展开）
@@ -285,7 +285,7 @@ git diff --check
 
 ## 7. 留给 T5 走查验证的事项
 
-- 自动更新全链路真实演练（§3.5 验收标准：`0.1.7-corp.1` → `0.1.7-corp.2`）。
+- 自动更新全链路真实演练（§3.5 验收标准：配置版本 `0.1.7` → `0.1.8`，对应 tag `corp-v0.1.7` → `corp-v0.1.8`）。
 - macOS 双芯片真机 / Windows 干净机实装验证。
 - `humanize.ts` 补译抽查（中英混排是否清零）。
 - 记录本次换肤各步骤实际耗时与卡点，输出"playbook 修订清单"（至少修订一处，
