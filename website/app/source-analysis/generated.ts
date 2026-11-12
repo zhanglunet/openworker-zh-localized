@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-13T06:23:17+08:00",
+  "generatedAt": "2026-11-13T07:44:03+08:00",
   "branch": "main",
-  "head": "319850e8034567c49664d8955a0de19a619ff11d",
-  "shortHead": "319850e",
-  "totalFiles": 774,
+  "head": "3256bf34b63ca65f18f3b55f2d1ae22344ec8fa1",
+  "shortHead": "3256bf3",
+  "totalFiles": 782,
   "byExt": [
     {
       "name": "py",
-      "count": 354
+      "count": 360
     },
     {
       "name": "ts",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 95
+      "count": 97
     },
     {
       "name": "tsx",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 168
+      "count": 172
     },
     {
       "name": "coworker",
@@ -93,7 +93,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 118
+      "count": 120
     },
     {
       "name": "website",
@@ -101,7 +101,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 32
+      "count": 34
     },
     {
       "name": ".github",
@@ -382,6 +382,36 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "3256bf3",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #132 from zhanglunet/trend/prd-383-t5-checklist-failure-verify-bench-acceptance"
+    },
+    {
+      "hash": "a30f15e",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #131 from zhanglunet/trend/prd-383-t4-checklist-failure-verify-bench-boundary"
+    },
+    {
+      "hash": "130e998",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #130 from zhanglunet/trend/prd-383-t3-checklist-failure-verify-bench-gate"
+    },
+    {
+      "hash": "ee83f4e",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #129 from zhanglunet/trend/prd-383-t2-checklist-failure-verify-bench-impl"
+    },
+    {
+      "hash": "30316f3",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #128 from zhanglunet/trend/prd-383-t1-checklist-failure-verify-bench"
+    },
+    {
+      "hash": "e630193",
+      "date": "2026-11-12",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "319850e",
       "date": "2026-11-13",
       "subject": "Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags"
@@ -392,58 +422,58 @@ export const repoReport = {
       "subject": "docs: clarify wording flagged by terminology checks"
     },
     {
-      "hash": "797f86e",
-      "date": "2026-11-13",
-      "subject": "docs: align enterprise release tags and version examples"
+      "hash": "3fcc22f",
+      "date": "2026-11-12",
+      "subject": "test(prd-383): T5 验收试运行——验证台接入点全链演练（run_checklist 失败项→verify_failures→VERIFIED 转人工拍板来源形态→JSONL 落账→闸门全 pass）两遍逐字节一致+UNVERIFIED 拦截演练（误报失败拦在人工拍板外）落账留痕+checkers 变更二次验证关闭演练（STALE 拒绝复用）+零改写复验+append-only+链复跑子进程实测+文档无密钥（trend #1887 的 T5 环节，6 例全绿）"
     },
     {
-      "hash": "5e9deda",
-      "date": "2026-11-11",
-      "subject": "docs: refresh generated site reports"
+      "hash": "044f925",
+      "date": "2026-11-12",
+      "subject": "test(prd-383): T4 checklist 失败验证台划界断言——验证台面与收件箱/机检引擎/解析器/重放双向模块隔离+零外部仓内耦合钉值（gates 只 import 同链 checkers_fingerprint）+R1/R2/R3/R4 红线钉值+借鉴仓零符号（仅代码标识符）+§3 引擎/收件箱面符号不变"
     },
     {
-      "hash": "c524679",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #126 from zhanglunet/trend/baseline-fix-owzh"
+      "hash": "a7261df",
+      "date": "2026-11-12",
+      "subject": "feat(prd-383): T3 checklist 失败验证台闸门——mark_baseline+append_only_gate 账本只增不删复核（LEDGER_DRIFT）+verdict_gate 结论与复现证据双向对账（BENCH_REPRO_MISMATCH/BENCH_INCOMPLETE）+stale_gate checkers 指纹复核（BENCH_STALE）+gate_summary 一票否决+ERROR_CODES 随模块导出（348 教训）+零改写词面 AST+闸门只读（trend #1887 的 T3 环节，15 例全绿，T2 回归 11 例仍绿）"
     },
     {
-      "hash": "1e1090a",
-      "date": "2026-11-11",
-      "subject": "fix: owzh main baseline — read PRD-341 design doc from local main copy instead of un-fetched branch"
-    },
-    {
-      "hash": "2055054",
-      "date": "2026-11-11",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9d33f91",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #125 from zhanglunet/trend/prd-369-t5-decision-inbox-acceptance"
-    },
-    {
-      "hash": "316ebf0",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #124 from zhanglunet/trend/prd-355-t5-zh-call-replay-acceptance"
-    },
-    {
-      "hash": "34a0ffc",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #123 from zhanglunet/trend/prd-369-t4-decision-inbox-boundary"
-    },
-    {
-      "hash": "b5cfc72",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #122 from zhanglunet/trend/prd-355-t4-zh-call-replay-boundary"
-    },
-    {
-      "hash": "c816e1a",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #121 from zhanglunet/trend/prd-355-t3-zh-call-replay-gate"
+      "hash": "d92cc20",
+      "date": "2026-11-12",
+      "subject": "feat(prd-383): T2 checklist 失败验证台最小实现——verify_failure 逐条失败复跑验证（recheck_fn 注入重跑同一 checker 集经 run_checklist 引擎，复现=同 check_id+状态 fail 匹配；机检器已修复→复现不出 UNVERIFIED 防误报失败进人工拍板）+verify_failures 人工拍板来源包装（UNVERIFIED 拦下）+FailureBenchLedger JSONL append-only 真实落库+reverify checkers 变更二次验证（BENCH_STALE 拒绝复用）+checkers_fingerprint（checker 名清单 canonical JSON sha16）+零改写词面 AST（trend #1887 的 T2 环节，11 例全绿，devlog 落库）"
     }
   ],
   "weeklyCommits": [
     {
+      "hash": "3256bf3",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #132 from zhanglunet/trend/prd-383-t5-checklist-failure-verify-bench-acceptance"
+    },
+    {
+      "hash": "a30f15e",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #131 from zhanglunet/trend/prd-383-t4-checklist-failure-verify-bench-boundary"
+    },
+    {
+      "hash": "130e998",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #130 from zhanglunet/trend/prd-383-t3-checklist-failure-verify-bench-gate"
+    },
+    {
+      "hash": "ee83f4e",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #129 from zhanglunet/trend/prd-383-t2-checklist-failure-verify-bench-impl"
+    },
+    {
+      "hash": "30316f3",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #128 from zhanglunet/trend/prd-383-t1-checklist-failure-verify-bench"
+    },
+    {
+      "hash": "e630193",
+      "date": "2026-11-12",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "319850e",
       "date": "2026-11-13",
       "subject": "Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags"
@@ -452,6 +482,31 @@ export const repoReport = {
       "hash": "fedef57",
       "date": "2026-11-13",
       "subject": "docs: clarify wording flagged by terminology checks"
+    },
+    {
+      "hash": "3fcc22f",
+      "date": "2026-11-12",
+      "subject": "test(prd-383): T5 验收试运行——验证台接入点全链演练（run_checklist 失败项→verify_failures→VERIFIED 转人工拍板来源形态→JSONL 落账→闸门全 pass）两遍逐字节一致+UNVERIFIED 拦截演练（误报失败拦在人工拍板外）落账留痕+checkers 变更二次验证关闭演练（STALE 拒绝复用）+零改写复验+append-only+链复跑子进程实测+文档无密钥（trend #1887 的 T5 环节，6 例全绿）"
+    },
+    {
+      "hash": "044f925",
+      "date": "2026-11-12",
+      "subject": "test(prd-383): T4 checklist 失败验证台划界断言——验证台面与收件箱/机检引擎/解析器/重放双向模块隔离+零外部仓内耦合钉值（gates 只 import 同链 checkers_fingerprint）+R1/R2/R3/R4 红线钉值+借鉴仓零符号（仅代码标识符）+§3 引擎/收件箱面符号不变"
+    },
+    {
+      "hash": "a7261df",
+      "date": "2026-11-12",
+      "subject": "feat(prd-383): T3 checklist 失败验证台闸门——mark_baseline+append_only_gate 账本只增不删复核（LEDGER_DRIFT）+verdict_gate 结论与复现证据双向对账（BENCH_REPRO_MISMATCH/BENCH_INCOMPLETE）+stale_gate checkers 指纹复核（BENCH_STALE）+gate_summary 一票否决+ERROR_CODES 随模块导出（348 教训）+零改写词面 AST+闸门只读（trend #1887 的 T3 环节，15 例全绿，T2 回归 11 例仍绿）"
+    },
+    {
+      "hash": "d92cc20",
+      "date": "2026-11-12",
+      "subject": "feat(prd-383): T2 checklist 失败验证台最小实现——verify_failure 逐条失败复跑验证（recheck_fn 注入重跑同一 checker 集经 run_checklist 引擎，复现=同 check_id+状态 fail 匹配；机检器已修复→复现不出 UNVERIFIED 防误报失败进人工拍板）+verify_failures 人工拍板来源包装（UNVERIFIED 拦下）+FailureBenchLedger JSONL append-only 真实落库+reverify checkers 变更二次验证（BENCH_STALE 拒绝复用）+checkers_fingerprint（checker 名清单 canonical JSON sha16）+零改写词面 AST（trend #1887 的 T2 环节，11 例全绿，devlog 落库）"
+    },
+    {
+      "hash": "5acc376",
+      "date": "2026-11-12",
+      "subject": "docs: PRD-383/T1 checklist 失败验证台设计——失败复跑验证过才进人工拍板（run_checklist 失败项→verify_failure→decision_inbox.collect(manual_reviews) 接入点+重跑同一机检器复算+JSONL 落账+TAMPERED 红线不变，trend #1887）"
     },
     {
       "hash": "797f86e",
