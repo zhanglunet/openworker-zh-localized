@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-11T21:11:32+08:00
+更新时间：2026-11-13T06:23:17+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：c52467978c95fa98a8985f1be7f8990d89763ef8
+当前提交：319850e8034567c49664d8955a0de19a619ff11d
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：774
-- 当前提交：c524679
+- 当前提交：319850e
 - 主要文件类型：
   - py: 354
   - ts: 105
@@ -236,6 +236,10 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-13 319850e Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags
+- 2026-11-13 fedef57 docs: clarify wording flagged by terminology checks
+- 2026-11-13 797f86e docs: align enterprise release tags and version examples
+- 2026-11-11 5e9deda docs: refresh generated site reports
 - 2026-11-11 c524679 Merge pull request #126 from zhanglunet/trend/baseline-fix-owzh
 - 2026-11-11 1e1090a fix: owzh main baseline — read PRD-341 design doc from local main copy instead of un-fetched branch
 - 2026-11-11 2055054 docs: refresh generated site reports
@@ -244,7 +248,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-11 34a0ffc Merge pull request #123 from zhanglunet/trend/prd-369-t4-decision-inbox-boundary
 - 2026-11-11 b5cfc72 Merge pull request #122 from zhanglunet/trend/prd-355-t4-zh-call-replay-boundary
 - 2026-11-11 c816e1a Merge pull request #121 from zhanglunet/trend/prd-355-t3-zh-call-replay-gate
-- 2026-11-11 2a91bc1 Merge pull request #120 from zhanglunet/trend/prd-369-t3-decision-inbox-gate
-- 2026-11-11 a07c9e7 Merge pull request #119 from zhanglunet/trend/prd-369-t2-decision-inbox-impl
-- 2026-11-11 9d0546b Merge pull request #118 from zhanglunet/trend/prd-355-t2-zh-call-replay-impl
-- 2026-11-11 246ef31 Merge pull request #117 from zhanglunet/trend/prd-369-t1-decision-inbox

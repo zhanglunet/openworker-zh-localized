@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-11T21:11:32+08:00",
+  "generatedAt": "2026-11-13T06:23:17+08:00",
   "branch": "main",
-  "head": "c52467978c95fa98a8985f1be7f8990d89763ef8",
-  "shortHead": "c524679",
+  "head": "319850e8034567c49664d8955a0de19a619ff11d",
+  "shortHead": "319850e",
   "totalFiles": 774,
   "byExt": [
     {
@@ -382,6 +382,26 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "319850e",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags"
+    },
+    {
+      "hash": "fedef57",
+      "date": "2026-11-13",
+      "subject": "docs: clarify wording flagged by terminology checks"
+    },
+    {
+      "hash": "797f86e",
+      "date": "2026-11-13",
+      "subject": "docs: align enterprise release tags and version examples"
+    },
+    {
+      "hash": "5e9deda",
+      "date": "2026-11-11",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "c524679",
       "date": "2026-11-11",
       "subject": "Merge pull request #126 from zhanglunet/trend/baseline-fix-owzh"
@@ -420,29 +440,29 @@ export const repoReport = {
       "hash": "c816e1a",
       "date": "2026-11-11",
       "subject": "Merge pull request #121 from zhanglunet/trend/prd-355-t3-zh-call-replay-gate"
-    },
-    {
-      "hash": "2a91bc1",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #120 from zhanglunet/trend/prd-369-t3-decision-inbox-gate"
-    },
-    {
-      "hash": "a07c9e7",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #119 from zhanglunet/trend/prd-369-t2-decision-inbox-impl"
-    },
-    {
-      "hash": "9d0546b",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #118 from zhanglunet/trend/prd-355-t2-zh-call-replay-impl"
-    },
-    {
-      "hash": "246ef31",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #117 from zhanglunet/trend/prd-369-t1-decision-inbox"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "319850e",
+      "date": "2026-11-13",
+      "subject": "Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags"
+    },
+    {
+      "hash": "fedef57",
+      "date": "2026-11-13",
+      "subject": "docs: clarify wording flagged by terminology checks"
+    },
+    {
+      "hash": "797f86e",
+      "date": "2026-11-13",
+      "subject": "docs: align enterprise release tags and version examples"
+    },
+    {
+      "hash": "5e9deda",
+      "date": "2026-11-11",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "c524679",
       "date": "2026-11-11",
