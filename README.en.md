@@ -16,6 +16,19 @@
 
 > **Beta** - OpenWorker is still in open beta: features are usable, automatic updates keep arriving, and upstream is still rapidly polishing the experience.
 
+## One-line Install (Out of the Box)
+
+```bash
+bash scripts/install-zh.sh
+```
+
+One line sets it up: checks the environment → installs dependencies → writes launcher scripts and the default Chinese config. Open it and you get the Chinese interface; secrets stay on your machine, and the config is all placeholders — point it at your own service address.
+
+![One-line install demo](docs/assets/install-zh-demo.svg)
+
+- Full illustrated steps: **[Installation Guide (Chinese, illustrated)](docs/install-guide-zh.md)**
+- Environment check only: `bash scripts/install-zh.sh --check`; dry run writes nothing: `--dry-run`
+
 ## Downloads & the Chinese Intro Site
 
 - Chinese intro site: [https://oaosf.cn](https://oaosf.cn)
@@ -42,6 +55,7 @@ The Chinese intro site brings together the product's capabilities, workflows, mo
 ## Table of Contents
 
 - [OpenWorker — Fully Localized Chinese Edition (Chinese GUI + macOS Desktop Client)](#openworker--fully-localized-chinese-edition-chinese-gui--macos-desktop-client)
+  - [One-line Install (Out of the Box)](#one-line-install-out-of-the-box)
   - [Downloads & the Chinese Intro Site](#downloads--the-chinese-intro-site)
   - [Table of Contents](#table-of-contents)
   - [1. Why Make a Chinese Edition](#1-why-make-a-chinese-edition)
@@ -66,10 +80,11 @@ The Chinese intro site brings together the product's capabilities, workflows, mo
   - [8. What Has Been Localized](#8-what-has-been-localized)
     - [8.1 Web GUI](#81-web-gui)
     - [8.2 Tauri Desktop Shell](#82-tauri-desktop-shell)
-  - [9. Repository Structure](#9-repository-structure)
-  - [10. Known Issues and Future Plans](#10-known-issues-and-future-plans)
-  - [10.1 Official Signing, Notarization, and Auto-Update](#101-official-signing-notarization-and-auto-update)
-  - [11. Contributing and License](#11-contributing-and-license)
+  - [9. Bonus: Chinese Context Panel (PRD-155)](#9-bonus-chinese-context-panel-prd-155)
+  - [10. Repository Structure](#10-repository-structure)
+  - [11. Known Issues and Future Plans](#11-known-issues-and-future-plans)
+  - [11.1 Official Signing, Notarization, and Auto-Update](#111-official-signing-notarization-and-auto-update)
+  - [12. Contributing and License](#12-contributing-and-license)
 
 ---
 
@@ -438,7 +453,21 @@ Main localized items:
 
 ---
 
-## 9. Repository Structure
+## 9. Bonus: Chinese Context Panel (PRD-155)
+
+A zero-dependency static mock — double-click to open and see what the agent is made of and how its calls evolve:
+
+1. Open `ui-mocks/dsh-context-panel.html` (double-click; no dependencies needed).
+2. Tab 1 "Capability Mix": assembly inventory and a five-segment breakdown of context tokens.
+3. Tab 2 "Call Evolution": replay every call in order; click a node for input/output tokens, latency and status (including a failure→retried sample).
+4. Demo data is entirely fictional (`ui-mocks/fixtures/panel-demo-data.json`) and can be swapped for real adapter output.
+
+![Chinese context panel](docs/assets/context-panel-zh.png)
+*(Tab 1 real screenshot; Tab 2 screenshots in the usage guide)*
+
+See [docs/context-panel-guide.md](docs/context-panel-guide.md) for details; T5 acceptance notes in [docs/context-panel-acceptance.md](docs/context-panel-acceptance.md).
+
+## 10. Repository Structure
 
 ```
 openworker-zh-localized/
@@ -460,7 +489,7 @@ openworker-zh-localized/
 
 ---
 
-## 10. Known Issues and Future Plans
+## 11. Known Issues and Future Plans
 
 ### Known Issues
 
@@ -493,7 +522,7 @@ See [docs/release-signed-updates.md](docs/release-signed-updates.md) for details
 
 ---
 
-## 11. Contributing and License
+## 12. Contributing and License
 
 - This localized edition is based on [andrewyng/openworker](https://github.com/andrewyng/openworker) and [Lenovo202409/openworker-zh](https://github.com/Lenovo202409/openworker-zh)
 - It follows the MIT license; see [LICENSE](LICENSE)
