@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-13T07:44:03+08:00",
+  "generatedAt": "2026-11-14T00:25:30+08:00",
   "branch": "main",
-  "head": "3256bf34b63ca65f18f3b55f2d1ae22344ec8fa1",
-  "shortHead": "3256bf3",
-  "totalFiles": 782,
+  "head": "6aff67a5e444bb440fa0b6eb832dd48d8746c791",
+  "shortHead": "6aff67a",
+  "totalFiles": 793,
   "byExt": [
     {
       "name": "py",
-      "count": 360
+      "count": 366
     },
     {
       "name": "ts",
@@ -15,7 +15,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 97
+      "count": 102
     },
     {
       "name": "tsx",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 172
+      "count": 176
     },
     {
       "name": "coworker",
@@ -93,15 +93,15 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 120
+      "count": 125
+    },
+    {
+      "name": "scripts",
+      "count": 36
     },
     {
       "name": "website",
       "count": 36
-    },
-    {
-      "name": "scripts",
-      "count": 34
     },
     {
       "name": ".github",
@@ -382,67 +382,122 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
-      "hash": "3256bf3",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #132 from zhanglunet/trend/prd-383-t5-checklist-failure-verify-bench-acceptance"
+      "hash": "6aff67a",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #137 from zhanglunet/trend/prd406-t5-collab-session-acceptance"
     },
     {
-      "hash": "a30f15e",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #131 from zhanglunet/trend/prd-383-t4-checklist-failure-verify-bench-boundary"
+      "hash": "49d0251",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #136 from zhanglunet/trend/prd406-t4-collab-session-boundary"
     },
     {
-      "hash": "130e998",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #130 from zhanglunet/trend/prd-383-t3-checklist-failure-verify-bench-gate"
+      "hash": "be21c66",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #135 from zhanglunet/trend/prd406-t3-collab-session-gates"
     },
     {
-      "hash": "ee83f4e",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #129 from zhanglunet/trend/prd-383-t2-checklist-failure-verify-bench-impl"
+      "hash": "0599c0a",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #134 from zhanglunet/trend/prd406-t2-collab-session-impl"
     },
     {
-      "hash": "30316f3",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #128 from zhanglunet/trend/prd-383-t1-checklist-failure-verify-bench"
+      "hash": "0b0a48f",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #133 from zhanglunet/trend/prd406-t1-collab-session"
     },
     {
-      "hash": "e630193",
+      "hash": "89c42e3",
+      "date": "2026-11-14",
+      "subject": "test(prd-406): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
+    },
+    {
+      "hash": "1def4bd",
+      "date": "2026-11-14",
+      "subject": "test(prd-406): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
+    },
+    {
+      "hash": "655b9a3",
+      "date": "2026-11-14",
+      "subject": "feat(prd-406): T3 会话闸门——append_only LEDGER_DRIFT + accept 双向对账 + outlet 拦截 + gate_summary 一票否决"
+    },
+    {
+      "hash": "83ba737",
+      "date": "2026-11-14",
+      "subject": "feat(prd-406): T2 中文 skill 协同评审会话内核——propose/accept/reject 署名事件+单向状态机+JSONL append-only 账本+outlet 出口包装"
+    },
+    {
+      "hash": "1682dc5",
+      "date": "2026-11-14",
+      "subject": "docs(prd-406): T1 中文 skill 协同评审会话设计——事件 schema/状态机/三码闸门/划界表+PR 门槛四项自查"
+    },
+    {
+      "hash": "01e96a5",
       "date": "2026-11-12",
       "subject": "docs: refresh generated site reports"
     },
     {
-      "hash": "319850e",
+      "hash": "3256bf3",
       "date": "2026-11-13",
-      "subject": "Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags"
-    },
-    {
-      "hash": "fedef57",
-      "date": "2026-11-13",
-      "subject": "docs: clarify wording flagged by terminology checks"
-    },
-    {
-      "hash": "3fcc22f",
-      "date": "2026-11-12",
-      "subject": "test(prd-383): T5 验收试运行——验证台接入点全链演练（run_checklist 失败项→verify_failures→VERIFIED 转人工拍板来源形态→JSONL 落账→闸门全 pass）两遍逐字节一致+UNVERIFIED 拦截演练（误报失败拦在人工拍板外）落账留痕+checkers 变更二次验证关闭演练（STALE 拒绝复用）+零改写复验+append-only+链复跑子进程实测+文档无密钥（trend #1887 的 T5 环节，6 例全绿）"
-    },
-    {
-      "hash": "044f925",
-      "date": "2026-11-12",
-      "subject": "test(prd-383): T4 checklist 失败验证台划界断言——验证台面与收件箱/机检引擎/解析器/重放双向模块隔离+零外部仓内耦合钉值（gates 只 import 同链 checkers_fingerprint）+R1/R2/R3/R4 红线钉值+借鉴仓零符号（仅代码标识符）+§3 引擎/收件箱面符号不变"
-    },
-    {
-      "hash": "a7261df",
-      "date": "2026-11-12",
-      "subject": "feat(prd-383): T3 checklist 失败验证台闸门——mark_baseline+append_only_gate 账本只增不删复核（LEDGER_DRIFT）+verdict_gate 结论与复现证据双向对账（BENCH_REPRO_MISMATCH/BENCH_INCOMPLETE）+stale_gate checkers 指纹复核（BENCH_STALE）+gate_summary 一票否决+ERROR_CODES 随模块导出（348 教训）+零改写词面 AST+闸门只读（trend #1887 的 T3 环节，15 例全绿，T2 回归 11 例仍绿）"
-    },
-    {
-      "hash": "d92cc20",
-      "date": "2026-11-12",
-      "subject": "feat(prd-383): T2 checklist 失败验证台最小实现——verify_failure 逐条失败复跑验证（recheck_fn 注入重跑同一 checker 集经 run_checklist 引擎，复现=同 check_id+状态 fail 匹配；机检器已修复→复现不出 UNVERIFIED 防误报失败进人工拍板）+verify_failures 人工拍板来源包装（UNVERIFIED 拦下）+FailureBenchLedger JSONL append-only 真实落库+reverify checkers 变更二次验证（BENCH_STALE 拒绝复用）+checkers_fingerprint（checker 名清单 canonical JSON sha16）+零改写词面 AST（trend #1887 的 T2 环节，11 例全绿，devlog 落库）"
+      "subject": "Merge pull request #132 from zhanglunet/trend/prd-383-t5-checklist-failure-verify-bench-acceptance"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "6aff67a",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #137 from zhanglunet/trend/prd406-t5-collab-session-acceptance"
+    },
+    {
+      "hash": "49d0251",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #136 from zhanglunet/trend/prd406-t4-collab-session-boundary"
+    },
+    {
+      "hash": "be21c66",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #135 from zhanglunet/trend/prd406-t3-collab-session-gates"
+    },
+    {
+      "hash": "0599c0a",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #134 from zhanglunet/trend/prd406-t2-collab-session-impl"
+    },
+    {
+      "hash": "0b0a48f",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #133 from zhanglunet/trend/prd406-t1-collab-session"
+    },
+    {
+      "hash": "89c42e3",
+      "date": "2026-11-14",
+      "subject": "test(prd-406): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
+    },
+    {
+      "hash": "1def4bd",
+      "date": "2026-11-14",
+      "subject": "test(prd-406): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
+    },
+    {
+      "hash": "655b9a3",
+      "date": "2026-11-14",
+      "subject": "feat(prd-406): T3 会话闸门——append_only LEDGER_DRIFT + accept 双向对账 + outlet 拦截 + gate_summary 一票否决"
+    },
+    {
+      "hash": "83ba737",
+      "date": "2026-11-14",
+      "subject": "feat(prd-406): T2 中文 skill 协同评审会话内核——propose/accept/reject 署名事件+单向状态机+JSONL append-only 账本+outlet 出口包装"
+    },
+    {
+      "hash": "1682dc5",
+      "date": "2026-11-14",
+      "subject": "docs(prd-406): T1 中文 skill 协同评审会话设计——事件 schema/状态机/三码闸门/划界表+PR 门槛四项自查"
+    },
+    {
+      "hash": "01e96a5",
+      "date": "2026-11-12",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "3256bf3",
       "date": "2026-11-13",

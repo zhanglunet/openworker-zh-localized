@@ -1,17 +1,17 @@
 # OpenWorker 中文站周报
 
-生成时间：2026-11-13T07:44:03+08:00
+生成时间：2026-11-14T00:25:30+08:00
 
 ## 本周概览
 
-- 2026-11-13 3256bf3 Merge pull request #132 from zhanglunet/trend/prd-383-t5-checklist-failure-verify-bench-acceptance
-- 2026-11-13 a30f15e Merge pull request #131 from zhanglunet/trend/prd-383-t4-checklist-failure-verify-bench-boundary
-- 2026-11-13 130e998 Merge pull request #130 from zhanglunet/trend/prd-383-t3-checklist-failure-verify-bench-gate
-- 2026-11-13 ee83f4e Merge pull request #129 from zhanglunet/trend/prd-383-t2-checklist-failure-verify-bench-impl
-- 2026-11-13 30316f3 Merge pull request #128 from zhanglunet/trend/prd-383-t1-checklist-failure-verify-bench
-- 2026-11-12 e630193 docs: refresh generated site reports
-- 2026-11-13 319850e Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags
-- 2026-11-13 fedef57 docs: clarify wording flagged by terminology checks
+- 2026-11-14 6aff67a Merge pull request #137 from zhanglunet/trend/prd406-t5-collab-session-acceptance
+- 2026-11-14 49d0251 Merge pull request #136 from zhanglunet/trend/prd406-t4-collab-session-boundary
+- 2026-11-14 be21c66 Merge pull request #135 from zhanglunet/trend/prd406-t3-collab-session-gates
+- 2026-11-14 0599c0a Merge pull request #134 from zhanglunet/trend/prd406-t2-collab-session-impl
+- 2026-11-14 0b0a48f Merge pull request #133 from zhanglunet/trend/prd406-t1-collab-session
+- 2026-11-14 89c42e3 test(prd-406): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥
+- 2026-11-14 1def4bd test(prd-406): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值
+- 2026-11-14 655b9a3 feat(prd-406): T3 会话闸门——append_only LEDGER_DRIFT + accept 双向对账 + outlet 拦截 + gate_summary 一票否决
 
 ## 维护建议
 
