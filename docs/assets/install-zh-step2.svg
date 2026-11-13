@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="178" viewBox="0 0 760 178">
+  <rect width="760" height="178" rx="10" fill="#0d1117"/>
+  <rect width="760" height="40" rx="10" fill="#161b22"/>
+  <circle cx="22" cy="20" r="6" fill="#f85149"/>
+  <circle cx="42" cy="20" r="6" fill="#d29922"/>
+  <circle cx="62" cy="20" r="6" fill="#2ea043"/>
+  <text x="380" y="25" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#8b949e">第 2 步 · 一行安装（示意图，非真实截图）</text>
+  <text x="28" y="64" font-family="Menlo,monospace" font-size="15" fill="#7ee787">$ bash scripts/install-zh.sh</text>
+  <text x="28" y="94" font-family="Menlo,monospace" font-size="15" fill="#56d364">Python …… 通过     Node.js …… 通过     npm …… 通过</text>
+  <text x="28" y="124" font-family="Menlo,monospace" font-size="15" fill="#8b949e">本脚本不下载工具链、不写系统目录、不需要管理员权限。</text>
+</svg>

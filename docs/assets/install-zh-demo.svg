@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="418" viewBox="0 0 760 418">
+  <rect width="760" height="418" rx="10" fill="#0d1117"/>
+  <rect width="760" height="40" rx="10" fill="#161b22"/>
+  <circle cx="22" cy="20" r="6" fill="#f85149"/>
+  <circle cx="42" cy="20" r="6" fill="#d29922"/>
+  <circle cx="62" cy="20" r="6" fill="#2ea043"/>
+  <text x="380" y="25" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#8b949e">OpenWorker 中文版 · 一行安装（示意图，非真实截图）</text>
+  <text x="28" y="64" font-family="Menlo,monospace" font-size="15" fill="#7ee787">$ bash scripts/install-zh.sh</text>
+  <text x="28" y="94" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">OpenWorker 中文版</text>
+  <text x="28" y="124" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">一行装好，打开就是中文界面。</text>
+  <text x="28" y="154" font-family="Menlo,monospace" font-size="15" fill="#56d364">Python …… 通过     Node.js …… 通过     npm …… 通过</text>
+  <text x="28" y="184" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">正在准备后端虚拟环境。</text>
+  <text x="28" y="214" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">正在安装后端依赖。  正在安装界面依赖。</text>
+  <text x="28" y="244" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">已写好：start-server.sh / start-gui.sh / openworker-zh.default.json</text>
+  <text x="28" y="274" font-family="Menlo,monospace" font-size="15" fill="#8b949e">装好了。接下来开两个终端：</text>
+  <text x="28" y="304" font-family="Menlo,monospace" font-size="15" fill="#7ee787">$ bash .openworker-state/start-server.sh</text>
+  <text x="28" y="334" font-family="Menlo,monospace" font-size="15" fill="#7ee787">$ bash .openworker-state/start-gui.sh</text>
+  <text x="28" y="364" font-family="Menlo,monospace" font-size="15" fill="#8b949e">浏览器打开 http://localhost:1420/ ——应当是中文界面。</text>
+</svg>

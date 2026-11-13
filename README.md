@@ -16,6 +16,19 @@
 
 > **Beta** - OpenWorker 仍处于 open beta：功能可用、会持续自动更新，上游仍在快速打磨体验。
 
+## 一行安装（开箱即用）
+
+```bash
+bash scripts/install-zh.sh
+```
+
+一行装好：检查环境 → 装依赖 → 写好启动脚本与默认中文配置。装完打开就是中文界面；密钥只留在本机，配置全是占位符，改上你自己的服务地址即可。
+
+![一行安装演示](docs/assets/install-zh-demo.svg)
+
+- 完整带图步骤：**[安装指南（中文，每步配图）](docs/install-guide-zh.md)**
+- 只体检环境：`bash scripts/install-zh.sh --check`；预演不写文件：`--dry-run`
+
 ## 下载与中文介绍站
 
 - 中文站：[https://oaosf.cn](https://oaosf.cn)
