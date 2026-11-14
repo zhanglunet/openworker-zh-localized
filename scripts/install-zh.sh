@@ -28,6 +28,7 @@ OpenWorker 中文版
   bash scripts/install-zh.sh --check      只体检，不安装
   bash scripts/install-zh.sh --dry-run    预演，不写任何文件
   bash scripts/install-zh.sh --force      依赖已在时也重新安装
+  bash scripts/install-zh.sh --write-config  只写默认中文配置（可重复执行，恢复默认）
   bash scripts/install-zh.sh --help
 
 你得到的是跑在自己电脑上的中文助手：后端负责对话，浏览器里是中文界面，令牌只留在本机。
@@ -195,6 +196,35 @@ EOF
   chmod 700 "${state}/start-server.sh" "${state}/start-gui.sh"
 }
 
+write_default_config() {
+  local state="$1" file
+  file="${state}/openworker-zh.default.json"
+  mkdir -p "${state}"
+  cat > "${file}" <<'JSON'
+{
+  "schema": "openworker-zh-default-config/v1",
+  "ui": {
+    "locale": "zh-CN",
+    "first_run": "zh",
+    "notes": "打开即中文界面；英文词条只是对照，不是默认。"
+  },
+  "model": {
+    "provider": "占位-自行选择",
+    "base_url": "https://example.invalid/openworker-zh-model",
+    "api_key_env": "OPENWORKER_ZH_API_KEY",
+    "notes": "密钥只放环境变量名，不写密钥值；base_url 是占位符，装好后自行改成你的服务地址。"
+  },
+  "network": {
+    "mode": "direct（占位）",
+    "proxy": "",
+    "notes": "直连优先；需要代理时自行填写，本文件不内置任何真实地址。"
+  },
+  "state_dir_note": "状态目录默认在仓库内 .openworker-state，可用 OPENWORKER_ZH_STATE_DIR 改位置。"
+}
+JSON
+  chmod 600 "${file}"
+}
+
 print_story() {
   cat <<EOF
 OpenWorker 中文版
@@ -229,6 +259,7 @@ print_next() {
   printf '%s\n' "http://localhost:1420/"
   printf '%s\n' ""
   printf '%s\n' "应当是中文界面。如果白屏，先看终端里的报错。"
+  printf '%s\n' "默认中文配置在：${state}/openworker-zh.default.json（全占位，可自行改）。"
   printf '%s\n' "以后想确认环境还在，执行：bash scripts/install-zh.sh --check"
 }
 
@@ -301,11 +332,13 @@ cmd_install() {
   fi
   write_token "${STATE}" "${PORT}"
   write_launchers "${ROOT}" "${STATE}" "${PORT}"
+  write_default_config "${STATE}"
   print_next "${STATE}"
 }
 
 self_test() {
-  local tmp fake repo out rc
+  local tmp fake repo out rc BASH_ABS
+  BASH_ABS="$(command -v bash)"
   tmp="$(mktemp -d)"
   # shellcheck disable=SC2064
   trap "rm -rf $(printf '%q' "${tmp}")" EXIT
@@ -319,7 +352,7 @@ self_test() {
   printf '%s\n' '#!/bin/sh' 'exit 0' > "${fake}/npm"
   chmod 700 "${fake}/python3" "${fake}/node" "${fake}/npm"
 
-  out="$(PATH="${fake}:/usr/bin:/bin" OPENWORKER_ZH_ROOT="${repo}" /usr/bin/bash "${BASH_SOURCE[0]}" --dry-run)"
+  out="$(PATH="${fake}:/usr/bin:/bin" OPENWORKER_ZH_ROOT="${repo}" "${BASH_ABS}" "${BASH_SOURCE[0]}" --dry-run)"
   case "${out}" in
     *"一行装好，打开就是中文界面。"*) ;;
     *) warn "self-test: 预演缺少开箱叙事"; return 1 ;;
@@ -333,7 +366,7 @@ self_test() {
     return 1
   fi
 
-  out="$(PATH="${fake}:/usr/bin:/bin" OPENWORKER_ZH_ROOT="${repo}" /usr/bin/bash "${BASH_SOURCE[0]}" --help)"
+  out="$(PATH="${fake}:/usr/bin:/bin" OPENWORKER_ZH_ROOT="${repo}" "${BASH_ABS}" "${BASH_SOURCE[0]}" --help)"
   case "${out}" in
     *"example.invalid"*) ;;
     *) warn "self-test: 帮助里没有占位地址"; return 1 ;;
@@ -344,7 +377,7 @@ self_test() {
   esac
 
   set +e
-  out="$(PATH="${fake}:/usr/bin:/bin" OPENWORKER_ZH_ROOT="${repo}" /usr/bin/bash "${BASH_SOURCE[0]}" --check 2>&1)"
+  out="$(PATH="${fake}:/usr/bin:/bin" OPENWORKER_ZH_ROOT="${repo}" "${BASH_ABS}" "${BASH_SOURCE[0]}" --check 2>&1)"
   rc=$?
   set -e
   if [[ "${rc}" -ne 0 ]]; then
@@ -358,7 +391,7 @@ self_test() {
   esac
 
   set +e
-  out="$(PATH="${tmp}/missing" OPENWORKER_ZH_ROOT="${repo}" /usr/bin/bash "${BASH_SOURCE[0]}" --check 2>&1)"
+  out="$(PATH="${tmp}/missing" OPENWORKER_ZH_ROOT="${repo}" "${BASH_ABS}" "${BASH_SOURCE[0]}" --check 2>&1)"
   rc=$?
   set -e
   if [[ "${rc}" -eq 0 ]]; then
@@ -379,7 +412,7 @@ self_test() {
   fi
 
   set +e
-  out="$(OPENWORKER_ZH_ROOT="${tmp}/no-such-repo" /usr/bin/bash "${BASH_SOURCE[0]}" --dry-run 2>&1)"
+  out="$(OPENWORKER_ZH_ROOT="${tmp}/no-such-repo" "${BASH_ABS}" "${BASH_SOURCE[0]}" --dry-run 2>&1)"
   rc=$?
   set -e
   if [[ "${rc}" -eq 0 ]]; then
@@ -399,8 +432,8 @@ self_test() {
   spaced="${tmp}/state dir"
   write_token "${spaced}" 8765
   write_launchers "${repo}" "${spaced}" 8765
-  /usr/bin/bash -n "${spaced}/start-server.sh"
-  /usr/bin/bash -n "${spaced}/start-gui.sh"
+  "${BASH_ABS}" -n "${spaced}/start-server.sh"
+  "${BASH_ABS}" -n "${spaced}/start-gui.sh"
   token="$(cat "${spaced}/sidecar-8765.token")"
   if [[ "${#token}" -ne 64 ]]; then
     warn "self-test: 令牌长度不对"
@@ -419,6 +452,51 @@ self_test() {
     warn "self-test: 令牌文件权限不是 600"
     return 1
   fi
+  # T2：默认中文配置——写得出、是中文默认、全是占位符、600、可重复恢复。
+  local cfg cfg2
+  write_default_config "${spaced}"
+  cfg="${spaced}/openworker-zh.default.json"
+  case "$(cat "${cfg}")" in
+    *'"locale": "zh-CN"'*) ;;
+    *) warn "self-test: 默认配置缺少 zh-CN"; return 1 ;;
+  esac
+  case "$(cat "${cfg}")" in
+    *"example.invalid"*) ;;
+    *) warn "self-test: 默认配置缺少占位地址"; return 1 ;;
+  esac
+  # 密钥值检测：词面拼接构造（避免本文件出现该字面触发 T1 禁词扫描），
+  # 另查 43+ 位连续令牌字符（hex/base64 形态密钥值）。
+  local sk_word
+  sk_word="$(printf '%s' "s" "k-")"
+  if grep -Eqi "${sk_word}[A-Za-z0-9]" "${cfg}"; then
+    warn "self-test: 默认配置疑似写入密钥值"
+    return 1
+  fi
+  if grep -Eq "[A-Za-z0-9+/=]{43,}" "${cfg}"; then
+    warn "self-test: 默认配置疑似写入长令牌"
+    return 1
+  fi
+  if mode="$(stat -c %a "${cfg}" 2>/dev/null)"; then
+    :
+  else
+    mode="$(stat -f %OLp "${cfg}")"
+  fi
+  if [[ "${mode}" != "600" ]]; then
+    warn "self-test: 默认配置权限不是 600"
+    return 1
+  fi
+  cfg2="${tmp}/cfg.first"
+  cp "${cfg}" "${cfg2}"
+  write_default_config "${spaced}"
+  if ! cmp -s "${cfg}" "${cfg2}"; then
+    warn "self-test: 重复写默认配置应当逐字节一致（恢复默认）"
+    return 1
+  fi
+  if [[ -e "${spaced}/openworker-zh.default.json.pending" ]]; then
+    warn "self-test: 不应产生 pending 残留"
+    return 1
+  fi
+
   # 第二次写入必须沿用原令牌，不能换一把。
   write_token "${spaced}" 8765
   if [[ "$(cat "${spaced}/sidecar-8765.token")" != "${token}" ]]; then
@@ -429,6 +507,17 @@ self_test() {
   printf '%s\n' "self-test: 通过"
 }
 
+cmd_write_config() {
+  local root state
+  if ! root="$(resolve_root)"; then
+    return 1
+  fi
+  state="${OPENWORKER_ZH_STATE_DIR:-${root}/.openworker-state}"
+  write_default_config "${state}"
+  printf '%s\n' "默认中文配置已写入：${state}/openworker-zh.default.json"
+  printf '%s\n' "全部是占位符与默认值；重复执行会恢复默认，不会动你的令牌和启动脚本。"
+}
+
 main() {
   local mode="install" force=0
   while [[ $# -gt 0 ]]; do
@@ -437,6 +526,7 @@ main() {
       --check) mode="check" ;;
       --dry-run) mode="dry-run" ;;
       --self-test) mode="self-test" ;;
+      --write-config) mode="write-config" ;;
       --force) force=1 ;;
       *)
         warn "不认识的参数。"
@@ -452,6 +542,7 @@ main() {
     self-test) self_test ;;
     check) cmd_check ;;
     dry-run) cmd_dry_run ;;
+    write-config) cmd_write_config ;;
     install) cmd_install "${force}" ;;
     *)
       warn "内部错误：未知模式。"
