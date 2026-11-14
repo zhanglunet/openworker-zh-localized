@@ -1,8 +1,9 @@
 //! OpenWorker desktop shell.
 //!
 //! Tauri is a thin native window over the existing React SPA. It:
-//!   1. picks a free localhost port and starts the Python `openworker-server` as a managed
-//!      sidecar on that port (so it never clashes with a hand-run server on 8765);
+//!   1. starts the Python `openworker-server` as a managed sidecar on localhost port 8765
+//!      (a fixed port: joined machines and their tunnels keep working across restarts;
+//!      OPE-212), falling back to a free port only when 8765 is taken;
 //!   2. injects the sidecar HTTP/WS addresses and per-launch authentication token before the
 //!      SPA loads (single codebase — the browser build still hits 8765);
 //!   3. lives in the system tray: closing the window hides it (keeps MyHelper + the scheduler
@@ -36,15 +37,171 @@ struct ServerProcess(Mutex<Option<Child>>);
 /// releases the hold (kills `caffeinate` on macOS, clears the execution state on Windows).
 struct KeepAwake(Mutex<Option<KeepAwakeGuard>>);
 
+/// The port machines are told to reach this app on. Fixed, so a joined machine's stored
+/// address and its SSH tunnel survive an app restart (OPE-212: with a random port every
+/// restart cut every machine off). The server listens on loopback and needs the launch
+/// token on every request, so the port number itself protects nothing.
+const DEFAULT_PORT: u16 = 8765;
+
 fn free_port() -> u16 {
     std::net::TcpListener::bind("127.0.0.1:0")
         .and_then(|l| l.local_addr())
         .map(|a| a.port())
-        .unwrap_or(8765)
+        .unwrap_or(DEFAULT_PORT)
+}
+
+/// 8765 when it is free (or OPENWORKER_PORT, for developers running two copies); otherwise
+/// a free port, and the Machines page says so, since tunnels to 8765 then lead nowhere.
+fn choose_port() -> u16 {
+    if let Some(p) = std::env::var("OPENWORKER_PORT").ok().and_then(|v| v.parse::<u16>().ok()) {
+        return p;
+    }
+    // A restart (an update, a relaunch) can find the previous sidecar still shutting
+    // down; give 8765 a few seconds to come free before settling for another port.
+    for _ in 0..10 {
+        if std::net::TcpListener::bind(("127.0.0.1", DEFAULT_PORT)).is_ok() {
+            return DEFAULT_PORT;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(500));
+    }
+    free_port()
+}
+
+/// The OS version ("26.0.1" on macOS), so the page can lay out the top strip for the
+/// traffic lights of that version: macOS 26 draws them at its own position and ignores
+/// the one the shell asks for (seen 2026-09-29). Empty when unknown.
+fn os_version() -> String {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(out) = Command::new("sw_vers").arg("-productVersion").output() {
+            return String::from_utf8_lossy(&out.stdout).trim().to_string();
+        }
+    }
+    String::new()
 }
 
 fn launch_token() -> String {
     format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple())
+}
+
+/// Directories where user-installed CLIs live but launchd's PATH never looks. Used to
+/// repair PATH when the login-shell probe can't run (broken profile, exotic shell).
+#[cfg(not(target_os = "windows"))]
+const KNOWN_TOOL_DIRS: &[&str] = &[
+    "/opt/homebrew/bin", // Apple Silicon Homebrew
+    "/opt/homebrew/sbin",
+    "/usr/local/bin", // Intel Homebrew, most installers
+    "/usr/local/sbin",
+    "/opt/local/bin", // MacPorts
+];
+
+/// The environment the sidecar should run with (OPE-83).
+///
+/// A Finder/Dock-launched app inherits launchd's minimal PATH — `/usr/bin:/bin:/usr/sbin:/sbin`
+/// — so every tool the user installed via Homebrew/nvm/pyenv/asdf is invisible to the agent:
+/// semgrep, gitleaks, gh, node, aws, kubectl, terraform. That silently guts the security
+/// coworkers (they drive those scanners) and every ops workflow. Fix, same as VS Code and
+/// friends: ask the user's login shell for its environment once at spawn and merge it in, so
+/// the coworker gets the user's REAL toolchain. Credentials follow for free — aws/kubectl read
+/// ~/.aws and ~/.kube via HOME, which a Finder launch already has.
+///
+/// Guards: `-i` (not just `-l`) because brew/nvm/pyenv init usually lives in .zshrc; markers so
+/// a chatty profile's own output can't be parsed as variables; a 5s timeout with the child
+/// killed, so a hanging profile can never block app launch; and a well-known-dirs PATH repair as
+/// the fallback. Skipped entirely when we were launched FROM a shell (SHLVL set) — we already
+/// inherit the real thing, and `npm run tauri dev` should behave exactly as before.
+#[cfg(not(target_os = "windows"))]
+fn sidecar_env() -> std::collections::HashMap<String, String> {
+    use std::collections::HashMap;
+    use std::io::Read;
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    const START: &str = "__OCW_ENV_START__";
+    const END: &str = "__OCW_ENV_END__";
+
+    let mut out: HashMap<String, String> = HashMap::new();
+
+    // Launched from a shell (dev run, `open` from a terminal): the env is already real.
+    if std::env::var_os("SHLVL").is_some() {
+        return out;
+    }
+
+    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".to_string());
+    let script = format!("echo {START}; env; echo {END}");
+    let spawned = Command::new(&shell)
+        .args(["-ilc", &script])
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn();
+
+    if let Ok(mut child) = spawned {
+        if let Some(mut stdout) = child.stdout.take() {
+            let (tx, rx) = mpsc::channel();
+            std::thread::spawn(move || {
+                let mut buf = String::new();
+                let _ = stdout.read_to_string(&mut buf);
+                let _ = tx.send(buf);
+            });
+            match rx.recv_timeout(Duration::from_secs(5)) {
+                Ok(text) => {
+                    let _ = child.wait();
+                    let mut inside = false;
+                    for line in text.lines() {
+                        if line.trim_end() == START {
+                            inside = true;
+                            continue;
+                        }
+                        if line.trim_end() == END {
+                            break;
+                        }
+                        if !inside {
+                            continue;
+                        }
+                        // `env` prints KEY=value; continuation lines of a multi-line value
+                        // have no '=' before whitespace and are skipped rather than guessed at.
+                        if let Some((k, v)) = line.split_once('=') {
+                            if !k.is_empty() && !k.contains(char::is_whitespace) {
+                                out.insert(k.to_string(), v.to_string());
+                            }
+                        }
+                    }
+                }
+                Err(_) => {
+                    // Hung profile — never let it hold up launch.
+                    let _ = child.kill();
+                    let _ = child.wait();
+                }
+            }
+        }
+    }
+
+    // These describe the probe shell, not the user's environment.
+    for k in ["SHLVL", "PWD", "OLDPWD", "_"] {
+        out.remove(k);
+    }
+
+    // Whether the probe worked or not, make sure the usual install dirs are reachable.
+    let base = out
+        .get("PATH")
+        .cloned()
+        .or_else(|| std::env::var("PATH").ok())
+        .unwrap_or_default();
+    let mut parts: Vec<String> = base.split(':').filter(|s| !s.is_empty()).map(String::from).collect();
+    for dir in KNOWN_TOOL_DIRS {
+        if !parts.iter().any(|p| p == dir) && std::path::Path::new(dir).is_dir() {
+            parts.push((*dir).to_string());
+        }
+    }
+    out.insert("PATH".to_string(), parts.join(":"));
+    out
+}
+
+/// Windows GUI apps inherit the user's full environment already.
+#[cfg(target_os = "windows")]
+fn sidecar_env() -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
 }
 
 /// Path to the server entrypoint. Resolution order:
@@ -54,7 +211,7 @@ fn launch_token() -> String {
 ///      (next to the app exe) on Windows.
 ///   3. Legacy onefile slot: `openworker-server[.exe]` next to the app binary (pre-onedir
 ///      builds used Tauri externalBin).
-///   4. Dev fallback: the repo venv, relative to this crate (`src-tauri` → `platform/.venv`;
+///   4. Dev fallback: the repo venv, relative to this crate (`src-tauri` → repo-root `.venv`;
 ///      `bin/` on POSIX, `Scripts\` on Windows).
 fn server_bin() -> PathBuf {
     if let Ok(p) = std::env::var("COWORKER_SERVER_BIN") {
@@ -345,19 +502,22 @@ fn voice_input_compatibility() -> (bool, String, Option<String>) {
 
 #[cfg(target_os = "windows")]
 fn voice_input_compatibility() -> (bool, String, Option<String>) {
-    let version = Command::new("cmd")
-        .args(["/C", "ver"])
-        .output()
-        .ok()
-        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_owned())
-        .unwrap_or_else(|| "Windows (unknown version)".to_owned());
-    let build = version
-        .split(|character: char| !character.is_ascii_digit() && character != '.')
-        .find(|part| part.matches('.').count() >= 2)
-        .and_then(|part| part.split('.').nth(2))
-        .and_then(|part| part.parse::<u32>().ok())
-        .unwrap_or(0);
-    let x64 = std::env::consts::ARCH == "x86_64";
+    // Do not spawn `cmd /C ver` here. This function runs in the synchronous
+    // `get_dictation_status` Tauri command, and process startup can stall the Windows
+    // webview event loop for several seconds while the user navigates away from Voice Input.
+    windows_voice_input_compatibility(
+        windows_version::OsVersion::current(),
+        std::env::consts::ARCH,
+    )
+}
+
+#[cfg(target_os = "windows")]
+fn windows_voice_input_compatibility(
+    version: windows_version::OsVersion,
+    architecture: &str,
+) -> (bool, String, Option<String>) {
+    let x64 = architecture == "x86_64";
+    let build = version.build;
     let supported = x64 && build >= 19_045;
     let reason = if !x64 {
         Some("语音输入当前需要 64 位 x64 Windows PC。".to_owned())
@@ -366,7 +526,43 @@ fn voice_input_compatibility() -> (bool, String, Option<String>) {
     } else {
         None
     };
-    (supported, format!("{version} · x64"), reason)
+    let architecture = if x64 { "x64" } else { architecture };
+    (
+        supported,
+        format!(
+            "Windows {}.{}.{} · {architecture}",
+            version.major, version.minor, version.build
+        ),
+        reason,
+    )
+}
+
+#[cfg(all(test, target_os = "windows"))]
+mod voice_input_compatibility_tests {
+    use super::windows_voice_input_compatibility;
+    use windows_version::OsVersion;
+
+    #[test]
+    fn windows_10_22h2_x64_is_supported_without_spawning_a_process() {
+        let (supported, summary, reason) =
+            windows_voice_input_compatibility(OsVersion::new(10, 0, 0, 19_045), "x86_64");
+
+        assert!(supported);
+        assert_eq!(summary, "Windows 10.0.19045 · x64");
+        assert_eq!(reason, None);
+    }
+
+    #[test]
+    fn older_windows_builds_remain_unsupported() {
+        let (supported, _, reason) =
+            windows_voice_input_compatibility(OsVersion::new(10, 0, 0, 19_044), "x86_64");
+
+        assert!(!supported);
+        assert_eq!(
+            reason.as_deref(),
+            Some("Voice Input requires Windows 10 22H2 or Windows 11.")
+        );
+    }
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -525,7 +721,11 @@ async fn download_update(
     // (Guard scope stays sync: a std MutexGuard must not live across an await.)
     {
         let slot = pending.0.lock().unwrap();
-        if slot.as_ref().map(|(v, _)| v == &update.version).unwrap_or(false) {
+        if slot
+            .as_ref()
+            .map(|(v, _)| v == &update.version)
+            .unwrap_or(false)
+        {
             return Ok(());
         }
     }
@@ -578,14 +778,15 @@ async fn install_update(
 }
 
 pub fn run() {
-    let port = free_port();
+    let port = choose_port();
     let api_token = launch_token();
     let http = format!("http://127.0.0.1:{port}");
     let ws = format!("ws://127.0.0.1:{port}");
     // Debug-format yields a quoted JS string literal.
     let inject = format!(
-        "window.__COWORKER_HTTP__={http:?};window.__COWORKER_WS__={ws:?};window.__COWORKER_API_TOKEN__={api_token:?};window.__OCW_PLATFORM__={:?};",
-        std::env::consts::OS
+        "window.__COWORKER_HTTP__={http:?};window.__COWORKER_WS__={ws:?};window.__COWORKER_API_TOKEN__={api_token:?};window.__OCW_PLATFORM__={:?};window.__OCW_OS_VERSION__={:?};",
+        std::env::consts::OS,
+        os_version()
     );
 
     tauri::Builder::default()
@@ -597,6 +798,7 @@ pub fn run() {
             show_main(app);
         }))
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -629,6 +831,10 @@ pub fn run() {
             let mut server_cmd = Command::new(server_bin());
             server_cmd
                 .args(["--host", "127.0.0.1", "--port", &port.to_string()])
+                // The user's real shell environment (PATH to their tools, AWS_PROFILE,
+                // KUBECONFIG, …) — see sidecar_env(). Applied FIRST so the explicit COWORKER_*
+                // vars below always win over anything a profile happens to export.
+                .envs(sidecar_env())
                 // The sidecar self-exits if we die abruptly (dev-watcher restart, crash) —
                 // belt-and-suspenders alongside the RunEvent::ExitRequested kill below.
                 // The explicit PID matters: under PyInstaller onefile the python process is a
@@ -755,6 +961,16 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building the OpenWorker desktop app")
         .run(|app, event| {
+            // macOS: clicking the Dock icon fires Reopen. Close-to-tray only HIDES the main
+            // window (see on_window_event above), and Tauri does nothing on Reopen by default,
+            // so the app activates (menu bar switches) but no window appears (#248). Reshow it —
+            // same path as the tray "Open" item.
+            #[cfg(target_os = "macos")]
+            {
+                if let RunEvent::Reopen { .. } = &event {
+                    show_main(app);
+                }
+            }
             // Also on Exit: belt-and-suspenders in case a quit path reaches teardown without
             // a preceding ExitRequested (observed with macOS Cmd+Q under the tray setup).
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {

@@ -1,78 +1,127 @@
-// PersonaView — the persona detail page (§5, mock parity). Identity header + Enable toggle, About,
-// Built-in capabilities (tools), "Connections for full benefit" (manifest `recommends`, core/optional
-// + reason + connect state), "New sessions get by default" (persona-default connection toggles), and a
-// defaults footer (recommended models / default mode / workspace).
+// PersonaView — the persona detail page (UX-035 redesign). Identity header + Enable toggle;
+// About as markdown with a screenshot carousel (bundle media/); ONE Connectors section with
+// Status | Enable columns (replacing "Connections for full benefit" + "New sessions get by
+// default" — they were the same list rendered twice); Tool calls as a collapsed disclosure
+// under Advanced; a defaults footer; and the management group that moved off the list page
+// (in picker, make default, export, delete).
 //
-// Data: fetches GET /v1/personas/{id} on mount; also fetches /v1/connectors to thread real brand
-// colors (Phase 1's `brand_color`) into the badges via visualFor(). Toggling a default connection
-// POSTs /v1/personas/{id}/connections and applies the returned `default_connections` (re-read).
-// Enabling/disabling POSTs /v1/personas/{id}/enable.
+// Data: GET /v1/personas/{id} on mount; /v1/connectors threads real brand colors into the
+// badges via visualFor(). Media loads through authenticated fetch → object URLs (a plain
+// <img src> can't carry the sidecar token).
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  deletePersona,
+  exportPersona,
   getConnectors,
   getPersonaDetail,
+  getPersonaMediaUrl,
   setPersonaConnection,
   setPersonaEnabled,
+  updatePersona,
+  type Machine,
   type PersonaDetail,
 } from "../api";
+import { chooseFolder } from "../tauri";
 import { ConnectorBadge } from "../connectors/ConnectorIcon";
-import { fullPersonaName, shortPersonaName } from "../personaScope";
+import { fullPersonaName } from "../personaScope";
 import { Icon } from "./Icon";
-import { PersonaGlyph } from "./personaIcon";
+import { Markdown } from "./Markdown";
 import { Toggle } from "./Toggle";
 import { indexConnectors, labelFor, visualFor, type ConnectorMap } from "../connectors/visuals";
+import { PersonaDoing } from "./PersonaDoing";
 
-// Shared section-heading + tag + button utility strings (mock parity).
-const SEC_H = "text-[11px] uppercase tracking-[0.05em] text-faint font-semibold";
+const SEC_H = "text-label text-faint font-medium";
 const TAG_CORE =
-  "text-[10px] px-1.5 py-0.5 rounded-full bg-warnSoft/70 text-warnInk border border-warnInk/15";
-const TAG_MCP = "text-[10px] px-1.5 py-0.5 rounded border border-line text-faint";
-const BTN_ACCENT = "text-[12px] px-2.5 py-1.5 rounded-lg bg-accent text-white shrink-0";
+  "text-label px-1.5 py-0.5 rounded-full bg-warnSoft/70 text-warnInk border border-warnInk/15";
+const TAG_MCP = "text-label px-1.5 py-0.5 rounded border border-line text-faint";
+const BTN_ACCENT = "text-meta px-2.5 py-1.5 rounded-lg bg-accent text-white shrink-0";
 const BTN_BORDERED =
-  "text-[12px] px-2.5 py-1.5 rounded-lg border border-line bg-paper hover:border-lineStrong shrink-0";
+  "text-meta px-2.5 py-1.5 rounded-lg border border-line bg-paper hover:border-lineStrong shrink-0 disabled:opacity-40";
+const GRP = "rounded-xl2 border border-line bg-panel divide-y divide-line overflow-hidden";
+const COL_STATUS = "w-[96px] flex justify-end items-center shrink-0";
+const COL_ENABLE = "w-[64px] flex justify-center items-center shrink-0";
 
 export function PersonaView({
   personaId,
   onBack,
   onOpenIntegrations,
+  machine,
+  focus,
 }: {
   personaId: string;
+  /** T3-12: "doing" scrolls to "How it's been doing" (opened from Usage ▸ By coworker) */
+  focus?: "doing";
   onBack?: () => void;
   onOpenIntegrations?: () => void;
+  // UX-046 machine scope: this coworker lives on a joined machine; every read
+  // and write goes through the controller's proxy.
+  machine?: Machine | null;
 }) {
+  const { t } = useTranslation();
+  const mid = machine?.id ?? null;
   const [detail, setDetail] = useState<PersonaDetail | null>(null);
   const [byName, setByName] = useState<ConnectorMap>({});
   const [error, setError] = useState<string | null>(null);
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [shot, setShot] = useState(0);
+  const [showTools, setShowTools] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
+    let urls: string[] = [];
     setDetail(null);
     setError(null);
-    getPersonaDetail(personaId)
-      .then((d) => live && setDetail(d))
-      .catch(() => live && setError("无法加载此智能体。"));
-    getConnectors()
+    setMediaUrls([]);
+    setShot(0);
+    getPersonaDetail(personaId, mid)
+      .then(async (d) => {
+        if (!live) return;
+        setDetail(d);
+        const loaded = await Promise.all(
+          (d.media || []).map((name) => getPersonaMediaUrl(personaId, name, mid).catch(() => null)),
+        );
+        urls = loaded.filter(Boolean) as string[];
+        if (live) setMediaUrls(urls);
+      })
+      .catch(() => live && setError(t("persona.load_error")));
+    getConnectors(mid)
       .then((list) => live && setByName(indexConnectors(list)))
       .catch(() => {});
     return () => {
       live = false;
+      urls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, [personaId]);
+  }, [personaId, mid]);
 
   const toggleEnabled = async (next: boolean) => {
     setDetail((d) => (d ? { ...d, enabled: next } : d)); // optimistic
-    const r = await setPersonaEnabled(personaId, next);
-    if (!r.ok) getPersonaDetail(personaId).then(setDetail).catch(() => {});
+    const r = await setPersonaEnabled(personaId, next, mid);
+    if (!r.ok) getPersonaDetail(personaId, mid).then(setDetail).catch(() => {});
   };
 
   const toggleDefault = async (connector: string, next: boolean) => {
-    const r = await setPersonaConnection(personaId, connector, next);
+    const r = await setPersonaConnection(personaId, connector, next, mid);
     if (r.default_connections) {
       setDetail((d) => (d ? { ...d, default_connections: r.default_connections! } : d));
     } else {
-      getPersonaDetail(personaId).then(setDetail).catch(() => {});
+      getPersonaDetail(personaId, mid).then(setDetail).catch(() => {});
     }
+  };
+
+  const patch = async (body: { surfaced?: boolean; default?: boolean }) => {
+    await updatePersona(personaId, body, mid);
+    getPersonaDetail(personaId, mid).then(setDetail).catch(() => {});
+  };
+
+  const exportBundle = async () => {
+    const dir = await chooseFolder();
+    if (!dir) return;
+    const r = await exportPersona(personaId, dir);
+    setMsg(r.ok ? t("persona.exported_to", { path: r.path }) : r.error || t("persona.export_failed"));
   };
 
   const header = (
@@ -80,15 +129,15 @@ export function PersonaView({
       {onBack && (
         <>
           <button
-            className="inline-flex items-center gap-1 text-[12.5px] text-muted hover:text-ink"
+            className="inline-flex items-center gap-1 text-ui text-muted hover:text-ink"
             onClick={onBack}
           >
-            <Icon name="arrowLeft" size={15} /> 返回
+            <Icon name="arrowLeft" size={15} /> {t("persona.back")}
           </button>
           <span className="text-faint">·</span>
         </>
       )}
-      <span className="text-[13px] font-semibold">智能体</span>
+      <span className="text-ui font-semibold">{t("persona.persona")}</span>
     </div>
   );
 
@@ -96,9 +145,50 @@ export function PersonaView({
     return (
       <main className="flex-1 min-w-0 flex flex-col bg-paper">
         {header}
-        <div className="p-12 text-center text-faint text-[13px]">{error || "加载中…"}</div>
+        <div className="p-12 flex items-center justify-center gap-2.5 text-faint text-ui">
+          {error ?? (
+            <>
+              <span className="w-[12px] h-[12px] rounded-full border-[1.5px] border-faint border-t-transparent animate-spin" />
+              {machine ? t("settingsx.persona.loading_from", { name: machine.name }) : t("persona.loading")}
+            </>
+          )}
+        </div>
       </main>
     );
+  }
+
+  // One Connectors table: manifest recommends ∪ the persona-default rows. A ref present in
+  // both renders once — status from the connect state, toggle from the default state.
+  const defaultsByRef = new Map(detail.default_connections.map((c) => [c.connector, c]));
+  const rows: {
+    key: string;
+    kind: string;
+    ref: string;
+    reason: string;
+    tier: string;
+    connected: boolean;
+    dflt?: { enabled: boolean; connected: boolean };
+  }[] = detail.recommends.map((r) => ({
+    key: `${r.kind}:${r.ref}`,
+    kind: r.kind,
+    ref: r.ref,
+    reason: r.reason,
+    tier: r.tier,
+    connected: r.connected,
+    dflt: r.kind === "connector" ? defaultsByRef.get(r.ref) : undefined,
+  }));
+  for (const c of detail.default_connections) {
+    if (!rows.some((r) => r.kind === "connector" && r.ref === c.connector)) {
+      rows.push({
+        key: `connector:${c.connector}`,
+        kind: "connector",
+        ref: c.connector,
+        reason: "",
+        tier: "optional",
+        connected: c.connected,
+        dflt: c,
+      });
+    }
   }
 
   return (
@@ -106,155 +196,237 @@ export function PersonaView({
       {header}
       <div className="flex-1 overflow-y-auto hairline-scroll">
         <div className="max-w-3xl mx-auto px-7 py-6 space-y-6">
-          {/* identity + enable */}
+          {/* identity + enable (no coworker glyph — owner 2026-08-21) */}
           <header className="flex items-start gap-3.5">
-            <span className="w-12 h-12 rounded-xl2 bg-panel border border-line grid place-items-center text-[22px]">
-              <PersonaGlyph icon={detail.icon} size={22} />
-            </span>
             <div className="min-w-0">
-              <h1 className="text-[20px] font-semibold tracking-tight">
+              <h1 className="text-title font-semibold tracking-tight">
                 {fullPersonaName(detail.name, personaId)}
               </h1>
-              <p className="text-[13px] text-muted mt-0.5">{detail.tagline}</p>
+              <p className="text-ui text-muted mt-0.5">{detail.tagline}</p>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-[12px] text-muted">{detail.enabled ? "已启用" : "已停用"}</span>
-              <Toggle checked={detail.enabled} onChange={toggleEnabled} title="启用此智能体" />
+              <span className="text-meta text-muted">{detail.enabled ? t("persona.enabled") : t("persona.disabled")}</span>
+              <Toggle checked={detail.enabled} onChange={toggleEnabled} title={t("persona.enable_title")} />
             </div>
           </header>
 
-          {/* about */}
-          {detail.description && (
+          {/* about: bundle markdown + screenshot carousel */}
+          {(detail.description || mediaUrls.length > 0) && (
             <section>
-              <div className={`${SEC_H} mb-1.5`}>关于</div>
-              <p className="text-[14px] leading-relaxed text-ink/90">{detail.description}</p>
+              <div className={`${SEC_H} mb-1.5`}>{t("persona.about")}</div>
+              {detail.description && (
+                <div className="text-body leading-relaxed text-ink/90">
+                  <Markdown text={detail.description} />
+                </div>
+              )}
+              {mediaUrls.length > 0 && (
+                <div className="mt-3.5">
+                  <div className="flex items-center gap-2">
+                    {mediaUrls.length > 1 && (
+                      <button
+                        className="w-7 h-7 rounded-full border border-line bg-panel text-muted hover:text-ink hover:border-lineStrong shrink-0"
+                        aria-label={t("persona.prev_screenshot")}
+                        onClick={() => setShot((s) => (s - 1 + mediaUrls.length) % mediaUrls.length)}
+                      >
+                        ‹
+                      </button>
+                    )}
+                    <img
+                      src={mediaUrls[shot]}
+                      alt={t("persona.screenshot_alt", { name: detail.name, n: shot + 1 })}
+                      className="flex-1 min-w-0 rounded-xl border border-line bg-panel"
+                      data-testid="persona-media"
+                    />
+                    {mediaUrls.length > 1 && (
+                      <button
+                        className="w-7 h-7 rounded-full border border-line bg-panel text-muted hover:text-ink hover:border-lineStrong shrink-0"
+                        aria-label={t("persona.next_screenshot")}
+                        onClick={() => setShot((s) => (s + 1) % mediaUrls.length)}
+                      >
+                        ›
+                      </button>
+                    )}
+                  </div>
+                  {mediaUrls.length > 1 && (
+                    <div className="flex justify-center gap-1.5 mt-2">
+                      {mediaUrls.map((_, i) => (
+                        <button
+                          key={i}
+                          aria-label={t("persona.screenshot_n", { n: i + 1 })}
+                          className={
+                            "w-1.5 h-1.5 rounded-full " + (i === shot ? "bg-accent" : "bg-lineStrong")
+                          }
+                          onClick={() => setShot(i)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
           )}
 
-          {/* tools */}
-          {detail.tools.length > 0 && (
+          {/* connectors — one table, Status | Enable columns */}
+          {rows.length > 0 && (
             <section>
-              <div className={`${SEC_H} mb-2`}>内置能力</div>
-              <div className="flex flex-wrap gap-1.5">
-                {detail.tools.map((t) => (
-                  <span
-                    className="px-2 py-1 rounded-md bg-panel border border-line text-[12px] font-mono"
-                    key={t}
-                  >
-                    {t}
-                  </span>
-                ))}
+              <div className={`${SEC_H} mb-1.5 flex items-baseline`}>
+                <span>{t("persona.connectors")}</span>
+                <span className="ml-auto flex font-semibold text-label text-faint normal-case tracking-normal">
+                  <span className={COL_STATUS}>{t("persona.col_status")}</span>
+                  <span className={COL_ENABLE}>{t("persona.col_enable")}</span>
+                </span>
               </div>
-            </section>
-          )}
-
-          {/* connections for full benefit (manifest recommends) */}
-          {detail.recommends.length > 0 && (
-            <section>
-              <div className={`${SEC_H} mb-1`}>充分发挥作用所需的连接器</div>
-              <p className="text-[12.5px] text-muted mb-2.5">
-                由该智能体声明 —— 将 {shortPersonaName(detail.name, personaId)} 接入这些连接器，以解锁其完整工作流。
-              </p>
-              <div className="rounded-xl2 border border-line overflow-hidden">
-                {detail.recommends.map((r, i) => {
-                  const isMcp = r.kind === "mcp";
-                  return (
-                    <div
-                      className={
-                        "flex items-center gap-3 p-3 bg-panel" + (i > 0 ? " border-t border-line" : "")
-                      }
-                      key={`${r.kind}:${r.ref}`}
-                    >
-                      <ConnectorBadge connector={visualFor(r.ref, r.kind, byName)} size={32} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-medium">{labelFor(r.ref, byName)}</span>
-                          {isMcp ? (
-                            <span className={TAG_MCP}>MCP</span>
-                          ) : r.tier === "core" ? (
-                            <span className={TAG_CORE}>核心</span>
-                          ) : null}
-                        </div>
-                        <div className="text-[12px] text-muted">{r.reason}</div>
+              <div className={GRP}>
+                {rows.map((r) => (
+                  <div className="flex items-center gap-3 px-4 py-3" key={r.key}>
+                    <ConnectorBadge connector={visualFor(r.ref, r.kind, byName)} size={32} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-ui font-medium">{labelFor(r.ref, byName)}</span>
+                        {r.kind === "mcp" ? (
+                          <span className={TAG_MCP}>MCP</span>
+                        ) : r.tier === "core" ? (
+                          <span className={TAG_CORE}>{t("persona.core_tag")}</span>
+                        ) : null}
                       </div>
+                      {r.reason && <div className="text-meta text-muted">{r.reason}</div>}
+                    </div>
+                    <span className={COL_STATUS}>
                       {r.connected ? (
-                        <span className="inline-flex items-center gap-1 text-[11.5px] text-ok shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-ok" />
-                          已连接
+                        <span className="text-label font-medium px-2 py-0.5 rounded-full bg-okSoft text-ok border border-okLine">
+                          {t("persona.connected")}
                         </span>
                       ) : (
                         <button
-                          className={r.tier === "core" && !isMcp ? BTN_ACCENT : BTN_BORDERED}
+                          className={r.tier === "core" && r.kind !== "mcp" ? BTN_ACCENT : BTN_BORDERED}
                           onClick={onOpenIntegrations}
                         >
-                          {isMcp ? "添加" : "连接"}
+                          {r.kind === "mcp" ? t("persona.add") : t("persona.connect")}
                         </button>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* persona-default connections (persona → session default) */}
-          {detail.default_connections.length > 0 && (
-            <section>
-              <div className={`${SEC_H} mb-1`}>新会话默认获得</div>
-              <p className="text-[12.5px] text-muted mb-2.5">
-                当你发起一个 {shortPersonaName(detail.name, personaId)} 会话时，这些会自动启用。你仍可在每个会话中单独静音。
-              </p>
-              <div className="space-y-1.5">
-                {detail.default_connections.map((c) => (
-                  <div
-                    className={
-                      "flex items-center gap-3 p-2.5 rounded-xl2 border border-line bg-panel" +
-                      (c.connected ? "" : " opacity-50")
-                    }
-                    key={c.connector}
-                  >
-                    <ConnectorBadge connector={visualFor(c.connector, "connector", byName)} size={32} />
-                    <div className="flex-1 text-[13px] font-medium">
-                      {labelFor(c.connector, byName)}
-                      {!c.connected && (
-                        <span className="text-[11px] text-faint font-normal"> · 需先连接以启用</span>
+                    </span>
+                    <span className={COL_ENABLE}>
+                      {r.dflt ? (
+                        <Toggle
+                          checked={r.dflt.enabled}
+                          disabled={!r.connected}
+                          onChange={(next) => toggleDefault(r.ref, next)}
+                          title={
+                            r.connected
+                              ? t("persona.on_by_default")
+                              : t("persona.connect_this_first")
+                          }
+                        />
+                      ) : (
+                        <span className="text-faint text-label">—</span>
                       )}
-                    </div>
-                    <Toggle
-                      checked={c.enabled}
-                      disabled={!c.connected}
-                      onChange={(next) => toggleDefault(c.connector, next)}
-                      title={c.connected ? "新会话默认开启" : "请先连接"}
-                    />
+                    </span>
                   </div>
                 ))}
               </div>
+              <p className="text-meta text-faint mt-1.5 px-1">
+                {t("persona.defaults_footnote")}
+              </p>
             </section>
           )}
 
-          {/* defaults footer */}
-          <section className="flex flex-wrap gap-x-8 gap-y-2 text-[12.5px]">
-            {detail.recommended_models.length > 0 && (
-              <div>
-                <span className="text-faint">模型</span> ·{" "}
-                {detail.recommended_models.map((m, i) => (
-                  <span key={m}>
-                    <span className="font-mono">{m}</span>
-                    {i < detail.recommended_models.length - 1 ? ", " : ""}
-                  </span>
-                ))}
+          {/* advanced: tool calls, collapsed by default (everyday users don't need these) */}
+          {detail.tools.length > 0 && (
+            <section>
+              <div className={`${SEC_H} mb-1.5`}>{t("persona.advanced")}</div>
+              <div className="rounded-xl2 border border-line bg-panel">
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left"
+                  data-testid="tool-calls-disclosure"
+                  onClick={() => setShowTools((v) => !v)}
+                >
+                  <Icon
+                    name="chevronRight"
+                    size={12}
+                    className={"text-faint transition-transform" + (showTools ? " rotate-90" : "")}
+                  />
+                  <span className="text-ui">{t("persona.tool_calls")}</span>
+                  <span className="ml-auto text-meta text-faint">{detail.tools.length}</span>
+                </button>
+                {showTools && (
+                  <div className="px-4 pb-3 font-mono text-meta text-muted">
+                    {detail.tools.join(" · ")}
+                  </div>
+                )}
               </div>
+            </section>
+          )}
+
+          {/* Phase 3 OB-15: how each version of this coworker has been doing */}
+          <PersonaDoing personaId={personaId} machineId={mid} secClass={SEC_H} scrollIntoView={focus === "doing"} />
+
+          {/* the models this coworker may use (T3-16: "Can use", apart from the models its
+              sessions used, under How it's been doing; Default mode and Workspace removed) */}
+          {detail.recommended_models.length > 0 && (
+            <section className="text-ui" data-testid="persona-can-use">
+              <span className="text-faint">{t("persona.can_use")}</span>{" "}
+              {detail.recommended_models.map((m, i) => (
+                <span key={m}>
+                  <span className="font-mono">{m}</span>
+                  {i < detail.recommended_models.length - 1 ? ", " : ""}
+                </span>
+              ))}
+            </section>
+          )}
+
+          {/* management — the controls that left the list page (UX-035) */}
+          <section className="border-t border-line pt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-ui">
+            <label className="flex items-center gap-2 text-muted select-none">
+              <input
+                type="checkbox"
+                checked={detail.surfaced}
+                disabled={!detail.enabled}
+                data-testid="persona-surfaced"
+                onChange={(e) => patch({ surfaced: e.target.checked })}
+              />
+              {t("persona.show_in_picker")}
+            </label>
+            <button
+              className={BTN_BORDERED}
+              disabled={detail.default || !detail.enabled}
+              data-testid="persona-make-default"
+              onClick={() => patch({ default: true })}
+            >
+              {detail.default ? t("persona.default_for_new") : t("persona.make_default")}
+            </button>
+            {!detail.builtin && !machine && (
+              <button className={BTN_BORDERED} data-testid="persona-export" onClick={exportBundle}>
+                {t("persona.export")}
+              </button>
             )}
-            {detail.default_permission_mode && (
-              <div>
-                <span className="text-faint">默认模式</span> · {detail.default_permission_mode}
-              </div>
-            )}
-            {detail.workspace && (
-              <div>
-                <span className="text-faint">工作区</span> · {detail.workspace}
-              </div>
-            )}
+            {!detail.builtin &&
+              (confirmDel ? (
+                <span className="flex items-center gap-1.5">
+                  <button
+                    className="text-meta px-2.5 py-1.5 rounded-lg bg-danger text-white"
+                    data-testid="persona-delete-confirm"
+                    onClick={async () => {
+                      const r = await deletePersona(personaId, mid);
+                      if (r.ok) onBack?.();
+                      else setMsg(r.error || t("persona.delete_failed"));
+                    }}
+                  >
+                    {t("persona.delete")}
+                  </button>
+                  <button className={BTN_BORDERED} onClick={() => setConfirmDel(false)}>
+                    {t("persona.keep")}
+                  </button>
+                </span>
+              ) : (
+                <button
+                  className="text-ui text-danger/80 hover:text-danger"
+                  data-testid="persona-delete"
+                  onClick={() => setConfirmDel(true)}
+                >
+                  {t("persona.delete_ellipsis")}
+                </button>
+              ))}
+            {msg && <span className="text-muted">{msg}</span>}
           </section>
         </div>
       </div>

@@ -28,7 +28,10 @@ COWORK_INSTRUCTIONS = (
     "no todo list means the user sees nothing happening. Keep exactly one item in_progress and "
     "update statuses as you finish each step. NEVER inline a multi-line script in a shell "
     "command (no heredocs): write it to a file with write_file, then run that file — the "
-    "script stays reviewable and the approval prompt stays short. Be outcome-oriented — "
+    "script stays reviewable and the approval prompt stays short. To change an existing "
+    "file, read it and edit it in place with replace_in_file or apply_patch rather than "
+    "rewriting the whole file; reserve write_file for new files or full rewrites. "
+    "Be outcome-oriented — "
     "clarify the goal, do the "
     "work in small reversible steps, and finish with the actual artifact plus a short summary "
     "of what you produced and where. When your deliverable is a file, end the reply with a "
@@ -51,9 +54,8 @@ def cowork_agent() -> Agent:
         name="cowork",
         title="Cowork",
         system_prompt=COWORK_INSTRUCTIONS,
-        needs_workspace=True,
         tool_factory=cowork_tool_factory,
-        family="knowledge",
+        scheduling=True,
         messaging=True,
         connectors=True,
     )

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Item } from "../types";
 import { chooseFolder } from "../tauri";
 import { Icon } from "./Icon";
@@ -16,6 +17,7 @@ export function DirectoryRequestCard({
 }) {
   const [path, setPath] = useState(item.path || "");
   const [writable, setWritable] = useState(!!item.writable);
+  const { t } = useTranslation();
 
   const browse = async () => {
     const picked = await chooseFolder();
@@ -26,31 +28,46 @@ export function DirectoryRequestCard({
     <div className="dirreq-card">
       <div className="dirreq-head">
         <Icon name="folderPlus" size={16} className="ico" />
-        <span>智能体正在请求访问一个文件夹</span>
+        <span>
+          {item.primary
+            ? t("dirreq.requesting_workspace")
+            : t("dirreq.requesting_access")}
+        </span>
       </div>
       {item.reason && <div className="dirreq-reason">“{item.reason}”</div>}
+      {item.primary && (
+        <div className="dirreq-reason">
+          {t("dirreq.primary_note")}
+        </div>
+      )}
       <div className="dirreq-pathrow">
         <input
           className="dirreq-path"
-          placeholder="选择或粘贴文件夹路径…"
+          placeholder={t("dirreq.path_placeholder")}
           value={path}
           onChange={(e) => setPath(e.target.value)}
         />
-        <button className="btn icon-only" onClick={browse} title="选择位置" aria-label="选择位置">
+        <button className="btn icon-only" onClick={browse} title={t("dirreq.choose_location")} aria-label={t("dirreq.choose_location")}>
           <Icon name="folder" size={15} />
         </button>
       </div>
       <div className="dirreq-actions">
-        <label className="dirreq-access">
-          <input type="checkbox" checked={writable} onChange={(e) => setWritable(e.target.checked)} />
-          允许写入（读写）
-        </label>
+        {!item.primary && (
+          <label className="dirreq-access">
+            <input type="checkbox" checked={writable} onChange={(e) => setWritable(e.target.checked)} />
+            {t("dirreq.allow_writing")}
+          </label>
+        )}
         <span className="spacer" />
         <button className="btn" onClick={() => onRespond(false)}>
-          拒绝
+          {t("dirreq.decline")}
         </button>
-        <button className="btn primary" disabled={!path.trim()} onClick={() => onRespond(true, path.trim(), writable)}>
-          授予访问权限
+        <button
+          className="btn primary"
+          disabled={!path.trim()}
+          onClick={() => onRespond(true, path.trim(), item.primary ? true : writable)}
+        >
+          {item.primary ? t("dirreq.make_workspace") : t("dirreq.grant_access")}
         </button>
       </div>
     </div>

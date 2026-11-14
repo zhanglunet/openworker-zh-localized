@@ -8,6 +8,7 @@ from .base import (
     ToolCall,
 )
 from .capabilities import capabilities_for
+from .codex_provider import CodexProvider
 from .gemini_provider import GeminiProvider
 from .openai_provider import OpenAIProvider, resolve_api_key
 from .openai_responses import OpenAIResponsesProvider
@@ -18,6 +19,8 @@ from .registry import (
     descriptor_configured,
     detect_provider,
     get_descriptor,
+    is_custom_provider,
+    is_removed_custom_provider,
     provider_descriptors,
     provider_names,
     verify_provider_key,
@@ -33,6 +36,7 @@ __all__ = [
     "ToolCall",
     "AnthropicProvider",
     "BedrockProvider",
+    "CodexProvider",
     "GeminiProvider",
     "OpenAIProvider",
     "OpenAIResponsesProvider",
@@ -45,6 +49,8 @@ __all__ = [
     "provider_descriptors",
     "provider_names",
     "get_descriptor",
+    "is_custom_provider",
+    "is_removed_custom_provider",
     "build_provider_client",
     "descriptor_configured",
     "detect_provider",

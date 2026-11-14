@@ -7,6 +7,7 @@ SDK's response surface, dict events for Bedrock's Converse stream.
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
 from types import SimpleNamespace
 
 import aisuite as ai
@@ -54,8 +55,13 @@ class _FakeAnthropicClient:
             self.kwargs = kwargs
             return events
 
-        self.messages = SimpleNamespace(create=create)
-        self.beta = SimpleNamespace(messages=SimpleNamespace(create=create))
+        @contextmanager
+        def stream(**kwargs):
+            self.kwargs = kwargs
+            yield SimpleNamespace(get_final_message=lambda: events)
+
+        self.messages = SimpleNamespace(create=create, stream=stream)
+        self.beta = SimpleNamespace(messages=SimpleNamespace(create=create, stream=stream))
 
 
 def test_anthropic_stream_captures_usage():
@@ -354,3 +360,17 @@ def test_model_context_windows_covers_verified_entries_only():
     assert windows["anthropic:claude-fable-5"] == 1_000_000
     assert "together:thinkingmachines/Inkling" not in windows  # unverified stays absent
     assert all(isinstance(v, int) and v > 0 for v in windows.values())
+
+
+def test_deepseek_v4_context_windows_match_provider_limits():
+    windows = model_context_windows()
+    expected = {
+        "deepseek:deepseek-v4-flash": 1_000_000,
+        "deepseek:deepseek-v4-pro": 1_000_000,
+        "together:deepseek-ai/DeepSeek-V4-Pro": 512_000,
+        # Fireworks lists "1040k tokens" for its deployment (read 2026-10-17).
+        "fireworks:accounts/fireworks/models/deepseek-v4-pro": 1_040_000,
+        "openrouter:deepseek/deepseek-v4-pro": 1_048_576,
+    }
+
+    assert {model: windows[model] for model in expected} == expected

@@ -19,13 +19,37 @@ from .base import ProviderClient
 from .capabilities import capabilities_for
 from .registry import build_provider_client, get_descriptor
 
+# The provider a model id with no `provider:` prefix runs on.
+DEFAULT_PROVIDER = "openai"
+
+
+def canonical_model(model: str) -> str:
+    """The one spelling of a model id that the app compares and stores.
+
+    A prefix naming the default provider says nothing a bare id doesn't: `openai:gpt-5.5`
+    and `gpt-5.5` both run on OpenAI. The machine's model list spells OpenAI models bare,
+    while coworker manifests often write `openai:...`, so the prefix is dropped here.
+    Every other prefix (`anthropic:`, `ollama:` ...) is kept. The GUI applies the same
+    rule (`surfaces/gui/src/modelNames.ts`, `canonicalModel`).
+    """
+    model = (model or "").strip()
+    prefix = DEFAULT_PROVIDER + ":"
+    if model.startswith(prefix) and len(model) > len(prefix):
+        return model[len(prefix):]
+    return model
+
+
+def same_model(a: str, b: str) -> bool:
+    """Do two model ids name the same model (see `canonical_model`)?"""
+    return canonical_model(a) == canonical_model(b)
+
 
 class ProviderRouter(ProviderClient):
     def __init__(
         self,
         secrets: Any = None,
         *,
-        default_provider: str = "openai",
+        default_provider: str = DEFAULT_PROVIDER,
         on_use: Any = None,
     ) -> None:
         self._secrets = secrets
@@ -51,7 +75,7 @@ class ProviderRouter(ProviderClient):
         """
         if ":" in model:
             prefix = model.split(":", 1)[0]
-            if get_descriptor(prefix) is not None:
+            if get_descriptor(prefix, getattr(self, "_secrets", None)) is not None:
                 return prefix
         return self._default
 
@@ -68,14 +92,14 @@ class ProviderRouter(ProviderClient):
             return client
 
     @staticmethod
-    def _bare(model: str) -> str:
+    def _bare(model: str, secrets: Any = None) -> str:
         """Strip a KNOWN provider prefix; the underlying SDK wants the bare model name. A model
         whose first segment isn't a provider (e.g. `qwen2.5-coder:32b` — a version tag, not a
         prefix) is returned unchanged, so the colon isn't mistaken for a provider separator.
         """
         if ":" in model:
             prefix, rest = model.split(":", 1)
-            if get_descriptor(prefix) is not None:
+            if get_descriptor(prefix, secrets) is not None:
                 return rest
         return model
 
@@ -98,7 +122,7 @@ class ProviderRouter(ProviderClient):
     ):
         self._note_use(model)
         return self._client_for(model).complete(
-            model=self._bare(model), messages=messages, tools=tools, **settings
+            model=self._bare(model, self._secrets), messages=messages, tools=tools, **settings
         )
 
     def stream(
@@ -111,7 +135,7 @@ class ProviderRouter(ProviderClient):
     ):
         self._note_use(model)
         return self._client_for(model).stream(
-            model=self._bare(model), messages=messages, tools=tools, **settings
+            model=self._bare(model, self._secrets), messages=messages, tools=tools, **settings
         )
 
     def capabilities(self, model: str):

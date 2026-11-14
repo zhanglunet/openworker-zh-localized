@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { getI18n, useTranslation } from "react-i18next";
 import {
   announceCloudChanged,
   AUTOMATIONS_CHANGED,
@@ -10,6 +11,7 @@ import {
   getPersonas,
   getSettings,
   INBOX_UNLOCK,
+  isCloudMode,
   PERSONAS_CHANGED,
   setNavLayout,
   waitForCloudSignIn,
@@ -17,43 +19,59 @@ import {
   type CloudStatus,
   type Persona,
   type RecentWorkspace,
-  type SurfaceVisibility,
-} from "../api";
+  type SurfaceVisibility, Machine } from "../api";
+import { cloudMe } from "../cloudAuth";
 import type { SessionInfo } from "../types";
 import { isProjectScoped, shortPersonaName } from "../personaScope";
 import { ConnectorIcon } from "../connectors/ConnectorIcon";
 import { Icon, type IconName } from "./Icon";
-import { PersonaGlyph, personaGlyph } from "./personaIcon";
+import { personaGlyph } from "./personaIcon";
 import { SearchModal } from "./SearchModal";
 import { baseName } from "../paths";
-import { showPersonas } from "../flags";
 
 // Session surfaces shown as accordions, in display order. The surfaced personas drive this list
 // (so third-party / Ops personas appear); the hardcoded set is the fallback before personas load.
 const SURFACES: { key: string; label: string; icon: IconName; cls: string }[] = [
-  { key: "cowork", label: "数字同事", icon: "diamond", cls: "ico-cowork" },
-  { key: "chat", label: "聊天", icon: "chat", cls: "ico-chat" },
-  { key: "code", label: "代码", icon: "code", cls: "ico-code" },
+  { key: "cowork", label: "Coworker", icon: "diamond", cls: "ico-cowork" },
+  { key: "chat", label: "Chat", icon: "chat", cls: "ico-chat" },
+  { key: "code", label: "Code", icon: "code", cls: "ico-code" },
 ];
 
 const surfaceFromPersona = (p: Persona) => ({
   key: p.id,
   label: shortPersonaName(p.name, p.id),
-  icon: personaGlyph(p.icon, p.family),
+  icon: personaGlyph(p.icon, p.requires_folder),
   cls: `ico-${p.icon || "cowork"}`,
 });
 
 // Attention = Inbox items awaiting a session (an accent count that bubbles session → persona →
 // footer Inbox — all views of the one Inbox queue, never a second list).
-function AttnBadge({ n }: { n: number }) {
+// "Needs you": a session parked on a question or an approval. A dot, not a count — a
+// session parks on one prompt at a time, so the number was always 1 (owner 2026-09-03).
+// Amber, so it never reads as the accent "working" pulse beside it.
+// OB-3: warnings in Steps ▸ Issues not opened yet. A ring, so it never reads as the solid
+// "waiting for you" dot beside it.
+function IssueRing({ n }: { n: number }) {
+  const { t } = useTranslation();
   if (!n) return null;
   return (
     <span
-      className="text-[10px] font-semibold text-ink bg-faint/30 rounded-full px-1.5 leading-[15px] shrink-0"
-      title={`${n} 条待你处理`}
-    >
-      {n > 99 ? "99+" : n}
-    </span>
+      className="w-1.5 h-1.5 rounded-full border border-warnInk shrink-0"
+      title={t("steps.issues.unseen", { count: n })}
+      data-testid="issue-ring"
+    />
+  );
+}
+
+function AttnBadge({ n }: { n: number }) {
+  const { t } = useTranslation();
+  if (!n) return null;
+  return (
+    <span
+      className="w-1.5 h-1.5 rounded-full bg-warnInk shrink-0"
+      title={t("onmachine.sidebar.waiting_for_you")}
+      data-testid="attn-dot"
+    />
   );
 }
 
@@ -61,11 +79,12 @@ function AttnBadge({ n }: { n: number }) {
 // treatment as the attention badge; failure only colors the tooltip's words, not the
 // sidebar (owner call 2026-07-20: no color, and the entry alone carries the count).
 function UnseenBadge({ n, failed }: { n: number; failed?: boolean }) {
+  const { t } = useTranslation();
   if (!n) return null;
   return (
     <span
-      className="text-[10px] font-semibold text-ink bg-faint/30 rounded-full px-1.5 leading-[15px] shrink-0"
-      title={failed ? `${n} 个新运行 — 最近一次失败` : `${n} 个新运行`}
+      className="text-label font-semibold text-ink bg-faint/30 rounded-full px-1.5 leading-[15px] shrink-0"
+      title={failed ? t("sidebar.unseen_failed", { count: n }) : t("sidebar.unseen_new", { count: n })}
     >
       {n > 99 ? "99+" : n}
     </span>
@@ -75,13 +94,14 @@ function UnseenBadge({ n, failed }: { n: number; failed?: boolean }) {
 // Liveness = working (in-flight turn) / sleeping (a self-wake is pending). A count-less dot that
 // never bubbles — it says "this is alive", not "this needs you".
 function LiveDot({ state }: { state?: "working" | "sleeping" | "idle" }) {
+  const { t } = useTranslation();
   if (state !== "working" && state !== "sleeping") return null;
   return state === "working" ? (
-    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0" title="正在工作" />
+    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0" title={t("sidebar.status_working")} />
   ) : (
     <span
       className="w-1.5 h-1.5 rounded-full bg-faint/60 shrink-0"
-      title="休眠中（会自动唤醒）"
+      title={t("sidebar.status_sleeping")}
     />
   );
 }
@@ -89,12 +109,13 @@ function LiveDot({ state }: { state?: "working" | "sleeping" | "idle" }) {
 // §31: a session spawned by a platform mention wears its platform's logo, right-aligned beside
 // the title cluster (owner call 2026-07-13). Slack today; the origin key is the platform id.
 function OriginIcon({ s }: { s: SessionInfo }) {
+  const { t } = useTranslation();
   if (s.origin !== "slack") return null;
   return (
     <ConnectorIcon
       connector={{ logo: "slack", brand_color: "#611f69" }}
       size={12}
-      title={s.origin_label || "来自 Slack"}
+      title={s.origin_label || t("sidebar.from_slack")}
     />
   );
 }
@@ -113,6 +134,13 @@ function ConnectorDot({ subs }: { subs?: string[] }) {
 }
 
 interface Props {
+  // Enrolled machines — the Machine grouping reads each group's provenance from here
+  // (sandbox → cloud icon, anything else → monitor).
+  machines?: Machine[];
+  // Settings open (owner 2026-09-03, peer-app pattern): the middle of the column becomes
+  // the settings nav (SettingsView portals it into #settings-rail); brand row and the
+  // account footer stay, so sign-in / Inbox / sign-out remain one click away.
+  settingsRail?: boolean;
   agent: string;
   workspace: string;
   surfaces: SurfaceVisibility;
@@ -128,15 +156,18 @@ interface Props {
   onArchiveSession: (id: string, archived: boolean) => void;
   onTogglePin: (id: string, pinned: boolean) => void;
   onManage: () => void;
-  // Grouped-nav gear + New-session menu's "管理角色…" entry points (§7).
+  // Grouped-nav gear entry point (§7). "Manage coworkers…" moved to the composer's
+  // setup-row picker (UX-029).
   onOpenPersona: (id: string) => void;
-  onManagePersonas: () => void;
   onOpenScheduled: () => void;
   // Scheduled-band row click: open the Automations surface ON that automation (UX-023).
   onOpenAutomation: (id: string) => void;
   onOpenIntegrations: () => void;
   onOpenAudit: () => void;
   onOpenInbox: () => void;
+  // Remote homes (UX-045): at least one machine is enrolled — unlocks the
+  // Machine grouping entry. Row badges key off each session's own tag.
+  hasMachines?: boolean;
   scheduledActive: boolean;
   integrationsActive: boolean;
   auditActive: boolean;
@@ -153,24 +184,26 @@ const compactAge = (iso?: string | null): string => {
   if (!iso) return "";
   const then = Date.parse(iso);
   if (Number.isNaN(then)) return "";
+  const tt = getI18n().getFixedT(null, "translation");
   const secs = Math.max(0, Math.floor((Date.now() - then) / 1000));
-  if (secs < 60) return "now";
+  if (secs < 60) return tt("sidebar.age_now");
   const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m`;
+  if (mins < 60) return tt("sidebar.age_m", { n: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
+  if (hrs < 24) return tt("sidebar.age_h", { n: hrs });
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d`;
+  if (days < 7) return tt("sidebar.age_d", { n: days });
   const weeks = Math.floor(days / 7);
-  if (days < 30) return `${weeks}w`;
+  if (days < 30) return tt("sidebar.age_w", { n: weeks });
   const months = Math.floor(days / 30);
-  if (days < 365) return `${months}mo`;
-  return `${Math.floor(days / 365)}y`;
+  if (days < 365) return tt("sidebar.age_mo", { n: months });
+  return tt("sidebar.age_y", { n: Math.floor(days / 365) });
 };
 
-// Sessions shown per group before "显示更多" comes from Settings (sessions_peek, default 5).
+// Sessions shown per group before "Show more" comes from Settings (sessions_peek, default 5).
 
 export function Sidebar(props: Props) {
+  const { t } = useTranslation();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [appMenuOpen, setAppMenuOpen] = useState(false);
   // The account row (§26): cloud sign-in status drives the avatar/name/dot; refreshed on
@@ -276,27 +309,30 @@ export function Sidebar(props: Props) {
   }, []);
   const personaOf = (id: string) => personas?.find((p) => p.id === id);
 
-  // Sidebar layout (§7): "grouped" = the per-persona accordion; "flat" = a single ungrouped list
-  // (Pinned + Recent). Read the persisted preference on load; ABSENT falls back by the
-  // Personas flag — with personas hidden for launch, a per-persona accordion groups by
-  // a concept the user can't see, so the default is the flat chronological list
-  // (owner call 2026-07-20). An explicit stored choice always wins.
-  const defaultLayout: "flat" | "grouped" = showPersonas() ? "grouped" : "flat";
-  const [layout, setLayout] = useState<"flat" | "grouped">(defaultLayout);
-  // Sessions shown per group before "显示更多" — Settings ▸ Appearance ▸ Sidebar.
+  // Sidebar layout (§7): "grouped" = the per-coworker accordion; "flat" = a single
+  // ungrouped list (Pinned + Recent). Flat stays the default even with Coworkers shipped
+  // (UX-029 flips the flag for the picker, not the nav shape — the flat chronological
+  // list default is the 2026-07-20 owner call). An explicit stored choice always wins.
+  const defaultLayout: "flat" | "grouped" | "machine" = "flat";
+  const [layout, setLayout] = useState<"flat" | "grouped" | "machine">(defaultLayout);
+  // Sessions shown per group before "Show more" — Settings ▸ Appearance ▸ Sidebar.
   const [peek, setPeek] = useState(5);
   useEffect(() => {
     getSettings()
       .then((s) => {
         setLayout(
-          s.nav_layout === "flat" ? "flat" : s.nav_layout === "grouped" ? "grouped" : defaultLayout,
+          s.nav_layout === "grouped" || s.nav_layout === "machine"
+            ? s.nav_layout
+            : s.nav_layout === "flat"
+              ? "flat"
+              : defaultLayout,
         );
         if (s.sessions_peek) setPeek(s.sessions_peek);
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const setGroupBy = (next: "flat" | "grouped") => {
+  const setGroupBy = (next: "flat" | "grouped" | "machine") => {
     setLayout(next);
     setNavLayout(next).catch(() => {});
   };
@@ -323,7 +359,7 @@ export function Sidebar(props: Props) {
   useEffect(() => setOpenKey(props.agent), [props.agent]);
   const browseKey = openKey ?? props.agent; // the persona whose sessions the body shows
 
-  // Per-project collapse + "显示更多". The active workspace's folder is open by default; toggling
+  // Per-project collapse + "Show more". The active workspace's folder is open by default; toggling
   // any folder flips it (XOR). `projShowAll` lifts the peek cap for a given folder;
   // `personaShowAll` does the same for a (non-project) persona's flat session list.
   const [projToggled, setProjToggled] = useState<Set<string>>(new Set());
@@ -341,7 +377,7 @@ export function Sidebar(props: Props) {
   );
   // §31 (revised 2026-07-21): mention-spawned sessions list chronologically in Recent like any
   // other session — the OriginIcon in the row's indicator cluster marks where they came from.
-  // The separate collapsed "来自 Slack" band hid fresh mentions below week-old sessions.
+  // The separate collapsed "From Slack" band hid fresh mentions below week-old sessions.
   // A row in the account menu (§26): closes the menu, then runs the destination.
   const appMenuItem = (
     icon: IconName,
@@ -352,8 +388,8 @@ export function Sidebar(props: Props) {
   ) => (
     <button
       className={
-        "w-full flex items-center gap-2.5 px-3 py-1.5 text-[13px] text-left " +
-        (active ? "text-ink bg-paper" : "hover:bg-paper")
+        "w-full flex items-center gap-2.5 px-3 py-1.5 text-ui text-left " +
+        (active ? "text-ink bg-chromeHover" : "hover:bg-chromeHover")
       }
       onClick={() => {
         setAppMenuOpen(false);
@@ -370,10 +406,14 @@ export function Sidebar(props: Props) {
 
   // Display identity for the account row: the cloud profile only carries the email, so the
   // row shows the capitalized local part ("rohit@…" → "Rohit"); the menu header shows it all.
-  const accountEmail = cloud?.signed_in ? cloud.account : "";
+  // On the hosted dashboard the identity comes from the Auth0 sign-in gate instead — the
+  // gateway account concept ("OpenWorker Cloud" sign-in) does not exist there.
+  const hostedActor = isCloudMode() ? (cloudMe()?.actor ?? "") : "";
+  const accountEmail = hostedActor || (cloud?.signed_in ? cloud.account : "");
   const accountName = accountEmail
     ? accountEmail.split("@")[0].replace(/^./, (c) => c.toUpperCase())
     : "";
+  const accountSignedIn = Boolean(hostedActor) || Boolean(cloud?.signed_in);
 
   // Roll the per-session attention/liveness up to the persona header and the footer Inbox: the
   // accent count bubbles (sum), the liveness dot aggregates (working wins over sleeping).
@@ -404,7 +444,12 @@ export function Sidebar(props: Props) {
   // Body data is keyed to the BROWSED persona (only one body renders at a time). Pinned sessions are
   // EXCLUDED here: they live in the cross-persona Pinned band only, so they don't repeat inside the
   // persona group / project list (matching the flat layout's Recent, which also drops pinned).
-  const all = props.sessions.filter((s) => s.agent === browseKey && !s.session_id.startsWith("__"));
+  const all = props.sessions.filter(
+    (s) =>
+      s.agent === browseKey &&
+      !s.session_id.startsWith("__") &&
+      s.team?.role !== "worker", // workers nest under their lead, never top-level
+  );
   const mine = all.filter((s) => !s.archived && !s.pinned);
   const archived = all.filter((s) => s.archived);
   // Only PROJECT-SCOPED personas group sessions by project (git-bound Code, project-bound Ops).
@@ -420,8 +465,10 @@ export function Sidebar(props: Props) {
 
   // Recent = every non-pinned, non-archived, real session across ALL personas, newest first
   // (by updated_at; missing timestamps keep store order), search-filtered. Drives the flat layout.
+  // Team workers never appear top-level: they nest under their lead's ONE expandable entry.
   const recentSessions = [...props.sessions]
     .filter((s) => !s.archived && !s.session_id.startsWith("__") && !s.pinned)
+    .filter((s) => s.team?.role !== "worker")
     .filter((s) => personaVisible(s.agent))
     .filter(matches)
     .sort((a, b) => (b.updated_at || "").localeCompare(a.updated_at || ""));
@@ -434,7 +481,7 @@ export function Sidebar(props: Props) {
     const menuOpen = rowMenu?.id === s.session_id;
     const item = (testid: string, icon: IconName, label: string, onClick: () => void) => (
       <button
-        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[12.5px] text-left hover:bg-paper"
+        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-ui text-left hover:bg-paper"
         data-testid={testid}
         role="menuitem"
         onClick={() => {
@@ -449,18 +496,23 @@ export function Sidebar(props: Props) {
     return (
       <span
         // Stay visible while this row's menu is open — the pointer may be on the menu, off the row.
-        className={(menuOpen ? "flex" : "hidden group-hover:flex") + " items-center shrink-0"}
+        // The slot is always reserved (w-7) and only fades in on hover, so the title never
+        // re-truncates when the pointer arrives (owner catch 2026-09-03).
+        className={
+          "absolute inset-y-0 right-0 flex items-center " +
+          (menuOpen ? "visible" : "invisible group-hover:visible")
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          title="会话操作"
-          aria-label="会话操作"
+          title={t("sidebar.session_actions")}
+          aria-label={t("sidebar.session_actions")}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           data-testid="row-menu"
           className={
-            "w-5 h-5 grid place-items-center rounded hover:bg-paper " +
-            (menuOpen ? "text-ink bg-paper" : "text-faint hover:text-ink")
+            "w-5 h-5 grid place-items-center rounded hover:bg-chromeHover " +
+            (menuOpen ? "text-ink bg-chromeHover" : "text-faint hover:text-ink")
           }
           onClick={(e) => (menuOpen ? closeRowMenu() : openRowMenu(s.session_id, e.currentTarget))}
         >
@@ -475,21 +527,21 @@ export function Sidebar(props: Props) {
               style={{ top: rowMenu!.top, left: rowMenu!.left }}
               role="menu"
             >
-              {item("row-menu-rename", "pencil", "重命名", () => {
+              {item("row-menu-rename", "pencil", t("sidebar.rename"), () => {
                 setEditingId(s.session_id);
                 setEditValue(title);
               })}
-              {item("row-menu-pin", "pin", s.pinned ? "取消置顶" : "置顶", () =>
+              {item("row-menu-pin", "pin", s.pinned ? t("sidebar.unpin") : t("sidebar.pin"), () =>
                 props.onTogglePin(s.session_id, !s.pinned),
               )}
-              {item("row-menu-archive", "archive", s.archived ? "取消归档" : "归档", () =>
+              {item("row-menu-archive", "archive", s.archived ? t("sidebar.unarchive") : t("sidebar.archive"), () =>
                 props.onArchiveSession(s.session_id, !s.archived),
               )}
               <div className="h-px bg-line my-1 mx-2" />
               {confirmDelId === s.session_id ? (
                 <button
-                  title="再次点击以永久删除"
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[12.5px] text-left font-medium text-danger hover:bg-paper"
+                  title={t("sidebar.confirm_delete")}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-ui text-left font-medium text-danger hover:bg-paper"
                   data-testid="row-menu-delete"
                   role="menuitem"
                   onClick={() => {
@@ -498,17 +550,17 @@ export function Sidebar(props: Props) {
                   }}
                 >
                   <Icon name="trash" size={13} className="shrink-0" />
-                  <span className="flex-1">删除？</span>
+                  <span className="flex-1">{t("sidebar.delete_confirm")}</span>
                 </button>
               ) : (
                 <button
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[12.5px] text-left text-danger hover:bg-paper"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-ui text-left text-danger hover:bg-paper"
                   data-testid="row-menu-delete"
                   role="menuitem"
                   onClick={() => setConfirmDelId(s.session_id)}
                 >
                   <Icon name="trash" size={13} className="shrink-0" />
-                  <span className="flex-1">删除</span>
+                  <span className="flex-1">{t("sidebar.delete")}</span>
                 </button>
               )}
             </div>
@@ -533,19 +585,20 @@ export function Sidebar(props: Props) {
       <div
         key={s.session_id}
         className={
-          "group flex items-center gap-2 px-2 py-1.5 rounded-lg text-left cursor-pointer " +
+          "group flex items-center gap-2 px-2 py-1.5 rounded-[7px] text-left cursor-pointer " +
           (active
-            ? "bg-ink/[0.055]"
-            : "hover:bg-panel")
+            ? "bg-chromeHover"
+            : "hover:bg-panel") +
+          (s.machine_offline ? " opacity-45" : "")
         }
         onClick={() => {
           if (!editing) props.onSelectSession(s.session_id, s.workspace, s.agent);
         }}
-        title={editing ? undefined : title}
+        title={editing ? undefined : s.machine_offline ? t("onmachine.sidebar.row_offline", { title, machine: s.machine_name || t("onmachine.machine_fallback") }) : title}
       >
         {editing ? (
           <input
-            className="flex-1 min-w-0 px-1.5 py-0.5 rounded-md bg-panel border border-accent text-[13px] text-ink outline-none"
+            className="flex-1 min-w-0 px-1.5 py-0.5 rounded-md bg-panel border border-accent text-ui text-ink outline-none"
             value={editValue}
             autoFocus
             onClick={(e) => e.stopPropagation()}
@@ -561,27 +614,33 @@ export function Sidebar(props: Props) {
           <>
             <span
               className={
-                "min-w-0 flex-1 flex items-center gap-1.5 truncate text-[13px] " +
+                // pr-2 + the reserved menu slot: the ellipsis lands early and never moves (owner 2026-09-03).
+                "min-w-0 flex-1 flex items-center gap-1.5 truncate pr-2 text-ui " +
                 (active ? "font-medium text-ink" : "text-ink")
               }
             >
               {s.pinned && <Icon name="pin" size={11} className="text-faint shrink-0" />}
-              <span className="truncate">{title}</span>
+              <span className="min-w-0 truncate">{title}</span>
             </span>
-            <span
-              className={
-                "flex items-center gap-1.5 shrink-0 group-hover:hidden" +
-                (rowMenu?.id === s.session_id ? " hidden" : "")
-              }
-            >
-              {opts.showTime && compactAge(s.updated_at) && (
-                <span className="text-[11px] text-faint tabular-nums">{compactAge(s.updated_at)}</span>
-              )}
-              <OriginIcon s={s} />
-              <LiveDot state={s.liveness} />
-              <AttnBadge n={s.attention || 0} />
+            {/* One right-edge slot: badges at rest, the ⋮ menu on hover, same width either
+                way so the title never re-truncates (owner 2026-09-03). */}
+            <span className="relative shrink-0 min-w-7 h-5 flex items-center justify-end">
+              <span
+                className={
+                  "flex items-center gap-1.5 " +
+                  (rowMenu?.id === s.session_id ? "invisible" : "group-hover:invisible")
+                }
+              >
+                {opts.showTime && compactAge(s.updated_at) && (
+                  <span className="text-label text-faint tabular-nums">{compactAge(s.updated_at)}</span>
+                )}
+                <OriginIcon s={s} />
+                <LiveDot state={s.liveness} />
+                <IssueRing n={s.issues_unseen || 0} />
+                <AttnBadge n={s.attention || 0} />
+              </span>
+              {rowActions(s, title)}
             </span>
-            {rowActions(s, title)}
           </>
         )}
       </div>
@@ -605,21 +664,25 @@ export function Sidebar(props: Props) {
       <div
         key={s.session_id}
         className={
-          "group w-full flex items-center gap-2.5 px-2 py-2 rounded-lg cursor-pointer text-left " +
+          "group w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[7px] cursor-pointer text-left " +
           (active
-            ? "bg-ink/[0.055]"
-            : "hover:bg-paper")
+            ? "bg-chromeHover"
+            : "hover:bg-chromeHover") +
+          // Snapshot row: its machine is offline — visible but quiet (UX-045:
+          // greyed, never vanished).
+          (s.machine_offline ? " opacity-45" : "")
         }
-        title={editing ? undefined : title}
+        title={editing ? undefined : s.machine_offline ? t("onmachine.sidebar.row_offline", { title, machine: s.machine_name || t("onmachine.machine_fallback") }) : title}
         onClick={() => {
           if (!editing) props.onSelectSession(s.session_id, s.workspace, s.agent);
         }}
       >
         {/* No leading glyph on session rows (Rohit's call 2026-07-07: the per-session icon
-            read as noise in both grouped and chronological). */}
+            read as noise in both grouped and chronological). Team leads are plain rows too —
+            worker rows live in the drawer's Team panel (seventeenth pass). */}
         {editing ? (
           <input
-            className="flex-1 min-w-0 px-1.5 py-0.5 rounded-md bg-panel border border-accent text-[13px] text-ink outline-none"
+            className="flex-1 min-w-0 px-1.5 py-0.5 rounded-md bg-panel border border-accent text-ui text-ink outline-none"
             value={editValue}
             autoFocus
             onClick={(e) => e.stopPropagation()}
@@ -633,21 +696,29 @@ export function Sidebar(props: Props) {
           />
         ) : (
           <>
-            <span className="min-w-0 flex-1 block truncate text-[13px] font-medium">
-              {title}
-            </span>
             <span
               className={
-                "flex items-center gap-1.5 shrink-0 group-hover:hidden" +
-                (rowMenu?.id === s.session_id ? " hidden" : "")
+                // pr-2 + the reserved menu slot: the ellipsis lands early and never moves (owner 2026-09-03).
+                "min-w-0 flex-1 block truncate pr-2 text-ui " + (active ? "font-medium" : "")
               }
             >
-              <OriginIcon s={s} />
-              <ConnectorDot subs={s.subscriptions} />
-              <LiveDot state={s.liveness} />
-              <AttnBadge n={s.attention || 0} />
+              {title}
             </span>
-            {rowActions(s, title)}
+            <span className="relative shrink-0 min-w-7 h-5 flex items-center justify-end">
+              <span
+                className={
+                  "flex items-center gap-1.5 " +
+                  (rowMenu?.id === s.session_id ? "invisible" : "group-hover:invisible")
+                }
+              >
+                <OriginIcon s={s} />
+                <ConnectorDot subs={s.subscriptions} />
+                <LiveDot state={s.liveness} />
+                <IssueRing n={s.issues_unseen || 0} />
+                <AttnBadge n={s.attention || 0} />
+              </span>
+              {rowActions(s, title)}
+            </span>
           </>
         )}
       </div>
@@ -659,8 +730,8 @@ export function Sidebar(props: Props) {
   const pinnedBand = () =>
     pinnedSessions.length > 0 ? (
       <div>
-        <div className="px-1.5 text-[10.5px] uppercase tracking-[0.07em] text-faint font-semibold mb-1">
-          已置顶
+        <div className="px-1.5 text-label text-faint font-medium mb-1">
+          {t("sidebar.pinned")}
         </div>
         <div className="space-y-0.5">
           {pinnedSessions.map((s) => cardRow(s))}
@@ -674,21 +745,21 @@ export function Sidebar(props: Props) {
   const scheduledBand = () =>
     automations.length > 0 ? (
       <div data-testid="scheduled-band">
-        <div className="px-1.5 text-[10.5px] uppercase tracking-[0.07em] text-faint font-semibold mb-1">
-          定时
+        <div className="px-1.5 text-label text-faint font-medium mb-1">
+          {t("sidebar.scheduled")}
         </div>
         <div className="space-y-0.5">
           {automations.map((a) => (
             <button
               key={a.id}
-              className="w-full flex items-center gap-2 px-1.5 py-1 rounded-lg text-left hover:bg-paper"
+              className="w-full flex items-center gap-2 px-1.5 py-1 rounded-lg text-left hover:bg-chromeHover"
               data-testid={`scheduled-${a.id}`}
               title={a.title}
               onClick={() => props.onOpenAutomation(a.id)}
             >
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] text-ink truncate">{a.title}</div>
-                <div className="text-[11px] text-faint truncate">{a.schedule}</div>
+                <div className="text-ui text-ink truncate">{a.title}</div>
+                <div className="text-label text-faint truncate">{a.schedule}</div>
               </div>
               <UnseenBadge n={a.unseen_runs || 0} failed={a.unseen_failed} />
             </button>
@@ -698,7 +769,7 @@ export function Sidebar(props: Props) {
     ) : null;
 
   // RECENT header with the group/filter control (§20) — the group toggle moved off the brand bar.
-  // "分组方式" flips the persona accordion ↔ chronological list; "按数字同事筛选" narrows to
+  // "Group by" flips the persona accordion ↔ chronological list; "Filter by coworker" narrows to
   // the checked personas (none checked = all shown).
   const recentHeader = () => {
     const filterPersonaList = (personas || []).filter(
@@ -706,13 +777,13 @@ export function Sidebar(props: Props) {
     );
     return (
     <div className="relative flex items-center justify-between px-1.5 mb-1" data-testid="recent-header">
-      <span className="text-[10.5px] uppercase tracking-[0.07em] text-faint font-semibold">
-        最近
+      <span className="text-label text-muted font-medium">
+        {t("sidebar.recent")}
       </span>
       <button
-        className="w-6 h-6 grid place-items-center rounded-md text-faint hover:text-ink hover:bg-paper -mr-1"
-        title="分组与筛选会话"
-        aria-label="分组与筛选会话"
+        className="w-6 h-6 grid place-items-center rounded-md text-faint hover:text-ink hover:bg-chromeHover -mr-1"
+        title={t("sidebar.group_and_filter_short")}
+        aria-label={t("sidebar.group_and_filter")}
         onClick={() => setGroupMenuOpen((v) => !v)}
       >
         <Icon name="sliders" size={14} />
@@ -725,18 +796,25 @@ export function Sidebar(props: Props) {
             role="menu"
             data-testid="group-filter-menu"
           >
-            <div className="px-2 pt-1 pb-1 text-[10.5px] uppercase tracking-[0.06em] text-faint font-semibold">
-              分组方式
+            <div className="px-2 pt-1 pb-1 text-label text-faint font-medium">
+              {t("sidebar.group_by")}
             </div>
-            {([["grouped", "角色"], ["flat", "按时间"]] as ["flat" | "grouped", string][]).map(
+            {(
+              [
+                ["grouped", t("sidebar.group_persona")],
+                ["flat", t("sidebar.group_chrono")],
+                // UX-045: the entry exists only once a machine does.
+                ...(props.hasMachines ? [["machine", t("onmachine.sidebar.group_machine")]] : []),
+              ] as ["flat" | "grouped" | "machine", string][]
+            ).map(
               ([key, label]) => (
                 <button
                   key={key}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] text-left hover:bg-paper"
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-ui text-left hover:bg-paper"
                   onClick={() => setGroupBy(key)}
                 >
                   <span className="flex-1">{label}</span>
-                  {layout === key && <span className="text-accent text-[12px]">✓</span>}
+                  {layout === key && <span className="text-accent text-meta">✓</span>}
                 </button>
               ),
             )}
@@ -744,12 +822,12 @@ export function Sidebar(props: Props) {
               <>
                 <div className="my-1 border-t border-line" />
                 <div className="px-2 pt-1 pb-1 flex items-center justify-between">
-                  <span className="text-[10.5px] uppercase tracking-[0.06em] text-faint font-semibold">
-                    按数字同事筛选
+                  <span className="text-label text-faint font-medium">
+                    {t("sidebar.filter_coworker")}
                   </span>
                   {filterPersonas.size > 0 && (
-                    <button className="text-[11px] text-accent" onClick={() => setFilterPersonas(new Set())}>
-                      清除
+                    <button className="text-label text-accent" onClick={() => setFilterPersonas(new Set())}>
+                      {t("sidebar.clear")}
                     </button>
                   )}
                 </div>
@@ -759,7 +837,7 @@ export function Sidebar(props: Props) {
                     return (
                       <button
                         key={p.id}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] text-left hover:bg-paper"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-ui text-left hover:bg-paper"
                         onClick={() => toggleFilterPersona(p.id)}
                       >
                         <span
@@ -775,8 +853,8 @@ export function Sidebar(props: Props) {
                     );
                   })}
                 </div>
-                <div className="px-2 pt-1 pb-0.5 text-[11px] text-faint leading-snug">
-                  未勾选则显示全部。
+                <div className="px-2 pt-1 pb-0.5 text-label text-faint leading-snug">
+                  {t("sidebar.filter_all_hint")}
                 </div>
               </>
             )}
@@ -825,7 +903,12 @@ export function Sidebar(props: Props) {
   // persona from New Session, never orphan its conversations).
   const agentsWithSessions = new Set(
     props.sessions
-      .filter((s) => !s.archived && !s.session_id.startsWith("__"))
+      .filter(
+        (s) =>
+          !s.archived &&
+          !s.session_id.startsWith("__") &&
+          s.team?.role !== "worker",
+      )
       .map((s) => s.agent),
   );
   const visibleSurfaces = (
@@ -842,30 +925,30 @@ export function Sidebar(props: Props) {
   const isCurrent = (key: string) => props.agent === key; // the active session's persona
   const isExpanded = (key: string) => openKey === key; // its body is open
   // Expand ≠ switch: clicking a header only browses (toggles the accordion). The chat area
-  // changes only when a session is selected or "新建会话" is clicked.
+  // changes only when a session is selected or "New session" is clicked.
   const onHeaderClick = (key: string) => setOpenKey((k) => (k === key ? null : key));
 
-  // The expanded body for the active surface: a "新建会话" action, then the project-grouped
+  // The expanded body for the active surface: a "New session" action, then the project-grouped
   // (or flat) session list, then the archived disclosure.
   const surfaceBody = () => {
     return (
       <div className="space-y-1 px-1.5 pb-2 pt-0.5">
         {/* Body is flush inside the expanded group's fill (provided by the wrapper) so the header +
             its sessions read as one connected block — clear where a group ends and the next begins. */}
-        {/* No per-persona "新建会话" here — the top split button's ▾ already starts a session
+        {/* No per-persona "New session" here — the top split button's ▾ already starts a session
             in any persona (it was redundant + the mock's grouped cards don't have it). */}
         {workspaceSurface ? (
           <>
             {/* Codex-style Projects: a "+" header affordance, then collapsible folders whose
-                rows carry a right-aligned compact age and truncate to PROJECT_PEEK + "显示更多". */}
+                rows carry a right-aligned compact age and truncate to PROJECT_PEEK + "Show more". */}
             <div className="flex items-center justify-between px-1.5 pt-1">
-              <span className="text-[10.5px] uppercase tracking-[0.07em] text-faint font-semibold">
-                项目
+              <span className="text-label text-faint font-medium">
+                {t("sidebar.projects")}
               </span>
               <button
                 className="w-5 h-5 grid place-items-center rounded text-faint hover:text-ink hover:bg-panel"
-                title="新建项目"
-                aria-label="新建项目"
+                title={t("sidebar.new_project")}
+                aria-label={t("sidebar.new_project")}
                 onClick={() => props.onNewProject(browseKey)}
               >
                 <Icon name="folderPlus" size={14} />
@@ -873,8 +956,8 @@ export function Sidebar(props: Props) {
             </div>
             <div className="space-y-0.5">
               {projectOrder.length === 0 && (
-                <div className="px-2 py-1.5 text-[12px] text-faint leading-snug">
-                  还没有项目 — 点击上方的 + 新建一个。
+                <div className="px-2 py-1.5 text-meta text-faint leading-snug">
+                  {t("sidebar.no_projects_yet")}
                 </div>
               )}
               {projectOrder.map((proj) => {
@@ -901,7 +984,7 @@ export function Sidebar(props: Props) {
                       <Icon name="folder" size={15} className="shrink-0" />
                       <span
                         className={
-                          "truncate min-w-0 text-[12.5px] " + (isActive ? "font-semibold" : "font-medium")
+                          "truncate min-w-0 text-ui " + (isActive ? "font-semibold" : "font-medium")
                         }
                       >
                         {baseName(proj)}
@@ -921,16 +1004,16 @@ export function Sidebar(props: Props) {
                           {shown.map((s) => sessionRow(s, { showTime: true }))}
                           {!showAll && list.length > peek && (
                             <button
-                              className="px-2 py-1 text-[12px] text-faint hover:text-muted"
+                              className="px-2 py-1 text-meta text-faint hover:text-muted"
                               onClick={() => setProjShowAll((s) => toggleSet(s, proj))}
                             >
-                              显示更多（{list.length - peek}）
+                              {t("sidebar.show_more_n", { n: list.length - peek })}
                             </button>
                           )}
                         </div>
                       ) : (
-                        <div className="px-2 py-1.5 pl-[19px] text-[12px] text-faint leading-snug">
-                          该项目下还没有会话。
+                        <div className="px-2 py-1.5 pl-[19px] text-meta text-faint leading-snug">
+                          {t("sidebar.no_project_convos")}
                         </div>
                       ))}
                   </div>
@@ -941,8 +1024,8 @@ export function Sidebar(props: Props) {
         ) : (
           <div className="space-y-0.5">
             {mine.filter(matches).length === 0 ? (
-              <div className="px-2 py-1.5 text-[12px] text-faint leading-snug">
-                {normalizedQuery ? "没有匹配的会话。" : "暂无会话。"}
+              <div className="px-2 py-1.5 text-meta text-faint leading-snug">
+                {normalizedQuery ? t("sidebar.no_matching") : t("sidebar.no_conversations")}
               </div>
             ) : (
               <>
@@ -952,10 +1035,10 @@ export function Sidebar(props: Props) {
                 ).map((s) => sessionRow(s))}
                 {!personaShowAll.has(browseKey) && mine.filter(matches).length > peek && (
                   <button
-                    className="px-2 py-1 text-[12px] text-faint hover:text-muted"
+                    className="px-2 py-1 text-meta text-faint hover:text-muted"
                     onClick={() => setPersonaShowAll((s) => toggleSet(s, browseKey))}
                   >
-                    显示更多（{mine.filter(matches).length - peek}）
+                    {t("sidebar.show_more_n", { n: mine.filter(matches).length - peek })}
                   </button>
                 )}
               </>
@@ -966,11 +1049,11 @@ export function Sidebar(props: Props) {
         {archived.length > 0 && (
           <div className="mt-2 pt-1.5 border-t border-line">
             <button
-              className="w-full flex items-center gap-1.5 px-1.5 py-1 rounded text-[12px] text-faint hover:text-muted"
+              className="w-full flex items-center gap-1.5 px-1.5 py-1 rounded text-meta text-faint hover:text-muted"
               onClick={() => setShowArchived((v) => !v)}
             >
               <Icon name={showArchived ? "chevronDown" : "chevronRight"} size={13} className="shrink-0" />
-              已归档（{archived.length}）
+              {t("sidebar.archived_n", { n: archived.length })}
             </button>
             {showArchived && (
               <div className="space-y-0.5 mt-0.5">{archived.filter(matches).map((s) => sessionRow(s))}</div>
@@ -983,7 +1066,7 @@ export function Sidebar(props: Props) {
 
   return (
     <div
-      className="sidebar flex flex-col min-h-0 bg-panel border-r border-line"
+      className="sidebar flex flex-col min-h-0 bg-chrome"
       onMouseLeave={props.onPeekLeave}
     >
       {/* Header: collapse/pin control FIRST + wordmark. The pin sits at the same screen position
@@ -994,56 +1077,69 @@ export function Sidebar(props: Props) {
         {/* Collapse (dock) / pin the sidebar. ⌘B mirrors this. */}
         {props.onCollapse && (
           <button
-            className="nav-pin-btn w-7 h-7 grid place-items-center rounded-md text-faint hover:text-ink hover:bg-paper shrink-0"
-            title={props.collapsed ? "停靠侧边栏（⌘B）" : "折叠侧边栏（⌘B）"}
-            aria-label={props.collapsed ? "停靠侧边栏" : "折叠侧边栏"}
+            className="nav-pin-btn w-7 h-7 grid place-items-center rounded-md text-faint hover:text-ink hover:bg-chromeHover shrink-0"
+            title={props.collapsed ? t("sidebar.dock") + " (⌘B)" : t("sidebar.collapse") + " (⌘B)"}
+            aria-label={props.collapsed ? t("sidebar.dock") : t("sidebar.collapse")}
             onClick={props.onCollapse}
           >
             <Icon name="sidebar" size={16} />
           </button>
         )}
-        <div className="brand-wordmark text-[15px]">OpenWorker<span className="beta-tag">BETA</span></div>
+        <div className="brand-wordmark text-body">OpenWorker<span className="beta-tag">beta</span></div>
       </div>
 
-      {/* New session: split button — primary starts the last-used persona; ▾ picks a specific one. */}
-      <NewSessionSplit
-        personas={personas}
-        current={props.agent}
-        onNew={props.onNewSession}
-        onManage={props.onManagePersonas}
-      />
+      {props.settingsRail ? (
+        <div
+          id="settings-rail"
+          className="flex-1 min-h-0 flex flex-col"
+          data-testid="settings-rail"
+        />
+      ) : (
+        <>
+      {/* New session: a quiet nav row like its siblings (UX-040 — the filled accent block
+          shouted over the whole panel). The coworker pick lives in the composer's setup
+          row (UX-029); this starts the last-used persona. */}
+      <div className="px-2.5 pt-2">
+        <button
+          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[7px] text-ui text-left font-medium text-ink hover:bg-chromeHover"
+          onClick={() => props.onNewSession(props.agent)}
+        >
+          <Icon name="plus" size={15} className="shrink-0" /> {t("sidebar.new_session")}
+        </button>
+      </div>
 
       {/* Search: a borderless nav-style entry (not a boxed input) that opens the command-palette
           SearchModal over the whole app. Matches the bottom-nav rows to reduce the boxy look. */}
-      <div className="px-2.5 mt-1">
+      <div className="px-2.5 mt-0.5">
         <button
-          className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-left text-muted hover:bg-paper hover:text-ink"
+          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[7px] text-ui text-left text-muted hover:bg-chromeHover hover:text-ink"
           onClick={() => setSearchModalOpen(true)}
         >
-          <Icon name="search" size={15} className="shrink-0" /> 搜索
+          <Icon name="search" size={15} className="shrink-0" /> {t("sidebar.search")}
         </button>
       </div>
 
       {/* Automations: a first-class nav row (UX-023) — the account menu keeps its entry.
           The badge is the cross-automation unseen-run total. */}
-      <div className="px-2.5 mt-1">
+      <div className="px-2.5 mt-0.5">
         <button
           className={
-            "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-left hover:bg-paper hover:text-ink " +
-            (props.scheduledActive ? "text-ink bg-paper" : "text-muted")
+            "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[7px] text-ui text-left hover:bg-chromeHover hover:text-ink " +
+            (props.scheduledActive ? "text-ink bg-chromeHover" : "text-muted")
           }
           data-testid="nav-automations"
           onClick={props.onOpenScheduled}
         >
           <Icon name="clock" size={15} className="shrink-0" />
-          <span className="flex-1">自动化</span>
+          <span className="flex-1">{t("sidebar.automations")}</span>
         </button>
       </div>
 
       {/* Scroll area: Pinned band + the RECENT header (with group/filter control), then the body —
           grouped (per-persona accordion) or flat (chronological list). */}
-      <div className="flex-1 overflow-y-auto px-2.5 mt-3 pb-2">
-        <div className="space-y-4">
+      {/* UX-040 rhythm: clear air between the fixed nav block and the content bands. */}
+      <div className="flex-1 overflow-y-auto px-2.5 mt-[22px] pb-2">
+        <div className="space-y-5">
           {pinnedBand()}
           {scheduledBand()}
           <div>
@@ -1057,7 +1153,7 @@ export function Sidebar(props: Props) {
                   // the block with its sessions (one connected group). Collapsed = a plain row.
                   <div
                     key={s.key}
-                    className={expanded ? "rounded-xl bg-paper/70 overflow-hidden" : ""}
+                    className={expanded ? "rounded-xl bg-chromeHover/70 overflow-hidden" : ""}
                   >
                     <div
                       className={
@@ -1065,14 +1161,14 @@ export function Sidebar(props: Props) {
                         (expanded
                           ? ""
                           : isCurrent(s.key)
-                            ? "rounded-lg bg-paper"
-                            : "rounded-lg hover:bg-paper")
+                            ? "rounded-lg bg-chromeHover"
+                            : "rounded-lg hover:bg-chromeHover")
                       }
                       onClick={() => onHeaderClick(s.key)}
                     >
                       <span
                         className={
-                          "min-w-0 flex-1 truncate text-[13px] " +
+                          "min-w-0 flex-1 truncate text-ui " +
                           (isCurrent(s.key) ? "font-semibold text-ink" : "font-medium text-ink")
                         }
                       >
@@ -1093,11 +1189,60 @@ export function Sidebar(props: Props) {
                 );
               })}
             </div>
+            ) : layout === "machine" ? (
+            // UX-045: grouped by home — This Mac first, then each machine (name-sorted).
+            // Groups render whole (no peek): the grouping IS the navigation.
+            <div className="space-y-3.5">
+              {recentSessions.length === 0 ? (
+                <div className="px-2 py-1.5 text-meta text-faint leading-snug">
+                  {normalizedQuery ? t("sidebar.no_matching") : t("sidebar.no_conversations")}
+                </div>
+              ) : (
+                (() => {
+                  const groups = new Map<string, SessionInfo[]>();
+                  for (const s of recentSessions) {
+                    const key = s.machine ? s.machine_name || "machine" : "This Mac";
+                    if (!groups.has(key)) groups.set(key, []);
+                    groups.get(key)!.push(s);
+                  }
+                  const order = ["This Mac", ...[...groups.keys()].filter((k) => k !== "This Mac").sort()];
+                  // Header glyph (owner 2026-09-03): cloud for a managed sandbox, monitor for
+                  // any other box; This Mac carries none.
+                  const glyphFor = (k: string): "cloud" | "monitor" | null => {
+                    if (k === "This Mac") return null;
+                    const first = groups.get(k)?.[0];
+                    const m = (props.machines || []).find((x) => x.id === first?.machine);
+                    return m?.provenance === "fly" ? "cloud" : "monitor";
+                  };
+                  return order
+                    .filter((k) => groups.has(k))
+                    .map((k) => {
+                      const glyph = glyphFor(k);
+                      return (
+                      <div key={k}>
+                        <div className="px-2 pb-1 flex items-center gap-1.5 text-label text-faint font-medium">
+                          {glyph && <Icon name={glyph} size={12} className="shrink-0" />}
+                          {/* `k` is the stable group key; only the two built-in labels translate. */}
+                          <span>
+                            {k === "This Mac"
+                              ? t("onmachine.this_mac")
+                              : k === "machine"
+                                ? t("onmachine.machine_fallback")
+                                : k}
+                          </span>
+                        </div>
+                        <div>{groups.get(k)!.map((s) => cardRow(s))}</div>
+                      </div>
+                      );
+                    });
+                })()
+              )}
+            </div>
             ) : (
             <div className="space-y-0.5">
               {recentSessions.length === 0 ? (
-                <div className="px-2 py-1.5 text-[12px] text-faint leading-snug">
-                  {normalizedQuery ? "没有匹配的会话。" : "暂无会话。"}
+                <div className="px-2 py-1.5 text-meta text-faint leading-snug">
+                  {normalizedQuery ? t("sidebar.no_matching") : t("sidebar.no_conversations")}
                 </div>
               ) : (
                 <>
@@ -1107,12 +1252,12 @@ export function Sidebar(props: Props) {
                   ).map((s) => cardRow(s))}
                   {recentSessions.length > RECENT_PEEK && (
                     <button
-                      className="w-full text-left px-2 py-1.5 text-[12px] text-muted hover:text-ink"
+                      className="w-full text-left px-2 py-1.5 text-meta text-muted hover:text-ink"
                       onClick={() => setRecentExpanded((v) => !v)}
                     >
                       {recentExpanded
-                        ? "显示更少"
-                        : `显示更多（${recentSessions.length - RECENT_PEEK}）`}
+                        ? t("sidebar.show_less")
+                        : t("sidebar.show_n_more", { n: recentSessions.length - RECENT_PEEK })}
                     </button>
                   )}
                 </>
@@ -1122,6 +1267,8 @@ export function Sidebar(props: Props) {
           </div>
         </div>
       </div>
+        </>
+      )}
 
       {/* Bottom (§26): exactly ONE row — the account anchor. The inbox chip on it is
           state-driven with a sticky unlock (quiet when empty, accent + count when pending);
@@ -1136,20 +1283,23 @@ export function Sidebar(props: Props) {
                 data-testid="account-menu"
                 role="menu"
               >
-                {cloud?.signed_in ? (
+                {cloud?.signed_in || hostedActor ? (
+                  /* Just the email — being signed in is implicit. On the hosted
+                     dashboard this is the Auth0 identity; the gateway sign-in
+                     below makes no sense there (no sidecar to open a browser). */
                   <div
-                    className="px-3 py-1.5 mb-1 text-[11px] text-faint truncate border-b border-line"
-                    title={`${accountEmail} · OpenWorker Cloud`}
+                    className="px-3 py-1.5 mb-1 text-label text-faint truncate border-b border-line"
+                    title={accountEmail}
                   >
-                    {accountEmail} · OpenWorker Cloud
+                    {accountEmail}
                   </div>
                 ) : (
                   <>
-                    <div className="px-3 py-1.5 text-[11px] text-faint border-b border-line">
-                      未登录 — 一键连接需要 OpenWorker Cloud
+                    <div className="px-3 py-1.5 text-label text-faint border-b border-line">
+                      {t("sidebar.not_signed_in")}
                     </div>
                     <button
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 mb-1 text-[13px] text-left text-accent hover:bg-paper"
+                      className="w-full flex items-center gap-2.5 px-3 py-1.5 mb-1 text-ui text-left text-accent hover:bg-paper"
                       data-testid="account-sign-in"
                       onClick={async () => {
                         setAppMenuOpen(false);
@@ -1164,33 +1314,32 @@ export function Sidebar(props: Props) {
                         });
                       }}
                     >
-                      <Icon name="plug" size={15} className="shrink-0" /> 登录 OpenWorker
-                      Cloud
+                      <Icon name="plug" size={15} className="shrink-0" /> {t("sidebar.sign_in")}
                     </button>
                   </>
                 )}
                 {appMenuItem(
                   "inbox",
-                  "收件箱",
+                  t("nav.inbox"),
                   props.onOpenInbox,
                   props.inboxActive,
                   <AttnBadge n={totalAttention} />,
                 )}
-                {appMenuItem("plug", "连接器", props.onOpenIntegrations, props.integrationsActive)}
+                {appMenuItem("plug", t("nav.connectors"), props.onOpenIntegrations, props.integrationsActive)}
                 <div className="h-px bg-line my-1 mx-2" />
                 {appMenuItem(
                   "gear",
-                  "设置",
+                  t("nav.settings"),
                   props.onManage,
                   false,
-                  <span className="text-[11px] text-faint">⌘ ,</span>,
+                  <span className="text-label text-faint">⌘ ,</span>,
                 )}
-                {appMenuItem("clock", "自动化", props.onOpenScheduled, props.scheduledActive)}
-                {appMenuItem("audit", "活动", props.onOpenAudit, props.auditActive)}
+                {/* No Automations here — the sidebar's top nav already carries it. */}
+                {appMenuItem("audit", t("nav.activity"), props.onOpenAudit, props.auditActive)}
                 {cloud?.signed_in && (
                   <>
                     <div className="h-px bg-line my-1 mx-2" />
-                    {appMenuItem("signOut", "退出登录", async () => {
+                    {appMenuItem("signOut", t("sidebar.sign_out"), async () => {
                       await cloudLogout().catch(() => {});
                       announceCloudChanged();
                     })}
@@ -1202,8 +1351,8 @@ export function Sidebar(props: Props) {
 
           <button
             className={
-              "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-[13px] text-left " +
-              (appMenuOpen ? "bg-paper text-ink" : "hover:bg-paper")
+              "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-ui text-left " +
+              (appMenuOpen ? "bg-chromeHover text-ink" : "hover:bg-chromeHover")
             }
             data-testid="account-row"
             onClick={() => {
@@ -1212,26 +1361,26 @@ export function Sidebar(props: Props) {
             }}
             aria-haspopup="menu"
             aria-expanded={appMenuOpen}
-            aria-label={cloud?.signed_in ? `账号：${accountEmail}` : "账号：未登录"}
+            aria-label={accountSignedIn ? t("sidebar.account_aria", { email: accountEmail }) : t("sidebar.account_not_signed_in_aria")}
           >
             <span
               className={
-                "w-6 h-6 rounded-full grid place-items-center text-[10.5px] font-semibold shrink-0 " +
-                (cloud?.signed_in
+                "w-6 h-6 rounded-full grid place-items-center text-label font-semibold shrink-0 " +
+                (accountSignedIn
                   ? "bg-accentSoft text-accent"
-                  : "bg-paper text-faint border border-line")
+                  : "bg-panel text-faint border border-line")
               }
               aria-hidden
             >
-              {cloud?.signed_in ? accountName.slice(0, 1).toUpperCase() : "?"}
+              {accountSignedIn ? accountName.slice(0, 1).toUpperCase() : "?"}
             </span>
-            <span className={"truncate " + (cloud?.signed_in ? "" : "text-muted")}>
-              {cloud?.signed_in ? accountName : "未登录"}
+            <span className={"truncate " + (accountSignedIn ? "" : "text-muted")}>
+              {accountSignedIn ? accountName : t("sidebar.not_signed_in_row")}
             </span>
-            {cloud?.signed_in && (
+            {accountSignedIn && (
               <span
                 className="w-[7px] h-[7px] rounded-full bg-ok shrink-0"
-                title="已登录 OpenWorker Cloud"
+                title={t("sidebar.signed_in_tooltip")}
                 aria-hidden
               />
             )}
@@ -1239,7 +1388,7 @@ export function Sidebar(props: Props) {
             {inboxUnlocked && (
               <span
                 className={
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] shrink-0 cursor-pointer " +
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-meta shrink-0 cursor-pointer " +
                   (totalAttention > 0
                     ? "bg-accentSoft text-accent font-semibold"
                     : "text-faint hover:text-ink")
@@ -1247,9 +1396,9 @@ export function Sidebar(props: Props) {
                 data-testid="inbox-chip"
                 role="button"
                 aria-label={
-                  totalAttention > 0 ? `收件箱 — 有 ${totalAttention} 项待你处理` : "收件箱"
+                  totalAttention > 0 ? t("sidebar.inbox_chip_pending", { n: totalAttention }) : t("nav.inbox")
                 }
-                title={totalAttention > 0 ? `收件箱 — 有 ${totalAttention} 项待你处理` : "收件箱"}
+                title={totalAttention > 0 ? t("sidebar.inbox_chip_pending", { n: totalAttention }) : t("nav.inbox")}
                 onClick={(e) => {
                   // The chip goes STRAIGHT to Inbox — the menu is the row's target, not the chip's.
                   e.stopPropagation();
@@ -1280,98 +1429,6 @@ export function Sidebar(props: Props) {
           }}
           onClose={() => setSearchModalOpen(false)}
         />
-      )}
-    </div>
-  );
-}
-
-// New-session split button (§8): the primary action starts a session with the last-used persona
-// (`current`); the ▾ opens a menu of the enabled personas (from /v1/personas) plus a "Manage
-// personas…" entry. A plain custom split control — the pill-shaped Dropdown doesn't fit this shape.
-function NewSessionSplit({
-  personas,
-  current,
-  onNew,
-  onManage,
-}: {
-  personas: Persona[] | null;
-  current: string;
-  onNew: (agent: string) => void;
-  onManage: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const enabled = (personas || []).filter((p) => p.enabled);
-  // With a single enabled persona there is nothing to pick — the split collapses to a plain
-  // button (owner ask 2026-07-09). `personas === null` (still loading) keeps the split so the
-  // control doesn't visibly change shape once the list arrives with 2+.
-  const solo = personas !== null && enabled.length <= 1;
-  return (
-    <div className="px-3 pt-2 relative">
-      <div className="flex">
-        <button
-          className={
-            "newsplit-primary flex-1 text-left px-3 py-2 bg-accent text-white text-[13px] font-medium hover:opacity-95 flex items-center gap-2 " +
-            (solo ? "rounded-lg" : "rounded-l-lg")
-          }
-          onClick={() => onNew(solo && enabled.length === 1 ? enabled[0].id : current)}
-        >
-          <Icon name="plus" size={15} className="shrink-0" /> 新建会话
-        </button>
-        {!solo && (
-          <button
-            className="px-2.5 rounded-r-lg bg-accent text-white border-l border-white/25 hover:opacity-95 flex items-center"
-            title="从指定角色开始"
-            aria-label="选择角色"
-            onClick={() => setOpen((v) => !v)}
-          >
-            <Icon name="chevronDown" size={13} />
-          </button>
-        )}
-      </div>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="newsplit-menu absolute left-3 right-3 mt-1 z-30 bg-panel border border-line rounded-xl2 shadow-xl p-1">
-            <div className="px-2 py-1 text-[10.5px] uppercase tracking-[0.06em] text-faint font-semibold">
-              以以下角色开始会话
-            </div>
-            {enabled.map((p) => (
-              <button
-                key={p.id}
-                className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-paper text-left"
-                onClick={() => {
-                  setOpen(false);
-                  onNew(p.id);
-                }}
-              >
-                <span className="w-6 h-6 rounded-md bg-paper border border-line grid place-items-center text-muted shrink-0">
-                  <PersonaGlyph icon={p.icon} family={p.family} size={12} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-medium truncate">
-                    {shortPersonaName(p.name, p.id)}
-                  </span>
-                  {p.tagline && (
-                    <span className="block text-[11px] text-muted truncate">{p.tagline}</span>
-                  )}
-                </span>
-              </button>
-            ))}
-            {showPersonas() && (
-              <div className="border-t border-line mt-1 pt-1">
-                <button
-                  className="w-full px-2 py-1.5 rounded-lg hover:bg-paper text-left text-[12.5px] text-muted"
-                  onClick={() => {
-                    setOpen(false);
-                    onManage();
-                  }}
-                >
-                  管理角色…
-                </button>
-              </div>
-            )}
-          </div>
-        </>
       )}
     </div>
   );

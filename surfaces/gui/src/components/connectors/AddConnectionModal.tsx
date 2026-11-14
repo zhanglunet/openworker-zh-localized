@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   connectConnector,
   connectManaged,
@@ -18,21 +19,24 @@ import { PILL_ACCENT, PILL_LINE, TAG_ACCENT } from "./ui";
 // existing ConnectSetup directly (Gmail's managed flow skips the modal entirely).
 
 const INPUT =
-  "w-full px-3 py-2 rounded-lg border border-line bg-paper text-[13px] text-ink outline-none focus:border-accent";
+  "w-full px-3 py-2 rounded-lg border border-line bg-paper text-ui text-ink outline-none focus:border-accent";
 
 export function AddConnectionModal({
   c,
   cloud,
   title,
+  githubFlow,
   onClose,
   onChanged,
 }: {
   c: Connector;
   cloud: CloudStatus | null;
   title?: string; // e.g. "Add a workspace" — defaults to "Connect {title}"
+  githubFlow?: "install";
   onClose: () => void;
   onChanged: () => void;
 }) {
+  const { t } = useTranslation();
   // MCP-backed one-click (§42): local OAuth against the vendor's hosted MCP server —
   // with manual fields alongside (jira, asana) it's a second mode; alone (monday)
   // it IS the connect flow.
@@ -52,20 +56,22 @@ export function AddConnectionModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const defaultTitle = t("modal.connect_title", { title: c.title });
+
   return (
     <div className="fixed inset-0 z-40" data-testid="add-connection-modal">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div
         className="absolute left-1/2 top-[14%] -translate-x-1/2 w-[480px] max-w-[calc(100vw-2rem)] bg-panel rounded-2xl border border-line shadow-2xl"
         role="dialog"
-        aria-label={title || `连接 ${c.title}`}
+        aria-label={title || defaultTitle}
       >
         <div className="flex items-center gap-3 px-5 pt-5">
           <ConnectorBadge connector={c} size={34} title={c.title} />
-          <div className="flex-1 font-semibold text-[16px] tracking-tight">
-            {title || `连接 ${c.title}`}
+          <div className="flex-1 font-semibold text-body tracking-tight">
+            {title || defaultTitle}
           </div>
-          <button className="text-faint hover:text-ink text-[18px] leading-none" onClick={onClose} title="关闭">
+          <button className="text-faint hover:text-ink text-title leading-none" onClick={onClose} title={t("modal.close")}>
             ×
           </button>
         </div>
@@ -73,7 +79,7 @@ export function AddConnectionModal({
         {twoModes ? (
           <>
             <div className="px-5 pt-4">
-              <div className="inline-flex rounded-full p-0.5 bg-paper text-[12.5px] font-medium">
+              <div className="inline-flex rounded-full p-0.5 bg-paper text-ui font-medium">
                 {(["one", "manual"] as const).map((p) => (
                   <button
                     key={p}
@@ -84,7 +90,7 @@ export function AddConnectionModal({
                     }
                     onClick={() => setPane(p)}
                   >
-                    {p === "one" ? "一键" : "手动"}
+                    {p === "one" ? t("modal.one_click") : t("modal.manual")}
                   </button>
                 ))}
               </div>
@@ -95,7 +101,7 @@ export function AddConnectionModal({
               ) : c.name === "hubspot" ? (
                 <HubSpotOneClick c={c} cloud={cloud} />
               ) : c.name === "github" ? (
-                <GithubOneClick c={c} cloud={cloud} />
+                <GithubOneClick c={c} cloud={cloud} flow={githubFlow} />
               ) : c.name === "slack" ? (
                 <SlackOneClick c={c} cloud={cloud} />
               ) : (
@@ -128,6 +134,7 @@ export function AddConnectionModal({
 // client secret, no broker, no OpenWorker sign-in required). Poll until the card
 // flips to connected, then close.
 function McpOneClick({ c, onConnected }: { c: Connector; onConnected: () => void }) {
+  const { t: tt } = useTranslation();
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -146,13 +153,12 @@ function McpOneClick({ c, onConnected }: { c: Connector; onConnected: () => void
     setError(null);
     const res = await connectMcpBacked(c.name);
     if (res.ok) setWaiting(true);
-    else setError(res.error || "无法启动连接");
+    else setError(res.error || tt("modal.could_not_start_connect"));
   };
   return (
     <div className="px-5 py-4 space-y-3">
-      <p className="text-[13px] text-muted">
-        在你的浏览器中打开 {c.title}——登录并授权访问。无需输入令牌，也无需
-        OpenWorker 账户：登录过程完全在本机完成。
+      <p className="text-ui text-muted">
+        {tt("modal.mcp_blurb", { title: c.title })}
       </p>
       <button
         className={PILL_ACCENT + " w-full !py-2"}
@@ -160,12 +166,11 @@ function McpOneClick({ c, onConnected }: { c: Connector; onConnected: () => void
         onClick={go}
         disabled={waiting}
       >
-        {waiting ? "请查看你的浏览器…" : `连接 ${c.title}`}
+        {waiting ? tt("cloud.check_browser") : tt("modal.connect_title", { title: c.title })}
       </button>
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
-      <p className="text-[12px] text-faint text-center flex items-center justify-center gap-1.5">
-        <span className={TAG_ACCENT}>推荐</span> 智能体会获得一组精选的{" "}
-        {c.title} 工具 · 令牌保留在本机
+      {error && <div className="text-ui text-danger">{error}</div>}
+      <p className="text-meta text-faint text-center flex items-center justify-center gap-1.5">
+        <span className={TAG_ACCENT}>{tt("modal.recommended")}</span> {tt("modal.mcp_recommended_foot", { title: c.title })}
       </p>
     </div>
   );
@@ -174,18 +179,19 @@ function McpOneClick({ c, onConnected }: { c: Connector; onConnected: () => void
 // One-click pane for generic managed connectors (Notion, Attio, …): sign in
 // with the service in the browser; each consent lands as its own account.
 function GenericOneClick({ c, cloud }: { c: Connector; cloud: CloudStatus | null }) {
+  const { t: tt } = useTranslation();
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const go = async () => {
     setError(null);
     const res = await connectManaged(c.name);
     if (res.ok) setWaiting(true);
-    else setError(res.error || "无法启动连接");
+    else setError(res.error || tt("modal.could_not_start_connect"));
   };
   return (
     <div className="px-5 py-4 space-y-3">
-      <p className="text-[13px] text-muted">
-        在你的浏览器中打开 {c.title}——在那里授权访问。无需输入令牌；使用其他账户再次连接即可一并添加。
+      <p className="text-ui text-muted">
+        {tt("modal.generic_blurb", { title: c.title })}
       </p>
       {cloud?.signed_in ? (
         <button
@@ -194,88 +200,104 @@ function GenericOneClick({ c, cloud }: { c: Connector; cloud: CloudStatus | null
           onClick={go}
           disabled={waiting}
         >
-          {waiting ? "请查看你的浏览器…" : `连接 ${c.title}`}
+          {waiting ? tt("cloud.check_browser") : tt("modal.connect_title", { title: c.title })}
         </button>
       ) : cloud ? (
         <CloudSignInInline />
       ) : (
         <CloudStatusPending />
       )}
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
-      <p className="text-[12px] text-faint text-center flex items-center justify-center gap-1.5">
-        <span className={TAG_ACCENT}>推荐</span> 令牌保留在本机
+      {error && <div className="text-ui text-danger">{error}</div>}
+      <p className="text-meta text-faint text-center flex items-center justify-center gap-1.5">
+        <span className={TAG_ACCENT}>{tt("modal.recommended")}</span> {tt("modal.tokens_stay_local")}
       </p>
     </div>
   );
 }
 
 function SlackOneClick({ c, cloud }: { c: Connector; cloud: CloudStatus | null }) {
+  const { t: tt } = useTranslation();
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The cloud-status poll runs every 5s (ConnectorsSection), so `cloud.signed_in`
+  // can still say true for a few seconds after the session actually expired.
+  // "Add to Slack" then dead-ended on a bare "not signed in" (issue #658) instead
+  // of recovering — this flag switches the pane to sign-in once the connect
+  // attempt itself (the authoritative check) says the session isn't usable.
+  const [sessionExpired, setSessionExpired] = useState(false);
   const go = async () => {
     setError(null);
     const res = await connectManaged(c.name);
     if (res.ok) setWaiting(true);
-    else setError(res.error || "无法启动安装");
+    else if (res.signed_in === false) setSessionExpired(true);
+    else setError(res.error || tt("modal.could_not_start_install"));
   };
   return (
     <div className="px-5 py-4 space-y-3">
-      <p className="text-[13px] text-muted">
-        在你的浏览器中打开 Slack——为工作区授权 @ocw。无需令牌；支持任意数量的工作区。
+      <p className="text-ui text-muted">
+        {tt("modal.slack_blurb")}
       </p>
-      {cloud?.signed_in ? (
-        <button className={PILL_ACCENT + " w-full !py-2"} data-testid="modal-add-to-slack" onClick={go} disabled={waiting}>
-          {waiting ? "请查看你的浏览器…" : "添加到 Slack"}
+      {waiting ? (
+        // The sign-in retry (if any) already happened — always land here once
+        // connectManaged has actually succeeded, so a just-completed sign-in
+        // doesn't flash the "Sign in" button again while Slack's own consent
+        // tab is open.
+        <button className={PILL_ACCENT + " w-full !py-2"} data-testid="modal-add-to-slack" disabled>
+          {tt("cloud.check_browser")}
+        </button>
+      ) : sessionExpired ? (
+        <CloudSignInInline onSignedIn={go} />
+      ) : cloud?.signed_in ? (
+        <button className={PILL_ACCENT + " w-full !py-2"} data-testid="modal-add-to-slack" onClick={go}>
+          {tt("modal.add_to_slack")}
         </button>
       ) : cloud ? (
-        <CloudSignInInline />
+        <CloudSignInInline onSignedIn={go} />
       ) : (
         <CloudStatusPending />
       )}
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
-      <p className="text-[12px] text-faint text-center flex items-center justify-center gap-1.5">
-        <span className={TAG_ACCENT}>推荐</span> 中继 · 令牌保留在本机
+      {error && <div className="text-ui text-danger">{error}</div>}
+      <p className="text-meta text-faint text-center flex items-center justify-center gap-1.5">
+        <span className={TAG_ACCENT}>{tt("modal.recommended")}</span> {tt("modal.slack_recommended_foot")}
       </p>
     </div>
   );
 }
 
-function GithubOneClick({ c, cloud }: { c: Connector; cloud: CloudStatus | null }) {
+function GithubOneClick({ c, cloud, flow }: { c: Connector; cloud: CloudStatus | null; flow?: "install" }) {
+  const { t: tt } = useTranslation();
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const go = async () => {
     setError(null);
-    const res = await connectManaged(c.name);
+    const res = await connectManaged(c.name, flow ? { flow } : undefined);
     if (res.ok) setWaiting(true);
-    else setError(res.error || "无法启动安装");
+    else setError(res.error || tt("modal.could_not_start_install"));
   };
   return (
     <div className="px-5 py-4 space-y-3">
-      <p className="text-[13px] text-muted">
-        在你的浏览器中打开 GitHub——在那里授权 OpenWorker。已安装的 @ocw-agent App
-        会直接关联；否则你需要选择账户和仓库。无需输入令牌；智能体以 ocw-agent[bot] 身份操作。
+      <p className="text-ui text-muted">
+        {tt(flow === "install" ? "modal.github_install_blurb" : "modal.github_blurb")}
       </p>
       {cloud?.signed_in ? (
-        /* One button: the broker is authorize-first — it links an existing installation or
-           redirects the same tab on to the install page (the old "Already installed? Link
-           it" question and the Configure dead-end are gone). */
         <button className={PILL_ACCENT + " w-full !py-2"} data-testid="modal-install-github-app" onClick={() => go()} disabled={waiting}>
-          {waiting ? "请查看你的浏览器…" : "连接 GitHub"}
+          {waiting ? tt("cloud.check_browser") : tt(flow === "install" ? "modal.choose_github_account" : "modal.connect_github")}
         </button>
       ) : cloud ? (
         <CloudSignInInline />
       ) : (
         <CloudStatusPending />
       )}
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
-      <p className="text-[12px] text-faint text-center flex items-center justify-center gap-1.5">
-        <span className={TAG_ACCENT}>推荐</span> 中继 · 短期令牌，永不存储
+      {error && <div className="text-ui text-danger">{error}</div>}
+      <p className="text-meta text-faint text-center flex items-center justify-center gap-1.5">
+        <span className={TAG_ACCENT}>{tt("modal.recommended")}</span> {tt("modal.github_recommended_foot")}
       </p>
     </div>
   );
 }
 
 function HubSpotOneClick({ c, cloud }: { c: Connector; cloud: CloudStatus | null }) {
+  const { t: tt } = useTranslation();
   const [access, setAccess] = useState<"read" | "write">("read");
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -283,21 +305,21 @@ function HubSpotOneClick({ c, cloud }: { c: Connector; cloud: CloudStatus | null
     setError(null);
     const res = await connectManaged(c.name, { access });
     if (res.ok) setWaiting(true);
-    else setError(res.error || "无法启动连接");
+    else setError(res.error || tt("modal.could_not_start_connect"));
   };
   return (
     <div className="px-5 py-4 space-y-3">
-      <p className="text-[13px] text-muted">
-        在你的浏览器中打开 HubSpot——在那里选择门户。智能体可以执行的操作在授权时即确定：
+      <p className="text-ui text-muted">
+        {tt("modal.hubspot_blurb")}
       </p>
       <div className="space-y-1.5" data-testid="hubspot-access">
         {(
           [
-            ["read", "只读", "搜索并读取联系人、公司、交易、工单"],
-            ["write", "读写", "新增：记录备注与任务、更新记录、创建联系人——永不删除"],
+            ["read", tt("modal.hubspot_readonly"), tt("modal.hubspot_readonly_blurb")],
+            ["write", tt("modal.hubspot_readwrite"), tt("modal.hubspot_readwrite_blurb")],
           ] as const
         ).map(([value, label, blurb]) => (
-          <label key={value} className="flex items-start gap-2 text-[13px] cursor-pointer">
+          <label key={value} className="flex items-start gap-2 text-ui cursor-pointer">
             <input
               type="radio"
               name="hubspot-access"
@@ -308,29 +330,30 @@ function HubSpotOneClick({ c, cloud }: { c: Connector; cloud: CloudStatus | null
             />
             <span>
               <span className="font-medium">{label}</span>
-              <span className="block text-[12px] text-muted">{blurb}</span>
+              <span className="block text-meta text-muted">{blurb}</span>
             </span>
           </label>
         ))}
       </div>
       {cloud?.signed_in ? (
         <button className={PILL_ACCENT + " w-full !py-2"} data-testid="modal-connect-hubspot" onClick={go} disabled={waiting}>
-          {waiting ? "请查看你的浏览器…" : "连接 HubSpot"}
+          {waiting ? tt("cloud.check_browser") : tt("modal.connect_hubspot")}
         </button>
       ) : cloud ? (
         <CloudSignInInline />
       ) : (
         <CloudStatusPending />
       )}
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
-      <p className="text-[12px] text-faint text-center">
-        支持任意数量的门户 · 令牌保留在本机
+      {error && <div className="text-ui text-danger">{error}</div>}
+      <p className="text-meta text-faint text-center">
+        {tt("modal.hubspot_foot")}
       </p>
     </div>
   );
 }
 
 function SlackManual({ onConnected }: { onConnected: () => void }) {
+  const { t: tt } = useTranslation();
   const [bot, setBot] = useState("");
   const [app, setApp] = useState("");
   const [busy, setBusy] = useState(false);
@@ -341,23 +364,23 @@ function SlackManual({ onConnected }: { onConnected: () => void }) {
     const res = await connectConnector("slack", { bot_token: bot.trim(), app_token: app.trim() });
     setBusy(false);
     if (res.ok) onConnected();
-    else setError(res.error || "无法连接");
+    else setError(res.error || tt("modal.could_not_connect"));
   };
   return (
     <div className="px-5 py-4 space-y-3">
-      <ol className="list-decimal pl-4 text-[13px] text-muted space-y-1">
-        <li>在 api.slack.com/apps 创建应用</li>
-        <li>启用 Socket Mode，添加机器人权限范围，安装到你的工作区</li>
-        <li>粘贴两个令牌</li>
+      <ol className="list-decimal pl-4 text-ui text-muted space-y-1">
+        <li>{tt("modal.slack_manual_step1")}</li>
+        <li>{tt("modal.slack_manual_step2")}</li>
+        <li>{tt("modal.slack_manual_step3")}</li>
       </ol>
-      <input className={INPUT} type="password" placeholder="机器人令牌 · xoxb-…" value={bot} spellCheck={false} onChange={(e) => setBot(e.target.value)} />
-      <input className={INPUT} type="password" placeholder="应用令牌 · xapp-…" value={app} spellCheck={false} onChange={(e) => setApp(e.target.value)} />
+      <input className={INPUT} type="password" placeholder={tt("modal.bot_token_placeholder")} value={bot} spellCheck={false} onChange={(e) => setBot(e.target.value)} />
+      <input className={INPUT} type="password" placeholder={tt("modal.app_token_placeholder")} value={app} spellCheck={false} onChange={(e) => setApp(e.target.value)} />
       <button className={PILL_LINE + " w-full !py-2"} onClick={submit} disabled={busy || !bot.trim() || !app.trim()}>
-        {busy ? "正在验证…" : "连接"}
+        {busy ? tt("modal.validating") : tt("modal.connect")}
       </button>
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
-      <p className="text-[12px] text-warnInk text-center">
-        一次仅一种模式——这会暂停所有中继工作区。
+      {error && <div className="text-ui text-danger">{error}</div>}
+      <p className="text-meta text-warnInk text-center">
+        {tt("modal.slack_manual_pause_note")}
       </p>
     </div>
   );

@@ -34,9 +34,25 @@ def _task(**kw) -> ScheduledTask:
 # -- model / schedule ----------------------------------------------------------
 def test_schedule_human():
     assert Schedule("cron", cron="10 19 * * *").human() == "Every day at ~7:10 PM"
-    assert "Monday" in Schedule("cron", cron="0 9 * * 0").human()
+    # Cron day-of-week: 0 (and 7) = Sunday, 1 = Monday … 6 = Saturday.
+    assert "Sunday" in Schedule("cron", cron="0 9 * * 0").human()
+    assert "Monday" in Schedule("cron", cron="0 9 * * 1").human()
+    assert "Saturday" in Schedule("cron", cron="0 9 * * 6").human()
+    assert "Sunday" in Schedule("cron", cron="0 9 * * 7").human()  # 7 also Sunday
     assert Schedule("cron", cron="0 9 5 * *").human() == "Monthly on day 5 at ~9:00 AM"
     assert Schedule("once", fire_at="2026-07-01T09:00:00").human().startswith("Once at")
+
+
+def test_weekly_label_matches_croniter_fire_day():
+    """The rendered weekday must equal the day croniter actually fires on (regression: a
+    Monday-first name list indexed by cron dow labelled every weekly schedule a day late)."""
+    from croniter import croniter
+
+    for dow in range(7):
+        label = Schedule("cron", cron=f"0 9 * * {dow}").human()
+        base = datetime(2026, 7, 20, 0, 0)  # a Monday
+        fires = croniter(f"0 9 * * {dow}", base).get_next(datetime)
+        assert fires.strftime("%A") in label, (dow, label, fires.strftime("%A"))
 
 
 def test_task_gets_own_thread_id():
@@ -67,6 +83,27 @@ def test_compute_next_run_once_in_past_is_none():
     past = "2020-01-01T00:00:00+00:00"
     t = _task(schedule=Schedule(kind="once", fire_at=past))
     assert compute_next_run(t) is None
+
+
+def test_compute_next_run_once_local_is_dst_aware(monkeypatch):
+    """A one-time 'local' task set while EDT is in effect but firing on a winter EST date must
+    fire at the requested wall-clock, not an hour off. Binding the naive datetime to the
+    offset in effect at compute time (the old bug) misfired by the DST delta."""
+    import time as _time
+
+    monkeypatch.setenv("TZ", "America/New_York")
+    _time.tzset()
+    try:
+        # Compute "now" during summer (EDT, -04:00); the task fires on a winter date (EST).
+        summer_now = datetime(2026, 7, 1, 12, 0).timestamp()
+        t = _task(schedule=Schedule(kind="once", fire_at="2026-12-25T08:00:00"))
+        nxt = compute_next_run(t, after=summer_now)
+        fires_local = datetime.fromtimestamp(nxt)
+        assert (fires_local.hour, fires_local.minute) == (8, 0)
+        assert fires_local.date() == datetime(2026, 12, 25, 8, 0).date()
+    finally:
+        monkeypatch.delenv("TZ", raising=False)
+        _time.tzset()
 
 
 # -- store ---------------------------------------------------------------------
@@ -111,14 +148,21 @@ async def test_scheduler_runs_due_task_and_advances(tmp_path):
     store._conn.commit()
 
     ran: list[str] = []
+    ran_once = asyncio.Event()
 
     async def runner(task, trigger):
         ran.append(task.id)
+        ran_once.set()
         return TaskRun(task_id=task.id, status="ok", trigger=trigger)
 
     sched = Scheduler(store, runner, tick_seconds=0.05)
     sched.start()
-    await asyncio.sleep(0.2)
+    # Wait for the run instead of sleeping a fixed window: with an every-minute cron, a
+    # fixed sleep that happens to straddle a minute boundary lets the advanced task come
+    # due AGAIN and legitimately fire twice. Stopping right after the first run (the
+    # advance is synchronous once the runner returns) makes the single-fire assertion
+    # deterministic.
+    await asyncio.wait_for(ran_once.wait(), timeout=5.0)
     await sched.stop()
     assert ran == [t.id]
     advanced = store.get(t.id)
@@ -432,3 +476,128 @@ async def test_scheduled_run_broadcasts_run_started_event(tmp_path, monkeypatch)
     assert event["data"]["session_id"] == run.session_id
     assert event["data"]["trigger"] == "schedule"
     assert dead not in manager._event_clients  # dropped, not fatal
+
+
+@pytest.mark.asyncio
+async def test_cancelled_scheduled_run_is_not_left_running(tmp_path, monkeypatch):
+    from coworker.server.manager import SessionManager
+
+    monkeypatch.setenv("COWORKER_STATE_DIR", str(tmp_path / "state"))
+    workspace = tmp_path / "ws"
+    workspace.mkdir()
+    manager = SessionManager(data_dir=tmp_path / "data")
+    task = manager.task_store.save(_task(workspace=str(workspace)))
+    started = asyncio.Event()
+    interrupted = False
+
+    class BlockingEngine:
+        messages = []
+
+        async def run(self, _opening, **_kw):
+            started.set()
+            await asyncio.Event().wait()
+            yield
+
+        def request_interrupt(self):
+            nonlocal interrupted
+            interrupted = True
+
+    monkeypatch.setattr(
+        manager,
+        "_build_task_engine",
+        lambda _task, *, session_id: BlockingEngine(),
+    )
+
+    pending = asyncio.create_task(
+        manager._run_scheduled_task(task, trigger="schedule")
+    )
+    await asyncio.wait_for(started.wait(), timeout=1.0)
+    (initial,) = manager.task_store.runs(task.id)
+    assert initial.status == "running"
+
+    pending.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await pending
+
+    (stored,) = manager.task_store.runs(task.id)
+    assert stored.run_id == initial.run_id
+    assert stored.status == "error"
+    assert stored.finished_at is not None
+    assert stored.error == "cancelled during scheduler shutdown"
+    assert interrupted is True
+
+
+@pytest.mark.asyncio
+async def test_cancelled_start_broadcast_is_not_left_running(tmp_path, monkeypatch):
+    from coworker.server.manager import SessionManager
+
+    monkeypatch.setenv("COWORKER_STATE_DIR", str(tmp_path / "state"))
+    workspace = tmp_path / "ws"
+    workspace.mkdir()
+    manager = SessionManager(data_dir=tmp_path / "data")
+    task = manager.task_store.save(_task(workspace=str(workspace)))
+    broadcast_started = asyncio.Event()
+
+    async def blocking_listener(_message):
+        broadcast_started.set()
+        await asyncio.Event().wait()
+
+    manager.register_event_client(blocking_listener)
+    pending = asyncio.create_task(
+        manager._run_scheduled_task(task, trigger="schedule")
+    )
+    await asyncio.wait_for(broadcast_started.wait(), timeout=1.0)
+    pending.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await pending
+
+    (stored,) = manager.task_store.runs(task.id)
+    assert stored.status == "error"
+    assert stored.finished_at is not None
+    assert stored.error == "cancelled during scheduler shutdown"
+
+
+@pytest.mark.asyncio
+async def test_cancelled_completion_notification_preserves_success(
+    tmp_path, monkeypatch
+):
+    from coworker.server.manager import SessionManager
+
+    monkeypatch.setenv("COWORKER_STATE_DIR", str(tmp_path / "state"))
+    workspace = tmp_path / "ws"
+    workspace.mkdir()
+    manager = SessionManager(data_dir=tmp_path / "data")
+    task = manager.task_store.save(_task(workspace=str(workspace)))
+    notify_started = asyncio.Event()
+
+    class CompletingEngine:
+        messages = [{"role": "assistant", "content": "done"}]
+
+        async def run(self, _opening, **_kw):
+            if False:
+                yield
+
+    async def blocking_notify(_task, _run):
+        notify_started.set()
+        await asyncio.Event().wait()
+
+    monkeypatch.setattr(
+        manager,
+        "_build_task_engine",
+        lambda _task, *, session_id: CompletingEngine(),
+    )
+    monkeypatch.setattr(manager, "_notify_task_done", blocking_notify)
+    scheduler = Scheduler(manager.task_store, manager._run_scheduled_task)
+    pending = asyncio.create_task(scheduler.run_task(task, trigger="schedule"))
+
+    await asyncio.wait_for(notify_started.wait(), timeout=1.0)
+    pending.cancel()
+    run = await pending
+
+    assert run is not None and run.status == "ok"
+    stored = manager.task_store.find_run(run.run_id)
+    assert stored is not None and stored.status == "ok"
+    updated = manager.task_store.get(task.id)
+    assert updated is not None
+    assert updated.run_count == 1
+    assert updated.last_status == "ok"

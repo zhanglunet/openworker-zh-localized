@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 from types import SimpleNamespace
 
+import pytest
+
+
 from coworker.providers import (
     AssistantTurn,
     ModelCapabilities,
@@ -278,7 +281,8 @@ def test_stream_accumulates_tool_calls():
     )
 
 
-# -- OpenAI-compatible vendor providers (Z AI, DeepSeek, Kimi, MiniMax, Qwen, xAI, Mistral) ------
+# -- OpenAI-compatible vendor providers (Z AI, DeepSeek, Kimi, MiniMax, Qwen, xAI, Mistral,
+# NVIDIA NIM) ------------------------------------------------------------------------------
 
 COMPAT_VENDORS = {
     "zai": "https://api.z.ai/api/paas/v4",
@@ -288,6 +292,13 @@ COMPAT_VENDORS = {
     "qwen": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     "xai": "https://api.x.ai/v1",
     "mistral": "https://api.mistral.ai/v1",
+    "nvidia": "https://integrate.api.nvidia.com/v1",
+    "atlascloud": "https://api.atlascloud.ai/v1",
+    "upstage": "https://api.upstage.ai/v1",
+    "cerebras": "https://api.cerebras.ai/v1",
+    "huggingface": "https://router.huggingface.co/v1",
+    "cohere": "https://api.cohere.ai/compatibility/v1",
+    "siliconflow": "https://api.siliconflow.com/v1",
 }
 
 
@@ -338,6 +349,121 @@ def test_compat_builder_never_leaks_the_openai_key(monkeypatch):
         build_provider_client("kimi", {}, None)
 
 
+ARK_RESPONSES_VENDORS = {
+    "ark": {
+        "base_url": "https://ark.ap-southeast.bytepluses.com/api/v3",
+        "env_key": "ARK_API_KEY",
+        "recommended_model": "dola-seed-evolving-latest-version",
+        "reasoning_summary": False,
+    },
+    "ark-agent-plan-cn": {
+        "base_url": "https://ark.cn-beijing.volces.com/api/plan/v3",
+        "env_key": "ARK_AGENT_PLAN_CN_API_KEY",
+        "recommended_model": "doubao-seed-evolving",
+        "reasoning_summary": True,
+    },
+}
+
+
+def test_ark_responses_descriptors_are_separate():
+    from coworker.providers.registry import get_descriptor
+
+    for name, expected in ARK_RESPONSES_VENDORS.items():
+        d = get_descriptor(name)
+        assert d is not None and d.needs_key, name
+        assert d.env_key == expected["env_key"]
+        assert d.recommended_model == expected["recommended_model"]
+        assert "Responses API" in d.blurb
+        base = next(f for f in d.fields if f.key == "base_url")
+        assert base.default == expected["base_url"]
+        assert not base.required
+
+
+def test_ark_responses_builder_capabilities_PathsUnchanged(monkeypatch):
+    from coworker.providers.openai_responses import OpenAIResponsesProvider
+    from coworker.providers.registry import build_provider_client
+
+    monkeypatch.setenv("ARK_AGENT_PLAN_CN_API_KEY", "plan-key")
+    bp = build_provider_client("ark", {"api_key": "bp-key"}, None)
+    plan = build_provider_client("ark-agent-plan-cn", {}, None)
+
+    assert isinstance(bp, OpenAIResponsesProvider)
+    assert (bp._api_key, bp._base_url) == (
+        "bp-key",
+        ARK_RESPONSES_VENDORS["ark"]["base_url"],
+    )
+    assert isinstance(plan, OpenAIResponsesProvider)
+    assert (plan._api_key, plan._base_url) == (
+        "plan-key",
+        ARK_RESPONSES_VENDORS["ark-agent-plan-cn"]["base_url"],
+    )
+    assert bp._reasoning_summary is ARK_RESPONSES_VENDORS["ark"]["reasoning_summary"]
+    assert plan._reasoning_summary is ARK_RESPONSES_VENDORS["ark-agent-plan-cn"][
+        "reasoning_summary"
+    ]
+
+
+def test_ark_responses_never_leak_the_openai_key(monkeypatch):
+    import pytest
+
+    from coworker.providers.registry import build_provider_client
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-real")
+    monkeypatch.delenv("ARK_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="BytePlus Ark"):
+        build_provider_client("ark", {}, None)
+
+
+def test_existing_chat_compat_paths_unchanged():
+    """Lockdown: adding Responses vendors must not migrate existing compat providers."""
+    from coworker.providers.registry import build_provider_client
+
+    provider = build_provider_client("deepseek", {"api_key": "ds-key"}, None)
+    assert isinstance(provider, OpenAIProvider)
+    assert provider._base_url == COMPAT_VENDORS["deepseek"]
+
+
+def test_ark_curated_models_are_strict_allowlists():
+    from coworker.providers.matrix import models_for_provider
+
+    assert models_for_provider("ark") == [
+        "dola-seed-evolving-latest-version",
+        "dola-seed-2-1-turbo-260628",
+    ]
+    assert models_for_provider("ark-agent-plan-cn") == [
+        "doubao-seed-evolving",
+        "doubao-seed-2.1-turbo",
+    ]
+
+
+def test_ark_models_route_and_get_verified_agent_capabilities():
+    from coworker.providers.router import ProviderRouter
+
+    models = (
+        "ark:dola-seed-evolving-latest-version",
+        "ark:dola-seed-2-1-turbo-260628",
+        "ark-agent-plan-cn:doubao-seed-evolving",
+        "ark-agent-plan-cn:doubao-seed-2.1-turbo",
+    )
+    router = ProviderRouter.__new__(ProviderRouter)
+    for model in models:
+        prefix, bare = model.split(":", 1)
+        assert router._provider_name(model) == prefix
+        assert ProviderRouter._bare(model) == bare
+        caps = capabilities_for(model)
+        assert caps.tools and caps.parallel_tool_calls and caps.streaming
+        assert not caps.vision
+
+
+def test_ark_recommended_models_are_curated():
+    from coworker.providers.matrix import models_for_provider
+    from coworker.providers.registry import get_descriptor
+
+    for name in ARK_RESPONSES_VENDORS:
+        d = get_descriptor(name)
+        assert d.recommended_model in models_for_provider(name)
+
+
 def test_compat_models_route_and_get_tool_capabilities():
     from coworker.providers.router import ProviderRouter
 
@@ -352,6 +478,13 @@ def test_compat_models_route_and_get_tool_capabilities():
         "qwen:qwen3-max",
         "xai:grok-4.3",
         "mistral:mistral-large-latest",
+        "orcarouter:anthropic/claude-sonnet-5",
+        "atlascloud:zai-org/glm-5.2",
+        "upstage:solar-pro4",
+        "cerebras:gpt-oss-120b",
+        "huggingface:zai-org/GLM-5.2",
+        "cohere:command-a-plus-05-2026",
+        "siliconflow:zai-org/GLM-5.2",
     ):
         prefix = model.split(":", 1)[0]
         assert router._provider_name(model) == prefix
@@ -383,9 +516,40 @@ def test_matrix_answers_capabilities_for_reseller_ids():
         "fireworks:accounts/fireworks/models/kimi-k2p6",
         "openrouter:z-ai/glm-5.2",
         "openrouter:meta-llama/llama-4-maverick",
+        "nebius:zai-org/GLM-5.2",
+        "orcarouter:anthropic/claude-sonnet-5",
+        # NIM ids are `vendor/model`, so NVIDIA's own models repeat the word in the
+        # routed id. Deliberate: the `z-ai/` and `deepseek-ai/` rows in matrix.py don't.
+        "nvidia:nvidia/nemotron-3-super-120b-a12b",
+        "groq:llama-3.3-70b-versatile",
     ):
         caps = capabilities_for(mid)
         assert caps.tools and caps.parallel_tool_calls and caps.streaming
+
+
+def test_openrouter_vision_matches_declared_input_modalities():
+    """Vision must track what OpenRouter declares per model, or the engine swaps in its
+    non-vision placeholder and the image never reaches a model that can read it."""
+    for mid in (
+        "openrouter:moonshotai/kimi-k2.6",
+        "openrouter:meta-llama/llama-4-maverick",
+    ):
+        caps = capabilities_for(mid)
+        assert caps.vision and not caps.pdf, mid
+    for mid in ("openrouter:z-ai/glm-5.2", "openrouter:deepseek/deepseek-v4-pro"):
+        assert not capabilities_for(mid).vision, mid
+
+
+def test_qwen38_max_is_curated_vision_true():
+    """Qwen3.8 Max is multimodal, unlike the text-only Qwen3 Max — it needs its own
+    matrix entry so the blanket qwen-prefix heuristic (vision=False) doesn't strip
+    images client-side (issue: images silently replaced with a placeholder). The bare
+    Qwen3 Max entry is untouched by the fix."""
+    assert capabilities_for("qwen:qwen3.8-max").vision is True
+    assert capabilities_for("qwen:qwen3-max").vision is False
+    # the heuristic alone (no provider prefix) still can't tell the two apart — the
+    # matrix entry, not the heuristic, is what fixes this.
+    assert capabilities_for("qwen3.8-max").vision is False
 
 
 def test_matrix_labels_and_custom_model_fallback():
@@ -395,12 +559,36 @@ def test_matrix_labels_and_custom_model_fallback():
     assert labels["together:zai-org/GLM-5.2"] == "GLM-5.2 · via Together"
     assert labels["zai:glm-5.2"] == "GLM-5.2 · Z AI"
     # Deliberately small: agent-capable current models only (owner call, 2026-07-04).
-    assert len(MATRIX) < 60
+    # 60→65 (2026-08-24): the stealth ox-alpha preview slug tipped it; reclaim slack by
+    # pruning retired entries before raising this again.
+    # 65→70 (2026-09-16): three Claude 4.5/4.6 rows added for comparability with
+    # published evaluations of those models. The
+    # pruning owed above is NOT done here — deciding which entries are retired is an owner
+    # call, and dropping a row silently downgrades that model to the conservative fallback
+    # capabilities. Prune before raising this a third time.
+    # 70→75 (2026-10-01, OPE-215): three OpenRouter rows (Nemotron 3 Ultra, Nemotron 3.5
+    # Lightning, GLM 5.3). The pruning owed above is still not done; it remains the owner's
+    # call and should come before this is raised again.
+    # 75→100 (2026-10-25, owner call): thirteen provider cards from the PR backlog land
+    # next, each with one to three rows; the prune of retired rows follows them as its own
+    # change, against a verified list of what each vendor still serves.
+    # The `openrouter-account:` rows are aliases of the `openrouter:` rows (one source), so
+    # they are excluded from the count rather than counted against it.
+    assert len([m for m in MATRIX if not m.startswith("openrouter-account:")]) < 100
     assert all(e.caps.tools for e in MATRIX.values())
     # A custom (unlisted) reseller model falls back to the conservative default — usable,
     # but at the user's own risk (no parallel tool calls assumed).
     caps = capabilities_for("together:some-org/Brand-New-Model")
     assert caps.tools and not caps.parallel_tool_calls
+
+
+def test_groq_gpt_oss_rows_do_not_claim_parallel_tool_calls():
+    """console.groq.com/docs/tool-use (2026-10-25): GPT-OSS on Groq takes tools but not
+    parallel tool use; Llama 3.3 70B does both."""
+    assert capabilities_for("groq:llama-3.3-70b-versatile").parallel_tool_calls
+    for mid in ("groq:openai/gpt-oss-120b", "groq:openai/gpt-oss-20b"):
+        caps = capabilities_for(mid)
+        assert caps.tools and not caps.parallel_tool_calls
 
 
 def test_reseller_descriptors_and_matrix_stay_in_lockstep():
@@ -409,7 +597,10 @@ def test_reseller_descriptors_and_matrix_stay_in_lockstep():
     from coworker.providers.matrix import models_for_provider
     from coworker.providers.registry import get_descriptor
 
-    for name in ("together", "fireworks", "openrouter"):
+    for name in (
+        "together", "fireworks", "openrouter", "nebius", "orcarouter", "sambanova",
+        "novita", "groq",
+    ):
         d = get_descriptor(name)
         assert d is not None and d.needs_key
         curated = models_for_provider(name)
@@ -456,3 +647,176 @@ def test_complete_picks_up_reasoning_content():
     provider = OpenAIProvider(client=_FakeClient(SimpleNamespace(choices=[choice])))
     turn = provider.complete(model="deepseek-v4-pro", messages=[{"role": "user", "content": "x"}])
     assert turn.text == "Answer" and turn.reasoning == "deep thought"
+
+
+def test_default_max_tokens_injected_and_caller_setting_wins():
+    """Compat servers left to their OWN defaults cap completions absurdly low
+    (owner-hit 2026-08-15: Together defaulted Kimi K3 to ~2k tokens, so every report
+    write truncated mid-arguments). The request always names a ceiling now."""
+    from coworker.providers.openai_provider import DEFAULT_MAX_TOKENS
+
+    client = _FakeClient(_response(content="ok"))
+    provider = OpenAIProvider(client=client)
+    provider.complete(model="kimi-k3", messages=[])
+    assert client.chat.completions.calls[0]["max_tokens"] == DEFAULT_MAX_TOKENS
+
+    client2 = _FakeClient(_response(content="ok"))
+    provider2 = OpenAIProvider(client=client2)
+    provider2.complete(model="kimi-k3", messages=[], max_tokens=512)
+    assert client2.chat.completions.calls[0]["max_tokens"] == 512
+
+
+def test_over_limit_max_tokens_is_dropped_and_retried():
+    """A model whose completion limit sits below our default must not surface the 400:
+    drop the param, retry on the server's own default (yesterday's behavior, at worst)."""
+
+    class _LimitRejecting:
+        def __init__(self, response):
+            self._response = response
+            self.calls: list[dict] = []
+
+        def create(self, **kwargs):
+            self.calls.append(kwargs)
+            if "max_tokens" in kwargs:
+                raise RuntimeError(
+                    "Error code: 400 - max_tokens must be at most 8193 for this model"
+                )
+            return self._response
+
+    client = _FakeClient(_response(content="ok"))
+    client.chat.completions = _LimitRejecting(_response(content="ok"))
+    provider = OpenAIProvider(client=client)
+
+    turn = provider.complete(model="tiny-model", messages=[])
+    calls = client.chat.completions.calls
+    assert turn.text == "ok" and len(calls) == 2
+    assert "max_tokens" not in calls[1]
+
+
+# -- Azure OpenAI (its own card, issue #457) ---------------------------------------------
+# Verified against learn.microsoft.com/azure/ai-foundry/openai/api-version-lifecycle
+# (read 2026-10-26): base URL = resource endpoint + `/openai/v1`, no api-version, the stock
+# OpenAI client with an API key; the model id is the deployment name.
+
+
+def test_azure_descriptor_shape():
+    from coworker.providers.registry import get_descriptor
+
+    d = get_descriptor("azure")
+    assert d is not None and d.needs_key and d.kind == "api_key"
+    assert d.title == "Azure OpenAI"
+    assert [f.key for f in d.fields] == ["endpoint", "api_key"]
+    endpoint, key = d.fields
+    # The endpoint is a REQUIRED plain field — keyed `endpoint`, not `base_url`, so the GUI
+    # renders it as an ordinary row instead of folding it behind the custom-endpoint link.
+    assert endpoint.required and not endpoint.secret
+    assert key.required and key.secret
+    assert d.env_key == "AZURE_OPENAI_API_KEY"
+    assert d.recommended_model is None  # no catalogue: ids are deployment names
+    assert "deployment" in d.blurb
+
+
+@pytest.mark.parametrize(
+    "pasted,expected",
+    [
+        ("https://contoso.openai.azure.com", "https://contoso.openai.azure.com/openai/v1"),
+        ("https://contoso.openai.azure.com/", "https://contoso.openai.azure.com/openai/v1"),
+        ("  https://contoso.openai.azure.com/openai/v1/ ", "https://contoso.openai.azure.com/openai/v1"),
+        ("https://contoso.openai.azure.com/openai", "https://contoso.openai.azure.com/openai/v1"),
+        # Foundry and sovereign-cloud hosts are not second-guessed — any https host goes.
+        ("https://contoso.services.ai.azure.com", "https://contoso.services.ai.azure.com/openai/v1"),
+        ("https://contoso.openai.azure.us/", "https://contoso.openai.azure.us/openai/v1"),
+        ("contoso.openai.azure.com", "https://contoso.openai.azure.com/openai/v1"),
+        # A request URL copied from the portal: path and api-version query dropped.
+        (
+            "https://contoso.openai.azure.com/openai/deployments/gpt-5/chat/completions?api-version=2024-10-21",
+            "https://contoso.openai.azure.com/openai/v1",
+        ),
+        ("", ""),
+        (None, ""),
+    ],
+)
+def test_azure_endpoint_normalisation(pasted, expected):
+    from coworker.providers.registry import normalize_azure_endpoint
+
+    assert normalize_azure_endpoint(pasted) == expected
+
+
+def test_azure_builder_targets_the_v1_api_with_the_profile_key():
+    from coworker.providers.openai_provider import OpenAIProvider
+    from coworker.providers.registry import build_provider_client
+
+    p = build_provider_client(
+        "azure", {"endpoint": "https://contoso.openai.azure.com", "api_key": "az-key"}, None
+    )
+    assert isinstance(p, OpenAIProvider)  # Chat Completions, as the custom-endpoint path did
+    assert p._base_url == "https://contoso.openai.azure.com/openai/v1"
+    assert p._api_key == "az-key"
+
+
+def test_azure_builder_env_key_fallback(monkeypatch):
+    from coworker.providers.registry import build_provider_client
+
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "az-env")
+    p = build_provider_client("azure", {"endpoint": "https://contoso.openai.azure.com/openai/v1"}, None)
+    assert p._api_key == "az-env"
+
+
+def test_azure_builder_never_leaks_the_openai_key(monkeypatch):
+    """Same guard as the compat vendors: an OpenAI key (env or SecretStore) is never sent
+    to an Azure host — a missing Azure key fails fast, naming Azure."""
+    from coworker.providers.registry import build_provider_client
+
+    class Store:
+        def get(self, name):
+            return {"api_key": "sk-openai-stored"} if name == "provider:openai" else None
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-real")
+    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="Azure OpenAI API key"):
+        build_provider_client("azure", {"endpoint": "https://contoso.openai.azure.com"}, Store())
+
+
+def test_azure_builder_requires_an_endpoint(monkeypatch):
+    from coworker.providers.registry import build_provider_client
+
+    with pytest.raises(RuntimeError, match="endpoint"):
+        build_provider_client("azure", {"api_key": "az-key"}, None)
+
+
+def test_azure_configured_needs_endpoint_and_key(monkeypatch):
+    """An env key alone is not a working setup — there is nowhere to send it."""
+    from coworker.providers.registry import descriptor_configured, get_descriptor
+
+    d = get_descriptor("azure")
+    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
+    assert not descriptor_configured(d, {})
+    assert not descriptor_configured(d, {"api_key": "k"})
+    assert not descriptor_configured(d, {"endpoint": "https://c.openai.azure.com"})
+    assert descriptor_configured(d, {"endpoint": "https://c.openai.azure.com", "api_key": "k"})
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env")
+    assert not descriptor_configured(d, {})
+    assert descriptor_configured(d, {"endpoint": "https://c.openai.azure.com"})
+
+
+def test_azure_models_route_by_prefix_and_default_to_agentic_capabilities():
+    from coworker.providers.capabilities import capabilities_for
+    from coworker.providers.router import ProviderRouter
+
+    router = ProviderRouter(secrets=None)
+    assert router._provider_name("azure:my-gpt-deployment") == "azure"
+    assert ProviderRouter._bare("azure:my-gpt-deployment") == "my-gpt-deployment"
+    # An arbitrary deployment name: tools + parallel calls, no vision claimed.
+    caps = capabilities_for("azure:my-gpt-deployment")
+    assert caps.tools and caps.parallel_tool_calls and caps.streaming and not caps.vision
+    # A deployment named after the model keeps the model's own profile.
+    assert capabilities_for("azure:gpt-5.5").vision
+    assert not capabilities_for("azure:o4-mini").parallel_tool_calls
+
+
+def test_openai_custom_endpoint_help_points_azure_users_at_the_card():
+    from coworker.providers.registry import get_descriptor
+
+    base = next(f for f in get_descriptor("openai").fields if f.key == "base_url")
+    assert "Azure OpenAI has its own card" in base.help
+    assert not base.required  # the old Azure-URL-in-OpenAI setup keeps working

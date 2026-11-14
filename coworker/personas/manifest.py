@@ -8,6 +8,7 @@ than silently producing a broken persona (a third-party persona must fail loudly
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,11 +21,23 @@ import yaml
 # (traversal), no `:*?"<>|` (invalid on Windows), bounded length.
 _ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
-VALID_FAMILIES = {"code", "knowledge"}
-VALID_WORKSPACES = {"git", "project", "deliverable", "none"}
-VALID_MODES = {"discuss", "plan", "interactive", "custom", "auto"}
+VALID_FAMILIES = {"code", "knowledge"}  # legacy key, shimmed in parse()
+VALID_TEAM = {"lead", "worker"}
+# "auto" kept as the legacy spelling of "bypass-approvals" (Mode._missing_).
+VALID_MODES = {
+    "discuss",
+    "plan",
+    "interactive",
+    "custom",
+    "auto",
+    "bypass-approvals",
+    "dangerously-bypass-approvals",
+    "auto-approve",
+}
 VALID_REC_KINDS = {"connector", "mcp"}
 VALID_REC_TIERS = {"core", "optional"}
+VALID_GROUPS = {"general", "engineering", "security"}
+VALID_COVERAGE = ("code", "secrets", "deps", "iac")
 
 
 class ManifestError(ValueError):
@@ -53,25 +66,71 @@ class PersonaManifest:
     tagline: str = ""
     description: str = ""
     tools: list[str] = field(default_factory=list)
-    family: str = "knowledge"  # "code" | "knowledge"
-    # Derived from family since the enum collapse (§16): code → "git", knowledge →
-    # "deliverable". Builtins registered via builders may still carry "none" (Chat).
-    workspace: str = "deliverable"
+    # Workspace/toolset traits (workspace-scratch-design.md — replaces the old
+    # family/workspace pair). requires_folder: the composer/engine gate on a
+    # user-picked primary folder. subagents: explorer fan-out. scheduling:
+    # scheduled tasks + self-wake (defaults to the opposite of requires_folder
+    # when the manifest is silent — folder personas fan out instead).
+    requires_folder: bool = False
+    subagents: bool = False
+    scheduling: bool = True
+    # `messaging:` is parsed and IGNORED (spec §11, 2026-09-05): posting to a chat
+    # platform is decided by `connectors:` alone. Removed next release.
     messaging: bool = False
-    connectors: bool = False
+    # Connector grant (OPE-93): False = none, a tuple = allowlist of connector ids
+    # (session exposes declared ∩ connected), True = every connected connector — the
+    # `all` sentinel, reserved for built-in general personas. Coarser grants leaked
+    # undeclared tools (browser, email) into security sessions; undeclared = absent.
+    connectors: bool | tuple[str, ...] = False
+    # Team identity (agent-teams design, third/fourth pass): "lead" = coordinates a
+    # team (gets the board coordination verbs + gates; consent copy says "can create
+    # and direct worker coworkers"); "worker" = purpose-built to work under a lead
+    # (board worker verbs, no ask_user-shaped prompt); None = solo-only. Solo
+    # personas are NOT team-eligible — team-awareness changes who the prompt talks
+    # to, so staffing fails closed on personas without the trait.
+    team: Optional[str] = None
+    approval_guidance: str = ""
     default_permission_mode: str = "interactive"
-    recommended_models: list[str] = field(default_factory=list)
+    # `models:` (connectors-across-machines spec §4): the ORDERED list of model ids this
+    # coworker may run on. First entry a machine can run = its default there; the
+    # composer's picker shows only the list; empty = any model (the machine default).
+    # `recommended_models` is the old name — read as an alias for one release.
+    models: list[str] = field(default_factory=list)
     skills: list[str] = field(default_factory=list)
     mcp: list[str] = field(default_factory=list)
+    # Sharing v1 (OPE-7): the author's version string ("1", "1.2", "2026-08"…). Purely
+    # informational provenance — with folder/git distribution there is no authoritative
+    # update channel, so this drives the "replaces vN" note on re-install, nothing more.
+    version: str = ""
     recommends: list[Recommendation] = field(default_factory=list)
+    # Distribution decision, not a maturity claim (owner, 2026-08-21): ships:false
+    # coworkers exist in the codebase but are absent from release builds — internal
+    # builds opt them in via OPENWORKER_UNSHIPPED=1.
+    ships: bool = True
+    # Settings-page grouping ("general" | "security"). Cosmetic — grouping never
+    # gates behavior, so a third-party persona claiming "security" is harmless.
+    group: str = "general"
+    # Observability Phase 3 (TD3-24): the scan areas this coworker promises to cover
+    # (code, secrets, deps, iac). Recorded on its turns as `stamp.persona_coverage`; the
+    # coverage checks run only on coworkers that declare it.
+    coverage: tuple[str, ...] = ()
     builtin: bool = False
     source: Optional[str] = (
         None  # where it was loaded from (path / url), for provenance
     )
 
     @property
-    def needs_workspace(self) -> bool:
-        return self.workspace != "none"
+    def recommended_models(self) -> list[str]:
+        """Old name for `models` — alias for one release, then removed."""
+        return self.models
+
+    @property
+    def can_chat(self) -> bool:
+        """Whether this persona may post to a chat platform — derived from `connectors:`
+        (every connected connector, or a declared chat platform), never from `messaging:`."""
+        if self.connectors is True:
+            return True
+        return bool(set(self.connectors or ()) & {"slack", "telegram"})
 
     def to_agent(self):
         """Materialize the runtime Agent (prompt + catalog-expanded tools + traits)."""
@@ -84,12 +143,69 @@ class PersonaManifest:
             name=self.id,
             title=self.name,
             system_prompt=self.system_prompt,
-            needs_workspace=self.needs_workspace,
             tool_factory=factory,
-            family=self.family,
-            messaging=self.messaging,
+            requires_folder=self.requires_folder,
+            subagents=self.subagents,
+            scheduling=self.scheduling,
+            messaging=self.can_chat,
             connectors=self.connectors,
+            team=self.team,
+            approval_guidance=self.approval_guidance,
+            coverage=tuple(self.coverage),
         )
+
+
+def _connectors(
+    persona_id: str,
+    raw: Any,
+    recommends: list[Recommendation],
+    builtin: bool,
+) -> bool | tuple[str, ...]:
+    """Parse the connector grant (OPE-93). Fail closed at every ambiguity.
+
+    - list → explicit allowlist (the normal case).
+    - "all" → every connected connector; reserved for BUILT-IN general personas — a
+      shared bundle claiming it is exactly the trust violation the allowlist exists
+      to prevent, so third-party loads reject it.
+    - legacy `true` (pre-allowlist manifests) → the connector refs the manifest already
+      recommends (author intent); no recommends → no grant.
+    - recommends must stay within the grant: a recommendation the coworker can't use is
+      author drift, surfaced at load rather than at the user's consent screen.
+    """
+    if raw is None or raw is False:
+        declared: bool | tuple[str, ...] = False
+    elif raw is True:
+        refs = {r.ref for r in recommends if r.kind == "connector"}
+        declared = tuple(sorted(refs)) if refs else False
+    elif isinstance(raw, str):
+        if raw.strip().lower() != "all":
+            raise ManifestError(
+                f"{persona_id}: `connectors` must be a list of connector ids or 'all'"
+            )
+        if not builtin:
+            raise ManifestError(
+                f"{persona_id}: `connectors: all` is reserved for built-in coworkers — "
+                "declare the specific connectors this coworker uses"
+            )
+        declared = True
+    elif isinstance(raw, list):
+        declared = tuple(
+            dict.fromkeys(s for s in (str(x).strip() for x in raw) if s)
+        )
+    else:
+        raise ManifestError(
+            f"{persona_id}: `connectors` must be a list of connector ids or 'all'"
+        )
+
+    if declared is not True:
+        granted = set(declared or ())
+        for r in recommends:
+            if r.kind == "connector" and r.ref not in granted:
+                raise ManifestError(
+                    f"{persona_id}: recommends connector '{r.ref}' but does not declare "
+                    "it in `connectors` — a recommendation must stay within the grant"
+                )
+    return declared
 
 
 def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
@@ -125,6 +241,22 @@ def _strlist(meta: dict, key: str) -> list[str]:
     if isinstance(val, list):
         return [str(v).strip() for v in val if str(v).strip()]
     raise ManifestError(f"`{key}` must be a list or comma-separated string")
+
+
+def _models(persona_id: str, meta: dict) -> list[str]:
+    """`models:` with the `recommended_models` alias (one release). Ids are kept verbatim
+    and de-duplicated in order; a manifest naming both keys must agree."""
+    new = _strlist(meta, "models")
+    old = _strlist(meta, "recommended_models")
+    if old and new and old != new:
+        raise ManifestError(
+            f"persona {persona_id!r}: `models` and `recommended_models` (deprecated) differ"
+        )
+    if old and not new:
+        logging.getLogger(__name__).info(
+            "persona %s uses `recommended_models` — rename it to `models`", persona_id
+        )
+    return list(dict.fromkeys(new or old))
 
 
 def _recommends(persona_id: str, meta: dict) -> list[Recommendation]:
@@ -195,22 +327,21 @@ def parse_manifest(
     if not body.strip():
         raise ManifestError(f"persona {persona_id!r} has no body (the system prompt)")
 
-    family = str(meta.get("family", "knowledge")).strip().lower()
-    if family not in VALID_FAMILIES:
+    # Workspace/toolset traits (workspace-scratch-design.md). Legacy shim: pre-trait
+    # bundles declared `family: code|knowledge` (and a dead `workspace:` enum, ignored
+    # here) — when the new keys are absent, `family: code` maps to the folder-gated
+    # profile so an old bundle keeps its gate. New keys always win.
+    legacy_family = str(meta.get("family", "")).strip().lower()
+    if legacy_family and legacy_family not in VALID_FAMILIES:
         raise ManifestError(
-            f"persona {persona_id!r}: family must be one of {sorted(VALID_FAMILIES)}"
+            f"persona {persona_id!r}: family (legacy) must be one of {sorted(VALID_FAMILIES)}"
         )
-
-    # The workspace enum collapsed into family (owner decision 2026-07-03, UX-DECISIONS §16):
-    # knowledge → transparent scratch + user-added roots (no folder gate, ever); code → an
-    # explicit directory picked by the user. The manifest key is still accepted — and
-    # typo-checked — so older manifests parse, but it no longer drives behavior.
-    declared = str(meta.get("workspace", "")).strip().lower()
-    if declared and declared not in VALID_WORKSPACES:
-        raise ManifestError(
-            f"persona {persona_id!r}: workspace must be one of {sorted(VALID_WORKSPACES)}"
-        )
-    workspace = "git" if family == "code" else "deliverable"
+    legacy_code = legacy_family == "code"
+    requires_folder = bool(meta.get("requires_folder", legacy_code))
+    subagents = bool(meta.get("subagents", legacy_code))
+    # Folder personas fan out to explorers instead of scheduling — the silent default
+    # mirrors that split; either can be declared explicitly.
+    scheduling = bool(meta.get("scheduling", not requires_folder))
 
     mode = str(meta.get("default_permission_mode", "interactive")).strip().lower()
     if mode not in VALID_MODES:
@@ -218,8 +349,33 @@ def parse_manifest(
             f"persona {persona_id!r}: default_permission_mode must be one of {sorted(VALID_MODES)}"
         )
 
+    group = str(meta.get("group", "general") or "general").strip().lower()
+    if group not in VALID_GROUPS:
+        raise ManifestError(
+            f"persona {persona_id!r}: group must be one of {sorted(VALID_GROUPS)}"
+        )
+
+    team_raw = str(meta.get("team", "") or "").strip().lower()
+    if team_raw and team_raw not in VALID_TEAM:
+        raise ManifestError(
+            f"persona {persona_id!r}: team must be one of {sorted(VALID_TEAM)}"
+            " (omit for a solo coworker)"
+        )
+
+    coverage = _strlist(meta, "coverage")
+    bad = [a for a in coverage if a not in VALID_COVERAGE]
+    if bad:
+        raise ManifestError(
+            f"persona {persona_id!r}: coverage areas must be among {list(VALID_COVERAGE)}, not {bad}")
+
+    approval_guidance = meta.get("approval_guidance", "")
+    if not isinstance(approval_guidance, str) or len(approval_guidance) > 2400:
+        raise ManifestError("approval_guidance must be text of at most 2400 characters")
+
     tools = _strlist(meta, "tools")
     _validate_tools(persona_id, tools)
+    recommends = _recommends(persona_id, meta)
+    connectors = _connectors(persona_id, meta.get("connectors"), recommends, builtin)
 
     return PersonaManifest(
         id=persona_id,
@@ -229,15 +385,22 @@ def parse_manifest(
         tagline=str(meta.get("tagline", "")).strip(),
         description=str(meta.get("description", "")).strip(),
         tools=tools,
-        family=family,
-        workspace=workspace,
+        requires_folder=requires_folder,
+        subagents=subagents,
+        scheduling=scheduling,
         messaging=bool(meta.get("messaging", False)),
-        connectors=bool(meta.get("connectors", False)),
+        connectors=connectors,
+        team=team_raw or None,
+        approval_guidance=approval_guidance,
         default_permission_mode=mode,
-        recommended_models=_strlist(meta, "recommended_models"),
+        models=_models(persona_id, meta),
         skills=_strlist(meta, "skills"),
         mcp=_strlist(meta, "mcp"),
-        recommends=_recommends(persona_id, meta),
+        version=str(meta.get("version", "") or "").strip(),
+        recommends=recommends,
+        ships=bool(meta.get("ships", True)),
+        group=group,
+        coverage=tuple(dict.fromkeys(coverage)),
         builtin=builtin,
         source=source,
     )

@@ -2,7 +2,7 @@ import { test, expect } from "./fixtures";
 
 // Guards the Settings-as-page refactor (§13, IA per UX-021): the ⚙ menu opens a full-page
 // surface with a left sub-nav — General · Models · Voice input — and each section renders.
-// Files is a card inside General; Personas is launch-flagged off.
+// Files is a card inside General; Coworkers ships on (flag "0" hides it).
 test("Settings opens as a full page and navigates sections", async ({ page }) => {
   await page.goto("/");
 
@@ -12,28 +12,62 @@ test("Settings opens as a full page and navigates sections", async ({ page }) =>
   // Full-page: left sub-nav + the General section (no modal backdrop).
   await expect(page.getByRole("heading", { name: "General" })).toBeVisible();
   await expect(page.locator(".modal-backdrop")).toHaveCount(0);
-  for (const label of ["General", "Models", "Voice input"]) {
+  for (const label of ["General", "Models & Keys", "Voice input"]) {
     await expect(page.getByRole("button", { name: label, exact: true })).toBeVisible();
   }
-  // Folded/hidden tabs: Files is a General card now; Personas is launch-flagged off.
+  // Folded tabs: Files is a General card now; Coworkers ships as its own tab (UX-029).
   await expect(page.getByRole("button", { name: "Files", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Personas", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Coworkers", exact: true })).toBeVisible();
 
   // The Files card lives inside General.
   await expect(page.getByText("Each conversation gets its own folder")).toBeVisible();
 
-  await page.getByRole("button", { name: "Models", exact: true }).click();
+  await page.getByRole("button", { name: "Models & Keys" }).click();
   await expect(page.getByTestId("set-provider-openai")).toBeVisible();
 });
 
-// The launch flag brings the Personas tab back (the gallery/persona suites rely on it).
-test("Settings: Personas tab returns behind the launch flag", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("ocw.flag.personas", "1"));
+// #43: when /v1/settings fails (server down, or hung past the 10 s timeout) Models says so
+// and offers Retry instead of "Loading…" forever; Retry reloads once the server answers.
+test("Models explains when the server cannot be reached, and Retry recovers", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("account-row").click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await page.getByRole("button", { name: "Personas", exact: true }).click();
-  await expect(page.getByText("Add personas")).toBeVisible();
+
+  // Later routes win over the fixture's catch-all: fail GET /v1/settings until "the server
+  // comes back"; every other call keeps its fixture answer.
+  let serverDown = true;
+  await page.route("**/v1/settings", async (route) => {
+    if (route.request().method() === "GET" && serverDown) return route.abort("connectionrefused");
+    await route.fallback();
+  });
+  await page.getByRole("button", { name: "Models & Keys", exact: true }).click();
+
+  await expect(page.getByTestId("settings-error")).toContainText("Couldn't reach the server to load settings");
+  await expect(page.getByText("Loading…", { exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("set-provider-openai")).toHaveCount(0);
+
+  serverDown = false;
+  await page.getByTestId("settings-retry").click();
+  await expect(page.getByTestId("set-provider-openai")).toBeVisible();
+  await expect(page.getByTestId("settings-error")).toHaveCount(0);
+});
+
+// The flag's "0" escape hatch hides the tab again (the default is on — UX-029).
+test("Settings: Coworkers tab opens by default; flag \"0\" hides it", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("account-row").click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("button", { name: "Coworkers", exact: true }).click();
+  await expect(page.getByTestId("install-disclosure")).toBeVisible();
+});
+
+test("Settings: the flag escape hatch hides the Coworkers tab", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ocw.flag.personas", "0"));
+  await page.goto("/");
+  await page.getByTestId("account-row").click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "General" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Coworkers", exact: true })).toHaveCount(0);
 });
 
 // UX-021: Settings ▸ Models is the shared provider gallery (§39 components). Cards wear
@@ -43,17 +77,26 @@ test("Models: provider gallery states; vendor form previews models", async ({ pa
   await page.goto("/");
   await page.getByTestId("account-row").click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await page.getByRole("button", { name: "Models", exact: true }).click();
+  await page.getByRole("button", { name: "Models & Keys" }).click();
 
-  // Card states from the fixtures: openai configured+used, anthropic configured, zai not.
-  await expect(page.getByTestId("set-provider-openai")).toContainText("✓ Connected · used 2h ago");
+  // Card states from the fixtures: openai configured with models in the picker, anthropic
+  // configured, zai not. UX-055: a connected card counts its picker models; connected
+  // cards come first in their group, the rest sit quieter behind them; local servers group apart.
+  await expect(page.getByTestId("set-provider-openai")).toContainText("✓ Connected · 4 models");
   await expect(page.getByTestId("set-provider-anthropic")).toContainText("✓ Connected");
   await expect(page.getByTestId("set-provider-zai")).toContainText("Not set up");
   await expect(page.getByTestId("set-provider-ollama")).toContainText("No key needed");
+  await expect(page.getByTestId("provider-group-local")).toContainText("Ollama");
+  await expect(page.getByTestId("set-provider-zai")).not.toHaveClass(/bg-panel/);
+  // Six API-key providers fit under the fold; the "Show N more" line only appears past six.
+
+  await expect(page.getByTestId("provider-more-api_key")).toHaveCount(0);
+  await expect(page.getByTestId("pick-model-btn")).toBeVisible();
+  await expect(page.getByTestId("provider-search")).toBeVisible();
 
   // The composer-picker card lists the curated models with provider tags.
   const picker = page.getByTestId("composer-picker");
-  await expect(picker).toContainText("In the composer's picker");
+  await expect(picker).toContainText("Select what shows up for sessions");
 
   // Vendor form: blurb renders; the prefilled endpoint hides behind the disclosure.
   await page.getByTestId("set-provider-zai").click();
@@ -71,6 +114,44 @@ test("Models: provider gallery states; vendor form previews models", async ({ pa
   await expect(page.getByTestId("set-provider-openai")).toBeVisible();
 });
 
+test("Models: BytePlus and Volcengine Ark stay visually and operationally separate", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("account-row").click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("button", { name: "Models & Keys" }).click();
+
+  const byteplusCard = page.getByTestId("set-provider-ark");
+  const volcengineCard = page.getByTestId("set-provider-ark-agent-plan-cn");
+  await expect(byteplusCard).toContainText("BytePlus Ark");
+  await expect(volcengineCard).toContainText("Volcengine Ark Agent Plan");
+  const byteplusLogo = await byteplusCard.locator("img").getAttribute("src");
+  const volcengineLogo = await volcengineCard.locator("img").getAttribute("src");
+  expect(byteplusLogo).toBeTruthy();
+  expect(volcengineLogo).toBeTruthy();
+  expect(byteplusLogo).not.toBe(volcengineLogo);
+
+  await byteplusCard.click();
+  await page.getByTestId("set-endpoint-link").click();
+  await expect(page.getByTestId("set-field-base_url")).toHaveValue(
+    "https://ark.ap-southeast.bytepluses.com/api/v3",
+  );
+  let preview = page.getByTestId("model-preview");
+  await expect(preview).toContainText("Dola Seed Evolving · BytePlus Ark");
+  await expect(preview).toContainText("Dola Seed 2.1 Turbo · BytePlus Ark");
+  await expect(preview).not.toContainText("Doubao Seed");
+
+  await page.getByTestId("set-back").click();
+  await volcengineCard.click();
+  await page.getByTestId("set-endpoint-link").click();
+  await expect(page.getByTestId("set-field-base_url")).toHaveValue(
+    "https://ark.cn-beijing.volces.com/api/plan/v3",
+  );
+  preview = page.getByTestId("model-preview");
+  await expect(preview).toContainText("Doubao Seed Evolving · Volcengine Agent Plan");
+  await expect(preview).toContainText("Doubao Seed 2.1 Turbo · Volcengine Agent Plan");
+  await expect(preview).not.toContainText("Dola Seed");
+});
+
 // UX-021: a configured provider's form shows the in-field saved state and the Remove key…
 // affordance; removing reverts the card to "Not set up".
 test("Models: Remove key reverts a configured provider", async ({ page }) => {
@@ -78,7 +159,7 @@ test("Models: Remove key reverts a configured provider", async ({ page }) => {
   page.on("dialog", (d) => d.accept());
   await page.getByTestId("account-row").click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await page.getByRole("button", { name: "Models", exact: true }).click();
+  await page.getByRole("button", { name: "Models & Keys" }).click();
 
   await page.getByTestId("set-provider-anthropic").click();
   await expect(page.getByTestId("set-saved-pill")).toContainText("Tested & saved");
@@ -88,13 +169,14 @@ test("Models: Remove key reverts a configured provider", async ({ page }) => {
   await expect(page.getByTestId("set-provider-anthropic")).toContainText("Not set up");
 });
 
-// Token savings (owner ask 2026-07-17; moved under Models by UX-021): the card renders with
-// the PDF fallback segmented control + attach thresholds, and edits POST through.
+// Token savings (owner ask 2026-07-17; now under Settings ▸ Context optimization,
+// owner 2026-08-21): the card renders with the PDF fallback segmented control +
+// attach thresholds, and edits POST through.
 test("Settings: Token savings card edits PDF fallback and thresholds", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("account-row").click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await page.getByRole("button", { name: "Models", exact: true }).click();
+  await page.getByRole("button", { name: "Context optimization", exact: true }).click();
 
   const card = page.getByTestId("token-savings-card");
   await expect(card).toBeVisible();

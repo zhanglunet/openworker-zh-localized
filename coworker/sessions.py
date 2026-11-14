@@ -30,6 +30,9 @@ class SessionRecord:
     grants: dict[str, Any] = field(default_factory=dict)
     pinned: bool = False
     archived: bool = False
+    # Fleet under the org (2026-09-02): the verified login that STARTED this session on a
+    # machine (controller-stamped, first writer wins). "" = local/desktop or automated.
+    actor: str = ""
     # Where the session came from, when not user-started (§31): machine key + display label
     # (e.g. origin="slack", origin_label="#general · T0ABCD"). Set once at spawn.
     origin: Optional[str] = None
@@ -37,3 +40,58 @@ class SessionRecord:
     # Auto-compaction state (OPE-27): CompactionState.as_dict(), {} when never compacted.
     # Persisted so a reloaded session keeps its compacted outbound view.
     compaction: dict[str, Any] = field(default_factory=dict)
+    # Twentieth pass: explicit per-session project bindings, {} = derive from the
+    # workspace. Keys "memory" / "board", values = names in project_names.
+    bindings: dict[str, Any] = field(default_factory=dict)
+    # Agent teams: {} for plain sessions. Workers: {team_id, role: "worker", actor,
+    # lead_session, space}. Leads gain their entry when the staffing gate creates the
+    # team. Drives tool binding (board actor identity) + the sidebar's expandable entry.
+    team: dict[str, Any] = field(default_factory=dict)
+    # Token counting (connectors-across-machines spec §5): per-model totals folded from
+    # the assistant messages' `usage` sidecars at save time — {model: {input, output,
+    # cache_read, cache_write, turns}}. No dollars anywhere; budgets are a later pass.
+    usage: dict[str, Any] = field(default_factory=dict)
+    # Started by a configuration (connectors spec §10): {config_id, event, name,
+    # instructions, clone, worktree, owner_repo, number}. `instructions` join the
+    # user's standing rules for this session only; `worktree` is removed on archive
+    # or delete (the clone stays). {} for every other session.
+    spawn: dict[str, Any] = field(default_factory=dict)
+    # Feature worktree (Code coworker, 2026-11-07): the record `start_worktree` left —
+    # {path, branch, base, start, fetched, repo_root, location, created, setup,
+    # warnings}. {} when the session works in place. Cleaned up on archive/delete by
+    # policy (never while dirty; the branch always stays).
+    worktree: dict[str, Any] = field(default_factory=dict)
+
+
+USAGE_FIELDS = ("input", "output", "cache_read", "cache_write")
+
+
+def usage_totals(messages: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """Fold the assistant messages' `usage` sidecars into per-model totals (spec §5).
+    Deterministic from the transcript, so a re-save never double counts."""
+    out: dict[str, dict[str, int]] = {}
+
+    def fold(u: Any, turns: int) -> None:
+        if not isinstance(u, dict):
+            return
+        key = str(u.get("model") or "unknown")
+        row = out.setdefault(key, {f: 0 for f in USAGE_FIELDS} | {"turns": 0})
+        for f in USAGE_FIELDS:
+            try:
+                row[f] += max(int(u.get(f) or 0), 0)
+            except (TypeError, ValueError):
+                pass
+        row["turns"] += turns
+
+    for m in messages or []:
+        if m.get("role") == "assistant":
+            fold(m.get("usage"), 1)
+        elif m.get("role") == "notice":
+            # A finished subagent's spend (OPE-258): the `agent_task` notice carries
+            # the child's per-model totals, since its turns never join this transcript.
+            au = m.get("agent_usage")
+            if isinstance(au, dict):
+                for model, u in au.items():
+                    fold({"model": model, **u} if isinstance(u, dict) else None,
+                         int(u.get("turns") or 0) if isinstance(u, dict) else 0)
+    return out

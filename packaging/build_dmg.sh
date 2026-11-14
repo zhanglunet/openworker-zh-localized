@@ -12,7 +12,7 @@
 #   - A Python venv at .venv (repo root) with this package installed editable, plus the
 #     build-only deps:
 #       python3 -m venv .venv
-#       .venv/bin/pip install -e '.[bedrock]' pyinstaller tzdata typer
+#       .venv/bin/pip install -e '.[bedrock,openshell]' pyinstaller tzdata typer
 #     `typer` is needed only at BUILD time: PyInstaller walks the `mcp` package and
 #     `mcp.cli` calls sys.exit() at import if typer is absent, which aborts the freeze.
 #     (aisuite installs like any other dependency — git-pinned in pyproject.toml.)
@@ -35,6 +35,10 @@
 # Experimental (use-at-your-own-risk) connectors are EXCLUDED from this build by default —
 # the spec strips coworker.connectors.experimental. Self-builders can opt in with:
 #   COWORKER_EXPERIMENTAL=1 ./build_dmg.sh
+# VENV PREREQS (a fresh worktree's venv, discovered the hard way 2026-08-21):
+#   .venv/bin/pip install -e ".[dev,messaging,browser,bedrock,openshell]" pyinstaller typer
+# (`typer` because PyInstaller's submodule collection imports mcp.cli, which
+# sys.exit(1)s without it.)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -67,6 +71,13 @@ if [ -n "${APPLE_CERTIFICATE:-}" ] && [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
   # Allow codesign to use the key headlessly (no UI prompt exists on a runner).
   security set-key-partition-list -S "apple-tool:,apple:" -s -k "$KC_PASS" "$KC" >/dev/null
   security list-keychains -d user -s "$KC" login.keychain-db
+fi
+
+# OpenShell sandboxes talk to the gateway over gRPC; a sidecar without grpcio can never use
+# them (a DMG shipped that way on 2026-09-28).
+if ! "$PLATFORM/.venv/bin/python" -c "import grpc" 2>/dev/null; then
+  echo "ERROR: grpcio is missing from .venv; install the openshell extra (see VENV PREREQS above)" >&2
+  exit 1
 fi
 
 echo "==> [1/5] PyInstaller: bundling openworker-server ($TRIPLE)"
@@ -104,6 +115,10 @@ if [ -n "$(find "$GUI/src-tauri/binaries/sidecar" -type d -name "*.framework" | 
   exit 1
 fi
 chmod +x "$GUI/src-tauri/binaries/sidecar/openworker-server"
+# Start it once, against an empty state folder: a sidecar that cannot load its libraries
+# must fail the build here, not on the user's Mac (the 0.3.0 and 0.3.1 Intel apps shipped
+# with a sidecar that could not; `--help` alone did not reach the broken import).
+COWORKER_STATE_DIR="$(mktemp -d)" "$GUI/src-tauri/binaries/sidecar/openworker-server" --check
 
 # Sign the sidecar's Mach-O files BEFORE tauri build: `tauri build` signs the .app (sealing
 # resources into its signature) but does NOT sign nested binaries inside resources — unsigned
@@ -213,13 +228,15 @@ OSA
   local i; for i in $(seq 1 15); do [ -f "$mnt/.DS_Store" ] && break; sleep 1; done
   [ -f "$mnt/.DS_Store" ] || { hdiutil detach "$dev" -force >/dev/null 2>&1 || true; return 1; }
   sync; sync
-  # detach 会因为卷仍被 Finder 占用而失败；直接往下 convert 会撞上 "Resource busy"。
-  # 重试几次，仍卸不掉就明确失败，让下面的 plain-dmg 兜底接手。
-  local d
-  for d in 1 2 3 4 5; do
-    hdiutil detach "$dev" -force >/dev/null 2>&1 && break
-    sleep 2
+  # Finder lets go of the volume a moment after it is done writing; on the GitHub Intel
+  # runner that moment came after our detach ("couldn't eject - Resource busy", then
+  # "convert failed - Resource temporarily unavailable"). Ask again for up to a minute.
+  for i in $(seq 1 20); do
+    hdiutil detach "$dev" >/dev/null 2>&1 && break
+    sleep 3
+    [ "$i" -lt 20 ] || hdiutil detach "$dev" -force >/dev/null 2>&1 || true
   done
+  # 仍卸不掉就明确失败，让下面的 plain-dmg 兜底接手，而不是带着挂载卷继续 convert。
   if [ -d "$mnt" ]; then
     echo "    (volume still mounted, cannot convert: $mnt)" >&2
     return 1
@@ -240,6 +257,7 @@ if ! style_dmg; then
   echo "    (Finder styling unavailable — writing a plain .dmg)"
   hdiutil create -volname "$APP" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null
 fi
+[ -f "$DMG" ] || { echo "ERROR: no .dmg was written" >&2; exit 1; }
 rm -rf "$STAGING"
 
 # 到这里必须有产物。少了这道断言，任何"没产出 .dmg 却 exit 0"的路径都会一路绿到

@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- 合并到应用 bundle 的 Info.plist 中。这些用途说明会出现在 macOS 权限弹窗中（桌面/文档/下载/照片），让用户在意外看到弹窗时至少知道原因——是 AI 代理的工具运行触碰了这些文件夹，仅在任务需要时才会如此。 -->
+<!-- Merged into the bundle's Info.plist by Tauri. These usage strings appear inside the macOS
+     permission prompts (桌面/文档/下载/照片/日历/提醒事项), so a prompt the user didn't expect
+     at least explains itself — the agent's tool runs are what touch these, and only when a
+     task needs them.
+
+     Calendars/Reminders (#302): without these keys macOS' TCC blocks EventKit access OUTRIGHT
+     rather than prompting, so a calendar/reminders MCP tool silently fails. macOS 14 split the
+     key: apps built against the 14+ SDK read the ...FullAccessUsageDescription variant, older
+     systems read the legacy key, so both are declared. Like Photos above (and unlike the mic,
+     a hardened-runtime *device* resource that also needs an entitlement), these personal-
+     information resources are gated by the usage string alone on this non-sandboxed app. -->
 <plist version="1.0">
 <dict>
   <key>NSMicrophoneUsageDescription</key>
@@ -13,5 +23,13 @@
   <string>您运行的任务可能需要读取或保存下载文件夹中的文件。OpenWorker 不会自主扫描此文件夹。</string>
   <key>NSPhotoLibraryUsageDescription</key>
   <string>您运行的任务可能需要从相册中读取图像。OpenWorker 不会自主扫描您的照片。</string>
+  <key>NSCalendarsUsageDescription</key>
+  <string>您运行的任务可能需要读取或管理日历中的日程，例如日历 MCP 工具。OpenWorker 不会自主读取您的日历。</string>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>您运行的任务可能需要读取或管理日历中的日程，例如日历 MCP 工具。OpenWorker 不会自主读取您的日历。</string>
+  <key>NSRemindersUsageDescription</key>
+  <string>您运行的任务可能需要读取或管理您的提醒事项，例如提醒事项 MCP 工具。OpenWorker 不会自主读取您的提醒事项。</string>
+  <key>NSRemindersFullAccessUsageDescription</key>
+  <string>您运行的任务可能需要读取或管理您的提醒事项，例如提醒事项 MCP 工具。OpenWorker 不会自主读取您的提醒事项。</string>
 </dict>
 </plist>

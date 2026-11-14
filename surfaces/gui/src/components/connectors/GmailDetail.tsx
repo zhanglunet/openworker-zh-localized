@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   connectManaged,
   disconnectGmailAccount,
@@ -16,9 +17,10 @@ import { FOOT, GRP, GRP_H, PILL_ACCENT, ROW, TAG_ACCENT, TAG_WARN, XBTN } from "
 // Adding an account launches managed OAuth DIRECTLY — Gmail has one connect mode,
 // so no modal (the pill-modal is only for ≥2-mode connectors like Slack).
 
-const LABEL = "text-[12.5px] text-muted w-24 shrink-0";
+const LABEL = "text-ui text-muted w-24 shrink-0";
 
 export function GmailDetail({ c, cloud, slack: _slack, onChanged }: DetailProps) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const accounts = (c.accounts ?? []) as GmailAccount[]; // email-keyed (pre-generic-layer shape)
 
@@ -33,17 +35,17 @@ export function GmailDetail({ c, cloud, slack: _slack, onChanged }: DetailProps)
       <div className="flex items-center gap-3.5 mb-5">
         <ConnectorBadge connector={c} size={44} title="Gmail" />
         <div className="min-w-0 flex-1">
-          <h2 className="text-[20px] font-semibold tracking-tight leading-tight">Gmail</h2>
-          <div className="text-[12.5px] text-muted flex items-center gap-1.5">
+          <h2 className="text-title font-semibold tracking-tight leading-tight">Gmail</h2>
+          <div className="text-ui text-muted flex items-center gap-1.5">
             {c.connected ? (
               <>
                 <span className="w-2 h-2 rounded-full bg-ok" />
                 <span data-testid="gmail-status">
-                  {accounts.length} 个账户
+                  {t("connector.account_count", { count: accounts.length })}
                 </span>
               </>
             ) : (
-              <span>未连接</span>
+              <span>{t("connector.not_connected")}</span>
             )}
           </div>
         </div>
@@ -54,28 +56,28 @@ export function GmailDetail({ c, cloud, slack: _slack, onChanged }: DetailProps)
           disabled={busy || !cloud?.signed_in || c.managed_paused}
           title={
             c.managed_paused
-              ? "一键 Google 登录即将推出"
+              ? t("gmail.coming_soon_title")
               : cloud?.signed_in
                 ? ""
-                : "请先登录 OpenWorker Cloud"
+                : t("cloud.sign_in_first")
           }
         >
-          {c.managed_paused ? "＋ 添加账户 · 即将推出" : busy ? "请查看你的浏览器…" : "＋ 添加账户"}
+          {c.managed_paused ? t("gmail.add_account_coming_soon") : busy ? t("cloud.check_browser") : t("gmail.add_account")}
         </button>
       </div>
 
       {!c.connected && (
         <div className={GRP}>
-          <div className={ROW + " text-[12.5px] text-muted"}>
-            使用 Google 登录——每个邮箱相互独立，智能体会说明使用的是哪一个。
-            {cloud?.signed_in ? "" : " 需要登录 OpenWorker Cloud。"}
+          <div className={ROW + " text-ui text-muted"}>
+            {t("gmail.setup_blurb")}
+            {cloud?.signed_in ? "" : " " + t("gmail.requires_cloud")}
           </div>
         </div>
       )}
 
       {accounts.length > 0 && (
         <>
-          <div className={GRP_H + " !mt-0"}>账户</div>
+          <div className={GRP_H + " !mt-0"}>{t("gmail.accounts")}</div>
           <div className={GRP} data-testid="gmail-accounts">
             {accounts.map((a) => (
               <AccountRow key={a.email} a={a} onChanged={onChanged} />
@@ -88,36 +90,37 @@ export function GmailDetail({ c, cloud, slack: _slack, onChanged }: DetailProps)
 
       <ToolsDisclosure c={c} onChanged={onChanged} />
       <div className={FOOT + " mt-2"}>
-        筛选在本机执行，在智能体看到结果之前生效。被隐藏的数量会显示在工具卡片和活动记录中——内容绝不显示。
+        {t("gmail.filters_foot")}
       </div>
     </div>
   );
 }
 
 function AccountRow({ a, onChanged }: { a: GmailAccount; onChanged: () => void }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   return (
     <div className={ROW} data-testid={`gmail-account-${a.email}`}>
       <span className="min-w-0 flex-1 flex items-center gap-2">
-        <span className="text-[13px] font-medium truncate">{a.email}</span>
-        {a.default && <span className={TAG_ACCENT}>默认</span>}
-        {a.needs_reauth && <span className={TAG_WARN}>⚠ 请重新登录</span>}
+        <span className="text-ui font-medium truncate">{a.email}</span>
+        {a.default && <span className={TAG_ACCENT}>{t("connector.default")}</span>}
+        {a.needs_reauth && <span className={TAG_WARN}>{t("gmail.sign_in_again")}</span>}
       </span>
       {!a.default && (
         <button
-          className="text-[12px] text-muted hover:text-ink shrink-0"
+          className="text-meta text-muted hover:text-ink shrink-0"
           data-testid={`gmail-make-default-${a.email}`}
           onClick={async () => {
             await setGmailDefaultAccount(a.email);
             onChanged();
           }}
         >
-          设为默认
+          {t("connector.make_default")}
         </button>
       )}
       <button
         className={XBTN}
-        title="断开此邮箱连接"
+        title={t("gmail.disconnect_mailbox_title")}
         data-testid={`gmail-disconnect-${a.email}`}
         disabled={busy}
         onClick={async () => {
@@ -134,15 +137,16 @@ function AccountRow({ a, onChanged }: { a: GmailAccount; onChanged: () => void }
 }
 
 function FiltersGroup({ c, onChanged }: Pick<DetailProps, "c" | "onChanged">) {
+  const { t } = useTranslation();
   const filters = c.filters ?? { senders: [], labels: [] };
   return (
     <>
-      <div className={GRP_H}>永不向智能体展示</div>
+      <div className={GRP_H}>{t("gmail.never_show_agents")}</div>
       <div className={GRP} data-testid="gmail-filters">
         <ChipListRow
-          label="发件人"
+          label={t("gmail.senders")}
           testid="gmail-filter-senders"
-          placeholder="name@example.com 或 @domain.com"
+          placeholder={t("gmail.senders_placeholder")}
           values={filters.senders}
           onSave={async (senders) => {
             await setGmailFilters({ senders });
@@ -150,9 +154,9 @@ function FiltersGroup({ c, onChanged }: Pick<DetailProps, "c" | "onChanged">) {
           }}
         />
         <ChipListRow
-          label="标签"
+          label={t("gmail.labels")}
           testid="gmail-filter-labels"
-          placeholder="标签名称，例如 个人"
+          placeholder={t("gmail.labels_placeholder")}
           values={filters.labels}
           onSave={async (labels) => {
             await setGmailFilters({ labels });
@@ -161,7 +165,7 @@ function FiltersGroup({ c, onChanged }: Pick<DetailProps, "c" | "onChanged">) {
         />
       </div>
       <div className={FOOT}>
-        匹配的邮件会被静默排除在智能体读取范围之外——不会留下任何可被探查的痕迹。
+        {t("gmail.filters_foot_inner")}
       </div>
     </>
   );
@@ -180,6 +184,7 @@ function ChipListRow({
   values: string[];
   onSave: (next: string[]) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState("");
   const add = async () => {
     const v = draft.trim();
@@ -194,12 +199,12 @@ function ChipListRow({
         {values.map((v) => (
           <span
             key={v}
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-paper border border-line text-[12.5px]"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-paper border border-line text-ui"
           >
             {v}
             <button
               className={XBTN}
-              title="移除"
+              title={t("common.remove")}
               onClick={() => onSave(values.filter((x) => x !== v))}
             >
               ×
@@ -207,7 +212,7 @@ function ChipListRow({
           </span>
         ))}
         <input
-          className="flex-1 min-w-[140px] bg-transparent text-[12.5px] outline-none placeholder:text-faint"
+          className="flex-1 min-w-[140px] bg-transparent text-ui outline-none placeholder:text-faint"
           placeholder={placeholder}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

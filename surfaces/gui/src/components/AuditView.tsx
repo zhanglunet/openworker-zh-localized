@@ -1,54 +1,100 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getAudit, type AuditEvent } from "../api";
 import { PanelHead } from "./IntegrationsView";
+import { UsagePage } from "./UsagePage";
 
 // Activity — connector/browser tool history, restructured onto the IntegrationsView page shell
 // (centered panel + PanelHead + cards), replacing the legacy `page-view` layout. Read-only:
 // filterable, with sanitized arguments.
 const CARD = "rounded-xl2 border border-line bg-panel";
-const INPUT = "px-3 py-1.5 rounded-lg border border-line bg-paper text-[13px] text-ink outline-none focus:border-accent";
-const BTN_ACCENT = "text-[12.5px] px-3 py-1.5 rounded-lg bg-accent text-white shrink-0";
+const INPUT = "px-3 py-1.5 rounded-lg border border-line bg-paper text-ui text-ink outline-none focus:border-accent";
+const BTN_ACCENT = "text-ui px-3 py-1.5 rounded-lg bg-accent text-white shrink-0";
 
-export function AuditView() {
+// `callId` (OPE-238): opened from the "changes made without asking" summary — show that one
+// tool call's rows, with the filter visible and clearable.
+// Phase 3 (OB-8): the page gains a tab bar, Log | Usage. A call filter always opens the Log.
+export function AuditView({ callId, initialTab = "log", onTabChange, onOpenTurn, onOpenPersona }: {
+  callId?: string;
+  initialTab?: "log" | "usage";
+  /** T3-11: the open tab, for the page's address */
+  onTabChange?: (tab: "log" | "usage") => void;
+  onOpenTurn?: (sessionId: string, turnId: string) => void;
+  onOpenPersona?: (personaId: string) => void;
+} = {}) {
+  const [tab, setTab] = useState<"log" | "usage">(callId ? "log" : initialTab);
+  useEffect(() => {
+    onTabChange?.(tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [sessionFilter, setSessionFilter] = useState("");
   const [connectorFilter, setConnectorFilter] = useState("");
   const [toolFilter, setToolFilter] = useState("");
+  const [callFilter, setCallFilter] = useState(callId || "");
+  const { t } = useTranslation();
 
-  const refresh = () =>
+  const refresh = (call = callFilter) =>
     getAudit({
       limit: 150,
       session_id: sessionFilter.trim() || undefined,
       connector: connectorFilter.trim() || undefined,
       tool: toolFilter.trim() || undefined,
+      call_id: call || undefined,
     })
       .then(setEvents)
       .catch(() => setEvents([]));
 
   useEffect(() => {
-    refresh();
-  }, []);
+    setCallFilter(callId || "");
+    refresh(callId || "");
+    if (callId) setTab("log");
+  }, [callId]);
 
   return (
     <main className="flex-1 min-w-0 flex bg-paper">
       <div className="flex-1 min-w-0 overflow-y-auto hairline-scroll">
         <div className="max-w-4xl mx-auto px-7 py-6">
           <PanelHead
-            title="活动"
-            sub="最近的连接器与浏览器工具活动。参数在存储前已做脱敏处理。"
+            title={t("audit.title")}
+            sub={tab === "usage" ? t("p3.usage.sub") : t("audit.sub")}
           />
-
-          <div className="flex items-center gap-2 flex-wrap mb-4">
-            <input className={INPUT} placeholder="会话 ID" value={sessionFilter} onChange={(e) => setSessionFilter(e.target.value)} />
-            <input className={INPUT} placeholder="连接器" value={connectorFilter} onChange={(e) => setConnectorFilter(e.target.value)} />
-            <input className={INPUT} placeholder="工具" value={toolFilter} onChange={(e) => setToolFilter(e.target.value)} />
-            <button className={BTN_ACCENT} onClick={refresh}>
-              筛选
+          <div className="p3-tabs mb-4" role="tablist" data-testid="activity-tabs">
+            <button role="tab" aria-selected={tab === "log"} data-testid="activity-tab-log" onClick={() => setTab("log")}>
+              {t("p3.usage.tab_log")}
+            </button>
+            <button role="tab" aria-selected={tab === "usage"} data-testid="activity-tab-usage" onClick={() => setTab("usage")}>
+              {t("p3.usage.tab_usage")}
             </button>
           </div>
+          {tab === "usage" ? <UsagePage onOpenTurn={onOpenTurn} onOpenPersona={onOpenPersona} /> : (<>
+
+          <div className="flex items-center gap-2 flex-wrap mb-4">
+            <input className={INPUT} placeholder={t("audit.placeholder_session")} value={sessionFilter} onChange={(e) => setSessionFilter(e.target.value)} />
+            <input className={INPUT} placeholder={t("audit.placeholder_connector")} value={connectorFilter} onChange={(e) => setConnectorFilter(e.target.value)} />
+            <input className={INPUT} placeholder={t("audit.placeholder_tool")} value={toolFilter} onChange={(e) => setToolFilter(e.target.value)} />
+            <button className={BTN_ACCENT} onClick={() => refresh()}>
+              {t("audit.filter")}
+            </button>
+          </div>
+          {callFilter && (
+            <div className="flex items-center gap-2 mb-4 text-meta text-muted" data-testid="audit-call-filter">
+              <span>{t("audit.call_filter", { id: callFilter })}</span>
+              <button
+                className="text-label text-faint hover:text-muted cursor-pointer"
+                data-testid="audit-call-filter-clear"
+                onClick={() => {
+                  setCallFilter("");
+                  refresh("");
+                }}
+              >
+                {t("audit.call_filter_clear")}
+              </button>
+            </div>
+          )}
 
           {events.length === 0 ? (
-            <div className={CARD + " p-4 text-[13px] text-muted"}>暂无审计事件。</div>
+            <div className={CARD + " p-4 text-ui text-muted"}>{t("audit.no_events")}</div>
           ) : (
             <div className="space-y-2">
               {events.map((ev) => (
@@ -56,6 +102,7 @@ export function AuditView() {
               ))}
             </div>
           )}
+          </>)}
         </div>
       </div>
     </main>
@@ -63,23 +110,24 @@ export function AuditView() {
 }
 
 function AuditRow({ ev }: { ev: AuditEvent }) {
+  const { t } = useTranslation();
   return (
     <div className={CARD + " p-3.5"}>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-mono text-[12.5px] font-medium text-ink">{ev.tool}</span>
-        <span className="text-[11.5px] text-faint">
-          {ev.connector || "工具"} · {ev.stage || ev.status || "事件"} · {ev.timestamp}
+        <span className="font-mono text-ui font-medium text-ink">{ev.tool}</span>
+        <span className="text-meta text-faint">
+          {ev.connector || t("audit.fallback_tool")} · {ev.stage || ev.status || t("audit.fallback_event")} · {ev.timestamp}
         </span>
       </div>
-      <div className="text-[11.5px] text-muted mt-0.5">
-        会话 {ev.session_id || "-"} {ev.approval ? `· ${ev.approval}` : ""} {ev.status ? `· ${ev.status}` : ""}
+      <div className="text-meta text-muted mt-0.5">
+        {t("audit.session")} {ev.session_id || "-"} {ev.approval ? `· ${ev.approval}` : ""} {ev.status ? `· ${ev.status}` : ""}
       </div>
-      {ev.resource && <div className="text-[11.5px] text-faint mt-0.5">资源：{ev.resource}</div>}
+      {ev.resource && <div className="text-meta text-faint mt-0.5">{t("audit.resource", { value: ev.resource })}</div>}
       {ev.args && Object.keys(ev.args).length > 0 && (
-        <div className="font-mono text-[11.5px] text-muted mt-1.5 break-words">{formatAuditArgs(ev.args)}</div>
+        <div className="font-mono text-meta text-muted mt-1.5 break-words">{formatAuditArgs(ev.args)}</div>
       )}
       {(ev.reason || ev.result_preview) && (
-        <div className="text-[11.5px] text-faint mt-1">{ev.reason || ev.result_preview}</div>
+        <div className="text-meta text-faint mt-1">{ev.reason || ev.result_preview}</div>
       )}
     </div>
   );

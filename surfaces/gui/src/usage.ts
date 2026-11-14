@@ -54,6 +54,22 @@ export function usageFromMessages(messages: ConversationMessage[]): SessionUsage
   return acc;
 }
 
+/** A team's tokens from its sessions' recordings (P3-1): every call the Steps pill counts,
+ * titles, helpers and auto-approver checks included, which the transcript's per-message
+ * counts leave out. `input` here is the call's whole input, so the total adds up the same.
+ * Null when none of the sessions was recorded. */
+export function usageFromRecordings(recs: any[]): SessionUsage | null {
+  const used = (recs || []).filter((r) => r && r.recorded);
+  if (!used.length) return null;
+  let acc = emptyUsage();
+  for (const r of used) {
+    for (const [key, p] of Object.entries((r.by_model_parts || {}) as Record<string, any>)) {
+      acc = addTurnUsage(acc, { model: key.split(" (")[0], input: p.input, output: p.output, cache_read: 0, cache_write: 0 });
+    }
+  }
+  return { byModel: acc.byModel, context: 0 };
+}
+
 /** All tokens consumed this session, across models and directions (chip headline). */
 export function totalTokens(u: SessionUsage): number {
   return Object.values(u.byModel).reduce(
@@ -72,4 +88,19 @@ export function formatTokens(n: number): string {
   }
   const m = n / 1_000_000;
   return (m < 100 ? m.toFixed(2).replace(/\.?0+$/, "") : String(Math.round(m))) + "M";
+}
+
+/** Roll a team up (spec §5): the lead's live accumulation plus each worker's persisted
+ * per-model totals, keyed by model. Dollars never appear. */
+export function teamUsage(
+  lead: SessionUsage,
+  workers: { usage?: Record<string, TurnUsage> }[],
+): SessionUsage {
+  let acc: SessionUsage = { byModel: { ...lead.byModel }, context: lead.context };
+  for (const w of workers) {
+    for (const [model, u] of Object.entries(w.usage || {})) {
+      acc = addTurnUsage(acc, { ...u, model });
+    }
+  }
+  return { byModel: acc.byModel, context: lead.context };
 }
