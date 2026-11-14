@@ -1,0 +1,20 @@
+{
+  "schema": "openworker-zh-default-config/v1",
+  "ui": {
+    "locale": "zh-CN",
+    "first_run": "zh",
+    "notes": "打开即中文界面；英文词条只是对照，不是默认。"
+  },
+  "model": {
+    "provider": "占位-自行选择",
+    "base_url": "https://example.invalid/openworker-zh-model",
+    "api_key_env": "OPENWORKER_ZH_API_KEY",
+    "notes": "密钥只放环境变量名，不写密钥值；base_url 是占位符，装好后自行改成你的服务地址。"
+  },
+  "network": {
+    "mode": "direct（占位）",
+    "proxy": "",
+    "notes": "直连优先；需要代理时自行填写，本文件不内置任何真实地址。"
+  },
+  "state_dir_note": "状态目录默认在仓库内 .openworker-state，可用 OPENWORKER_ZH_STATE_DIR 改位置。"
+}
