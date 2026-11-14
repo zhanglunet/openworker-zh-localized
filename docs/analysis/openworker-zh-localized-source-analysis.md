@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-14T08:08:40+08:00
+更新时间：2026-11-14T21:08:04+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：738a4804930e910ae8f4c79b723a5d29ffc773bb
+当前提交：6efd8341e1dcd7ba66397f06040777fa1605bcd0
 
 ## 1. 总体判断
 
@@ -14,16 +14,16 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：815
-- 当前提交：738a480
+- 跟踪文件总数：827
+- 当前提交：6efd834
 - 主要文件类型：
-  - py: 374
-  - md: 110
+  - py: 380
+  - md: 115
   - ts: 105
   - tsx: 79
   - svg: 28
   - png: 25
-  - json: 21
+  - json: 22
   - yml: 16
   - html: 8
   - [none]: 7
@@ -37,10 +37,10 @@
 ## 3. 目录结构
 
 - surfaces: 229 个文件
-- tests: 183 个文件
-- docs: 138 个文件
+- tests: 187 个文件
+- docs: 143 个文件
 - coworker: 134 个文件
-- scripts: 37 个文件
+- scripts: 39 个文件
 - website: 36 个文件
 - .github: 12 个文件
 - role-packs: 11 个文件
@@ -53,6 +53,7 @@
 - BUILD_LOG.md: 1 个文件
 - LICENSE: 1 个文件
 - openworker-zh-test-report.md: 1 个文件
+- openworker-zh.default.json: 1 个文件
 - pyproject.toml: 1 个文件
 - README.en.md: 1 个文件
 - README.md: 1 个文件
@@ -236,15 +237,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-14 6efd834 Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance
+- 2026-11-14 b7a3450 Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary
+- 2026-11-14 57f6679 Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates
+- 2026-11-14 bd7419b Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl
+- 2026-11-14 3347e04 Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline
+- 2026-11-14 7a27cca test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥
+- 2026-11-14 00bfe4c test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值
+- 2026-11-14 2274284 feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决
+- 2026-11-14 d58c241 feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截
+- 2026-11-14 b43517e docs(prd-429): T1 翻译评审流水线设计——三件套 schema/规则先行模型后判/三码闸门/划界表+PR 门槛四项自查
+- 2026-11-14 a57aa57 docs: refresh generated site reports
 - 2026-11-14 738a480 Merge pull request #145 from zhanglunet/trend/prd-122-t5-acceptance
-- 2026-11-14 904e0ed Merge pull request #144 from zhanglunet/trend/prd-122-t3-sync-check
-- 2026-11-14 85944fd Merge pull request #143 from zhanglunet/trend/prd-122-t4-sync-en
-- 2026-11-14 d368a11 Merge pull request #142 from zhanglunet/trend/prd-122-t2-crosslink
-- 2026-11-14 7abc79f Merge pull request #141 from zhanglunet/trend/prd-121-t5-acceptance
-- 2026-11-14 3039932 Merge pull request #140 from zhanglunet/trend/prd-121-t4-readme-demo
-- 2026-11-14 1688a68 Merge pull request #139 from zhanglunet/trend/prd-121-t3-clean-ci
-- 2026-11-14 d1df810 Merge pull request #138 from zhanglunet/trend/prd-121-t2-default-zh-config
-- 2026-11-13 c0fcba0 test(prd-122): T5 验收——3 节抽查+检查器与全链复跑（4 tests green，本链 15）
-- 2026-11-13 43ad3cb ci(prd-122): T3 章节同步检查——H2 结构比对脚本+i18n-check job 新步+漂移检出钉值（trend #611，4 tests green）
-- 2026-11-13 957029a docs(prd-122): T4 英文版同步——补 One-line Install+Bonus 两节+重编号+双 TOC 同步（trend #612，4 tests green）
-- 2026-11-13 ccfd745 test(prd-122): T2 互链钉值——双向顶部链接+语言正确（trend #610，3 tests green；互链 T1 已交付，本单为验收钉值）

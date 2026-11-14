@@ -1,17 +1,17 @@
 export const repoReport = {
-  "generatedAt": "2026-11-14T08:08:40+08:00",
+  "generatedAt": "2026-11-14T21:08:04+08:00",
   "branch": "main",
-  "head": "738a4804930e910ae8f4c79b723a5d29ffc773bb",
-  "shortHead": "738a480",
-  "totalFiles": 815,
+  "head": "6efd8341e1dcd7ba66397f06040777fa1605bcd0",
+  "shortHead": "6efd834",
+  "totalFiles": 827,
   "byExt": [
     {
       "name": "py",
-      "count": 374
+      "count": 380
     },
     {
       "name": "md",
-      "count": 110
+      "count": 115
     },
     {
       "name": "ts",
@@ -31,7 +31,7 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 21
+      "count": 22
     },
     {
       "name": "yml",
@@ -85,11 +85,11 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 183
+      "count": 187
     },
     {
       "name": "docs",
-      "count": 138
+      "count": 143
     },
     {
       "name": "coworker",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 37
+      "count": 39
     },
     {
       "name": "website",
@@ -145,6 +145,10 @@ export const repoReport = {
     },
     {
       "name": "openworker-zh-test-report.md",
+      "count": 1
+    },
+    {
+      "name": "openworker-zh.default.json",
       "count": 1
     },
     {
@@ -382,67 +386,122 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "6efd834",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance"
+    },
+    {
+      "hash": "b7a3450",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary"
+    },
+    {
+      "hash": "57f6679",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates"
+    },
+    {
+      "hash": "bd7419b",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl"
+    },
+    {
+      "hash": "3347e04",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline"
+    },
+    {
+      "hash": "7a27cca",
+      "date": "2026-11-14",
+      "subject": "test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
+    },
+    {
+      "hash": "00bfe4c",
+      "date": "2026-11-14",
+      "subject": "test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
+    },
+    {
+      "hash": "2274284",
+      "date": "2026-11-14",
+      "subject": "feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决"
+    },
+    {
+      "hash": "d58c241",
+      "date": "2026-11-14",
+      "subject": "feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截"
+    },
+    {
+      "hash": "b43517e",
+      "date": "2026-11-14",
+      "subject": "docs(prd-429): T1 翻译评审流水线设计——三件套 schema/规则先行模型后判/三码闸门/划界表+PR 门槛四项自查"
+    },
+    {
+      "hash": "a57aa57",
+      "date": "2026-11-14",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "738a480",
       "date": "2026-11-14",
       "subject": "Merge pull request #145 from zhanglunet/trend/prd-122-t5-acceptance"
-    },
-    {
-      "hash": "904e0ed",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #144 from zhanglunet/trend/prd-122-t3-sync-check"
-    },
-    {
-      "hash": "85944fd",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #143 from zhanglunet/trend/prd-122-t4-sync-en"
-    },
-    {
-      "hash": "d368a11",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #142 from zhanglunet/trend/prd-122-t2-crosslink"
-    },
-    {
-      "hash": "7abc79f",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #141 from zhanglunet/trend/prd-121-t5-acceptance"
-    },
-    {
-      "hash": "3039932",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #140 from zhanglunet/trend/prd-121-t4-readme-demo"
-    },
-    {
-      "hash": "1688a68",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #139 from zhanglunet/trend/prd-121-t3-clean-ci"
-    },
-    {
-      "hash": "d1df810",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #138 from zhanglunet/trend/prd-121-t2-default-zh-config"
-    },
-    {
-      "hash": "c0fcba0",
-      "date": "2026-11-13",
-      "subject": "test(prd-122): T5 验收——3 节抽查+检查器与全链复跑（4 tests green，本链 15）"
-    },
-    {
-      "hash": "43ad3cb",
-      "date": "2026-11-13",
-      "subject": "ci(prd-122): T3 章节同步检查——H2 结构比对脚本+i18n-check job 新步+漂移检出钉值（trend #611，4 tests green）"
-    },
-    {
-      "hash": "957029a",
-      "date": "2026-11-13",
-      "subject": "docs(prd-122): T4 英文版同步——补 One-line Install+Bonus 两节+重编号+双 TOC 同步（trend #612，4 tests green）"
-    },
-    {
-      "hash": "ccfd745",
-      "date": "2026-11-13",
-      "subject": "test(prd-122): T2 互链钉值——双向顶部链接+语言正确（trend #610，3 tests green；互链 T1 已交付，本单为验收钉值）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "6efd834",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance"
+    },
+    {
+      "hash": "b7a3450",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary"
+    },
+    {
+      "hash": "57f6679",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates"
+    },
+    {
+      "hash": "bd7419b",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl"
+    },
+    {
+      "hash": "3347e04",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline"
+    },
+    {
+      "hash": "7a27cca",
+      "date": "2026-11-14",
+      "subject": "test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
+    },
+    {
+      "hash": "00bfe4c",
+      "date": "2026-11-14",
+      "subject": "test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
+    },
+    {
+      "hash": "2274284",
+      "date": "2026-11-14",
+      "subject": "feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决"
+    },
+    {
+      "hash": "d58c241",
+      "date": "2026-11-14",
+      "subject": "feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截"
+    },
+    {
+      "hash": "b43517e",
+      "date": "2026-11-14",
+      "subject": "docs(prd-429): T1 翻译评审流水线设计——三件套 schema/规则先行模型后判/三码闸门/划界表+PR 门槛四项自查"
+    },
+    {
+      "hash": "a57aa57",
+      "date": "2026-11-14",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "738a480",
       "date": "2026-11-14",
@@ -947,106 +1006,6 @@ export const repoReport = {
       "hash": "7248db7",
       "date": "2026-11-07",
       "subject": "fix(prd299): 补回被合并覆盖的 T3 错误码封闭词表——zh_skill_ref 增加 ERROR_CODES 三码（修复 #97 合并事故，trend #1198） - 根因：PRD-299/T3（#97）合并时 -X theirs 吞掉词表，T3/T4 测试导入失败 → main CI 红 - 验证：PRD-299 链 T2/T3/T4/T5 共 33 例全过"
-    },
-    {
-      "hash": "c2340ce",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ce720cc",
-      "date": "2026-11-07",
-      "subject": "docs: PRD-313/T1 openworker-zh-localized 重放包设计——replay-pack/v1（输入指纹+决策+输出、二值重放结论、重放面只读）（trend #1576） (#100)"
-    },
-    {
-      "hash": "992fd0f",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "02ab6be",
-      "date": "2026-11-07",
-      "subject": "PRD-240/T5 验收试运行：抽样知识问答溯源 (#94)"
-    },
-    {
-      "hash": "2348e77",
-      "date": "2026-11-07",
-      "subject": "PRD-239/T5 验收试运行：中文口语指令抽样 (#93)"
-    },
-    {
-      "hash": "71321c8",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ff4eb47",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-240/T4 一致性校验——consistency_check.py check_consistency 三方对齐（E-DANGLING-REF 悬空引用规则 kb_refs/知识回指原文、E-CIRCULAR-REF 知识→规则反向引用禁止、E-ORPHAN-SOURCE 孤儿原文提示级）+ issues 机读清单（code/location/detail）+ summary errors/warnings/aligned（5 例，trend #1203） (#92)"
-    },
-    {
-      "hash": "bfaf6bc",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-239/T4 按包加载与检索适配——pack_loader.py load_skills_for_runtime（目录形态加载 role-packs/*/skills/*/SKILL.md 与既有 store.py 同构，现有使用方式不断链不依赖登记资产）+ search_skills 检索（description/name 子串 OR/短词拒绝/确定性）（4 例，trend #1198） (#91)"
-    },
-    {
-      "hash": "eefaa32",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "b64c3b6",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-240/T3 规则层计算接口——validate_rule §5 全字段（id 格式/词表/封闭类型/kb_refs 非空不悬空 §6.3/strict）+ evaluate_rule 可算执行（§5.1 四条钉死：纯函数/类型封闭/precondition 不满足统一 not_applicable/可重放）+ 三形态 expr（ast 白名单求值：算术/比较/逻辑/条件/min-max-abs 其余拒绝）/table 判定表/formula 算术，script 拒绝执行须沙箱评审 + 回指原文依据（evidence.sources 经 T2 trace_to_source 到 raw_text）（18 例，trend #1202） (#90)"
-    },
-    {
-      "hash": "380fbac",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-239/T3 中文触发词登记册——§5.2 字段全量（19 条种子逐句入册+P0 产物名示范+2 条场景词同包多技能冲突示范）、收录冲突处理（check_conflicts：未标注跨技能同词拒绝并列出双方人工消歧，已标注放行）、lookup 口语命中（归一消形差/整句精确/条目短语嵌句、§5.4 裁决 P0→P3 排序、同级跨技能 ambiguous 待澄清可解释、停用留痕不删行）、coverage 三包覆盖检查、诚实边界声明（发行侧登记资产非运行时引擎）（14 例，trend #1197） (#89)"
-    },
-    {
-      "hash": "df71490",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "7f6ae90",
-      "date": "2026-11-07",
-      "subject": "PRD-299/T4 与 PRD-267/285 及 239 双路径划界断言 (#98)"
-    },
-    {
-      "hash": "4df6157",
-      "date": "2026-11-07",
-      "subject": "PRD-299/T3 引用解析歧义闸门：候选列表请用户选，人工消歧留痕 (#97)"
-    },
-    {
-      "hash": "d101d6f",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "34b6080",
-      "date": "2026-11-07",
-      "subject": "feat: PRD-299/T5 验收试运行——中文口语指令 @引用 全链回放（6 例，trend #1500） (#99)"
-    },
-    {
-      "hash": "782113b",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "adb4059",
-      "date": "2026-11-07",
-      "subject": "PRD-299/T2 引用解析最小实现：@中文技能名（归一/歧义候选/人工消歧留痕） (#96)"
-    },
-    {
-      "hash": "182be98",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1ac0d58",
-      "date": "2026-11-07",
-      "subject": "docs: PRD-299/T1 中文指令 @中文技能名引用解析设计——中文 @语法与禁止形态（版本后缀/通配/中间空白不归一）/ref-resolution/v1 schema（meta_summary 定位+触发词计数零正文读取）/确定性归一四规则显形（全半角/繁简固定映射/去首尾空白——归一是规范化不是模糊匹配）/四错误码封闭词表（歧义列候选含一句话定位请用户选不按频次挑；chosen_from_candidates 人工消歧留痕）/与 239/T3 触发词登记册双路径划界（显式 @ 引用优先级高于口语命中，T4 断言预埋）/与 PRD-267/285 划界表（trend #1496） (#95)"
     }
   ]
 } as const;
