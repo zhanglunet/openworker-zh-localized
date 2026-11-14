@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-14T23:03:17+08:00",
+  "generatedAt": "2026-11-14T23:51:10+08:00",
   "branch": "main",
-  "head": "0c929a678daf4dd88c09bfb77a98177f49e189e8",
-  "shortHead": "0c929a67",
+  "head": "fd713c857e650db72218d27353111f58d4848025",
+  "shortHead": "fd713c85",
   "totalFiles": 2952,
   "byExt": [
     {
@@ -418,6 +418,21 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "fd713c85",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #152 from zhanglunet/fix/sync-fail-loud"
+    },
+    {
+      "hash": "3aeb47bf",
+      "date": "2026-11-15",
+      "subject": "ci(sync): 拆假绿——合并失败让运行变红"
+    },
+    {
+      "hash": "940d7265",
+      "date": "2026-11-14",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "0c929a67",
       "date": "2026-11-14",
       "subject": "Merge upstream OpenWorker ecb44549 (#151)"
@@ -461,24 +476,24 @@ export const repoReport = {
       "hash": "7a27cca5",
       "date": "2026-11-14",
       "subject": "test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
-    },
-    {
-      "hash": "00bfe4c9",
-      "date": "2026-11-14",
-      "subject": "test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
-    },
-    {
-      "hash": "22742842",
-      "date": "2026-11-14",
-      "subject": "feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决"
-    },
-    {
-      "hash": "d58c241f",
-      "date": "2026-11-14",
-      "subject": "feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "fd713c85",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #152 from zhanglunet/fix/sync-fail-loud"
+    },
+    {
+      "hash": "3aeb47bf",
+      "date": "2026-11-15",
+      "subject": "ci(sync): 拆假绿——合并失败让运行变红"
+    },
+    {
+      "hash": "940d7265",
+      "date": "2026-11-14",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "0c929a67",
       "date": "2026-11-14",

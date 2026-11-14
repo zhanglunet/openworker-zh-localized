@@ -1,9 +1,12 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-11-14T23:03:17+08:00
+更新时间：2026-11-14T23:51:10+08:00
 
 ## 最近提交
 
+- 2026-11-14 fd713c85 Merge pull request #152 from zhanglunet/fix/sync-fail-loud
+- 2026-11-15 3aeb47bf ci(sync): 拆假绿——合并失败让运行变红
+- 2026-11-14 940d7265 docs: refresh generated site reports
 - 2026-11-14 0c929a67 Merge upstream OpenWorker ecb44549 (#151)
 - 2026-11-14 8acfb16b Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20261114
 - 2026-11-14 795dd7df docs: refresh generated site reports
@@ -13,6 +16,3 @@
 - 2026-11-14 bd7419b5 Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl
 - 2026-11-14 3347e04a Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline
 - 2026-11-14 7a27cca5 test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥
-- 2026-11-14 00bfe4c9 test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值
-- 2026-11-14 22742842 feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决
-- 2026-11-14 d58c241f feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截
