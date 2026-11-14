@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-14T21:08:04+08:00
+更新时间：2026-11-14T23:03:17+08:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：6efd8341e1dcd7ba66397f06040777fa1605bcd0
+当前提交：0c929a678daf4dd88c09bfb77a98177f49e189e8
 
 ## 1. 总体判断
 
@@ -14,49 +14,57 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：827
-- 当前提交：6efd834
+- 跟踪文件总数：2952
+- 当前提交：0c929a67
 - 主要文件类型：
-  - py: 380
-  - md: 115
-  - ts: 105
-  - tsx: 79
-  - svg: 28
-  - png: 25
-  - json: 22
-  - yml: 16
-  - html: 8
-  - [none]: 7
-  - sh: 6
-  - css: 4
-  - mjs: 4
-  - rs: 4
-  - toml: 4
-  - lock: 3
+  - py: 733
+  - rs: 436
+  - json: 312
+  - md: 290
+  - mjs: 273
+  - ts: 254
+  - tsx: 196
+  - png: 52
+  - svg: 51
+  - [none]: 40
+  - js: 38
+  - jsonl: 36
+  - yaml: 33
+  - css: 27
+  - toml: 25
+  - html: 24
 
 ## 3. 目录结构
 
-- surfaces: 229 个文件
-- tests: 187 个文件
-- docs: 143 个文件
-- coworker: 134 个文件
-- scripts: 39 个文件
+- harness: 920 个文件
+- tests: 630 个文件
+- surfaces: 466 个文件
+- coworker: 309 个文件
+- docs: 236 个文件
+- deploy: 160 个文件
+- scripts: 49 个文件
+- docs-site: 42 个文件
 - website: 36 个文件
-- .github: 12 个文件
+- skills: 31 个文件
+- packaging: 17 个文件
+- .github: 16 个文件
 - role-packs: 11 个文件
-- packaging: 10 个文件
 - ui-mocks: 6 个文件
 - stt: 4 个文件
 - releases: 3 个文件
-- skills: 2 个文件
+- .claude: 1 个文件
+- .dockerignore: 1 个文件
+- .gitattributes: 1 个文件
 - .gitignore: 1 个文件
 - BUILD_LOG.md: 1 个文件
+- CONTRIBUTING.md: 1 个文件
 - LICENSE: 1 个文件
 - openworker-zh-test-report.md: 1 个文件
 - openworker-zh.default.json: 1 个文件
 - pyproject.toml: 1 个文件
 - README.en.md: 1 个文件
 - README.md: 1 个文件
+- SECURITY.md: 1 个文件
 - start-openworker-gui.sh: 1 个文件
 - start-openworker-server.sh: 1 个文件
 - uv.lock: 1 个文件
@@ -237,15 +245,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
-- 2026-11-14 6efd834 Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance
-- 2026-11-14 b7a3450 Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary
-- 2026-11-14 57f6679 Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates
-- 2026-11-14 bd7419b Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl
-- 2026-11-14 3347e04 Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline
-- 2026-11-14 7a27cca test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥
-- 2026-11-14 00bfe4c test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值
-- 2026-11-14 2274284 feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决
-- 2026-11-14 d58c241 feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截
-- 2026-11-14 b43517e docs(prd-429): T1 翻译评审流水线设计——三件套 schema/规则先行模型后判/三码闸门/划界表+PR 门槛四项自查
-- 2026-11-14 a57aa57 docs: refresh generated site reports
-- 2026-11-14 738a480 Merge pull request #145 from zhanglunet/trend/prd-122-t5-acceptance
+- 2026-11-14 0c929a67 Merge upstream OpenWorker ecb44549 (#151)
+- 2026-11-14 8acfb16b Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20261114
+- 2026-11-14 795dd7df docs: refresh generated site reports
+- 2026-11-14 6efd8341 Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance
+- 2026-11-14 b7a34504 Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary
+- 2026-11-14 57f66799 Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates
+- 2026-11-14 bd7419b5 Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl
+- 2026-11-14 3347e04a Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline
+- 2026-11-14 7a27cca5 test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥
+- 2026-11-14 00bfe4c9 test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值
+- 2026-11-14 22742842 feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决
+- 2026-11-14 d58c241f feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截
