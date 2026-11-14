@@ -27,6 +27,8 @@ jobs:
           python-version: "3.12"
       - name: 流水线脚本自测（证明检查逻辑本身没坏）
         run: python3 scripts/i18n-pipeline.py --self-test
+      - name: 中英 README 章节同步检查（PRD-122/T3，trend #611）
+        run: python3 scripts/check_readme_sync.py
       - name: 术语锁定 + 链接检查
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
