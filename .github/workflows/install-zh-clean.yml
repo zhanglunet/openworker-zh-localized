@@ -1,0 +1,46 @@
+# PRD-121/T3（trend issue #606）：干净环境跑安装脚本。
+# 全新 ubuntu 容器内：语法检查 → 脚本自带 --self-test（预演零写入/体检/
+# 默认配置/令牌与启动脚本全链）→ T1+T2 测试套件。不联网装任何工具链，
+# 安装本体只验预演与自测（真实装依赖留待 T5 验收口径）。
+name: install-zh clean-env
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "trend/prd-121-*"
+    paths:
+      - "scripts/install-zh.sh"
+      - "tests/test_install_zh.py"
+      - "tests/test_prd121_t2_default_config.py"
+  pull_request:
+    paths:
+      - "scripts/install-zh.sh"
+      - "tests/test_install_zh.py"
+      - "tests/test_prd121_t2_default_config.py"
+
+jobs:
+  clean-install:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:24.04
+    steps:
+      - name: 最小依赖（git/bash 已随镜像；装 python 与 uv）
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq python3 python3-venv python3-pip curl >/dev/null
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: actions/checkout@v4
+      - name: 脚本语法
+        run: bash -n scripts/install-zh.sh
+      - name: 安装脚本自带自测（含 T2 默认中文配置段）
+        run: bash scripts/install-zh.sh --self-test
+      - name: T1+T2 测试套件
+        run: |
+          uv run --with pytest python -m pytest tests/test_install_zh.py tests/test_prd121_t2_default_config.py -q
+      - name: 预演在干净环境零写入
+        run: |
+          export OPENWORKER_ZH_STATE_DIR="${RUNNER_TEMP}/zh-state"
+          bash scripts/install-zh.sh --dry-run >/dev/null
+          test ! -e "${RUNNER_TEMP}/zh-state" && echo "干净环境预演零写入：通过"
