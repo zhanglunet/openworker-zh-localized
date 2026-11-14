@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="238" viewBox="0 0 760 238">
+  <rect width="760" height="238" rx="10" fill="#0d1117"/>
+  <rect width="760" height="40" rx="10" fill="#161b22"/>
+  <circle cx="22" cy="20" r="6" fill="#f85149"/>
+  <circle cx="42" cy="20" r="6" fill="#d29922"/>
+  <circle cx="62" cy="20" r="6" fill="#2ea043"/>
+  <text x="380" y="25" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#8b949e">第 3 步 · 默认中文配置（全部占位）（示意图，非真实截图）</text>
+  <text x="28" y="64" font-family="Menlo,monospace" font-size="15" fill="#7ee787">$ cat .openworker-state/openworker-zh.default.json</text>
+  <text x="28" y="94" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">"ui":    { "locale": "zh-CN", "first_run": "zh" }</text>
+  <text x="28" y="124" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">"model": { "base_url": "https://example.invalid/…",</text>
+  <text x="28" y="154" font-family="Menlo,monospace" font-size="15" fill="#c9d1d9">          "api_key_env": "OPENWORKER_ZH_API_KEY" }</text>
+  <text x="28" y="184" font-family="Menlo,monospace" font-size="15" fill="#8b949e">全是占位符；改成你的服务地址即可，密钥只放环境变量。</text>
+</svg>
