@@ -1,17 +1,17 @@
 # OpenWorker 中文站周报
 
-生成时间：2026-11-14T00:25:30+08:00
+生成时间：2026-11-14T08:08:40+08:00
 
 ## 本周概览
 
-- 2026-11-14 6aff67a Merge pull request #137 from zhanglunet/trend/prd406-t5-collab-session-acceptance
-- 2026-11-14 49d0251 Merge pull request #136 from zhanglunet/trend/prd406-t4-collab-session-boundary
-- 2026-11-14 be21c66 Merge pull request #135 from zhanglunet/trend/prd406-t3-collab-session-gates
-- 2026-11-14 0599c0a Merge pull request #134 from zhanglunet/trend/prd406-t2-collab-session-impl
-- 2026-11-14 0b0a48f Merge pull request #133 from zhanglunet/trend/prd406-t1-collab-session
-- 2026-11-14 89c42e3 test(prd-406): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥
-- 2026-11-14 1def4bd test(prd-406): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值
-- 2026-11-14 655b9a3 feat(prd-406): T3 会话闸门——append_only LEDGER_DRIFT + accept 双向对账 + outlet 拦截 + gate_summary 一票否决
+- 2026-11-14 738a480 Merge pull request #145 from zhanglunet/trend/prd-122-t5-acceptance
+- 2026-11-14 904e0ed Merge pull request #144 from zhanglunet/trend/prd-122-t3-sync-check
+- 2026-11-14 85944fd Merge pull request #143 from zhanglunet/trend/prd-122-t4-sync-en
+- 2026-11-14 d368a11 Merge pull request #142 from zhanglunet/trend/prd-122-t2-crosslink
+- 2026-11-14 7abc79f Merge pull request #141 from zhanglunet/trend/prd-121-t5-acceptance
+- 2026-11-14 3039932 Merge pull request #140 from zhanglunet/trend/prd-121-t4-readme-demo
+- 2026-11-14 1688a68 Merge pull request #139 from zhanglunet/trend/prd-121-t3-clean-ci
+- 2026-11-14 d1df810 Merge pull request #138 from zhanglunet/trend/prd-121-t2-default-zh-config
 
 ## 维护建议
 

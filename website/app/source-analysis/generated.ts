@@ -1,33 +1,33 @@
 export const repoReport = {
-  "generatedAt": "2026-11-14T00:25:30+08:00",
+  "generatedAt": "2026-11-14T08:08:40+08:00",
   "branch": "main",
-  "head": "6aff67a5e444bb440fa0b6eb832dd48d8746c791",
-  "shortHead": "6aff67a",
-  "totalFiles": 793,
+  "head": "738a4804930e910ae8f4c79b723a5d29ffc773bb",
+  "shortHead": "738a480",
+  "totalFiles": 815,
   "byExt": [
     {
       "name": "py",
-      "count": 366
+      "count": 374
+    },
+    {
+      "name": "md",
+      "count": 110
     },
     {
       "name": "ts",
       "count": 105
     },
     {
-      "name": "md",
-      "count": 102
-    },
-    {
       "name": "tsx",
       "count": 79
     },
     {
-      "name": "png",
-      "count": 25
+      "name": "svg",
+      "count": 28
     },
     {
-      "name": "svg",
-      "count": 23
+      "name": "png",
+      "count": 25
     },
     {
       "name": "json",
@@ -35,7 +35,7 @@ export const repoReport = {
     },
     {
       "name": "yml",
-      "count": 15
+      "count": 16
     },
     {
       "name": "html",
@@ -85,19 +85,19 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 176
+      "count": 183
+    },
+    {
+      "name": "docs",
+      "count": 138
     },
     {
       "name": "coworker",
       "count": 134
     },
     {
-      "name": "docs",
-      "count": 125
-    },
-    {
       "name": "scripts",
-      "count": 36
+      "count": 37
     },
     {
       "name": "website",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": ".github",
-      "count": 11
+      "count": 12
     },
     {
       "name": "role-packs",
@@ -382,67 +382,152 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
-      "hash": "6aff67a",
+      "hash": "738a480",
       "date": "2026-11-14",
-      "subject": "Merge pull request #137 from zhanglunet/trend/prd406-t5-collab-session-acceptance"
+      "subject": "Merge pull request #145 from zhanglunet/trend/prd-122-t5-acceptance"
     },
     {
-      "hash": "49d0251",
+      "hash": "904e0ed",
       "date": "2026-11-14",
-      "subject": "Merge pull request #136 from zhanglunet/trend/prd406-t4-collab-session-boundary"
+      "subject": "Merge pull request #144 from zhanglunet/trend/prd-122-t3-sync-check"
     },
     {
-      "hash": "be21c66",
+      "hash": "85944fd",
       "date": "2026-11-14",
-      "subject": "Merge pull request #135 from zhanglunet/trend/prd406-t3-collab-session-gates"
+      "subject": "Merge pull request #143 from zhanglunet/trend/prd-122-t4-sync-en"
     },
     {
-      "hash": "0599c0a",
+      "hash": "d368a11",
       "date": "2026-11-14",
-      "subject": "Merge pull request #134 from zhanglunet/trend/prd406-t2-collab-session-impl"
+      "subject": "Merge pull request #142 from zhanglunet/trend/prd-122-t2-crosslink"
     },
     {
-      "hash": "0b0a48f",
+      "hash": "7abc79f",
       "date": "2026-11-14",
-      "subject": "Merge pull request #133 from zhanglunet/trend/prd406-t1-collab-session"
+      "subject": "Merge pull request #141 from zhanglunet/trend/prd-121-t5-acceptance"
     },
     {
-      "hash": "89c42e3",
+      "hash": "3039932",
       "date": "2026-11-14",
-      "subject": "test(prd-406): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
+      "subject": "Merge pull request #140 from zhanglunet/trend/prd-121-t4-readme-demo"
     },
     {
-      "hash": "1def4bd",
+      "hash": "1688a68",
       "date": "2026-11-14",
-      "subject": "test(prd-406): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
+      "subject": "Merge pull request #139 from zhanglunet/trend/prd-121-t3-clean-ci"
     },
     {
-      "hash": "655b9a3",
+      "hash": "d1df810",
       "date": "2026-11-14",
-      "subject": "feat(prd-406): T3 会话闸门——append_only LEDGER_DRIFT + accept 双向对账 + outlet 拦截 + gate_summary 一票否决"
+      "subject": "Merge pull request #138 from zhanglunet/trend/prd-121-t2-default-zh-config"
     },
     {
-      "hash": "83ba737",
-      "date": "2026-11-14",
-      "subject": "feat(prd-406): T2 中文 skill 协同评审会话内核——propose/accept/reject 署名事件+单向状态机+JSONL append-only 账本+outlet 出口包装"
-    },
-    {
-      "hash": "1682dc5",
-      "date": "2026-11-14",
-      "subject": "docs(prd-406): T1 中文 skill 协同评审会话设计——事件 schema/状态机/三码闸门/划界表+PR 门槛四项自查"
-    },
-    {
-      "hash": "01e96a5",
-      "date": "2026-11-12",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3256bf3",
+      "hash": "c0fcba0",
       "date": "2026-11-13",
-      "subject": "Merge pull request #132 from zhanglunet/trend/prd-383-t5-checklist-failure-verify-bench-acceptance"
+      "subject": "test(prd-122): T5 验收——3 节抽查+检查器与全链复跑（4 tests green，本链 15）"
+    },
+    {
+      "hash": "43ad3cb",
+      "date": "2026-11-13",
+      "subject": "ci(prd-122): T3 章节同步检查——H2 结构比对脚本+i18n-check job 新步+漂移检出钉值（trend #611，4 tests green）"
+    },
+    {
+      "hash": "957029a",
+      "date": "2026-11-13",
+      "subject": "docs(prd-122): T4 英文版同步——补 One-line Install+Bonus 两节+重编号+双 TOC 同步（trend #612，4 tests green）"
+    },
+    {
+      "hash": "ccfd745",
+      "date": "2026-11-13",
+      "subject": "test(prd-122): T2 互链钉值——双向顶部链接+语言正确（trend #610，3 tests green；互链 T1 已交付，本单为验收钉值）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "738a480",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #145 from zhanglunet/trend/prd-122-t5-acceptance"
+    },
+    {
+      "hash": "904e0ed",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #144 from zhanglunet/trend/prd-122-t3-sync-check"
+    },
+    {
+      "hash": "85944fd",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #143 from zhanglunet/trend/prd-122-t4-sync-en"
+    },
+    {
+      "hash": "d368a11",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #142 from zhanglunet/trend/prd-122-t2-crosslink"
+    },
+    {
+      "hash": "7abc79f",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #141 from zhanglunet/trend/prd-121-t5-acceptance"
+    },
+    {
+      "hash": "3039932",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #140 from zhanglunet/trend/prd-121-t4-readme-demo"
+    },
+    {
+      "hash": "1688a68",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #139 from zhanglunet/trend/prd-121-t3-clean-ci"
+    },
+    {
+      "hash": "d1df810",
+      "date": "2026-11-14",
+      "subject": "Merge pull request #138 from zhanglunet/trend/prd-121-t2-default-zh-config"
+    },
+    {
+      "hash": "c0fcba0",
+      "date": "2026-11-13",
+      "subject": "test(prd-122): T5 验收——3 节抽查+检查器与全链复跑（4 tests green，本链 15）"
+    },
+    {
+      "hash": "43ad3cb",
+      "date": "2026-11-13",
+      "subject": "ci(prd-122): T3 章节同步检查——H2 结构比对脚本+i18n-check job 新步+漂移检出钉值（trend #611，4 tests green）"
+    },
+    {
+      "hash": "957029a",
+      "date": "2026-11-13",
+      "subject": "docs(prd-122): T4 英文版同步——补 One-line Install+Bonus 两节+重编号+双 TOC 同步（trend #612，4 tests green）"
+    },
+    {
+      "hash": "ccfd745",
+      "date": "2026-11-13",
+      "subject": "test(prd-122): T2 互链钉值——双向顶部链接+语言正确（trend #610，3 tests green；互链 T1 已交付，本单为验收钉值）"
+    },
+    {
+      "hash": "a2f47e6",
+      "date": "2026-11-13",
+      "subject": "test(prd-121): T5 验收——干净克隆全链走查+文档命令与脚本旗标一致+10 分钟预算表（3 tests green，本链 17）"
+    },
+    {
+      "hash": "2c6a9c1",
+      "date": "2026-11-13",
+      "subject": "docs(prd-121): T4 README 首屏一行安装+5 张演示示意图+带图安装指南（trend #607，6 tests green）"
+    },
+    {
+      "hash": "51e52c0",
+      "date": "2026-11-14",
+      "subject": "ci(prd-121): T3 干净环境 CI——ubuntu:24.04 容器内 self-test+T1/T2 套件+预演零写入（trend #606）"
+    },
+    {
+      "hash": "559f960",
+      "date": "2026-11-13",
+      "subject": "feat(prd-121): T2 默认中文配置——install --write-config 写占位配置件(zh-CN/600/幂等)+T1 self-test 可移植性修复(BASH_ABS)（8 tests green）"
+    },
+    {
+      "hash": "70c2c49",
+      "date": "2026-11-13",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "6aff67a",
       "date": "2026-11-14",
