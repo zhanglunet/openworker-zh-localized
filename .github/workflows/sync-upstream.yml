@@ -46,9 +46,13 @@ jobs:
         run: echo "Localized repository already contains upstream/main."
 
       - name: Merge upstream into sync branch
+        # ★ 不设 continue-on-error（拆假绿）：2026-08-04 起这条流水线在合并失败时也显示
+        #   绿色，冲突只在 issue 里积累，main 四个多月没有进过一个上游提交却没有任何告警
+        #   （2026-11-14 人工追平后定位）。合并失败就让本次运行变红——冲突 issue 靠
+        #   `steps.merge.outcome == 'failure'` 条件照常创建，后续步骤按各自条件跳过。
+        #   同步 PR 必须 Merge commit 合并，禁止 squash（祖先链断裂会让冲突无限复发）。
         if: steps.diff.outputs.changed == 'true'
         id: merge
-        continue-on-error: true
         run: |
           git switch -c sync/upstream-main
           git merge --no-edit upstream/main
