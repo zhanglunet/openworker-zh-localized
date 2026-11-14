@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import pytest
+from conftest import assert_user_only
 from fastapi.testclient import TestClient
 
 from coworker.providers import (
@@ -22,6 +24,10 @@ class ScriptedProvider(ProviderClient):
         self._turns = list(turns)
 
     def complete(self, *, model, messages, tools=None, **settings):
+        # Session auto-titling calls the same provider from a background thread, racing
+        # the turn for the next scripted reply; answer it here so the script stays the turn's.
+        if messages and messages[0].get("content") == SessionManager._AUTOTITLE_PROMPT:
+            return _text("Session title")
         return self._turns.pop(0)
 
     def capabilities(self, model):
@@ -60,10 +66,12 @@ def test_chat_completions_openai_shape(tmp_path):
 def test_agents_and_memory_rest(tmp_path):
     client = _client(tmp_path, [])
     agents = client.get("/v1/agents").json()["agents"]
-    # The picker lists enabled+surfaced personas — a fresh install is cowork-only
-    # (non-default personas ship disabled, opt-in from Settings ▸ Personas).
+    # The picker lists enabled+surfaced personas. Release lineup (owner 2026-08-21):
+    # OpenWorker + the security bundles; Code ships disabled, Chat is gone, and
+    # ships:false personas (teams, ops, design) need OPENWORKER_UNSHIPPED=1.
     names = [a["name"] for a in agents]
-    assert names == ["cowork"]
+    assert names[0] == "cowork"
+    assert set(names) == {"cowork", "code", "security", "cloud-posture", "dep-audit", "reviewer"}
     assert "skills" in client.get("/v1/skills").json()  # catalog (may be empty)
 
     added = client.post("/v1/memory", json={"content": "prefer pathlib"}).json()
@@ -92,17 +100,17 @@ def test_disable_persona_archives_its_sessions(tmp_path):
             )
         )
 
-    mk("chat-a", "chat")
-    mk("chat-b", "chat")
-    mk("chat-old", "chat")
+    mk("chat-a", "code")
+    mk("chat-b", "code")
+    mk("chat-old", "code")
     store.set_flags(
         "chat-old", archived=True
     )  # already archived — must not be re-counted
     mk("cowork-a", "cowork")
-    mk("__run__r1", "chat")  # internal automation thread — never touched
+    mk("__run__r1", "code")  # internal automation thread — never touched
 
     client = TestClient(create_app(manager))
-    body = client.post("/v1/personas/chat", json={"enabled": False}).json()
+    body = client.post("/v1/personas/code", json={"enabled": False}).json()
     assert body["ok"] is True
     assert body["archived_sessions"] == 2
     assert store.load("chat-a").archived and store.load("chat-b").archived
@@ -114,8 +122,8 @@ def test_disable_persona_archives_its_sessions(tmp_path):
     assert store.load("chat-a").archived
 
     # The dedicated §5/§8 enable route shares the same semantic.
-    mk("chat-c", "chat")
-    client.post("/v1/personas/chat/enable", json={"enabled": False})
+    mk("chat-c", "code")
+    client.post("/v1/personas/code/enable", json={"enabled": False})
     assert store.load("chat-c").archived
 
 
@@ -421,6 +429,11 @@ def test_ws_allows_only_one_inflight_turn_per_session(tmp_path):
             self.max_active = 0
 
         def complete(self, *, model, messages, tools=None, **settings):
+            # The fire-and-forget auto-title completion legitimately runs CONCURRENTLY
+            # with the chat turn (it fires at turn start, owner catch 2026-08-24) — the
+            # invariant under test is one CHAT turn at a time, so exclude title calls.
+            if messages and "title chat sessions" in str(messages[0].get("content", "")):
+                return _text("A Title")
             with self._lock:
                 self.active += 1
                 self.max_active = max(self.max_active, self.active)
@@ -470,9 +483,6 @@ def test_ws_rate_limits_inbound_frames(tmp_path):
 
 
 def test_server_sets_explicit_websocket_frame_limit(tmp_path, monkeypatch):
-    import sys
-    from types import SimpleNamespace
-
     from coworker.server import run as server_run
 
     seen = {}
@@ -481,16 +491,42 @@ def test_server_sets_explicit_websocket_frame_limit(tmp_path, monkeypatch):
     monkeypatch.setattr(server_run, "_ensure_ca_bundle", lambda: None)
     monkeypatch.setattr(server_run, "_exit_when_orphaned", lambda: None)
     monkeypatch.setattr(server_run, "build_app", lambda *args: fake_app)
-    monkeypatch.setitem(
-        sys.modules,
-        "uvicorn",
-        SimpleNamespace(run=lambda app, **kwargs: seen.update(app=app, **kwargs)),
-    )
+    from coworker.server import ws_guard
+
+    class _Server:
+        # T3-3: the launcher runs uvicorn through GuardedServer (ws_guard.py)
+        def __init__(self, config):
+            seen.update(app=config.app, ws_max_size=config.ws_max_size, port=config.port)
+
+        def run(self):
+            seen["ran"] = True
+
+    monkeypatch.setattr(ws_guard, "GuardedServer", _Server)
 
     server_run.main(["--cwd", str(tmp_path), "--port", "8766"])
 
-    assert seen["app"] is fake_app
+    assert seen["app"] is fake_app and seen["ran"] and seen["port"] == 8766
     assert seen["ws_max_size"] == server_run._WS_MAX_FRAME_BYTES
+
+
+def test_check_flag_builds_the_app_and_serves_nothing(tmp_path, monkeypatch, capsys):
+    """The packaging check: every import and the wiring, no port, no token file. Added
+    after the Intel apps shipped with a sidecar that died on its first import."""
+    import sys
+
+    from coworker.server import run as server_run
+
+    built = []
+    monkeypatch.setattr(server_run, "_ensure_ca_bundle", lambda: None)
+    monkeypatch.setattr(server_run, "build_app", lambda *args: built.append(args) or object())
+    monkeypatch.setattr(server_run, "_ensure_api_token", lambda port: pytest.fail("a check must not write a token"))
+    monkeypatch.delitem(sys.modules, "uvicorn", raising=False)
+    monkeypatch.setattr(server_run, "_exit_when_orphaned", lambda: pytest.fail("a check must not serve"))
+
+    server_run.main(["--cwd", str(tmp_path), "--check"])
+
+    assert len(built) == 1 and built[0][0] == str(tmp_path)
+    assert capsys.readouterr().out.strip() == "ok"
 
 
 def test_standalone_server_token_file_is_user_only(tmp_path, monkeypatch):
@@ -504,7 +540,7 @@ def test_standalone_server_token_file_is_user_only(tmp_path, monkeypatch):
         assert path == tmp_path / "coworker-state" / "sidecar-9876.token"
         assert path.read_text().strip() == os.environ["COWORKER_API_TOKEN"]
         assert len(path.read_text().strip()) == 64
-        assert (path.stat().st_mode & 0o777) == 0o600
+        assert_user_only(path)
     finally:
         path.unlink(missing_ok=True)
         os.environ.pop("COWORKER_API_TOKEN", None)
@@ -516,6 +552,10 @@ def test_ws_error_persists_notice_and_retry_reruns(tmp_path):
             self.calls = 0
 
         def complete(self, *, model, messages, tools=None, **settings):
+            # The fire-and-forget auto-title call runs concurrently with the turn; it must
+            # not take the one scripted outage meant for the chat call.
+            if messages and "title chat sessions" in str(messages[0].get("content", "")):
+                return _text("A Title")
             self.calls += 1
             if self.calls == 1:
                 raise RuntimeError("outage")
@@ -540,6 +580,40 @@ def test_ws_error_persists_notice_and_retry_reruns(tmp_path):
     messages = client.get("/v1/sessions/flaky/messages").json()["messages"]
     assert messages[-1]["role"] == "assistant" and messages[-1]["content"] == "recovered"
     assert sum(1 for m in messages if m["role"] == "user") == 1
+
+
+def test_ws_turn_crash_broadcasts_error_event(tmp_path):
+    """An exception escaping engine.run() (not a provider error the engine converts into an
+    error event) must surface as an error event + turn_done — not die silently as an
+    unretrieved task exception with only a bare turn_done (#367)."""
+    import asyncio
+
+    from coworker.engine import Event
+
+    manager = SessionManager(workspace=tmp_path, provider=ScriptedProvider([]))
+    engine = manager.get_engine("boom", workspace=tmp_path)
+    assert engine is not None
+
+    async def exploding_run(*args, **kwargs):
+        raise RuntimeError("engine blew up")
+        yield  # pragma: no cover - makes this an async generator
+
+    engine.run = exploding_run  # type: ignore[method-assign]
+    client = TestClient(create_app(manager))
+    with client.websocket_connect("/ws/session/boom") as ws:
+        assert ws.receive_json()["type"] == "ready"
+        ws.send_json({"type": "user_message", "text": "hello"})
+        types, errors = [], []
+        while True:
+            event = ws.receive_json()
+            types.append(event["type"])
+            if event["type"] == "error":
+                errors.append(event["data"].get("error"))
+            if event["type"] == "turn_done":
+                break
+        assert len(errors) == 1 and "engine blew up" in errors[0]
+        assert "turn_done" in types
+        assert "assistant_message" not in types  # the crashed turn produced no reply
 
 
 # -- origin gate (local-API hardening): a browser page on a foreign origin must not be able to
@@ -673,6 +747,50 @@ def test_ws_session_persisted_while_parked_on_approval(tmp_path):
             pass
 
 
+def test_ws_disconnect_promotes_parked_prompt_to_inbox(tmp_path):
+    """Attended session, agent parks on an approval, the viewer's socket drops: the prompt
+    must surface in the cross-session Inbox at once (it was inline-only, i.e. invisible with
+    no viewer) — not wait for an engine rebuild. Reopening the session still shows it."""
+    manager = SessionManager(
+        workspace=tmp_path,
+        provider=ScriptedProvider(
+            [_tool("write_file", {"path": "y.py", "content": "1\n"}), _text("done")]
+        ),
+    )
+    client = TestClient(create_app(manager))
+    with client.websocket_connect("/ws/session/dropped1") as ws:
+        assert ws.receive_json()["type"] == "ready"
+        ws.send_json({"type": "user_message", "text": "make y.py"})
+        while ws.receive_json()["type"] != "permission_required":
+            pass
+        # Global Inbox hides attended (inline) prompts while a viewer is present.
+        assert client.get("/v1/inbox", params={"state": "pending"}).json()["items"] == []
+        parked = manager.inbox.pending("dropped1")
+        assert len(parked) == 1 and parked[0].visibility == "inline"
+    # Socket gone → promoted, still pending, and now in the global list.
+    items = client.get("/v1/inbox", params={"state": "pending"}).json()["items"]
+    assert [i["id"] for i in items] == [parked[0].id]
+    assert items[0]["visibility"] == "inbox" and items[0]["state"] == "pending"
+    # A per-session query (the session reopened) still sees it in context.
+    inline = client.get("/v1/inbox", params={"session_id": "dropped1", "state": "pending"})
+    assert [i["id"] for i in inline.json()["items"]] == [parked[0].id]
+
+
+def test_promote_is_a_no_op_while_another_viewer_remains(tmp_path):
+    from coworker.inbox import VIS_INLINE
+
+    manager = SessionManager(workspace=tmp_path, provider=ScriptedProvider([]))
+    item = manager.inbox.add_approval("shared1", "Run `x`?", visibility=VIS_INLINE)
+    manager.register_session_client("shared1", object())
+    assert asyncio.run(manager.promote_pending_prompts("shared1")) == 0
+    assert manager.inbox.get(item.id).visibility == VIS_INLINE
+    manager._session_clients.clear()
+    assert asyncio.run(manager.promote_pending_prompts("shared1")) == 1
+    assert manager.inbox.get(item.id).visibility == "inbox"
+    # Idempotent: nothing left to move.
+    assert asyncio.run(manager.promote_pending_prompts("shared1")) == 0
+
+
 def test_ws_browser_tool_audit_round_trip(tmp_path):
     client = _client(tmp_path, [_tool("browser_close", {}), _text("closed")])
     with client.websocket_connect("/ws/session/browser-audit?agent=cowork") as ws:
@@ -689,6 +807,13 @@ def test_ws_browser_tool_audit_round_trip(tmp_path):
         r["tool"] == "browser_close" and r["stage"] == "approval_resolved" for r in rows
     )
     assert any(r["tool"] == "browser_close" and r["stage"] == "finished" for r in rows)
+
+    # OPE-238: one tool call's rows, by its id (the GUI's "changes made without asking"
+    # summary links each item this way).
+    call_id = next(r["call_id"] for r in rows if r["stage"] == "finished")
+    one = client.get("/v1/audit", params={"call_id": call_id}).json()["events"]
+    assert one and {r["call_id"] for r in one} == {call_id}
+    assert client.get("/v1/audit", params={"call_id": "no-such-call"}).json()["events"] == []
 
 
 def test_open_and_recent_workspaces(tmp_path):
@@ -862,18 +987,19 @@ def test_ws_with_workspace_query(tmp_path):
         assert "turn_end" in _drain(ws)
 
 
-def test_ws_chat_agent_needs_no_workspace(tmp_path):
+def test_ws_removed_agent_id_falls_back_to_default(tmp_path):
+    # Chat is removed (owner 2026-08-21): a stored session or deep link carrying
+    # agent=chat resolves to the default persona instead of erroring.
     manager = SessionManager(
         workspace=None,
         data_dir=tmp_path,
-        provider=ScriptedProvider([_text("hi from chat")]),
+        provider=ScriptedProvider([_text("hi")]),
     )
     client = TestClient(create_app(manager))
     with client.websocket_connect("/ws/session/chat1?agent=chat") as ws:
         ready = ws.receive_json()
         assert ready["type"] == "ready"
-        assert ready["data"]["agent"] == "chat"
-        assert ready["data"]["workspace"] is None
+        assert ready["data"]["agent"] == "cowork"
         ws.send_json({"type": "user_message", "text": "hello"})
         assert "turn_end" in _drain(ws)
 
@@ -917,10 +1043,7 @@ def test_ws_first_message_binds_then_midsession_switch_persists_notice(tmp_path)
     reconnects — found 2026-07-04). Mid-session rebinds are ALLOWED (roadmap item 3,
     2026-07-22, supersedes the 07-04 lock): the switch lands as a persisted model_switch
     notice and a model_changed broadcast, and the next turn runs on the new model."""
-    # 4 turns: 3 user turns + the autotitle's fire-and-forget complete() after turn 1.
-    client = _client(
-        tmp_path, [_text("ok"), _text("Session title"), _text("ok again"), _text("still ok")]
-    )
+    client = _client(tmp_path, [_text("ok"), _text("ok again"), _text("still ok")])
     with client.websocket_connect("/ws/session/model-per-msg") as ws:
         ready = ws.receive_json()
         assert ready["type"] == "ready"
@@ -931,6 +1054,10 @@ def test_ws_first_message_binds_then_midsession_switch_persists_notice(tmp_path)
         _drain(ws)
         ws.send_json({"type": "set_model", "model": "kimi:kimi-k2.6"})
         changed = ws.receive_json()
+        while changed["type"] == "step":
+            # Live Steps updates go out in 100 ms batches, so one can land after
+            # turn_done (observability; fix list C-1). They are not part of this test.
+            changed = ws.receive_json()
         assert changed["type"] == "model_changed"
         assert changed["data"]["model"] == "kimi:kimi-k2.6"
         assert "Kimi" in changed["data"]["text"]
@@ -1016,6 +1143,32 @@ def test_provider_set_and_remove_roundtrip(tmp_path):
     assert not client.delete("/v1/providers/nope").json()["ok"]
 
 
+def test_custom_provider_rest_create_and_delete(tmp_path, monkeypatch):
+    """The public Settings API creates a separately-routed custom provider."""
+    monkeypatch.setenv("COWORKER_STATE_DIR", str(tmp_path / "state"))
+    manager = SessionManager(workspace=tmp_path, provider=ScriptedProvider([]))
+    client = TestClient(create_app(manager))
+
+    created = client.post(
+        "/v1/providers/custom",
+        json={
+            "name": "acme",
+            "title": "Acme Gateway",
+            "fields": {
+                "api_key": "acme-test",
+                "base_url": "https://llm.acme.example/v1",
+            },
+        },
+    ).json()
+    assert created == {"ok": True, "provider": "acme", "recommended_model": None}
+    provider = {p["name"]: p for p in client.get("/v1/providers").json()}["acme"]
+    assert provider["is_custom"] is True and provider["values"]["base_url"].endswith("/v1")
+    assert "acme-test" not in str(provider)
+
+    assert client.delete("/v1/providers/acme").json()["ok"] is True
+    assert "acme" not in {p["name"] for p in client.get("/v1/providers").json()}
+
+
 def test_always_allow_grants_survive_restart(tmp_path):
     """"Always allow" is session-scoped, and the session outlives the process — a restart
     (fresh manager over the same store) must not re-ask for an approved command
@@ -1077,3 +1230,91 @@ def test_set_provider_persists_extra_fields(tmp_path):
     manager.set_provider("ollama", {"base_url": ""})
     providers = {p["name"]: p for p in manager.get_providers()}
     assert "base_url" not in providers["ollama"]["values"]
+
+
+def test_mcp_connect_route_flags_authorizing_immediately(tmp_path, monkeypatch):
+    """Owner-hit 2026-08-21: the Test button looked dead — the connect ran as a
+    background task, and the GUI's first refresh landed before the task set
+    `authorizing`, so the fast poll never armed. The route must flag it
+    synchronously (and only for known servers, so nothing wedges)."""
+    import asyncio
+
+    from coworker.server import SessionManager
+
+    mgr = SessionManager(data_dir=tmp_path / "data")
+    monkeypatch.setattr(
+        "coworker.server.manager.read_global", lambda: {"sales-db": {"command": "x"}}
+    )
+    mgr.begin_mcp_connect("sales-db")
+    assert "sales-db" in mgr._mcp_authorizing
+    mgr.begin_mcp_connect("nope")
+    assert "nope" not in mgr._mcp_authorizing
+    # An unmatched name clears the flag instead of wedging "Testing…" forever.
+    monkeypatch.setattr("coworker.server.manager.load_mcp_servers", lambda *a, **k: [])
+    res = asyncio.run(mgr.connect_mcp("sales-db"))
+    assert not res["ok"] and "sales-db" not in mgr._mcp_authorizing
+
+
+def test_ws_ready_reports_live_turn(tmp_path):
+    # A reconnect can land mid-turn (sidebar revisit, relaunch, dropped socket). `ready`
+    # must carry server truth on the running turn or the GUI loses Stop + the waiting row
+    # (owner catch 2026-08-24, v0.2.0 walkthrough).
+    manager = SessionManager(workspace=tmp_path, provider=ScriptedProvider([_text("hi")]))
+    client = TestClient(create_app(manager))
+    with client.websocket_connect("/ws/session/live1") as ws:
+        assert ws.receive_json()["data"]["running"] is False
+
+    manager.mark_running("live1")
+    try:
+        with client.websocket_connect("/ws/session/live1") as ws:
+            assert ws.receive_json()["data"]["running"] is True
+    finally:
+        manager.mark_idle("live1")
+
+
+def test_set_mode_persists_notice_once_then_markers(tmp_path):
+    # Owner ruling 2026-08-24: the Auto-Approve explainer is server-authored and persisted
+    # ONCE per session; later switches persist one-line markers. Restarts re-show nothing.
+    manager = SessionManager(workspace=tmp_path, provider=ScriptedProvider([_text("hi")]))
+    client = TestClient(create_app(manager))
+    with client.websocket_connect("/ws/session/modes1") as ws:
+        assert ws.receive_json()["type"] == "ready"
+        ws.send_json({"type": "set_mode", "mode": "auto-approve"})
+        ev = ws.receive_json()
+        assert ev["type"] == "mode_notice"
+        assert ev["data"]["title"] == "Auto-approve is on."
+        assert "uses a model" in ev["data"]["text"]
+        ws.send_json({"type": "set_mode", "mode": "interactive"})
+        assert ws.receive_json()["data"] == {"text": "Ask for approval is on.", "mode": "interactive"}
+        # Re-entering auto-approve: marker, never the banner again.
+        ws.send_json({"type": "set_mode", "mode": "auto-approve"})
+        assert ws.receive_json()["data"] == {"text": "Auto-approve is on.", "mode": "auto-approve"}
+
+    engine = manager._engines["modes1"]
+    kinds = [m.get("kind") for m in engine.messages if m.get("role") == "notice"]
+    assert kinds.count("mode_notice") == 1
+    assert kinds.count("mode_switch") == 2
+
+
+def test_connect_banners_a_session_already_in_auto_approve(tmp_path):
+    from coworker.permissions import Mode
+
+    manager = SessionManager(
+        workspace=tmp_path,
+        provider=ScriptedProvider([_text("hi")]),
+        mode=Mode("auto-approve"),
+    )
+    client = TestClient(create_app(manager))
+    with client.websocket_connect("/ws/session/modes2") as ws:
+        assert ws.receive_json()["type"] == "ready"
+        ev = ws.receive_json()
+        assert ev["type"] == "mode_notice" and ev["data"]["title"] == "Auto-approve is on."
+    # A reconnect stays quiet: the banner is persisted (asserted below), not re-announced —
+    # a set_mode echo of the SAME mode also stays silent (previous is new_mode).
+    with client.websocket_connect("/ws/session/modes2") as ws:
+        assert ws.receive_json()["type"] == "ready"
+        ws.send_json({"type": "set_mode", "mode": "interactive"})
+        assert ws.receive_json()["data"] == {"text": "Ask for approval is on.", "mode": "interactive"}
+    engine = manager._engines["modes2"]
+    kinds = [m.get("kind") for m in engine.messages if m.get("role") == "notice"]
+    assert kinds.count("mode_notice") == 1

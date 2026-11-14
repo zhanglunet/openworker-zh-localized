@@ -10,10 +10,13 @@ a Keychain / age-encrypted backend can swap in later without touching them.
 
 from __future__ import annotations
 
+import contextlib
 import json
+import logging
 import os
 import re
 import subprocess
+import tempfile
 import sys
 import threading
 import time
@@ -36,6 +39,11 @@ def state_dir() -> Path:
     base = os.environ.get("COWORKER_STATE_DIR")
     if base:
         return Path(base).expanduser()
+    # A box confined to OPENWORKER_BASE_DIR keeps its state there too
+    # (coworker/basedir.py) — nothing of the machine's lives outside it.
+    confined = os.environ.get("OPENWORKER_BASE_DIR", "").strip()
+    if confined:
+        return Path(confined).expanduser() / "state"
     if sys.platform == "win32":
         appdata = os.environ.get("APPDATA")
         if appdata:
@@ -88,19 +96,134 @@ def _restrict_to_user(path: Path, *, is_dir: bool) -> None:
     os.chmod(path, 0o700 if is_dir else 0o600)
 
 
-def write_private_text(path: str | Path, content: str) -> Path:
-    """Atomically write a user-only text file using the SecretStore's OS protections."""
-    target = Path(path).expanduser()
+def _atomic_private_write(target: Path, content: str) -> Path:
+    """Write `content` to `target` atomically, never exposing it through a readable temp.
+
+    The temp file used to be created by `Path.write_text` and only chmod-ed afterwards, so
+    the plaintext sat on disk at the umask default (0644 on a normal box) for the length of
+    the write — readable by every local process and by anything backing the directory up.
+    That is issue #143; the same pattern was in both writers here.
+
+    `tempfile.mkstemp` creates with 0600 and O_EXCL before a byte is written, which also
+    removes the fixed `<name>.tmp` filename. That name was predictable, so a local attacker
+    could pre-create it as a symlink and have the write land wherever the link pointed.
+
+    Windows gets no mode bits from mkstemp, so the ACL is applied to the still-empty file
+    before the content goes in.
+    """
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
         _restrict_to_user(target.parent, is_dir=True)
     except OSError:
         pass
-    tmp = target.with_name(target.name + ".tmp")
-    tmp.write_text(content, encoding="utf-8")
-    _restrict_to_user(tmp, is_dir=False)
-    os.replace(tmp, target)
+
+    fd, tmp_name = tempfile.mkstemp(
+        dir=str(target.parent), prefix=f".{target.name}.", suffix=".tmp"
+    )
+    tmp = Path(tmp_name)
+    try:
+        _restrict_to_user(tmp, is_dir=False)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(content)
+        os.replace(tmp, target)
+    except BaseException:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        raise
     return target
+
+
+def write_private_text(path: str | Path, content: str) -> Path:
+    """Atomically write a user-only text file using the SecretStore's OS protections."""
+    return _atomic_private_write(Path(path).expanduser(), content)
+
+
+class _StoreLock:
+    """One lock per secrets file, across threads AND processes.
+
+    Several OpenWorker processes can share a state folder: the app's server, and each
+    `openworker run`. A change to the file is read, modify, write of the WHOLE file, so
+    without this two processes can each write and one change is lost. A sign-in renewal
+    is worse: two processes renewing the same sign-in at once can leave it cancelled at a
+    vendor that hands out a new refresh token each time.
+
+    Inside the process it is a re-entrant lock shared by every SecretStore on the same
+    file. Across processes it is an advisory lock on `<file>.lock` (flock; byte-range
+    locking on Windows), taken with a deadline: if another process holds it for too long,
+    this one goes ahead without it rather than stall a turn on a stuck peer."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path.with_name(path.name + ".lock")
+        self._thread = threading.RLock()
+        self._depth = 0
+        self._fh: Any = None
+
+    def acquire(self, timeout: float) -> None:
+        self._thread.acquire()
+        if self._depth == 0:
+            self._fh = self._lock_file(timeout)
+        self._depth += 1
+
+    def release(self) -> None:
+        self._depth -= 1
+        if self._depth == 0 and self._fh is not None:
+            fh, self._fh = self._fh, None
+            try:
+                if _IS_WINDOWS:
+                    import msvcrt
+
+                    fh.seek(0)
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+            except (OSError, ImportError):
+                pass
+            fh.close()
+        self._thread.release()
+
+    def _lock_file(self, timeout: float) -> Any:
+        from .statelock import _try_lock
+
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            # Made private from the first moment, like every file beside the secrets. It
+            # is empty and stays: it is the lock, not a temporary file.
+            fh = os.fdopen(os.open(self.path, os.O_RDWR | os.O_CREAT, 0o600), "r+")
+        except OSError:
+            return None  # a read-only folder: nothing could be written there anyway
+        try:
+            _restrict_to_user(self.path, is_dir=False)
+        except OSError:
+            pass
+        deadline = time.monotonic() + max(0.0, timeout)
+        while True:
+            if _try_lock(fh):
+                return fh
+            if time.monotonic() >= deadline:
+                logging.getLogger(__name__).warning(
+                    "the stored sign-ins stayed locked by another process for %.0fs; going ahead without the lock",
+                    timeout,
+                )
+                fh.close()
+                return None
+            time.sleep(0.05)
+
+
+_STORE_LOCKS: dict[str, _StoreLock] = {}
+_STORE_LOCKS_GUARD = threading.Lock()
+
+
+def _store_lock(path: Path) -> _StoreLock:
+    key = os.path.realpath(str(path))
+    with _STORE_LOCKS_GUARD:
+        lock = _STORE_LOCKS.get(key)
+        if lock is None:
+            lock = _STORE_LOCKS[key] = _StoreLock(Path(key))
+        return lock
 
 
 class SecretStore:
@@ -109,7 +232,19 @@ class SecretStore:
     def __init__(self, path: Optional[str | Path] = None) -> None:
         self.path = Path(path).expanduser() if path else state_dir() / "secrets.json"
         self._dotenv_path = self.path.parent / ".env"
-        self._lock = threading.Lock()
+        self._lock = _store_lock(self.path)
+
+    @contextlib.contextmanager
+    def exclusive(self, timeout: float = 30.0):
+        """Hold the store for a read-then-write that no other thread or process may
+        interleave with. A sign-in renewal takes it, reads the profile AGAIN inside, and
+        renews only if nobody else just did: the first process renews, the others read
+        its result. Re-entrant: `put` and `delete` inside it are fine."""
+        self._lock.acquire(timeout)
+        try:
+            yield self
+        finally:
+            self._lock.release()
 
     # -- reads ------------------------------------------------------------------
     def get(self, profile: str) -> Optional[dict[str, Any]]:
@@ -158,13 +293,13 @@ class SecretStore:
 
     # -- writes -----------------------------------------------------------------
     def put(self, profile: str, data: dict[str, Any]) -> None:
-        with self._lock:
+        with self.exclusive():
             store = self._read()
             store[profile] = data
             self._write(store)
 
     def delete(self, profile: str) -> bool:
-        with self._lock:
+        with self.exclusive():
             store = self._read()
             if profile not in store:
                 return False
@@ -182,12 +317,29 @@ class SecretStore:
             return {}
 
     def _write(self, store: dict[str, Any]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            _restrict_to_user(self.path.parent, is_dir=True)
-        except OSError:
-            pass
-        tmp = self.path.with_name(self.path.name + ".tmp")
-        tmp.write_text(json.dumps(store, indent=2), encoding="utf-8")
-        _restrict_to_user(tmp, is_dir=False)
-        os.replace(tmp, self.path)
+        _atomic_private_write(self.path, json.dumps(store, indent=2))
+
+
+class EphemeralSecretStore(SecretStore):
+    """A SecretStore that never touches disk.
+
+    Used to stage a connector grant that is destined for ANOTHER machine
+    (machines spec §Remote OAuth): the normal storage layers run against this
+    store, producing exactly the profile keys a fresh connect would write, and
+    the result is sealed and shipped — the grant never lands in the local
+    secrets file.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(path="/dev/null/ephemeral")  # never read or written
+        self._data: dict[str, Any] = {}
+
+    def _read(self) -> dict[str, Any]:
+        return dict(self._data)
+
+    def _write(self, store: dict[str, Any]) -> None:
+        self._data = dict(store)
+
+    def profiles(self) -> dict[str, Any]:
+        """Every staged profile, by key — the payload a sealed deploy ships."""
+        return dict(self._data)

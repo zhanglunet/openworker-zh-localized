@@ -77,21 +77,14 @@ class Scheduler:
         for task in self.store.due():
             # Spawn, don't await: a run can suspend on a parked approval (standing
             # scoped approvals, §25) and one blocked automation must never stall the
-            # scheduler loop, other due tasks, or self-wake resumption.
-            #
-            # Claim the id HERE, synchronously, instead of inside the spawned
-            # run_task. A suspended run never advances next_run, so every tick's
-            # due() scan keeps handing back the same task; if one of those spawns
-            # only gets its first execution slot *after* the in-flight run finished
-            # (released the guard AND advanced next_run), it sails past the guard
-            # and runs the task a second time — skip-on-overlap silently violated.
-            if task.id in self._running_ids:
-                logger.info("skipping %s — previous run still going", task.id)
+            # scheduler loop, other due tasks, or self-wake resumption. The overlap
+            # guard must be claimed *here*, before the spawn: this due() snapshot
+            # goes stale, and if the in-flight run finishes before a spawned
+            # duplicate gets its first step, a guard checked inside the spawn is
+            # already clear — the task runs twice.
+            if not self._claim(task.id):
                 continue
-            self._running_ids.add(task.id)
-            spawned = asyncio.create_task(
-                self.run_task(task, trigger=trigger, claimed=True)
-            )
+            spawned = asyncio.create_task(self._run_claimed(task, trigger=trigger))
             self._spawned.add(spawned)
             spawned.add_done_callback(self._spawned.discard)
         if self.extra_tick is not None:
@@ -100,17 +93,21 @@ class Scheduler:
             except Exception:
                 logger.exception("scheduler extra_tick (wake resume) failed")
 
-    async def run_task(
-        self, task: ScheduledTask, *, trigger: str, claimed: bool = False
+    def _claim(self, task_id: str) -> bool:
+        if task_id in self._running_ids:  # skip-on-overlap
+            logger.info("skipping %s — previous run still going", task_id)
+            return False
+        self._running_ids.add(task_id)
+        return True
+
+    async def run_task(self, task: ScheduledTask, *, trigger: str) -> Optional[TaskRun]:
+        if not self._claim(task.id):
+            return None
+        return await self._run_claimed(task, trigger=trigger)
+
+    async def _run_claimed(
+        self, task: ScheduledTask, *, trigger: str
     ) -> Optional[TaskRun]:
-        # `claimed` means the caller already reserved the id synchronously (_tick
-        # does). Direct callers — "run now" from the UI, tests — still take the
-        # guard here, so skip-on-overlap holds for them too.
-        if not claimed:
-            if task.id in self._running_ids:  # skip-on-overlap
-                logger.info("skipping %s — previous run still going", task.id)
-                return None
-            self._running_ids.add(task.id)
         try:
             run = await self.runner(task, trigger)
         except Exception as exc:

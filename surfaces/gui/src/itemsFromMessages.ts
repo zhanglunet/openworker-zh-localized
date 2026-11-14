@@ -16,12 +16,35 @@ export function itemsFromMessages(messages: ConversationMessage[]): Item[] {
   // `_display` sidecar on a tool message = user-facing metadata the agent never saw
   // (e.g. how many hits the privacy filters hid) — surfaces on the tool card.
   const hiddenCounts: Record<string, number> = {};
+  // Approval provenance (owner ruling 2026-08-24): who cleared (or refused) the call —
+  // "reviewer"/"bypass"/"user"/"reviewer_denied" — persisted in the same sidecar so the
+  // quiet chips survive reload.
+  const approvalMeta: Record<string, { origin: string; note?: string; grant?: string; effect?: string; tier?: string }> = {};
+  // OPE-238: the call's outcome, persisted with the result so a reload shows what the live
+  // view showed: a failed status, and a shell command's exit code / time-out / background start.
+  const outcomes: Record<string, { status?: string; exitCode?: number | null; timedOut?: boolean; background?: boolean }> = {};
   for (const m of messages || []) {
     if (m.role === "tool" && m.tool_call_id) {
       results[m.tool_call_id] =
         typeof m.content === "string" ? m.content : JSON.stringify(m.content);
       const hidden = Number(m._display?.hidden_by_filters || 0);
       if (hidden > 0) hiddenCounts[m.tool_call_id] = hidden;
+      if (m._display?.approval_origin)
+        approvalMeta[m.tool_call_id] = {
+          origin: String(m._display.approval_origin),
+          ...(m._display.approval_note ? { note: String(m._display.approval_note) } : {}),
+          ...(m._display.approval_grant ? { grant: String(m._display.approval_grant) } : {}),
+          ...(m._display.approval_effect ? { effect: String(m._display.approval_effect) } : {}),
+          ...(m._display.approval_tier ? { tier: String(m._display.approval_tier) } : {}),
+        };
+      const d = m._display && typeof m._display === "object" ? (m._display as any) : null;
+      if (d && (d.status || "exit_code" in d || d.timed_out || d.background))
+        outcomes[m.tool_call_id] = {
+          ...(d.status ? { status: String(d.status) } : {}),
+          ...("exit_code" in d ? { exitCode: typeof d.exit_code === "number" ? d.exit_code : null } : {}),
+          ...(d.timed_out ? { timedOut: true } : {}),
+          ...(d.background ? { background: true } : {}),
+        };
     }
   }
   for (const m of messages || []) {
@@ -38,6 +61,8 @@ export function itemsFromMessages(messages: ConversationMessage[]): Item[] {
       if (typeof m._display === "string" && m._display) user.text = m._display;
       // `ts` (unix seconds) is the server's canonical-message stamp; older sessions have none.
       if (typeof m.ts === "number") user.ts = m.ts;
+      // The server's message id: the trace index joins the message to its turn by it (UX-060).
+      if (typeof (m as any).mid === "string") user.mid = (m as any).mid;
       if (user.text || user.attachments?.length) items.push(user);
     } else if (m.role === "assistant") {
       if (m.content || m.reasoning)
@@ -46,6 +71,7 @@ export function itemsFromMessages(messages: ConversationMessage[]): Item[] {
           text: m.content || "",
           ...(typeof m.ts === "number" ? { ts: m.ts } : {}),
           ...(m.reasoning ? { reasoning: m.reasoning } : {}),
+          ...(typeof (m as any).mid === "string" ? { mid: (m as any).mid } : {}),
         });
       for (const tc of m.tool_calls || []) {
         let args: any = {};
@@ -56,14 +82,32 @@ export function itemsFromMessages(messages: ConversationMessage[]): Item[] {
         }
         const preview = results[tc.id];
         const hidden = hiddenCounts[tc.id];
+        const meta = approvalMeta[tc.id];
+        const outcome = outcomes[tc.id] || {};
+        // A denial (by the reviewer or the user) must not replay as a green step — and a
+        // call that failed must not either (it changed nothing).
+        const denied = meta && (meta.origin === "reviewer_denied" || meta.grant === "deny");
         items.push({
           kind: "tool",
           id: tc.id,
+          ...(tc.id ? { callId: tc.id } : {}),
           name: tc.function?.name,
           args,
-          status: "ok",
+          status: denied ? "denied" : outcome.status || "ok",
           preview,
+          ...("exitCode" in outcome ? { exitCode: outcome.exitCode } : {}),
+          ...(outcome.timedOut ? { timedOut: true } : {}),
+          ...(outcome.background ? { background: true } : {}),
           ...(hidden ? { hidden } : {}),
+          ...(meta ? { approvalOrigin: meta.origin } : {}),
+          ...(meta?.effect ? { effect: meta.effect } : {}),
+          ...(meta?.tier ? { tier: meta.tier } : {}),
+          ...(meta?.note
+            ? meta.origin === "reviewer_denied"
+              ? { reviewerReason: meta.note }
+              : { approvalNote: meta.note }
+            : {}),
+          ...(meta?.grant ? { approvalGrant: meta.grant } : {}),
         });
       }
     } else if (m.role === "notice") {
@@ -78,12 +122,57 @@ export function itemsFromMessages(messages: ConversationMessage[]): Item[] {
             : m.kind === "compacted"
               ? // The subtle "compacted here" divider (OPE-27) — the transcript itself is intact.
                 { kind: "notice", tone: "info", text: m.text || "Context compacted" }
-              : { kind: "notice", tone: "warn", text: "Error: " + (m.text || "unknown"), retriable: true },
+              : m.kind === "mcp_error"
+                ? // A configured MCP server failed to start for this session — informational,
+                  // NOT retriable (retry re-runs the model turn, which can't fix a dead server).
+                  // Renders as one quiet line + disclosure. Legacy notices (persisted before
+                  // the `server` field existed) recover the name from their own text, so old
+                  // transcripts collapse too instead of keeping the wall of stderr.
+                  mcpNoticeItem(m)
+                : m.kind === "project_presence" || m.kind === "export_notice"
+                  ? // Grant-time pointer (pass 20): the granted folder already has
+                    // memory/board — informational, one quiet line. The OB-6 notice (a
+                    // company policy sends this session's content) reads the same way.
+                    { kind: "notice", tone: "info", text: m.text || "" }
+                  : m.kind === "reviewer_paused"
+                    ? // §8.4 breaker: auto-approve paused itself for the rest of the turn.
+                      { kind: "notice", tone: "info", text: m.text || "Auto-approve paused for the rest of this turn." }
+                    : m.kind === "mode_notice"
+                      ? // The once-per-session Auto-Approve explainer, in place forever.
+                        { kind: "notice", tone: "info", title: (m as any).title || "Auto-approve is on.", text: m.text || "" }
+                      : m.kind === "mode_switch"
+                        ? { kind: "notice", tone: "info", text: m.text || "" }
+                  : m.kind === "truncated"
+                          ? // OPE-171: the turn stopped after repeated output-limit cut-offs with no
+                            // action. Retriable like an error: a fresh attempt usually acts.
+                            { kind: "notice", tone: "warn", text: m.text || "Stopped: reply cut off at the output-token limit.", retriable: true }
+                          : { kind: "notice", tone: "warn", text: "Error: " + (m.text || "unknown"), retriable: true },
       );
+    }
+    if (m.role === "tool" && m._display?.team_created) {
+      const c = m._display.team_created;
+      if (c.team_id && Array.isArray(c.workers)) items.push({ kind: "teamcreated", teamId: c.team_id, workers: c.workers, ts: m.ts });
     }
     // system messages are omitted; tool-result messages are folded into the tool row above
   }
   return items;
+}
+
+function mcpNoticeItem(m: ConversationMessage): Item {
+  const text = typeof m.text === "string" ? m.text : "";
+  const server =
+    (m.server && String(m.server)) || (text.match(/MCP server [“"]([^”"]+)[”"]/) || [])[1];
+  if (!server)
+    return { kind: "notice", tone: "warn", text: text || "An MCP server failed to start" };
+  // The old format appended a plain-text Settings pointer — the button replaces it.
+  const detail = text.replace(/\s*—\s*see Settings ▸ Connectors\s*$/u, "");
+  return {
+    kind: "notice",
+    tone: "warn",
+    text: `MCP server “${server}” didn’t start — its tools are unavailable here`,
+    server,
+    detail: detail || undefined,
+  };
 }
 
 export function userItemFromContent(content: any): Extract<Item, { kind: "user" }> {

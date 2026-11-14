@@ -70,6 +70,19 @@ describe("itemsFromMessages notices", () => {
 });
 
 describe("itemsFromMessages model switch", () => {
+  it("replays the persisted truncated marker as a retriable warning (OPE-171)", () => {
+    const items = itemsFromMessages([
+      { role: "user", content: "go", ts: 1752969700 },
+      { role: "assistant", content: "", finish_reason: "length", replay: "stub", ts: 1752969710 },
+      { role: "notice", kind: "truncated", text: "cut off 3 times", continuations: 2, ts: 1752969720 },
+    ] as any);
+    const notice = items[items.length - 1] as any;
+    expect(notice.kind).toBe("notice");
+    expect(notice.tone).toBe("warn");
+    expect(notice.text).toBe("cut off 3 times");
+    expect(notice.retriable).toBe(true);
+  });
+
   it("replays the persisted model_switch marker as an info notice", () => {
     const items = itemsFromMessages([
       { role: "user", content: "hi" },
@@ -106,5 +119,99 @@ describe("itemsFromMessages reasoning", () => {
     ] as any);
     expect(items[1]).toEqual({ kind: "assistant", text: "answer", reasoning: "let me think" });
     expect(items[2]).toEqual({ kind: "assistant", text: "", reasoning: "stopped mid-thought" });
+  });
+});
+
+describe("itemsFromMessages mcp failure", () => {
+  it("replays the persisted mcp_error marker as a collapsed notice WITHOUT retry", () => {
+    // Legacy format (no `server` field): the name is recovered from the text and the
+    // old plain-text Settings pointer is dropped — the Open Connectors button owns it.
+    const items = itemsFromMessages([
+      { role: "user", content: "hi" },
+      { role: "notice", kind: "mcp_error", text: "MCP server “sales-db” failed to start — see Settings ▸ Connectors" },
+    ] as any);
+    expect(items[1]).toEqual({
+      kind: "notice",
+      tone: "warn",
+      text: "MCP server “sales-db” didn’t start — its tools are unavailable here",
+      server: "sales-db",
+      detail: "MCP server “sales-db” failed to start",
+    });
+  });
+
+  it("keeps an unparseable mcp_error text as a plain warn notice", () => {
+    const items = itemsFromMessages([
+      { role: "notice", kind: "mcp_error", text: "something opaque went wrong" },
+    ] as any);
+    expect(items[0]).toEqual({ kind: "notice", tone: "warn", text: "something opaque went wrong" });
+  });
+
+  it("renders a project_presence notice as one quiet info line, never an error", () => {
+    const items = itemsFromMessages([
+      {
+        role: "notice",
+        kind: "project_presence",
+        text: "“notes” already has project memory (3 entries) — bind it by name or start a session there to use it.",
+      },
+    ] as any);
+    expect(items[0]).toEqual({
+      kind: "notice",
+      tone: "info",
+      text: "“notes” already has project memory (3 entries) — bind it by name or start a session there to use it.",
+    });
+  });
+});
+
+// OPE-238: a replayed tool item carries its tool call's id, so the "changes made without
+// asking" summary can link it to its audit rows after a reload too.
+describe("itemsFromMessages call ids", () => {
+  it("puts the tool call id on the tool item", () => {
+    const items = itemsFromMessages([
+      { role: "user", content: "run the tests" },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [{ id: "call_9", function: { name: "run_shell", arguments: '{"command": "pytest"}' } }],
+      },
+      {
+        role: "tool",
+        tool_call_id: "call_9",
+        content: '{"exit_code": 0}',
+        _display: { approval_origin: "reviewer" },
+      },
+    ] as any);
+    const tool = items.find((i: any) => i.kind === "tool") as any;
+    expect(tool.callId).toBe("call_9");
+    expect(tool.approvalOrigin).toBe("reviewer");
+  });
+});
+
+
+// OPE-238: a call's outcome is persisted with its result, so a reload shows what the live
+// view showed: a failed write is not a green "Wrote x", a command keeps its exit status.
+describe("itemsFromMessages outcomes", () => {
+  const replay = (display: any, content = '{"ok": true}') =>
+    itemsFromMessages([
+      { role: "user", content: "go" },
+      { role: "assistant", content: "", tool_calls: [{ id: "call_1", function: { name: "run_shell", arguments: '{"command": "x"}' } }] },
+      { role: "tool", tool_call_id: "call_1", content, _display: display },
+    ] as any).find((i: any) => i.kind === "tool") as any;
+
+  it("a failed call replays with its status", () => {
+    const tool = replay({ approval_origin: "reviewer", status: "error" }, '{"error": "boom"}');
+    expect(tool.status).toBe("error");
+    expect(tool.approvalOrigin).toBe("reviewer");
+  });
+
+  it("a shell command replays with its exit code, time-out or background start", () => {
+    expect(replay({ exit_code: 1 }).exitCode).toBe(1);
+    expect(replay({ exit_code: null, timed_out: true })).toMatchObject({ exitCode: null, timedOut: true });
+    expect(replay({ background: true }).background).toBe(true);
+    expect("exitCode" in replay({ approval_origin: "reviewer" })).toBe(false);
+  });
+
+  it("effect and tier ride along with the origin", () => {
+    const tool = replay({ approval_origin: "gate_tier", approval_effect: "read", approval_tier: "readonly_command" });
+    expect(tool).toMatchObject({ approvalOrigin: "gate_tier", effect: "read", tier: "readonly_command" });
   });
 });

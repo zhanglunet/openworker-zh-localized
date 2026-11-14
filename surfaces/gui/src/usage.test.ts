@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { addTurnUsage, emptyUsage, formatTokens, totalTokens, usageFromMessages } from "./usage";
+import { addTurnUsage, emptyUsage, formatTokens, teamUsage, totalTokens, usageFromMessages, usageFromRecordings } from "./usage";
+import type { TurnUsage } from "./types";
 
 const turn = (over: Record<string, unknown> = {}) => ({
   model: "anthropic:claude-fable-5",
@@ -74,5 +75,40 @@ describe("totalTokens / formatTokens", () => {
     expect(formatTokens(982_000)).toBe("982k");
     expect(formatTokens(1_240_000)).toBe("1.24M");
     expect(formatTokens(NaN)).toBe("0");
+  });
+});
+
+describe("teamUsage", () => {
+  it("rolls the lead's live totals and the workers' persisted totals up by model", () => {
+    const lead = addTurnUsage(emptyUsage(), {
+      model: "anthropic:claude-opus-4-8", input: 100, output: 10, cache_read: 0, cache_write: 0,
+    });
+    const workers: { usage?: Record<string, TurnUsage & { turns?: number }> }[] = [
+      { usage: { "anthropic:claude-opus-4-8": { input: 50, output: 5, cache_read: 20, cache_write: 0, turns: 2 } } },
+      { usage: { "ollama:qwen3-coder:30b": { input: 7, output: 3, cache_read: 0, cache_write: 0, turns: 1 } } },
+      {},
+    ];
+    const t = teamUsage(lead, workers);
+    expect(t.byModel["anthropic:claude-opus-4-8"]).toMatchObject({ input: 150, output: 15, cache_read: 20 });
+    expect(t.byModel["ollama:qwen3-coder:30b"]).toMatchObject({ input: 7, output: 3 });
+    expect(totalTokens(t)).toBe(195);
+    expect(t.context).toBe(lead.context); // the lead's window, not a sum
+  });
+});
+
+describe("usageFromRecordings (P3-1)", () => {
+  it("adds every recorded call of the team, helpers included", () => {
+    const u = usageFromRecordings([
+      { recorded: true, by_model_parts: { "model-a": { input: 1000, cache: 400, output: 100 }, "model-a (title)": { input: 50, cache: 0, output: 5 } } },
+      { recorded: true, by_model_parts: { "model-b": { input: 200, cache: 0, output: 20 } } },
+      null,
+    ])!;
+    // input already holds the cached part, so it is not added twice
+    expect(totalTokens(u)).toBe(1000 + 100 + 50 + 5 + 200 + 20);
+    expect(Object.keys(u.byModel).sort()).toEqual(["model-a", "model-b"]);
+  });
+  it("is null when no session was recorded, so the transcript count stays", () => {
+    expect(usageFromRecordings([{ recorded: false }, null])).toBeNull();
+    expect(usageFromRecordings([])).toBeNull();
   });
 });

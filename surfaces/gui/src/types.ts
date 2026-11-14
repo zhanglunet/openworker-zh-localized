@@ -1,5 +1,7 @@
 export type EventType =
   | "ready"
+  // Observability: batched recording events for the Steps panel ({events: [...]}).
+  | "step"
   | "inbound"
   | "turn_start"
   | "assistant_delta"
@@ -8,19 +10,43 @@ export type EventType =
   | "tool_proposed"
   | "permission_required"
   | "directory_requested"
+  | "tool_requested"
+  | "connector_requested"
   | "question_requested"
   | "plan_proposed"
+  | "team_proposed"
+  | "items_proposed"
   | "tool_started"
   | "tool_finished"
   | "iteration_end"
+  | "turn_summary"
   | "turn_end"
   | "error"
   | "input_rejected"
   | "interrupted"
   | "model_changed"
+  | "mode_notice"
+  | "export_notice"
+  | "memory_saved"
+  | "agent_task"
+  | "workspace_changed"
   | "compacting"
   | "compacted"
-  | "turn_done";
+  | "continuation"
+  | "turn_done"
+  // OPE-206: a socket connect that has to build a sandbox first says so on the socket
+  // itself, so the session view can show "Preparing sandbox…" instead of the app
+  // falling back to its startup screen while the backend was busy.
+  | "sandbox_preparing"
+  | "sandbox_ready";
+
+export interface PlanStepView {
+  kind: string;
+  target: string;
+  destination?: string;
+  note?: string;
+  risky: boolean;
+}
 
 export interface WsEvent {
   type: EventType;
@@ -33,7 +59,21 @@ import type { MessageSource } from "./api";
 
 // "always_task" persists to the owning automation's task record (standing scoped
 // approval, UX-DECISIONS §25) — offered only on automation-run approval cards, in-app.
-export type ApprovalDecision = "once" | "deny" | "always_tool" | "always_command" | "always_task";
+export type ApprovalDecision =
+  | "once"
+  | "deny"
+  | "always_tool"
+  | "always_command"
+  | "always_domain"
+  | "always_site"
+  | "always_task"
+  // OPE-136 §4: durable per-MCP-tool trust — writes a rule to the user-local
+  // override store; survives sessions; revocable on the server's detail page.
+  | "always_trust"
+  // OPE-136 run grant: covers the exact tool for the remainder of the current
+  // answer only; in-memory, cleared at the run boundary. EXTERNAL family only.
+  | "this_run"
+  | "readonly_session";
 
 export interface TodoItem {
   content: string;
@@ -59,6 +99,18 @@ export interface SessionUsage {
   context: number;
 }
 
+// Window occupancy for the rail's Context section (FB-015), from the `ready` event and
+// each `assistant_message`. The category split is a server-side chars/4 estimate, so it
+// is rendered as proportion of `used`, never as a ledger. `window` is null when the
+// model isn't in the matrix ("window unknown", same contract as the composer ring).
+export interface ContextInfo {
+  window: number | null;
+  used: number;
+  estimated: boolean;
+  breakdown: { system: number; tools: number; messages: number };
+  compaction?: { created_at?: number; messages?: number; trimmed?: boolean };
+}
+
 export interface SessionInfo {
   session_id: string;
   title?: string;
@@ -74,6 +126,10 @@ export interface SessionInfo {
   attention?: number;
   // working = in-flight turn; sleeping = a self-wake is pending; idle = neither. A count-less dot.
   liveness?: "working" | "sleeping" | "idle";
+  // OB-3: warnings in turns whose Issues you have not opened (an amber ring in the sidebar).
+  issues_unseen?: number;
+  // When sleeping: the next timer fire (ISO) — drives the "sleeping until…" strip.
+  sleeping_until?: string | null;
   // Channels this session listens to (inbound subscriptions).
   subscriptions?: string[];
   // §31: set when the session was spawned by a platform mention rather than the user —
@@ -81,6 +137,30 @@ export interface SessionInfo {
   // "From Slack" group and the row's platform icon.
   origin?: string;
   origin_label?: string;
+  // Remote homes (UX-045): set client-side when the row came from a joined machine's
+  // store (fetched through the proxy prefix). Absent = a This-Mac session. Drives the
+  // ⌂ badge, the Machine grouping, and machine-aware routing of session API calls.
+  machine?: string;
+  machine_name?: string;
+  // Set when the row came from the controller's stored snapshot because the
+  // machine is offline — the sidebar greys it, and opening it explains why.
+  machine_offline?: boolean;
+  // Per-model token totals persisted by the box (spec §5) — {model: {input, output,
+  // cache_read, cache_write, turns}}. The lead's Team panel rolls its workers up.
+  usage?: Record<string, TurnUsage & { turns?: number }>;
+  // Agent teams: {} / absent for plain sessions. Workers carry role/lead_session
+  // (+ a computed current-item line); leads carry role/team_id. Drives the sidebar's
+  // ONE expandable team entry (workers nest under their lead; plain rows never expand).
+  team?: {
+    role?: "lead" | "worker" | string;
+    team_id?: string;
+    lead_session?: string;
+    actor?: string;
+    current_item?: string;
+    status?: string;
+    chat_enabled?: boolean;
+    chat_unread?: number;
+  };
 }
 
 // Attachments (images, PDFs, text files) sent with a user message.
@@ -96,18 +176,34 @@ export interface Attachment {
 // `ts` = unix seconds (the server's canonical-message stamp; live items stamp locally).
 // Optional: sessions saved before the server stamped timestamps have none.
 export type Item =
-  | { kind: "user"; text: string; attachments?: Attachment[]; ts?: number }
+  // `mid` is the server's message id (a replayed session has it; a live send gets it from
+  // turn_start) — the trace index joins a message to its turn by it (UX-060).
+  | { kind: "user"; text: string; attachments?: Attachment[]; ts?: number; mid?: string }
   // A connector-delivered inbound message (Slack/Salesforce/…), rendered as a structured card
   // (ConnectorMessageCard) instead of a plain user bubble. Generalizes to any connector via the
   // registry — no per-connector special-casing.
   | { kind: "connector"; source: MessageSource }
-  | { kind: "assistant"; text: string; ts?: number; reasoning?: string }
+  | { kind: "teamcreated"; teamId: string; workers: { actor: string; persona: string }[]; ts?: number }
+  // `mid`: the message id (observability links a turn footer to its answer by it, OB-5).
+  | { kind: "assistant"; text: string; ts?: number; reasoning?: string; mid?: string }
   // `hidden` = results the user's privacy filters removed before the agent saw them
   // (from the tool message's `_display` sidecar; the agent-visible content has no trace).
   // `standingRule` = the task-scoped rule that auto-allowed this call ("tool → target").
-  | { kind: "tool"; id: string; name: string; args: any; status: string; preview?: string; hidden?: number; standingRule?: string }
+  // `reviewerReason` + `allowAnyway` = an Auto-Approve reviewer deny (spec 8.4): the full
+  // reason is user-facing only (the agent got a terse refusal), and allowAnyway offers the
+  // one-shot exact-action override.
+  // `approvalOrigin` = why the call ran without a card: "reviewer" (auto-approved by the
+  // Auto-Approve reviewer; `approvalNote` carries its one-line reason) or "bypass"
+  // (bypass-approvals mode). Rendered as a quiet debugging chip, deliberately subtle.
+  // `callId` = the tool call's id (OPE-238: links the item to its audit rows, and pairs the
+  // proposed event with its own finished event). `effect` ("change" | "read") and `tier` come
+  // with a cardless origin and decide whether the auto-approved summary counts the call.
+  // `exitCode` / `timedOut` / `background` are a shell command's outcome, read from the
+  // result itself rather than the truncated preview.
+  | { kind: "tool"; id: string; name: string; args: any; status: string; preview?: string; hidden?: number; standingRule?: string; reviewerReason?: string; allowAnyway?: boolean; approvalOrigin?: string; approvalNote?: string; approvalGrant?: string; callId?: string; effect?: string; tier?: string; exitCode?: number | null; timedOut?: boolean; background?: boolean }
   | {
       kind: "approval";
+      toolCallId?: string;
       name: string;
       args: any;
       reason: string;
@@ -115,6 +211,38 @@ export type Item =
       // The exact target a standing rule could pin (server-computed) — with a run
       // context, the card offers "Allow every time" (§25).
       standingTarget?: string;
+      // web_search only (§1.9): the LIVE configured provider name, resolved server-side
+      // when the card was raised — the grant description names the actual destination.
+      searchProvider?: string;
+      // web_fetch only: the search service the page is read through, when Settings ▸
+      // Customization sends fetches through it (it sees the page address). Absent = this
+      // machine fetches the page.
+      fetchProvider?: string;
+      // OPE-219: the host the sandbox's allowed-sites wall stopped. The card says so and
+      // offers "Always allow <host>", which adds it to Settings ▸ Sandbox ▸ allowed sites.
+      siteWall?: string;
+      // OPE-219: the agent asked for sites its commands cannot reach (request_network_access).
+      // `evidence` is false where the sandbox cannot say what it blocked: the card then shows the sites only.
+      networkRequest?: { reason: string; evidence: boolean; hosts: { host: string; blockedSecondsAgo: number | null }[] };
+      // OPE-114 §1: set when the action would run a file the agent itself created or
+      // downloaded this session ("setup.py was created by the agent 3 steps ago"). The
+      // one fact that cannot be read off the command text. Engine-authored, fixed
+      // vocabulary — never file contents.
+      provenance?: string;
+      // The Auto-Approve reviewer answered `unsure` and raised this card: its one-line
+      // reason, rendered quietly so "why am I being asked?" is answered in place.
+      reviewerUnsure?: string;
+      escalation?: import("./components/ApprovalEscalation").Escalation;
+      // Server-classified: this shell command only reads locally, so the card may offer
+      // the session-wide "Allow read-only commands" grant.
+      readonlyOk?: boolean;
+      // decide_worker_call only: the worker's waiting call this decision answers, looked
+      // up by the server so the card can show it (absent from an older server).
+      workerCall?: { worker?: string; tool: string; arguments?: any; reason?: string; state?: string; resolution?: string | null };
+      // OPE-136 finding 4: where an MCP call actually goes, from the server DEF (the
+      // user's own config, never the server's claims). Drives the honest scope chip —
+      // "leaves this computer → host" (http) / "runs a local program" (stdio).
+      mcpDestination?: { transport: string; host?: string };
       resolved?: ApprovalDecision;
     }
   | {
@@ -122,20 +250,141 @@ export type Item =
       reason: string;
       path?: string;
       writable?: boolean;
+      primary?: boolean; // root promotion: the folder becomes the session's workspace
       resolved?: "granted" | "denied";
+    }
+  | {
+      kind: "toolreq";
+      tool: string;
+      reason: string;
+      installable?: boolean;
+      version?: string;
+      summary?: string;
+      source?: string;
+      resolved?: "installed" | "skipped";
     }
   | {
       kind: "planreq";
       plan: string;
+      // OPE-237: a plan proposed in auto-approve lists its steps; the card shows them,
+      // marks the risky ones, and offers approve-all or send-back (no mode choice).
+      steps?: PlanStepView[];
+      autoApprove?: boolean;
+      resolved?: "approved" | "rejected";
+    }
+  | {
+      // The staffing gate (agent teams): a lead proposes its worker roster.
+      kind: "teamreq";
+      title?: string;
+      summary?: string;
+      groups?: import("./proposals").ProposalGroup[];
+      planned_items?: { id: number; title: string; final_acceptance?: { id: number; title: string; owner: "lead" | "assigned_worker" } }[];
+      toolCallId?: string;
+      // connectors = the LEAD'S SUGGESTION for this worker (arrives ticked on the card);
+      // connector_reasons = why, per suggested connector.
+      members: {
+        persona: string;
+        group?: string;
+        item_ids?: number[];
+        name?: string;
+        model?: string;
+        reason?: string;
+        connectors?: string[];
+        connector_reasons?: Record<string, string>;
+        approval_guidance?: string;
+        // The model this worker WILL run on if the human changes nothing on the card.
+        resolved_model?: string;
+        // Set when none of the persona's recommended models can run on this machine.
+        model_warning?: string;
+      }[];
+      enable_chat?: boolean;
+      note?: string;
+      // Per worker persona, its RECOMMENDED models that can run on this machine, in order.
+      model_options?: Record<string, string[]>;
+      // Every model that can run on this machine. Present → the card offers a model
+      // picker per worker; absent (older server) → the model stays plain text.
+      runnable_models?: { id: string; label: string }[];
+      lead_model?: string;
+      // Per worker persona, its DEFAULT set that is connected on the machine.
+      offer?: Record<string, string[]>;
+      // Every other connector connected on the machine — a human may extend a worker
+      // beyond its default set from this list (worker-connector-grants spec §2, §6).
+      other_connected?: string[];
+      // The lead's real approval mode, for a card rendered away from the composer (Inbox).
+      lead_mode?: string;
+      resolved?: "approved" | "rejected";
+    }
+  | {
+      // Spec §11.6: connector access is a human decision. "connect" = the coworker asks
+      // for a service to be connected; "grant" = a lead asks to give a worker a connector.
+      kind: "connreq";
+      request: "connect" | "grant";
+      connector: string;
+      worker?: string;
+      reason: string;
+      resolved?: "approved" | "declined";
+    }
+  | {
+      // The decomposition gate: a lead proposes work items; approval creates them.
+      kind: "itemsreq";
+      title?: string;
+      summary?: string;
+      targets?: string[];
+      external_actions?: import("./proposals").ExternalActions;
+      activities?: import("./proposals").ProposalGroup[];
+      workstreams?: import("./proposals").ProposalGroup[];
+      final_acceptance?: { item_key: string; owner: "lead" | "assigned_worker" };
+      toolCallId?: string;
+      items: import("./proposals").ProposalTask[];
+      note?: string;
       resolved?: "approved" | "rejected";
     }
   | {
       // A live ask_user prompt (attended sessions answer inline; unattended ones route to the Inbox).
       kind: "question";
       question: string;
-      options?: string[];
+      options?: QuestionOption[];
       allow_text?: boolean;
       multi?: boolean;
+      header?: string;
+      questions?: GroupedQuestion[];
       resolved?: string;
     }
-  | { kind: "notice"; tone: "info" | "warn"; text: string; retriable?: boolean };
+  | {
+      kind: "notice";
+      tone: "info" | "warn";
+      text: string;
+      retriable?: boolean;
+      // `title` switches the one-line status notice to a block: a heading plus
+      // blank-line-separated paragraphs, left-aligned. Used for the Auto-Approve
+      // banner, which is prose rather than a status line.
+      title?: string;
+      // mcp_error notices: the failing server's name + the full error, rendered as one
+      // quiet line with the detail behind a disclosure and an Open-Connectors action.
+      server?: string;
+      detail?: string;
+    }
+  // MEMORY-SPEC §5.1: the save notice, inline in the conversation where the user is
+  // already looking (a corner toast vanished before it could be read or undone —
+  // owner-hit 2026-07-28). Stays put. `previous` is set when an existing memory was
+  // EDITED rather than a new one added (the update-don't-duplicate rule sends many
+  // saves that way) — Undo restores that text instead of deleting the memory.
+  | { kind: "memory"; id: number; text: string; previous?: string; undone?: boolean };
+
+// -- ask_user question metadata (OPE-51) --------------------------------------
+// An option is a plain string (renders as today's pill) or a rich object: `label` is the answer
+// value, `description` renders under it, `recommended` adds the green tag, `preview` is monospace
+// text shown in the side pane (≥1 preview switches the card to the two-pane layout).
+export type QuestionOption =
+  | string
+  | { label: string; description?: string; recommended?: boolean; preview?: string };
+
+// One step of a grouped ask_user call (up to 4, rendered as a stepper). The answer map is keyed
+// by `header` (falling back to `question`).
+export interface GroupedQuestion {
+  question: string;
+  header?: string;
+  options?: QuestionOption[];
+  allow_text?: boolean;
+  multi?: boolean;
+}

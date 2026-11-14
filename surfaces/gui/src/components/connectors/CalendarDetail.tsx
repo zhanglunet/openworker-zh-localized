@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   connectManaged,
   disconnectGcalAccount,
@@ -15,6 +16,7 @@ import { FOOT, GRP, GRP_H, PILL_ACCENT, ROW, TAG_ACCENT, TAG_WARN, XBTN } from "
 // Adding an account launches managed OAuth DIRECTLY (one connect mode, no modal).
 
 export function CalendarDetail({ c, cloud, slack: _slack, onChanged }: DetailProps) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const accounts = (c.accounts ?? []) as GmailAccount[]; // email-keyed (pre-generic-layer shape)
 
@@ -27,21 +29,21 @@ export function CalendarDetail({ c, cloud, slack: _slack, onChanged }: DetailPro
   return (
     <div data-testid="gcal-detail">
       <div className="flex items-center gap-3.5 mb-5">
-        <ConnectorBadge connector={c} size={44} title="Google Calendar" />
+        <ConnectorBadge connector={c} size={44} title={t("calendar.google_calendar")} />
         <div className="min-w-0 flex-1">
-          <h2 className="text-[20px] font-semibold tracking-tight leading-tight">
+          <h2 className="text-title font-semibold tracking-tight leading-tight">
             Google Calendar
           </h2>
-          <div className="text-[12.5px] text-muted flex items-center gap-1.5">
+          <div className="text-ui text-muted flex items-center gap-1.5">
             {c.connected ? (
               <>
                 <span className="w-2 h-2 rounded-full bg-ok" />
                 <span data-testid="gcal-status">
-                  {accounts.length} 个账户
+                  {t("connector.account_count", { count: accounts.length })}
                 </span>
               </>
             ) : (
-              <span>未连接</span>
+              <span>{t("connector.not_connected")}</span>
             )}
           </div>
         </div>
@@ -52,28 +54,28 @@ export function CalendarDetail({ c, cloud, slack: _slack, onChanged }: DetailPro
           disabled={busy || !cloud?.signed_in || c.managed_paused}
           title={
             c.managed_paused
-              ? "一键 Google 登录即将推出"
+              ? t("calendar.coming_soon_title")
               : cloud?.signed_in
                 ? ""
-                : "请先登录 OpenWorker Cloud"
+                : t("cloud.sign_in_first")
           }
         >
-          {c.managed_paused ? "＋ 添加账户 · 即将推出" : busy ? "请查看你的浏览器…" : "＋ 添加账户"}
+          {c.managed_paused ? t("calendar.add_account_coming_soon") : busy ? t("cloud.check_browser") : t("calendar.add_account")}
         </button>
       </div>
 
       {!c.connected && (
         <div className={GRP}>
-          <div className={ROW + " text-[12.5px] text-muted"}>
-            使用 Google 登录——每个账户相互独立，智能体会说明使用的是哪一个。
-            {cloud?.signed_in ? "" : " 需要登录 OpenWorker Cloud。"}
+          <div className={ROW + " text-ui text-muted"}>
+            {t("calendar.setup_blurb")}
+            {cloud?.signed_in ? "" : " " + t("calendar.requires_cloud")}
           </div>
         </div>
       )}
 
       {accounts.length > 0 && (
         <>
-          <div className={GRP_H + " !mt-0"}>账户</div>
+          <div className={GRP_H + " !mt-0"}>{t("calendar.accounts")}</div>
           <div className={GRP} data-testid="gcal-accounts">
             {accounts.map((a) => (
               <AccountRow key={a.email} a={a} onChanged={onChanged} />
@@ -84,36 +86,37 @@ export function CalendarDetail({ c, cloud, slack: _slack, onChanged }: DetailPro
 
       <ToolsDisclosure c={c} onChanged={onChanged} />
       <div className={FOOT + " mt-2"}>
-        创建、修改或删除日程前总会先请求你的批准，且批准会标注所使用的账户。
+        {t("calendar.events_approval_foot")}
       </div>
     </div>
   );
 }
 
 function AccountRow({ a, onChanged }: { a: GmailAccount; onChanged: () => void }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   return (
     <div className={ROW} data-testid={`gcal-account-${a.email}`}>
       <span className="min-w-0 flex-1 flex items-center gap-2">
-        <span className="text-[13px] font-medium truncate">{a.email}</span>
-        {a.default && <span className={TAG_ACCENT}>默认</span>}
-        {a.needs_reauth && <span className={TAG_WARN}>⚠ 请重新登录</span>}
+        <span className="text-ui font-medium truncate">{a.email}</span>
+        {a.default && <span className={TAG_ACCENT}>{t("connector.default")}</span>}
+        {a.needs_reauth && <span className={TAG_WARN}>{t("calendar.sign_in_again")}</span>}
       </span>
       {!a.default && (
         <button
-          className="text-[12px] text-muted hover:text-ink shrink-0"
+          className="text-meta text-muted hover:text-ink shrink-0"
           data-testid={`gcal-make-default-${a.email}`}
           onClick={async () => {
             await setGcalDefaultAccount(a.email);
             onChanged();
           }}
         >
-          设为默认
+          {t("connector.make_default")}
         </button>
       )}
       <button
         className={XBTN}
-        title="断开此账户连接"
+        title={t("calendar.disconnect_account_title")}
         data-testid={`gcal-disconnect-${a.email}`}
         disabled={busy}
         onClick={async () => {

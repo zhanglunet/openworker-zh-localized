@@ -1,58 +1,59 @@
 import { useEffect, useState } from "react";
+import { getI18n, useTranslation } from "react-i18next";
 import {
-  addMcpServer,
+  addTelegramApprovalOwner,
   allowUser,
   connectConnector,
   connectManaged,
   connectMcpBacked,
-  connectMcp,
-  deleteMcpServer,
+  createCustomProvider,
+  getLocalModels,
   disallowUser,
-  getMcpServers,
-  getMcpTools,
-  signoutMcp,
   getSettings,
   getSubscriptions,
   removeModel,
+  removeTelegramApprovalOwner,
   resolveUnauthorized,
   unsubscribeChannel,
-  patchMcpServer,
-  reloadMcp,
   setDefaultModel,
   updateConnectorTools,
   type CloudStatus,
   type Connector,
   type Subscription,
-  type McpServer,
   type ModelSettings,
   type ProviderInfo,
 } from "../api";
 import { CloudSignInInline, CloudStatusPending } from "./connectors/CloudSignIn";
+import { Icon } from "./Icon";
 import { ModelChecklist } from "./ModelChecklist";
-import { ProviderCards, ProviderForm, useProviderSetup } from "../providers/ProviderSetup";
-import { Toggle } from "./Toggle";
+import { LlamaCppPage } from "./models/LlamaCppSetup";
+import { LocalModelsTable, YourSystem } from "./models/LocalModels";
+import { PickModelDialog } from "./models/PickModelDialog";
+import { ProviderGroups } from "./models/ProviderGroups";
+import { ProviderForm, useProviderSetup } from "../providers/ProviderSetup";
+import { WalletChips } from "./WalletChips";
 
 // "2h ago"-style label for the providers' Last-used line (null when never used).
 const relTime = (epoch?: number | null): string | null => {
   if (!epoch) return null;
+  const t = getI18n().getFixedT(null, "translation");
   const secs = Math.max(0, Math.floor(Date.now() / 1000 - epoch));
-  if (secs < 90) return "刚刚";
+  if (secs < 90) return t("manage.reltime_just_now");
   const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins} 分钟前`;
+  if (mins < 60) return t("manage.reltime_min", { n: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 48) return `${hrs} 小时前`;
-  return `${Math.floor(hrs / 24)} 天前`;
+  if (hrs < 48) return t("manage.reltime_hour", { n: hrs });
+  return t("manage.reltime_day", { n: Math.floor(hrs / 24) });
 };
 
 // Shared tab bodies for the Settings and Integrations pages (the old top-tab ManageModal was retired
-// when Settings/Activity became full-page surfaces): ModelsTab → Settings ▸ Models; ConnectorsTab +
-// McpTab → Integrations ▸ Connectors / MCP servers.
-const SEC_H = "text-[11px] uppercase tracking-[0.05em] text-faint font-semibold";
+// when Settings/Activity became full-page surfaces): ModelsTab → Settings ▸ Models; ConnectorsTab →
+// Integrations ▸ Connectors (the MCP tab retired into the Connectors page, UX-034).
+const SEC_H = "text-label text-faint font-medium";
 const CARD = "rounded-xl2 border border-line bg-panel";
 const BTN_BORDERED =
-  "text-[12.5px] px-3 py-1.5 rounded-lg border border-line bg-paper hover:border-lineStrong shrink-0";
-const BTN_ACCENT = "text-[12.5px] px-3 py-1.5 rounded-lg bg-accent text-white shrink-0 disabled:opacity-50";
-const BTN_DANGER = "text-[12.5px] text-danger/80 hover:text-danger shrink-0";
+  "text-ui px-3 py-1.5 rounded-lg border border-line bg-paper hover:border-lineStrong shrink-0";
+const BTN_ACCENT = "text-ui px-3 py-1.5 rounded-lg bg-accent text-white shrink-0 disabled:opacity-50";
 
 /** Two-letter initials for a chip/avatar (first+last word, else first two chars). */
 function initials(name: string): string {
@@ -62,13 +63,33 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const EXAMPLE = `{
-  "filesystem": {
-    "command": "npx",
-    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"],
-    "enabled": true
-  }
-}`;
+// "Remove key…" under a provider's form. Only for a key the app itself stores: a key
+// that comes from the provider's environment variable (key_source "env") cannot be
+// removed here, so the button is left out and the env note below the form says why (#742).
+export function ProviderKeyFooter({
+  info,
+  credentialed,
+  onRemove,
+}: {
+  info: ProviderInfo | null | undefined;
+  credentialed: boolean;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!credentialed || info?.key_source === "env") return null;
+  return (
+    <button
+      className="text-ui text-danger/80 hover:text-danger hover:underline underline-offset-2"
+      data-testid="set-remove-key"
+      onClick={() => {
+        const key = info?.is_custom ? "manage.remove_provider_confirm" : "manage.remove_key_confirm";
+        if (window.confirm(t(key, { title: info?.title || "" }))) onRemove();
+      }}
+    >
+      {t(info?.is_custom ? "manage.remove_provider" : "manage.remove_key")}
+    </button>
+  );
+}
 
 // -- Configure Models tab (UX-021: the shared provider gallery + key form) ----
 // Settings ▸ Models reuses onboarding §39's ProviderCards/ProviderForm so the two
@@ -76,63 +97,186 @@ const EXAMPLE = `{
 // key…" affordance, the global composer-picker card (gallery view), and the
 // per-provider ModelChecklist / read-only model preview (form view).
 export function ModelsTab() {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<ModelSettings | null>(null);
-  const refreshSettings = () => getSettings().then(setSettings).catch(() => setSettings(null));
+  // The Pick a model dialog (UX-055): "" closed, "+" picking, else the model to configure.
+  const [dialog, setDialog] = useState<string>("");
+  const [settingsError, setSettingsError] = useState(false);
+  const [addingCustom, setAddingCustom] = useState(false);
+  const [openCustom, setOpenCustom] = useState<string | null>(null);
+  // A custom provider's "Fetch from server": the ids its GET /models listed (offered as
+  // suggestions in the checklist) and the one-line outcome.
+  const [fetched, setFetched] = useState<string[]>([]);
+  const [fetching, setFetching] = useState(false);
+  const [fetchNote, setFetchNote] = useState<string | null>(null);
+  const refreshSettings = () => {
+    setSettingsError(false);
+    getSettings()
+      .then(setSettings)
+      .catch(() => {
+        setSettings(null);
+        setSettingsError(true);
+      });
+  };
   const ps = useProviderSetup({ onSaved: refreshSettings });
   useEffect(() => {
     refreshSettings();
+    // The composer's "Pick or configure a model…" lands here with the dialog up.
+    try {
+      if (sessionStorage.getItem("ow:pick-model") === "1") {
+        sessionStorage.removeItem("ow:pick-model");
+        setDialog("+");
+      }
+    } catch { /* private window */ }
   }, []);
 
-  if (!settings) return <div className="text-[13px] text-muted">加载中…</div>;
+  useEffect(() => {
+    if (openCustom && ps.providers.some((p) => p.name === openCustom)) {
+      setOpenCustom(null);
+      ps.openProvider(openCustom);
+    }
+  }, [openCustom, ps.providers]);
+
+  useEffect(() => {
+    setFetched([]);
+    setFetchNote(null);
+  }, [ps.sel]);
+
+  const fetchModels = async () => {
+    if (!ps.sel) return;
+    setFetching(true);
+    setFetchNote(null);
+    try {
+      const res = await getLocalModels(ps.sel);
+      const ids = res.models.map((m) => m.name);
+      setFetched(ids);
+      setFetchNote(res.error || (ids.length ? t("manage.custom_fetched_count", { count: ids.length }) : t("manage.custom_fetched_none")));
+    } catch {
+      setFetchNote(t("manage.local_models_failed"));
+    }
+    setFetching(false);
+  };
+
+  // #43: a failed or hung settings fetch says so and offers Retry (same shape as the
+  // local-models status line below) instead of sitting on "Loading…" forever.
+  if (settingsError) {
+    return (
+      <div className="text-ui text-warnInk" data-testid="settings-error">
+        {t("manage.settings_failed")}{" "}
+        <button className="text-muted underline underline-offset-2 hover:text-ink" onClick={refreshSettings} data-testid="settings-retry">
+          {t("manage.retry")}
+        </button>
+      </div>
+    );
+  }
+
+  if (!settings) return <div className="text-ui text-muted">{t("manage.loading")}</div>;
 
   const info = ps.info;
   const knownNames = ps.providers.map((p) => p.name);
+  const dialogEl = dialog ? (
+    <PickModelDialog
+      providers={ps.providers}
+      settings={settings}
+      keylessOk={ps.keylessOk}
+      configure={dialog === "+" ? null : dialog}
+      onClose={() => setDialog("")}
+      onChanged={() => {
+        refreshSettings();
+        ps.refreshProviders();
+      }}
+    />
+  ) : null;
 
   if (ps.sel === null) {
     return (
       <div>
-        <ProviderCards ps={ps} tp="set" gridClass="grid grid-cols-2 xl:grid-cols-3 gap-2.5" lastUsed />
-        <ComposerPickerCard settings={settings} providers={ps.providers} onChanged={refreshSettings} />
+        {addingCustom ? (
+          <CustomProviderForm
+            onCancel={() => setAddingCustom(false)}
+            onCreated={async (name) => {
+              setAddingCustom(false);
+              setOpenCustom(name);
+              await ps.refreshProviders();
+              refreshSettings();
+            }}
+          />
+        ) : (
+          <ProviderGroups ps={ps} tp="set" models={settings.models} onAddCustom={() => setAddingCustom(true)} />
+        )}
+        <ComposerPickerCard settings={settings} providers={ps.providers} onChanged={refreshSettings} onPick={() => setDialog("+")} onConfigure={(m) => setDialog(m)} />
+        {dialogEl}
+      </div>
+    );
+  }
+
+  const removeKeyFooter = <ProviderKeyFooter info={info} credentialed={ps.credentialed} onRemove={ps.removeKey} />;
+  const localTables = (key = "", withTable = true) => (
+    <>
+      <YourSystem />
+      {withTable && <LocalModelsTable
+        key={key}
+        provider={ps.sel!}
+        curated={settings.models}
+        defaultModel={settings.model}
+        onChanged={refreshSettings}
+        onConfigure={(m) => setDialog(m)}
+      />}
+      {dialogEl}
+    </>
+  );
+
+  if (ps.sel === "llamacpp" && info?.setup_here) {
+    // UX-057: OpenWorker sets llama.cpp up and runs it on this Mac.
+    return (
+      <div>
+        <LlamaCppPage ps={ps} tp="set" footer={removeKeyFooter} onChanged={refreshSettings} after={localTables} />
       </div>
     );
   }
 
   return (
     <div>
-      <ProviderForm
-        ps={ps}
-        tp="set"
-        footer={
-          ps.credentialed ? (
-            <button
-              className="text-[12.5px] text-danger/80 hover:text-danger hover:underline underline-offset-2"
-              data-testid="set-remove-key"
-              onClick={() => {
-                if (window.confirm(`从本机移除 ${info?.title} 的密钥？`)) ps.removeKey();
-              }}
-            >
-              Remove key…
-            </button>
-          ) : null
-        }
-      />
+      <ProviderForm ps={ps} tp="set" footer={removeKeyFooter} />
 
-      {ps.sel === "openai" && settings.source === "env" && (
-        <p className="text-[12px] text-muted mt-3 leading-relaxed">
-          已通过本机服务环境的 <code>OPENAI_API_KEY</code> 设置了密钥。你可以在上方覆盖它；仅在环境变量不存在时才会使用已存储的密钥。
+      {info?.env_key && (
+        <p className="text-meta text-muted mt-3 leading-relaxed" data-testid="set-env-key-note">
+          {t(info.key_source === "env" ? "manage.env_key_help" : "manage.env_key_fallback_help", { var: info.env_key })}
         </p>
       )}
 
-      {info?.configured ? (
+      {/* Keys wallet: once a machine is enrolled, a provider with a STORED key can
+          deploy it (sealed; the machine owns its copy). Keyless providers (Ollama)
+          have nothing in the wallet — no row. */}
+      {ps.credentialed && ps.sel && <WalletChips profiles={[`provider:${ps.sel}`]} />}
+
+      {info?.kind === "local" ? (
+        // A local provider: the machine, then what the server holds (UX-055).
+        localTables()
+      ) : info?.configured ? (
         <div className="mt-6">
-          <div className={SEC_H + " mb-1.5"}>模型</div>
-          <p className="text-[12px] text-muted mb-2.5 leading-relaxed">
-            勾选的模型会显示在对话模型的选项中；黑色徽标标记新会话的默认模型。
+          <div className={SEC_H + " mb-1.5"}>{t("manage.models")}</div>
+          <p className="text-meta text-muted mb-2.5 leading-relaxed">
+            {t(info?.is_custom ? "manage.custom_models_help" : "manage.models_help")}
           </p>
+          {ps.sel === "azure" && (
+            // No catalogue on Azure: the id to add is the deployment's name.
+            <p className="text-meta text-muted mb-2.5 leading-relaxed" data-testid="set-azure-deployment-note">
+              {t("manage.azure_deployment_help")}
+            </p>
+          )}
+          {info?.is_custom && (
+            <div className="flex items-center gap-3 mb-2.5" data-testid="custom-fetch-row">
+              <button className={BTN_BORDERED} data-testid="custom-fetch-models" disabled={fetching} onClick={() => void fetchModels()}>
+                {fetching ? t("manage.custom_fetching") : t("manage.custom_fetch_models")}
+              </button>
+              {fetchNote && <span className="text-meta text-muted" data-testid="custom-fetch-note">{fetchNote}</span>}
+            </div>
+          )}
           <ModelChecklist
             provider={ps.sel}
             knownProviders={knownNames}
-            suggested={info?.suggested_models || []}
+            suggested={[...(info?.suggested_models || []), ...fetched].filter((m, i, a) => a.indexOf(m) === i)}
             curated={settings.models}
             defaultModel={settings.model}
             labels={settings.model_labels}
@@ -144,9 +288,9 @@ export function ModelsTab() {
         // key unlocks is part of deciding to get one at all (owner ask, 2026-07-04).
         (info?.suggested_models?.length || 0) > 0 && (
           <div className="mt-6" data-testid="model-preview">
-            <div className={SEC_H + " mb-1.5"}>内置模型</div>
-            <p className="text-[12px] text-muted mb-2.5 leading-relaxed">
-              该服务商精选的、具备智能体能力的模型 —— 在上方添加密钥即可启用。
+            <div className={SEC_H + " mb-1.5"}>{t("manage.included_models")}</div>
+            <p className="text-meta text-muted mb-2.5 leading-relaxed">
+              {t(info?.auth === "oauth" ? "manage.included_models_help_signin" : "manage.included_models_help")}
             </p>
             <div className="space-y-1">
               {(info?.suggested_models || []).map((m) => {
@@ -154,7 +298,7 @@ export function ModelsTab() {
                 return (
                   <div
                     key={m}
-                    className="px-2.5 py-1.5 rounded-lg border border-line bg-paper text-[13px] text-muted"
+                    className="px-2.5 py-1.5 rounded-lg border border-line bg-paper text-ui text-muted"
                     title={full}
                   >
                     {settings.model_labels?.[full] || m}
@@ -169,6 +313,125 @@ export function ModelsTab() {
   );
 }
 
+/** A route prefix from a display name: lowercase, dashes between words, starting with a
+ * letter, at most 32 characters — the slug the backend accepts for `<prefix>:<model-id>`. */
+export function routePrefixFor(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/^[^a-z]+/, "")
+    .slice(0, 32)
+    .replace(/-+$/, "");
+}
+
+/** The form behind the "Add an OpenAI-compatible provider" box: a name of the user's
+ * choosing (the new card's title), the route prefix derived from it (editable until the
+ * first save), the endpoint and the key. Saving creates the card and opens it, where the
+ * model ids are typed or fetched from the server. */
+function CustomProviderForm({
+  onCancel,
+  onCreated,
+}: {
+  onCancel: () => void;
+  onCreated: (name: string) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
+  const [baseUrl, setBaseUrl] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const input = "w-full px-3 py-2 rounded-lg border border-line bg-panel text-ui outline-none focus:border-accent";
+  const label = "block text-meta text-muted mt-3 mb-1";
+  const prefix = name || routePrefixFor(title);
+
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    const result: { ok: boolean; error?: string; provider?: string } = await createCustomProvider(
+      prefix,
+      title,
+      { base_url: baseUrl, api_key: apiKey },
+    ).catch(() => ({ ok: false, error: t("provider.err_unreachable") }));
+    setSaving(false);
+    if (!result.ok || !result.provider) {
+      setError(result.error || t("manage.custom_add_failed"));
+      return;
+    }
+    await onCreated(result.provider);
+  };
+
+  return (
+    <div className={CARD + " p-4 max-w-xl mb-6"} data-testid="set-custom-provider-form">
+      <div className="text-body font-semibold">{t("manage.custom_add_title")}</div>
+      <p className="text-meta text-muted mt-1 leading-relaxed">{t("manage.custom_add_desc")}</p>
+      <label className={label} htmlFor="custom-provider-title">{t("manage.custom_name_label")}</label>
+      <input
+        id="custom-provider-title"
+        className={input}
+        value={title}
+        placeholder={t("manage.custom_name_placeholder")}
+        data-testid="custom-provider-title"
+        onChange={(e) => {
+          setTitle(e.target.value);
+          if (!nameTouched) setName(routePrefixFor(e.target.value));
+        }}
+      />
+      <label className={label} htmlFor="custom-provider-route">{t("manage.custom_route_label")}</label>
+      <input
+        id="custom-provider-route"
+        className={input + " font-mono"}
+        value={prefix}
+        spellCheck={false}
+        autoCapitalize="none"
+        data-testid="custom-provider-route"
+        onChange={(e) => {
+          setNameTouched(true);
+          setName(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""));
+        }}
+      />
+      <p className="text-meta text-faint mt-1">{t("manage.custom_route_hint", { prefix: prefix || "acme" })}</p>
+      <label className={label} htmlFor="custom-provider-endpoint">{t("manage.custom_endpoint_label")}</label>
+      <input
+        id="custom-provider-endpoint"
+        className={input}
+        value={baseUrl}
+        placeholder="https://…/v1"
+        spellCheck={false}
+        autoCapitalize="none"
+        data-testid="custom-provider-endpoint"
+        onChange={(e) => setBaseUrl(e.target.value)}
+      />
+      <p className="text-meta text-faint mt-1">{t("manage.custom_endpoint_help")}</p>
+      <label className={label} htmlFor="custom-provider-key">{t("manage.custom_key_label")}</label>
+      <input
+        id="custom-provider-key"
+        className={input}
+        type="password"
+        value={apiKey}
+        autoComplete="off"
+        data-testid="custom-provider-key"
+        onChange={(e) => setApiKey(e.target.value)}
+      />
+      <div className="mt-3 min-h-[19px] text-ui">{error && <span className="text-warnInk" data-testid="custom-provider-error">{error}</span>}</div>
+      <div className="flex gap-2 mt-1">
+        <button
+          className={BTN_ACCENT}
+          disabled={saving || !title.trim() || !prefix || !baseUrl.trim() || !apiKey.trim()}
+          data-testid="custom-provider-add"
+          onClick={() => void save()}
+        >
+          {saving ? t("manage.custom_adding") : t("manage.custom_add_btn")}
+        </button>
+        <button className={BTN_BORDERED} onClick={onCancel} data-testid="custom-provider-cancel">{t("manage.custom_cancel")}</button>
+      </div>
+    </div>
+  );
+}
+
 // The gallery view's "In the composer's picker" card: every curated model across providers,
 // with its provider tag. Unticking removes it from the picker; adding happens from a
 // provider's card (the ModelChecklist there has the suggested list + free-type add).
@@ -176,11 +439,17 @@ function ComposerPickerCard({
   settings,
   providers,
   onChanged,
+  onPick,
+  onConfigure,
 }: {
   settings: ModelSettings;
   providers: ProviderInfo[];
   onChanged: () => void;
+  onPick: () => void;
+  onConfigure: (model: string) => void;
 }) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState("");
   const names = providers.map((p) => p.name);
   const provOf = (id: string) => {
     const i = id.indexOf(":");
@@ -190,316 +459,83 @@ function ComposerPickerCard({
     const p = providers.find((x) => x.name === provOf(id));
     return (p?.title || provOf(id)).split(" (")[0];
   };
+  // "ollama:qwen3-coder:30b" reads as "qwen3-coder:30b"; the provider sits beside it.
+  const shortId = (id: string) => (id.startsWith(provOf(id) + ":") ? id.slice(provOf(id).length + 1) : id);
+  // The card says the provider on its second line, so a label that ends in it
+  // ("GPT-5.6 Sol · OpenAI") loses that tail on the first.
+  const title = (id: string) => {
+    const label = settings.model_labels?.[id] || shortId(id);
+    const tail = ` · ${tag(id)}`;
+    return label.endsWith(tail) ? label.slice(0, -tail.length) : label;
+  };
+  const detail = (id: string) => {
+    const cfg = settings.model_config?.[id];
+    const bits = [tag(id)];
+    if (cfg?.context_size) bits.push(`${Math.round(cfg.context_size / 1024)}K`);
+    if (cfg?.thinking) bits.push(t("manage.thinking_tag"));
+    return bits.join(" · ");
+  };
+  const q = query.trim().toLowerCase();
+  const shown = settings.models.filter((id) => !q || id.toLowerCase().includes(q) || (settings.model_labels?.[id] || "").toLowerCase().includes(q));
   return (
-    <div className="mt-6" data-testid="composer-picker">
-      <div className={SEC_H + " mb-1.5"}>在对话模型的选项中</div>
-      <p className="text-[12px] text-muted mb-2.5 leading-relaxed">
-        开始会话时可用的模型；黑色徽标标记默认模型。可从上方服务商卡片添加更多。
-      </p>
-      <div className="mlist">
-        {settings.models.map((id) => {
+    <div className="mt-10" data-testid="composer-picker">
+      <div className="flex items-center mb-2">
+        <div className={SEC_H + " uppercase tracking-wide"}>{t("manage.composer_picker_title")}</div>
+        <label className="ml-auto flex items-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1 w-[220px] text-meta">
+          <Icon name="search" size={12} className="text-faint shrink-0" />
+          <input className="flex-1 bg-transparent outline-none" placeholder={t("manage.picker_search")} value={query} onChange={(e) => setQuery(e.target.value)} data-testid="picker-search" />
+        </label>
+        <button
+          className="ml-2 grid place-items-center w-[30px] h-[30px] rounded-lg border border-line bg-panel text-muted hover:text-ink hover:border-lineStrong transition-colors"
+          title={t("manage.pick_model_btn")}
+          onClick={onPick}
+          data-testid="pick-model-btn"
+        >
+          <Icon name="plus" size={14} />
+        </button>
+      </div>
+      {/* Each model is a card like the provider cards above: name, then provider and any
+          saved settings; ✕ and "Make default" show on hover. No table, no dividers. */}
+      <div className={"grid grid-cols-2 xl:grid-cols-3 gap-3" + (shown.length > 9 ? " max-h-[262px] overflow-y-auto pr-1 -mr-1" : "")}>
+        {shown.map((id) => {
           const isDefault = id === settings.model;
           return (
-            <div className="mlist-row" key={id}>
-              <label className="mlist-main">
-                <input
-                  type="checkbox"
-                  checked
-                  disabled={isDefault}
-                  title={isDefault ? "默认模型始终显示 —— 请先把其他模型设为默认" : "从选项中移除"}
-                  onChange={() => removeModel(id).then((r) => r.ok && onChanged())}
-                />
-                <span className="mlist-name" title={id}>
-                  {settings.model_labels?.[id] || id}
+            <div
+              className="mlist-row group relative flex items-center gap-3 rounded-xl border border-line bg-panel/50 px-5 py-4 min-h-[70px] text-ui hover:border-lineStrong transition-colors"
+              key={id}
+              data-testid={`picker-row-${id}`}
+            >
+              <span className="min-w-0 flex-1">
+                <button className="block w-full truncate text-left leading-tight hover:underline underline-offset-2" title={t("manage.configure_model")} onClick={() => onConfigure(id)}>
+                  {title(id)}
+                </button>
+                <span className="flex items-center gap-2 mt-1 text-meta text-faint">
+                  <span className="truncate">{detail(id)}</span>
+                  {isDefault ? (
+                    <span className="mlist-default">{t("models.default_badge")}</span>
+                  ) : (
+                    <button className="mlist-make" onClick={() => setDefaultModel(id).then(() => onChanged())}>
+                      {t("models.make_default")}
+                    </button>
+                  )}
                 </span>
-              </label>
-              <span className="text-[11px] text-faint mr-2 shrink-0">{tag(id)}</span>
-              {isDefault ? (
-                <span className="mlist-default">默认</span>
-              ) : (
-                <button className="mlist-make" onClick={() => setDefaultModel(id).then(() => onChanged())}>
-                  设为默认
+              </span>
+              {!isDefault && (
+                <button
+                  className="text-faint hover:text-ink opacity-0 group-hover:opacity-100 transition-opacity"
+                  title={t("manage.remove_from_picker")}
+                  onClick={() => removeModel(id).then((r) => r.ok && onChanged())}
+                  data-testid={`picker-remove-${id}`}
+                >
+                  ✕
                 </button>
               )}
             </div>
           );
         })}
+        {shown.length === 0 && <div className="px-1 py-2 text-meta text-faint">—</div>}
       </div>
-    </div>
-  );
-}
-
-// Curated OAuth quick-adds: remote MCP servers with browser sign-in (OAuth 2.1 + DCR) —
-// no keys to paste, tokens stay in the local secret store. First: Granola.
-const MCP_PRESETS: { name: string; label: string; blurb: string; config: Record<string, any> }[] = [
-  {
-    name: "granola",
-    label: "Granola",
-    blurb: "会议记录与转写 —— 使用你的 Granola 账号登录。",
-    config: { type: "http", url: "https://mcp.granola.ai/mcp", auth: "oauth" },
-  },
-];
-
-export function McpTab() {
-  const [servers, setServers] = useState<McpServer[]>([]);
-  const [adding, setAdding] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const refresh = () => getMcpServers().then(setServers).catch(() => setServers([]));
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  // While a browser sign-in is in flight, poll so the row flips to connected (or
-  // surfaces the error) without the user having to touch anything.
-  const authorizing = servers.some((s) => s.status === "authorizing");
-  useEffect(() => {
-    if (!authorizing) return;
-    const t = window.setInterval(refresh, 2000);
-    return () => window.clearInterval(t);
-  }, [authorizing]);
-
-  const toggle = async (s: McpServer) => {
-    await patchMcpServer(s.name, { enabled: !s.enabled });
-    refresh();
-  };
-  const remove = async (s: McpServer) => {
-    await deleteMcpServer(s.name);
-    refresh();
-  };
-
-  return (
-    <div className="space-y-3">
-      <p className="text-[12.5px] text-muted leading-relaxed">
-        外部工具服务器（stdio 或 HTTP），在所有智能体间共享。已启用的服务器工具受权限控制。更改在新建会话后生效 ——{" "}
-        <button
-          className="text-accent font-medium hover:underline"
-          onClick={() => reloadMcp().then(refresh)}
-        >
-          立即重新加载
-        </button>
-        。
-      </p>
-
-      {servers.length === 0 && !adding ? (
-        <div className={CARD + " p-4 text-[13px] text-muted"}>
-          尚未配置任何 MCP 服务器。{" "}
-          <button className="text-accent font-medium" onClick={() => setAdding(true)}>
-            添加服务器
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {servers.map((s) => (
-            <McpRow
-              key={s.name}
-              server={s}
-              onToggle={() => toggle(s)}
-              onRemove={() => remove(s)}
-              onRefresh={refresh}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* One-click OAuth presets not yet configured. */}
-      {MCP_PRESETS.filter((p) => !servers.some((s) => s.name === p.name)).map((p) => (
-        <div key={p.name} className={CARD + " p-3.5 flex items-center gap-3"} data-testid={`mcp-preset-${p.name}`}>
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] font-medium">{p.label}</div>
-            <div className="text-[11.5px] text-faint">{p.blurb}</div>
-          </div>
-          <button
-            className={BTN_ACCENT}
-            onClick={async () => {
-              await addMcpServer(p.name, p.config);
-              await connectMcp(p.name); // opens the browser sign-in right away
-              refresh();
-            }}
-          >
-            连接
-          </button>
-        </div>
-      ))}
-
-      {adding ? (
-        <AddForm
-          onCancel={() => {
-            setAdding(false);
-            setError(null);
-          }}
-          onError={setError}
-          onAdded={() => {
-            setAdding(false);
-            setError(null);
-            refresh();
-          }}
-        />
-      ) : servers.length > 0 ? (
-        <button className={BTN_ACCENT} onClick={() => setAdding(true)}>
-          + 添加服务器
-        </button>
-      ) : null}
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
-    </div>
-  );
-}
-
-function McpRow({
-  server,
-  onToggle,
-  onRemove,
-  onRefresh,
-}: {
-  server: McpServer;
-  onToggle: () => void;
-  onRemove: () => void;
-  onRefresh: () => void;
-}) {
-  const [tools, setTools] = useState<{ name: string; description: string }[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [toolErr, setToolErr] = useState<string | null>(null);
-
-  const isOauth = server.auth === "oauth";
-  const authorizing = server.status === "authorizing";
-  const signIn = async () => {
-    await connectMcp(server.name); // browser opens; the tab's poll flips the status
-    onRefresh();
-  };
-  const signOut = async () => {
-    await signoutMcp(server.name);
-    onRefresh();
-  };
-
-  const loadTools = async () => {
-    if (tools) {
-      setTools(null);
-      return;
-    }
-    setBusy(true);
-    setToolErr(null);
-    const res = await getMcpTools(server.name);
-    setBusy(false);
-    if (res.ok) setTools(res.tools);
-    else setToolErr(res.error || "failed to connect");
-  };
-
-  return (
-    <div className={CARD + " p-3.5"}>
-      <div className="flex items-center gap-3">
-        <Toggle checked={server.enabled} onChange={onToggle} title="启用此服务器" />
-        <div className="flex-1 min-w-0">
-          <div className="text-[14px] font-medium">{server.name}</div>
-          <div className="text-[11.5px] text-faint">
-            {server.transport} · {authorizing ? "登录中…" : server.status.replace("_", " ")}
-            {server.tool_count != null ? ` · ${server.tool_count} tools` : ""}
-            {server.requires_approval ? " · asks" : ""}
-            {isOauth ? " · oauth" : ""}
-          </div>
-        </div>
-        {isOauth &&
-          (server.status === "needs_auth" ? (
-              <button className={BTN_ACCENT} onClick={signIn} data-testid={`mcp-signin-${server.name}`}>
-              登录
-            </button>
-          ) : authorizing ? (
-            <span className="text-[12px] text-muted shrink-0">等待浏览器…</span>
-          ) : server.status === "connected" ? (
-            <button
-              className="text-[12px] text-muted hover:text-ink shrink-0"
-              onClick={signOut}
-              data-testid={`mcp-signout-${server.name}`}
-            >
-              退出登录
-            </button>
-          ) : null)}
-        <button
-          className="text-[12px] text-muted hover:text-ink shrink-0"
-          onClick={loadTools}
-          disabled={busy}
-        >
-          {busy ? "…" : tools ? "隐藏工具" : "工具"}
-        </button>
-        <button className={BTN_DANGER} onClick={onRemove}>
-          移除
-        </button>
-      </div>
-      {server.last_error && server.status !== "connected" && (
-        <div className="text-[12.5px] text-danger mt-1.5">{server.last_error}</div>
-      )}
-      {toolErr && <div className="text-[12.5px] text-danger mt-1.5">{toolErr}</div>}
-      {tools && (
-        <div className="mt-2.5 pt-2.5 border-t border-line flex flex-wrap gap-1.5">
-          {tools.length === 0 && <div className="text-[12px] text-faint">No tools.</div>}
-          {tools.map((t) => (
-            <span
-              key={t.name}
-              title={t.description}
-              className="font-mono text-[11.5px] px-1.5 py-0.5 rounded-md bg-paper border border-line"
-            >
-              {t.name}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AddForm({
-  onCancel,
-  onAdded,
-  onError,
-}: {
-  onCancel: () => void;
-  onAdded: () => void;
-  onError: (e: string | null) => void;
-}) {
-  const [text, setText] = useState(EXAMPLE);
-
-  const save = async () => {
-    onError(null);
-    let parsed: any;
-    try {
-      parsed = JSON.parse(text);
-    } catch (e: any) {
-      onError("JSON 格式无效：" + e.message);
-      return;
-    }
-    // Accept either {mcpServers:{...}}, {name:{...}}, or a single bare config.
-    const map = parsed.mcpServers || parsed;
-    const entries =
-      map && typeof map === "object" && !map.command && !map.url
-        ? Object.entries(map)
-        : null;
-    if (!entries || entries.length === 0) {
-      onError('请粘贴一个 `{ "<name>": { … } }` 对象（或完整的 mcpServers 块）。');
-      return;
-    }
-    for (const [name, config] of entries) {
-      await addMcpServer(name, config as Record<string, any>);
-    }
-    onAdded();
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="text-[12.5px] text-muted">粘贴服务器 JSON（名称 → 配置）：</div>
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        spellCheck={false}
-        rows={9}
-        className="w-full font-mono text-[12px] px-3 py-2.5 rounded-lg border border-line bg-paper text-ink outline-none focus:border-accent resize-y"
-      />
-      <div className="flex items-center gap-3">
-        <button className={BTN_ACCENT} onClick={save}>
-          添加
-        </button>
-        <button className="text-[12.5px] text-muted hover:text-ink" onClick={onCancel}>
-          取消
-        </button>
-      </div>
+      <p className="text-meta text-muted mt-3 leading-relaxed">{t("manage.composer_picker_help_v3")}</p>
     </div>
   );
 }
@@ -524,6 +560,7 @@ export function UnauthorizedBlock({
   onChanged: () => void;
   teamId?: string;
 }) {
+  const { t } = useTranslation();
   const items = (c.unauthorized ?? []).filter(
     (m) => teamId === undefined || m.team_id === teamId,
   );
@@ -538,41 +575,41 @@ export function UnauthorizedBlock({
       data-testid={teamId ? `unauthorized-${c.name}-${teamId}` : `unauthorized-${c.name}`}
     >
       <div className={SEC_H + " mb-2"}>
-        来自未授权发件人的消息 · {items.length}
+        {t("manage.parked_title", { n: items.length })}
       </div>
       <div className="space-y-2">
         {items.map((m) => (
           <div key={m.id} className="rounded-xl border border-line bg-paper p-2.5">
-            <div className="flex items-center gap-2 text-[12px] text-muted">
+            <div className="flex items-center gap-2 text-meta text-muted">
               <span className="font-medium text-ink">{m.user_name || m.user_id}</span>
-              <span>在 {m.chat_name || m.chat_id}</span>
+              <span>{t("manage.parked_in", { chat: m.chat_name || m.chat_id })}</span>
               <span className="ml-auto shrink-0">{relTime(m.ts) || ""}</span>
             </div>
-            <div className="text-[12.5px] mt-1 break-words">{m.text}</div>
+            <div className="text-ui mt-1 break-words">{m.text}</div>
             <div className="flex items-center gap-1.5 mt-2">
               <button
-                className="text-[11.5px] px-2 py-1 rounded-md bg-accent text-white"
+                className="text-meta px-2 py-1 rounded-md bg-accent text-white"
                 data-testid={`parked-allow-deliver-${m.id}`}
-                title="将此发件人加入允许列表并立即投递该消息"
+                title={t("manage.parked_allow_deliver_tip")}
                 onClick={() => act(m.id, "allow_deliver")}
               >
-                允许并投递
+                {t("manage.parked_allow_deliver")}
               </button>
               <button
                 className={BTN_BORDERED}
                 data-testid={`parked-allow-${m.id}`}
-                title="将此发件人加入允许列表；该消息将被丢弃"
+                title={t("manage.parked_allow_tip")}
                 onClick={() => act(m.id, "allow")}
               >
-                仅允许
+                {t("manage.parked_allow_only")}
               </button>
               <button
-                className="text-[11.5px] px-2 py-1 rounded-md text-faint hover:text-danger"
+                className="text-meta px-2 py-1 rounded-md text-faint hover:text-danger"
                 data-testid={`parked-dismiss-${m.id}`}
-                title="丢弃此消息"
+                title={t("manage.parked_dismiss_tip")}
                 onClick={() => act(m.id, "dismiss")}
               >
-                忽略
+                {t("manage.parked_dismiss")}
               </button>
             </div>
           </div>
@@ -586,6 +623,7 @@ export function UnauthorizedBlock({
 // Channel-subscriptions table (Integrations ▸ Messaging routing). Subscribing happens from a
 // session's Sources ▸ Channels panel; here the owner can see and revoke.
 export function ListeningSessionsBlock({ c }: { c: Connector }) {
+  const { t } = useTranslation();
   const [subs, setSubs] = useState<Subscription[] | null>(null);
   const load = () => getSubscriptions().then(setSubs).catch(() => setSubs([]));
   useEffect(() => {
@@ -596,15 +634,15 @@ export function ListeningSessionsBlock({ c }: { c: Connector }) {
   const mine = (subs ?? []).filter((s) => platformOf(s.channel) === c.name);
   return (
     <div className="border-t border-line px-3.5 py-3" data-testid={`listening-${c.name}`}>
-      <div className={SEC_H + " mb-2"}>正在监听 {c.title} 频道的会话 · {mine.length}</div>
+      <div className={SEC_H + " mb-2"}>{t("manage.listening_title", { title: c.title, n: mine.length })}</div>
       {mine.length === 0 ? (
-        <div className="text-[12px] text-faint">
-          暂无 —— 打开某个会话的来源 ▸ 频道，将其订阅到频道。
+        <div className="text-meta text-faint">
+          {t("manage.listening_empty")}
         </div>
       ) : (
         <div className="space-y-1.5">
           {mine.map((s) => (
-            <div className="flex items-center gap-2 text-[12.5px]" key={s.session_id + s.channel}>
+            <div className="flex items-center gap-2 text-ui" key={s.session_id + s.channel}>
               <span className="min-w-0 truncate" title={s.session_id}>
                 {s.session_title || s.session_id}
                 {s.agent ? <span className="text-faint"> · {s.agent}</span> : null}
@@ -614,7 +652,7 @@ export function ListeningSessionsBlock({ c }: { c: Connector }) {
               </span>
               <button
                 className="ml-auto text-faint hover:text-danger shrink-0"
-                title="取消此会话的订阅"
+                title={t("manage.listening_unsub_tip")}
                 onClick={async () => {
                   await unsubscribeChannel(s.session_id, s.channel);
                   load();
@@ -647,6 +685,7 @@ export function AllowlistBlock({
   allowed?: string[];
   allowedNames?: Record<string, string | null>;
 }) {
+  const { t } = useTranslation();
   const allowedUsers = allowed ?? c.allowed_users;
   const names = allowedNames ?? c.allowed_user_names;
   const recent = (c.recent ?? []).filter(
@@ -657,16 +696,16 @@ export function AllowlistBlock({
   return (
     <div className="border-t border-line px-3.5 py-3 grid grid-cols-2 gap-5">
       <div>
-        <div className={SEC_H + " mb-2"}>允许发消息</div>
+        <div className={SEC_H + " mb-2"}>{t("manage.allowed_to_message")}</div>
         <div className="flex flex-wrap gap-1.5">
           {allowedUsers.length === 0 && (
-            <span className="text-[12px] text-faint">暂无 —— 允许一位最近的发件人 →</span>
+            <span className="text-meta text-faint">{t("manage.allowed_empty")}</span>
           )}
           {allowedUsers.map((u) => (
             <span
               key={u}
-              className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full bg-paper border border-line text-[12px]"
-              title={`ID ${u}`}
+              className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full bg-paper border border-line text-meta"
+              title={t("manage.id_title", { id: u })}
             >
               <span className="w-4 h-4 rounded-full bg-accentSoft text-accent grid place-items-center text-[9px] font-bold">
                 {initials(names?.[u] || u)}
@@ -674,7 +713,7 @@ export function AllowlistBlock({
               {names?.[u] || u}
               <button
                 className="w-4 h-4 grid place-items-center text-faint hover:text-danger"
-                title="移除"
+                title={t("common.remove")}
                 onClick={async () => {
                   await disallowUser(c.name, u, teamId);
                   onChanged();
@@ -687,27 +726,27 @@ export function AllowlistBlock({
         </div>
       </div>
       <div>
-        <div className={SEC_H + " mb-2"}>最近的发件人</div>
+        <div className={SEC_H + " mb-2"}>{t("manage.recent_senders")}</div>
         {unknownRecent.length === 0 ? (
-          <div className="text-[12px] text-faint">暂无。给机器人发一条消息，它就会显示在这里。</div>
+          <div className="text-meta text-faint">{t("manage.recent_empty")}</div>
         ) : (
           <div className="space-y-1.5">
             {unknownRecent.map((r) => (
-              <div className="flex items-center gap-2 text-[12.5px]" key={r.user_id}>
+              <div className="flex items-center gap-2 text-ui" key={r.user_id}>
                 <span className="w-5 h-5 rounded-full bg-paper border border-line grid place-items-center text-[9px] font-bold text-muted shrink-0">
                   {initials(r.user_name || "?")}
                 </span>
-                <span className="min-w-0 truncate" title={`ID ${r.user_id}`}>
-                  {r.user_name || "未知"} <span className="text-faint">· {r.chat_type}</span>
+                <span className="min-w-0 truncate" title={t("manage.id_title", { id: r.user_id })}>
+                  {r.user_name || t("manage.unknown")} <span className="text-faint">· {r.chat_type}</span>
                 </span>
                 <button
-                  className="ml-auto text-[11.5px] px-2 py-0.5 rounded-md bg-accent text-white shrink-0"
+                  className="ml-auto text-meta px-2 py-0.5 rounded-md bg-accent text-white shrink-0"
                   onClick={async () => {
                     await allowUser(c.name, r.user_id, teamId);
                     onChanged();
                   }}
                 >
-                  允许
+                  {t("approval.allow")}
                 </button>
               </div>
             ))}
@@ -718,20 +757,110 @@ export function AllowlistBlock({
   );
 }
 
+// Who may APPROVE from this Telegram bot — a stricter list than "allowed to message"
+// (OPE-217 / #712). Empty means: the one person in a bound private chat may approve;
+// a bound group needs owners chosen here before anyone can.
+export function TelegramApprovalOwnersBlock({ c, onChanged }: { c: Connector; onChanged: () => void }) {
+  const { t } = useTranslation();
+  const [err, setErr] = useState<string | null>(null);
+  const [pick, setPick] = useState("");
+  const owners = c.approval_owner_ids ?? [];
+  const names = { ...(c.allowed_user_names ?? {}), ...(c.approval_owner_names ?? {}) };
+  const candidates = c.allowed_users.filter((u) => !owners.includes(u));
+  const label = (u: string) => names[u] || u;
+  const add = async (userId: string) => {
+    const result = await addTelegramApprovalOwner(userId, names[userId] || undefined);
+    if (!result.ok) {
+      setErr(result.error || t("manage.owners_update_failed"));
+      return;
+    }
+    setErr(null);
+    setPick("");
+    onChanged();
+  };
+  const remove = async (userId: string) => {
+    const result = await removeTelegramApprovalOwner(userId);
+    if (!result.ok) {
+      setErr(result.error || t("manage.owners_update_failed"));
+      return;
+    }
+    setErr(null);
+    onChanged();
+  };
+  return (
+    <div className="border-t border-line px-3.5 py-3" data-testid="telegram-approval-owners">
+      <div className={SEC_H + " mb-1"}>{t("manage.approval_owners")}</div>
+      <div className="text-meta text-faint mb-2">{t("manage.approval_owners_help")}</div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {owners.length === 0 && (
+          <span className="text-meta text-faint">{t("manage.approval_owners_empty")}</span>
+        )}
+        {owners.map((u) => (
+          <span
+            key={u}
+            className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-full bg-paper border border-line text-meta"
+            title={t("manage.id_title", { id: u })}
+            data-testid={`telegram-approval-owner-${u}`}
+          >
+            <span className="w-4 h-4 rounded-full bg-accentSoft text-accent grid place-items-center text-[9px] font-bold">
+              {initials(label(u))}
+            </span>
+            {label(u)}
+            <button
+              className="w-4 h-4 grid place-items-center text-faint hover:text-danger"
+              title={t("common.remove")}
+              onClick={() => remove(u)}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {candidates.length > 0 && (
+          <span className="inline-flex items-center gap-1">
+            <select
+              className="text-meta bg-paper border border-line rounded-md px-1.5 py-0.5"
+              value={pick}
+              onChange={(e) => setPick(e.target.value)}
+              data-testid="telegram-approval-owner-pick"
+            >
+              <option value="">{t("manage.approval_owners_pick")}</option>
+              {candidates.map((u) => (
+                <option key={u} value={u}>
+                  {label(u)}
+                </option>
+              ))}
+            </select>
+            <button
+              className="text-meta px-2 py-0.5 rounded-md bg-accent text-white disabled:opacity-50"
+              disabled={!pick}
+              onClick={() => pick && add(pick)}
+              data-testid="telegram-approval-owner-add"
+            >
+              {t("manage.add_btn")}
+            </button>
+          </span>
+        )}
+        {err && <span className="basis-full text-meta text-warnInk">{err}</span>}
+      </div>
+    </div>
+  );
+}
+
 export function ConnectorTools({ c, onChanged }: { c: Connector; onChanged: () => void }) {
+  const { t } = useTranslation();
   const toggle = async (toolName: string, enabled: boolean) => {
     await updateConnectorTools(c.name, { [toolName]: enabled });
     onChanged();
   };
   if (!c.tools?.length)
     return (
-      <div className="border-t border-line px-3.5 py-3 text-[12.5px] text-muted">
-        此连接器暂无工具。
+      <div className="border-t border-line px-3.5 py-3 text-ui text-muted">
+        {t("manage.connector_no_tools")}
       </div>
     );
   return (
     <div className="border-t border-line px-3.5 py-3">
-      <div className={SEC_H + " mb-2"}>向 OpenWorker 开放的工具</div>
+      <div className={SEC_H + " mb-2"}>{t("manage.tools_exposed")}</div>
       <div className="space-y-1.5">
         {c.tools.map((tool) => (
           <label
@@ -745,11 +874,11 @@ export function ConnectorTools({ c, onChanged }: { c: Connector; onChanged: () =
               onChange={(e) => toggle(tool.name, e.target.checked)}
             />
             <span className="min-w-0">
-              <span className="block text-[13px]">{tool.label}</span>
-              <span className="block text-[11.5px] text-faint">
-                {tool.name} · {tool.kind} · 需审批
+              <span className="block text-ui">{tool.label}</span>
+              <span className="block text-meta text-faint">
+                {t("manage.tool_asks_approval", { name: tool.name, kind: tool.kind })}
               </span>
-              <span className="block text-[11.5px] text-faint">{tool.description}</span>
+              <span className="block text-meta text-faint">{tool.description}</span>
             </span>
           </label>
         ))}
@@ -773,6 +902,7 @@ export function ConnectSetup({
   // pill, so don't render the managed block again here.
   manualOnly?: boolean;
 }) {
+  const { t } = useTranslation();
   const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [waiting, setWaiting] = useState(false); // managed flow: browser is open
@@ -784,7 +914,7 @@ export function ConnectSetup({
     const res = await connectConnector(c.name, values);
     setBusy(false);
     if (res.ok) onConnected();
-    else setError(res.error || "could not connect");
+    else setError(res.error || t("manage.could_not_connect"));
   };
 
   const oneClick = async () => {
@@ -793,7 +923,7 @@ export function ConnectSetup({
     // Completion arrives via the tab's poll: the broker form-POSTs the profile
     // to the sidecar, the connector flips to connected, this card closes itself.
     if (res.ok) setWaiting(true);
-    else setError(res.error || "could not start managed connect");
+    else setError(res.error || t("manage.could_not_start_managed"));
   };
 
   const mcpOneClick = async () => {
@@ -802,7 +932,7 @@ export function ConnectSetup({
     // Completion likewise arrives via the poll — the sidecar flips the connector
     // to connected once the local OAuth flow lands.
     if (res.ok) setWaiting(true);
-    else setError(res.error || "could not start the connect");
+    else setError(res.error || t("manage.could_not_start_connect"));
   };
 
   return (
@@ -811,10 +941,10 @@ export function ConnectSetup({
         /* MCP-backed one-click needs no cloud sign-in — the OAuth flow is local. */
         <div className="space-y-2" data-testid="mcp-connect">
           <button className={BTN_ACCENT} onClick={mcpOneClick} disabled={waiting}>
-            {waiting ? "请在浏览器中确认…" : `一键连接 ${c.title}`}
+            {waiting ? t("manage.check_browser") : t("manage.connect_one_click", { title: c.title })}
           </button>
           {c.fields.length > 0 && (
-            <div className="text-[11.5px] text-faint">或手动连接：</div>
+            <div className="text-meta text-faint">{t("manage.or_connect_manually")}</div>
           )}
         </div>
       )}
@@ -825,22 +955,22 @@ export function ConnectSetup({
             // a visibly-parked button, and the manual path below stays fully live.
             <>
               <button className={BTN_ACCENT + " opacity-50"} disabled data-testid="managed-coming-soon">
-                {`Connect ${c.title} with one click`}
-                <span className="ml-2 text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-white/25">
-                  即将推出
+                {t("manage.connect_one_click", { title: c.title })}
+                <span className="ml-2 text-label font-medium px-1.5 py-0.5 rounded-full bg-white/25">
+                  {t("manage.coming_soon")}
                 </span>
               </button>
-              <div className="text-[11.5px] text-faint">
-                一键登录即将推出 —— 暂时请通过下方手动连接：
+              <div className="text-meta text-faint">
+                {t("manage.one_click_coming")}
               </div>
             </>
           ) : cloud?.signed_in ? (
             <button className={BTN_ACCENT} onClick={oneClick} disabled={waiting}>
-              {waiting ? "请在浏览器中确认…" : `一键连接 ${c.title}`}
+              {waiting ? t("manage.check_browser") : t("manage.connect_one_click", { title: c.title })}
             </button>
           ) : cloud ? (
             <CloudSignInInline
-              blurb={`登录后解锁一键连接 ${c.title} —— 或点击下方手动连接。`}
+              blurb={t("manage.signin_unlocks", { title: c.title })}
             />
           ) : (
             // Status unknown (fetch pending/failed): never show the sign-in ask to a
@@ -848,12 +978,12 @@ export function ConnectSetup({
             <CloudStatusPending />
           )}
           {!c.managed_paused && cloud?.signed_in && (
-            <div className="text-[11.5px] text-faint">或手动连接：</div>
+            <div className="text-meta text-faint">{t("manage.or_connect_manually")}</div>
           )}
         </div>
       )}
       {c.instructions.length > 0 && (
-        <ol className="list-decimal pl-4 text-[12.5px] text-muted leading-relaxed space-y-1">
+        <ol className="list-decimal pl-4 text-ui text-muted leading-relaxed space-y-1">
           {c.instructions.map((step, i) => (
             <li key={i}>{step}</li>
           ))}
@@ -863,7 +993,7 @@ export function ConnectSetup({
         <label className="conn-field" key={f.key}>
           <span className="conn-field-label">
             {f.label}
-            {!f.required && <em> （可选）</em>}
+            {!f.required && <em> ({t("manage.optional")})</em>}
           </span>
           <input
             type={f.secret ? "password" : "text"}
@@ -877,10 +1007,10 @@ export function ConnectSetup({
       ))}
       <div>
         <button className={BTN_ACCENT} onClick={submit} disabled={busy}>
-          {busy ? "验证中…" : "连接"}
+          {busy ? t("manage.validating") : t("manage.connect")}
         </button>
       </div>
-      {error && <div className="text-[12.5px] text-danger">{error}</div>}
+      {error && <div className="text-ui text-danger">{error}</div>}
     </div>
   );
 }

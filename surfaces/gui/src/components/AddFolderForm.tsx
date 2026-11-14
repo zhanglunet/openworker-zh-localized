@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { chooseFolder } from "../tauri";
 import { Icon } from "./Icon";
 
@@ -20,6 +21,7 @@ export function AddFolderForm({
   startOpen?: boolean;
   onDismiss?: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(!!startOpen);
   const [path, setPath] = useState("");
   const [writable, setWritable] = useState(false);
@@ -45,7 +47,7 @@ export function AddFolderForm({
   if (!open) {
     return (
       <button className={"addfolder-trigger" + (compact ? " compact" : "")} onClick={() => setOpen(true)}>
-        <Icon name="folderPlus" size={15} /> 授予文件夹访问权限
+        <Icon name="folderPlus" size={15} /> {t("access.give_folder")}
       </button>
     );
   }
@@ -56,7 +58,7 @@ export function AddFolderForm({
         <input
           className="addfolder-path"
           autoFocus
-          placeholder="选择或粘贴文件夹路径…"
+          placeholder={t("access.addfolder_path_placeholder")}
           value={path}
           spellCheck={false}
           onChange={(e) => setPath(e.target.value)}
@@ -65,21 +67,21 @@ export function AddFolderForm({
             else if (e.key === "Escape") reset();
           }}
         />
-        <button className="btn icon-only" onClick={browse} title="选择位置" aria-label="选择位置">
+        <button className="btn icon-only" onClick={browse} title={t("access.choose_location")} aria-label={t("access.choose_location")}>
           <Icon name="folder" size={15} />
         </button>
       </div>
       <div className="addfolder-actions">
-        <label className="addfolder-write" title="关闭 = 只读。勾选以允许智能体在此处写入。">
+        <label className="addfolder-write" title={t("access.allow_writes_help")}>
           <input type="checkbox" checked={writable} onChange={(e) => setWritable(e.target.checked)} />
-          允许写入
+          {t("access.allow_writes")}
         </label>
         <span className="spacer" />
         <button className="btn" onClick={reset}>
-          取消
+          {t("access.cancel")}
         </button>
         <button className="btn primary" disabled={busy || !path.trim()} onClick={submit}>
-          添加
+          {t("access.add_btn")}
         </button>
       </div>
     </div>

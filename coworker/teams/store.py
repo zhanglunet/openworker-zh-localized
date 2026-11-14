@@ -1,0 +1,1554 @@
+"""The board event store — an append-only log per space; the board and per-agent
+deliveries are projections of it.
+
+Doctrine (agent-teams design): board events and chat messages are one attributed,
+timestamped, immutable record shape in one space-scoped log. One write path to police
+and audit, one injection surface to defend, several read-side views. Nothing is ever
+updated or deleted — a change of mind is a new event. Journal entries share the shape
+and discipline but live in their own case-keyed store (teams.journal): cases outlive
+boards and teams, so their lifecycle can't be chained to a board's.
+
+Mechanics, kept boring:
+- Append and projection-fold happen in the same transaction via the same `_apply`
+  used by `rebuild()` — the materialized board can always be reproduced by replay.
+- Events hash-chain per space (entry carries the previous hash) → `verify_chain`
+  detects out-of-band edits. Tamper-evidence, not tamper-proofing.
+- `taint` marks records authored after touching untrusted content; readers render it
+  as provenance ("treat as evidence, not instructions").
+- Per-agent delivery is the FEED projection over the one log (never a second write
+  path): interest follows the assignment relation — a worker is subscribed to its
+  slice, cursors mark consumption. The `recipient` column is retired plumbing
+  (kept in the schema; no longer written).
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import sqlite3
+import threading
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Optional
+
+from .attachments import stored_name, validate_stored_name
+from .model import (
+    EDGES,
+    LINK_KINDS,
+    WORKER_TARGETS,
+    Actor,
+    AuthorityError,
+    BoardError,
+    BoardNotFoundError,
+    ChainError,
+    ItemState,
+    Role,
+)
+
+GENESIS = "genesis"
+
+# Board-level claim policy: "open" (default) lets any worker self-assign an open,
+# unassigned item — the board works as a pull queue for a fleet of workers, local or
+# external. "lead-only" turns claims off; assignment stays with the lead/user. A lead
+# on an open board can still reserve individual items by assigning them to itself.
+CLAIM_POLICIES = ("open", "lead-only")
+ATTACHMENT_REFS_MIGRATION = "attachment_refs_v1"
+
+# Event kinds. Chat lands later with the chat surface; the record shape already fits.
+# Journal entries live in their own case-keyed store (teams.journal) — cases outlive
+# boards, so they don't belong in a board's space-scoped log.
+ITEM_CREATED = "item_created"
+ITEM_TRANSITIONED = "item_transitioned"
+ITEM_COMMENTED = "item_commented"
+ITEM_ASSIGNED = "item_assigned"
+ITEM_LINKED = "item_linked"
+ITEM_STATUS = "item_status"
+# §11.6: a manual-mode worker parked on a tool approval — the lead cannot approve it
+# (it holds nothing the human did not grant) but should wait knowingly or reassign.
+WORKER_WAITING = "worker_waiting"
+
+_HASHED_FIELDS = (
+    "ts",
+    "space",
+    "kind",
+    "actor",
+    "actor_role",
+    "item_id",
+    "case_id",
+    "recipient",
+    "payload",
+    "taint",
+    "prev_hash",
+)
+
+
+class TeamStore:
+    def __init__(self, db_path: str | Path, *, journal: Any = None) -> None:
+        # `journal` is a teams.journal.JournalStore when wired: assignment feeds
+        # case grants ("sharing rides assignment"). Optional so the board works
+        # standalone (tests, boards with no journal).
+        self.journal = journal
+        self.db_path = str(db_path)
+        if self.db_path != ":memory:":
+            Path(self.db_path).expanduser().parent.mkdir(parents=True, exist_ok=True)
+        self._lock = threading.RLock()
+        self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        self._conn.row_factory = sqlite3.Row
+        self._conn.executescript("""
+            CREATE TABLE IF NOT EXISTS team_events (
+                seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts TEXT NOT NULL,
+                space TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                actor TEXT NOT NULL,
+                actor_role TEXT NOT NULL,
+                persona TEXT DEFAULT '',
+                model TEXT DEFAULT '',
+                session_id TEXT DEFAULT '',
+                item_id INTEGER,
+                case_id TEXT,
+                recipient TEXT,
+                payload TEXT NOT NULL,
+                taint INTEGER NOT NULL DEFAULT 0,
+                prev_hash TEXT NOT NULL,
+                hash TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_team_events_space
+                ON team_events (space, seq);
+            CREATE INDEX IF NOT EXISTS idx_team_events_item
+                ON team_events (space, item_id, seq);
+            CREATE INDEX IF NOT EXISTS idx_team_events_case
+                ON team_events (space, case_id, seq);
+            CREATE INDEX IF NOT EXISTS idx_team_events_recipient
+                ON team_events (recipient, seq);
+            CREATE TABLE IF NOT EXISTS team_items (
+                space TEXT NOT NULL,
+                id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                criteria TEXT NOT NULL,
+                state TEXT NOT NULL,
+                assignee TEXT DEFAULT '',
+                creator TEXT NOT NULL DEFAULT '',
+                case_id TEXT DEFAULT '',
+                refs TEXT NOT NULL DEFAULT '[]',
+                created_ts TEXT NOT NULL,
+                updated_seq INTEGER NOT NULL,
+                PRIMARY KEY (space, id)
+            );
+            CREATE TABLE IF NOT EXISTS team_links (
+                space TEXT NOT NULL,
+                src INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                dst INTEGER NOT NULL,
+                UNIQUE (space, src, kind, dst)
+            );
+            CREATE TABLE IF NOT EXISTS team_attachment_refs (
+                space TEXT NOT NULL,
+                stored TEXT NOT NULL,
+                item_id INTEGER NOT NULL,
+                event_seq INTEGER NOT NULL,
+                PRIMARY KEY (space, stored, item_id)
+            );
+            CREATE TABLE IF NOT EXISTS team_meta (
+                space TEXT PRIMARY KEY,
+                head_hash TEXT NOT NULL,
+                watermark INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS team_cursors (
+                cursor_key TEXT PRIMARY KEY,
+                consumed_seq INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS team_settings (
+                space TEXT PRIMARY KEY,
+                claims TEXT NOT NULL DEFAULT 'open'
+            );
+            CREATE TABLE IF NOT EXISTS team_migrations (
+                name TEXT PRIMARY KEY
+            );
+            """)
+        columns = {row[1] for row in self._conn.execute("PRAGMA table_info(team_items)")}
+        for column in ("status", "status_ts", "proposal"):
+            if column not in columns:
+                self._conn.execute(f"ALTER TABLE team_items ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
+        self._conn.commit()
+        migrated = self._conn.execute(
+            "SELECT 1 FROM team_migrations WHERE name = ?",
+            (ATTACHMENT_REFS_MIGRATION,),
+        ).fetchone()
+        if migrated is None:
+            try:
+                self._backfill_legacy_attachment_refs()
+                self._conn.execute(
+                    "INSERT INTO team_migrations (name) VALUES (?)",
+                    (ATTACHMENT_REFS_MIGRATION,),
+                )
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
+                raise
+
+    # ------------------------------------------------------------------ events core
+
+    def append_event(
+        self,
+        space: str,
+        kind: str,
+        actor: Actor,
+        *,
+        item_id: Optional[int] = None,
+        case_id: Optional[str] = None,
+        recipient: Optional[str] = None,
+        payload: Optional[dict[str, Any]] = None,
+        taint: bool = False,
+    ) -> dict[str, Any]:
+        """Append one record and fold it into the projections, atomically."""
+        if not space:
+            raise BoardError("space is required")
+        with self._lock:
+            try:
+                return self._append_locked(
+                    space,
+                    kind,
+                    actor,
+                    item_id=item_id,
+                    case_id=case_id,
+                    recipient=recipient,
+                    payload=payload or {},
+                    taint=taint,
+                )
+            except Exception:
+                self._conn.rollback()
+                raise
+
+    def _append_locked(
+        self,
+        space: str,
+        kind: str,
+        actor: Actor,
+        *,
+        item_id: Optional[int],
+        case_id: Optional[str],
+        recipient: Optional[str],
+        payload: dict[str, Any],
+        taint: bool,
+        commit: bool = True,
+    ) -> dict[str, Any]:
+        prev = self._head_hash(space)
+        record = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "space": space,
+            "kind": kind,
+            "actor": actor.id,
+            "actor_role": actor.role.value,
+            "item_id": item_id,
+            "case_id": case_id,
+            "recipient": recipient,
+            "payload": _canonical(payload),
+            "taint": 1 if taint else 0,
+            "prev_hash": prev,
+        }
+        record["hash"] = _hash(record)
+        cursor = self._conn.execute(
+            """
+            INSERT INTO team_events
+                (ts, space, kind, actor, actor_role, persona, model, session_id,
+                 item_id, case_id, recipient, payload, taint, prev_hash, hash)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record["ts"],
+                space,
+                kind,
+                actor.id,
+                actor.role.value,
+                actor.persona,
+                actor.model,
+                actor.session_id,
+                item_id,
+                case_id,
+                recipient,
+                record["payload"],
+                record["taint"],
+                prev,
+                record["hash"],
+            ),
+        )
+        seq = cursor.lastrowid
+        self._apply(space, seq, record["ts"], kind, actor.id, item_id, payload)
+        self._conn.execute(
+            """
+            INSERT INTO team_meta (space, head_hash, watermark) VALUES (?, ?, ?)
+            ON CONFLICT(space) DO UPDATE SET head_hash = ?, watermark = ?
+            """,
+            (space, record["hash"], seq, record["hash"], seq),
+        )
+        if commit:
+            self._conn.commit()
+        return {**record, "seq": seq, "payload": payload}
+
+    def events(
+        self,
+        space: str,
+        *,
+        kinds: Optional[list[str]] = None,
+        item_id: Optional[int] = None,
+        case_id: Optional[str] = None,
+        since_seq: int = 0,
+        limit: int = 500,
+        exclude_kinds: Optional[list[str]] = None,
+    ) -> list[dict[str, Any]]:
+        where = ["space = ?", "seq > ?"]
+        params: list[Any] = [space, since_seq]
+        if exclude_kinds:
+            where.append(f"kind NOT IN ({','.join('?' * len(exclude_kinds))})")
+            params.extend(exclude_kinds)
+        if kinds:
+            where.append(f"kind IN ({','.join('?' * len(kinds))})")
+            params.extend(kinds)
+        if item_id is not None:
+            where.append("item_id = ?")
+            params.append(item_id)
+        if case_id is not None:
+            where.append("case_id = ?")
+            params.append(case_id)
+        sql = (
+            "SELECT * FROM team_events WHERE "
+            + " AND ".join(where)
+            + " ORDER BY seq LIMIT ?"
+        )
+        params.append(max(1, min(int(limit or 500), 2000)))
+        with self._lock:
+            rows = self._conn.execute(sql, params).fetchall()
+        return [_row_to_event(row) for row in rows]
+
+    def for_recipient(
+        self, recipient: str, *, since_seq: int = 0, limit: int = 200
+    ) -> list[dict[str, Any]]:
+        """Everything addressed to one agent, in order — the delivery projection."""
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM team_events WHERE recipient = ? AND seq > ?"
+                " ORDER BY seq LIMIT ?",
+                (recipient, since_seq, max(1, min(int(limit or 200), 2000))),
+            ).fetchall()
+        return [_row_to_event(row) for row in rows]
+
+    # -------------------------------------------------- delivery (durable feed)
+
+    # The per-agent durable feed is a PROJECTION over the one log, never a second
+    # write path — and INTEREST FOLLOWS THE ASSIGNMENT RELATION (owner ruling
+    # 2026-08-17): a worker is subscribed to events on its slice (items assigned
+    # to it or filed by it — subscription ≡ visibility, one boundary), with no
+    # per-event addressing decisions in the write path. "Consumed" is a cursor;
+    # durable-until-consumed (a crash before consume replays on the next drain);
+    # coalescing happens at dequeue. "Mailbox" is banned as a concept.
+
+    def feed_for(
+        self, space: str, actor_id: str, *, limit: int = 200
+    ) -> list[dict[str, Any]]:
+        """Unconsumed events this actor is subscribed to, in order: everything on
+        its current slice, plus assignment events that START its interest (newly
+        assigned to it) or END it (just reassigned away — it hears that, then
+        goes quiet). Its own events never appear."""
+        key = f"feed:{actor_id}:{space}"
+        events = self.events(space, since_seq=self._cursor(key), limit=limit, exclude_kinds=[ITEM_STATUS])
+        with self._lock:
+            slice_ids = self._worker_slice(space, actor_id)
+        out = []
+        for event in events:
+            if event["actor"] == actor_id:
+                continue
+            payload = event.get("payload") or {}
+            if event["kind"] == ITEM_ASSIGNED and actor_id in (
+                payload.get("assignee"),
+                payload.get("previous"),
+            ):
+                out.append(event)
+                continue
+            if event.get("item_id") in slice_ids:
+                out.append(event)
+        return out
+
+    def consume_feed(self, space: str, actor_id: str, upto_seq: int) -> None:
+        self._set_cursor(f"feed:{actor_id}:{space}", int(upto_seq))
+
+    @staticmethod
+    def _subscription_event(event: dict, subscriber: str) -> bool:
+        if event["actor"] == subscriber:
+            return False
+        kind, payload = event["kind"], event["payload"]
+        if kind == ITEM_COMMENTED:
+            return bool(payload.get("needs_attention")) or event.get("actor_role") == "user"
+        if kind == ITEM_TRANSITIONED:
+            return payload.get("to") in ("review", "blocked")
+        if kind == ITEM_ASSIGNED:
+            return bool(payload.get("claimed"))
+        return kind in (ITEM_CREATED, WORKER_WAITING)
+
+    def delivery_page(self, space: str, actor: str, *, is_lead: bool,
+                      feed_after: int = 0, subscription_after: int = 0, limit: int = 200) -> dict:
+        """Read both delivery projections from ONE scanned log range.
+
+        Even quiet/self/status events advance the scan. Never let a subscription
+        cursor leap over an unscanned direct user instruction on a busy board.
+        The caller acknowledges through_seq only after deciding it is quiet or
+        durably accepting the actionable input.
+        """
+        with self._lock:
+            feed = max(feed_after, self._cursor(f"feed:{actor}:{space}"))
+            sub = max(subscription_after, self._cursor(f"sub:{actor}:{space}")) if is_lead else feed
+            events = self.events(space, since_seq=min(feed, sub), limit=limit + 1)
+            page = events[:limit]
+            visible = self._worker_slice(space, actor)
+            directs = [e for e in page if e["seq"] > feed and e["actor"] != actor and (
+                e.get("item_id") in visible or
+                (e["kind"] == ITEM_ASSIGNED and actor in (e["payload"].get("assignee"), e["payload"].get("previous"))))]
+            subs = [e for e in page if e["seq"] > sub and self._subscription_event(e, actor)] if is_lead else []
+            return {"directs": directs, "subs": subs, "through_seq": page[-1]["seq"] if page else 0,
+                    "has_more": len(events) > limit}
+
+    # Lead subscriptions: an ALLOWLIST of decision-demanding event classes — a
+    # worker moving its item to review/blocked, or filing a new item. Journal
+    # appends and routine comments never wake anyone.
+    SUBSCRIBED_TRANSITIONS = ("review", "blocked")
+
+    def subscribed_events(
+        self, space: str, subscriber: str, *, limit: int = 200
+    ) -> list[dict[str, Any]]:
+        """Unconsumed subscription-worthy events on a space for one subscriber."""
+        key = f"sub:{subscriber}:{space}"
+        events = self.events(
+            space,
+            kinds=[ITEM_TRANSITIONED, ITEM_CREATED, ITEM_ASSIGNED, ITEM_COMMENTED, WORKER_WAITING],
+            since_seq=self._cursor(key),
+            limit=limit,
+        )
+        out = []
+        for event in events:
+            if event["kind"] == ITEM_COMMENTED and not self._subscription_event(event, subscriber):
+                continue
+            if event["actor"] == subscriber:
+                continue  # your own verbs never wake you
+            if (
+                event["kind"] == ITEM_TRANSITIONED
+                and event["payload"].get("to") not in self.SUBSCRIBED_TRANSITIONS
+            ):
+                continue
+            # Assignments only surface when they are CLAIMS — the lead supervises
+            # self-service by exception; its own (and the user's) assigns are not news.
+            if event["kind"] == ITEM_ASSIGNED and not event["payload"].get("claimed"):
+                continue
+            out.append(event)
+        return out
+
+    def consume_subscription(self, space: str, subscriber: str, upto_seq: int) -> None:
+        self._set_cursor(f"sub:{subscriber}:{space}", upto_seq)
+
+    def _cursor(self, key: str) -> int:
+        row = self._conn.execute(
+            "SELECT consumed_seq FROM team_cursors WHERE cursor_key = ?", (key,)
+        ).fetchone()
+        return int(row["consumed_seq"]) if row else 0
+
+    def _set_cursor(self, key: str, seq: int) -> None:
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO team_cursors (cursor_key, consumed_seq) VALUES (?, ?)"
+                " ON CONFLICT(cursor_key) DO UPDATE SET consumed_seq ="
+                " MAX(consumed_seq, ?)",
+                (key, int(seq), int(seq)),
+            )
+            self._conn.commit()
+
+    def spaces(self) -> list[str]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT space FROM team_meta ORDER BY space"
+            ).fetchall()
+        return [row["space"] for row in rows]
+
+    def verify_chain(self, space: str) -> int:
+        """Recompute the chain; return the number of verified events.
+
+        Raises ChainError at the first record whose hash or linkage does not match —
+        the log was edited out of band.
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM team_events WHERE space = ? ORDER BY seq", (space,)
+            ).fetchall()
+        prev = GENESIS
+        for row in rows:
+            record = {key: row[key] for key in _HASHED_FIELDS}
+            if row["prev_hash"] != prev:
+                raise ChainError(f"event {row['seq']}: chain linkage broken")
+            if _hash(record) != row["hash"]:
+                raise ChainError(f"event {row['seq']}: content does not match hash")
+            prev = row["hash"]
+        # The chain alone can't see TAIL truncation (a shortened log still links);
+        # the stored head can.
+        if rows and prev != self._head_hash(space):
+            raise ChainError("log ends before the recorded head — tail deleted")
+        return len(rows)
+
+    def rebuild(self, space: str) -> None:
+        """Drop the space's projections and replay its log through `_apply`.
+
+        The recovery path (projection bug fix, cache corruption) — never the hot
+        path; live appends fold incrementally in `append_event`.
+        """
+        with self._lock:
+            self._conn.execute("DELETE FROM team_items WHERE space = ?", (space,))
+            self._conn.execute("DELETE FROM team_links WHERE space = ?", (space,))
+            self._conn.execute(
+                "DELETE FROM team_attachment_refs"
+                " WHERE space = ? AND event_seq != 0",
+                (space,),
+            )
+            rows = self._conn.execute(
+                "SELECT seq, ts, kind, actor, item_id, payload FROM team_events"
+                " WHERE space = ? ORDER BY seq",
+                (space,),
+            ).fetchall()
+            for row in rows:
+                self._apply(
+                    space,
+                    row["seq"],
+                    row["ts"],
+                    row["kind"],
+                    row["actor"],
+                    row["item_id"],
+                    json.loads(row["payload"]),
+                )
+            self._conn.commit()
+
+    # ------------------------------------------------------------------ board verbs
+
+    def create_proposal(self, space: str, actor: Actor, proposal: dict) -> dict:
+        """Atomically materialize an accepted plan, its intent and dependency links."""
+        from .proposals import validate_work_proposal
+        proposal = validate_work_proposal(proposal)
+        self._require(actor, {Role.USER, Role.LEAD}, "create_proposal")
+        # Journal failures must not leave committed board items followed by an error
+        # that encourages the lead to retry the whole proposal.
+        if self.journal is not None:
+            for case in {i.get("case") for i in proposal["items"]} - {None, ""}:
+                self.journal.ensure_case(case, actor.id)
+        common = {k: v for k, v in proposal.items() if k != "items"}
+        with self._lock:
+            first = self._next_item_id(space)
+            ids = {item["key"]: first + i for i, item in enumerate(proposal["items"])}
+            def append(kind, item_id, payload, case=None):
+                return self._append_locked(space, kind, actor, item_id=item_id,
+                    case_id=case, recipient=None, payload=payload, taint=False, commit=False)
+            try:
+                for item in proposal["items"]:
+                    metadata = {**common, "key": item["key"], "activity": item["activity"],
+                        "workstream": item["workstream"], "item_ids": ids,
+                        "verifies": [ids[k] for k in item["verifies"]]}
+                    append(ITEM_CREATED, ids[item["key"]], {**item, "proposal": metadata}, item.get("case"))
+                for item in proposal["items"]:
+                    for prerequisite in item["depends_on"]:
+                        append(ITEM_LINKED, ids[prerequisite], {"src": ids[prerequisite],
+                            "kind": "blocks", "dst": ids[item["key"]]})
+                # Reserving the explicit lead-owned acceptance item does not execute it.
+                final = proposal["final_acceptance"]
+                if final["owner"] == "lead":
+                    append(ITEM_ASSIGNED, ids[final["item_key"]], {"assignee": actor.id, "previous": ""})
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
+                raise
+        return {"approved": True, "items": [{"id": ids[i["key"]], "key": i["key"],
+            "title": i["title"]} for i in proposal["items"]],
+            "note": "Items and dependency links created. Staff and assign to start work; declared external actions are not permission grants."}
+
+    def create_item(
+        self,
+        space: str,
+        actor: Actor,
+        *,
+        title: str,
+        criteria: str,
+        description: str = "",
+        parent: Optional[int] = None,
+        case: Optional[str] = None,
+        verifies: Optional[int] = None,
+    ) -> dict[str, Any]:
+        """New item, `open` and unassigned. Acceptance criteria are load-bearing —
+        required. `verifies` names the item whose fix this one re-checks (a `verifies`
+        link, observability Phase 3 E17d).
+
+        Workers may create too — a bug spotted in passing, a follow-up — because
+        filing is harmless: nothing runs until the item is ASSIGNED, and assign
+        authority stays with the lead/user (the lead triages worker filings:
+        assign or cancel)."""
+        self._require(actor, {Role.USER, Role.LEAD, Role.WORKER}, "create_item")
+        if not (title or "").strip():
+            raise BoardError("title is required")
+        if not (criteria or "").strip():
+            raise BoardError(
+                "acceptance criteria are required — they are what gets verified at"
+                " review"
+            )
+        with self._lock:
+            if parent is not None:
+                try:
+                    parent_item = self._item(space, parent)
+                except BoardError:
+                    raise BoardNotFoundError(
+                        f"no visible item #{parent} in space {space!r}"
+                    ) from None
+                if not self._item_visible_to(space, actor, parent_item):
+                    raise BoardNotFoundError(
+                        f"no visible item #{parent} in space {space!r}"
+                    )
+                if case is None:
+                    case = parent_item["case_id"] or None
+            item_id = self._next_item_id(space)
+            event = self.append_event(
+                space,
+                ITEM_CREATED,
+                actor,
+                item_id=item_id,
+                case_id=case,
+                payload={
+                    "title": title.strip(),
+                    "description": description,
+                    "criteria": criteria.strip(),
+                    "parent": parent,
+                    "case": case,
+                },
+            )
+            if verifies is not None:
+                self._item(space, int(verifies))
+                if int(verifies) == item_id:
+                    raise BoardError("an item cannot verify itself")
+                event = self.append_event(space, ITEM_LINKED, actor, item_id=item_id,
+                                          payload={"src": item_id, "kind": "verifies", "dst": int(verifies)})
+            if self.journal is not None and case:
+                self.journal.ensure_case(case, actor.id)
+        return self.get_item(space, item_id, actor=actor, seq=event["seq"])
+
+    def list_items(
+        self,
+        space: str,
+        actor: Actor,
+        *,
+        state: Optional[str] = None,
+        assignee: Optional[str] = None,
+    ) -> list[dict[str, Any]]:
+        """Return actor-visible items in a space.
+
+        A worker's slice contains items it owns or created, their direct links,
+        and—while claims are open—the open, unassigned claim pool.
+        """
+        where = ["space = ?"]
+        params: list[Any] = [space]
+        if state:
+            where.append("state = ?")
+            params.append(ItemState(state).value)
+        if assignee:
+            where.append("assignee = ?")
+            params.append(assignee)
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM team_items WHERE "
+                + " AND ".join(where)
+                + " ORDER BY id",
+                params,
+            ).fetchall()
+            items = [_row_to_item(row) for row in rows]
+            worker_slice = None
+            claims_open = None
+            if actor.role == Role.WORKER:
+                worker_slice = self._worker_slice(space, actor.id)
+                claims_open = self.policy(space)["claims"] == "open"
+            items = [
+                item
+                for item in items
+                if self._item_visible_to(
+                    space,
+                    actor,
+                    item,
+                    worker_slice=worker_slice,
+                    claims_open=claims_open,
+                )
+            ]
+            for item in items:
+                item["links"] = self._links_of(space, item["id"])
+        return items
+
+    def get_item(
+        self,
+        space: str,
+        item_id: int,
+        *,
+        actor: Actor,
+        seq: Optional[int] = None,
+        include_comments: bool = True,
+    ) -> dict[str, Any]:
+        """Return one actor-visible item.
+
+        The actor is required because detail reads enforce the same worker scope as
+        list reads. Missing and hidden items deliberately share one error contract.
+        """
+        if isinstance(item_id, bool) or not isinstance(item_id, int) or item_id < 1:
+            raise BoardError("item must be a positive integer")
+        with self._lock:
+            try:
+                item = self._item(space, item_id)
+            except BoardError:
+                raise BoardNotFoundError(
+                    f"no visible item #{item_id} in space {space!r}"
+                ) from None
+            if not self._item_visible_to(space, actor, item):
+                raise BoardNotFoundError(
+                    f"no visible item #{item_id} in space {space!r}"
+                )
+            item["links"] = self._links_of(space, item_id)
+            if include_comments:
+                item["comments"] = self.comments(space, item_id)
+        if seq is not None:
+            item["seq"] = seq
+        return item
+
+    def comment_page(self, space: str, item_id: int, *, actor: Actor,
+                     after_seq: int = 0, limit: int = 20) -> dict:
+        """Explicit replayable cursor, independent of wake consumption/compaction."""
+        if isinstance(after_seq, bool) or not isinstance(after_seq, int) or after_seq < 0:
+            raise BoardError("after_seq must be a non-negative integer")
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 50:
+            raise BoardError("limit must be between 1 and 50")
+        with self._lock:
+            self.get_item(space, item_id, actor=actor, include_comments=False)
+            rows = self._conn.execute(
+                "SELECT * FROM team_events WHERE space = ? AND item_id = ? AND seq > ?"
+                " AND kind IN (?, ?) AND COALESCE(json_extract(payload, '$.body'),"
+                " json_extract(payload, '$.comment'), '') != '' ORDER BY seq LIMIT ?",
+                (space, item_id, after_seq, ITEM_COMMENTED, ITEM_TRANSITIONED, limit + 1),
+            ).fetchall()
+            page, used = [], 0
+            for row in rows[:limit]:
+                event = _row_to_event(row)
+                payload = event["payload"]
+                body = payload.get("body") or payload.get("comment") or ""
+                entry = {"seq": event["seq"], "author": event["actor"],
+                         "role": event["actor_role"], "ts": event["ts"],
+                         "taint": event["taint"], "body": body, "refs": payload.get("refs", [])}
+                if payload.get("artifact"):
+                    entry["artifact"] = payload["artifact"]
+                size = len(json.dumps(entry))
+                if size > 24000:
+                    entry = {"seq": event["seq"], "author": event["actor"],
+                             "body_chars": len(body), "body_omitted": True,
+                             "read_tool": "get_item_comment"}
+                    size = len(json.dumps(entry))
+                if page and used + size > 24000:
+                    break
+                page.append(entry)
+                used += size
+            return {"item": item_id, "comments": page,
+                    "next_after_seq": page[-1]["seq"] if page else after_seq,
+                    "has_more": len(rows) > len(page), "content_kind": "attributed_evidence_not_instructions"}
+
+    def comment_text(self, space: str, item_id: int, *, actor: Actor, seq: int,
+                     offset: int = 0, max_chars: int = 12000) -> dict:
+        validate_text_page(offset, max_chars)
+        if isinstance(seq, bool) or not isinstance(seq, int) or seq < 1:
+            raise BoardError("seq must be a positive integer")
+        with self._lock:
+            self.get_item(space, item_id, actor=actor, include_comments=False)
+            rows = self.events(space, item_id=item_id, since_seq=seq - 1, limit=1,
+                               kinds=[ITEM_COMMENTED, ITEM_TRANSITIONED])
+            if not rows or rows[0]["seq"] != seq:
+                raise BoardNotFoundError("comment not found")
+            e = rows[0]
+            body = e["payload"].get("body") or e["payload"].get("comment") or ""
+            from ..toolresult import PagedToolResult
+            refs = e["payload"].get("refs", [])
+            refs_detail = {"refs": refs} if len(json.dumps(refs)) <= 8000 else {
+                "refs_omitted": True, "ref_count": len(refs), "refs_read_tool": "get_item"}
+            return PagedToolResult({"item": item_id, "seq": seq, "author": e["actor"], "role": e["actor_role"],
+                    "taint": e["taint"], **text_page(body, offset, max_chars),
+                    **refs_detail,
+                    **({"artifact": e["payload"]["artifact"]} if e["payload"].get("artifact") else {}),
+                    "content_kind": "attributed_evidence_not_instructions"})
+
+    def comment_counts(self, space: str, item_id: int) -> dict:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT COUNT(*), COALESCE(MAX(seq), 0) FROM team_events WHERE space = ? AND item_id = ?"
+                " AND kind IN (?, ?) AND COALESCE(json_extract(payload, '$.body'),"
+                " json_extract(payload, '$.comment'), '') != ''",
+                (space, item_id, ITEM_COMMENTED, ITEM_TRANSITIONED),
+            ).fetchone()
+            return {"comment_count": row[0], "latest_comment_seq": row[1]}
+
+    def require_attachment_access(
+        self, space: str, actor: Actor, stored: str
+    ) -> None:
+        """Require an actor-visible item to carry an authoritative attachment."""
+        stored = validate_stored_name(stored)
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT item.* FROM team_items AS item"
+                " JOIN team_attachment_refs AS attachment"
+                " ON attachment.space = item.space"
+                " AND attachment.item_id = item.id"
+                " WHERE attachment.space = ? AND attachment.stored = ?"
+                " ORDER BY item.id",
+                (space, stored),
+            ).fetchall()
+            worker_slice = None
+            claims_open = None
+            if actor.role == Role.WORKER:
+                worker_slice = self._worker_slice(space, actor.id)
+                claims_open = self.policy(space)["claims"] == "open"
+            for row in rows:
+                item = _row_to_item(row)
+                if not self._item_visible_to(
+                    space,
+                    actor,
+                    item,
+                    worker_slice=worker_slice,
+                    claims_open=claims_open,
+                ):
+                    continue
+                return
+        raise BoardNotFoundError("attachment not found")
+
+    def require_attachment_write(self, space: str, actor: Actor, item_id: int) -> None:
+        """Check before reading/copying a capture; attach_ref rechecks at publication."""
+        if isinstance(item_id, bool) or not isinstance(item_id, int) or item_id <= 0:
+            raise BoardError("item must be a positive integer")
+        with self._lock:
+            self._item(space, item_id)
+            if actor.role == Role.WORKER and item_id not in self._worker_slice(space, actor.id):
+                raise AuthorityError("worker may only attach to its assigned items and items linked to them")
+
+    def attach_ref(
+        self,
+        space: str,
+        actor: Actor,
+        item_id: int,
+        body: str,
+        ref: str,
+        *,
+        taint: bool = False,
+        artifact: Optional[dict] = None,
+    ) -> dict[str, Any]:
+        """Attach one stored blob through an attributed comment event.
+
+        The dedicated payload field is the authoritative provenance marker;
+        arbitrary artifact refs on normal comments and transitions never grant
+        attachment-byte access.
+        """
+        if not (body or "").strip():
+            raise BoardError("comment body is required")
+        stored = stored_name(ref)
+        if stored is None:
+            raise BoardError(f"not an attachment ref: {ref!r}")
+        stored = validate_stored_name(stored)
+        with self._lock:
+            self.require_attachment_write(space, actor, item_id)
+            item = self._item(space, item_id)
+            return self.append_event(
+                space,
+                ITEM_COMMENTED,
+                actor,
+                item_id=item_id,
+                case_id=item["case_id"] or None,
+                payload={
+                    "body": body,
+                    "refs": [ref],
+                    "attachments": [stored],
+                    **({"artifact": artifact} if artifact else {}),
+                },
+                taint=taint,
+            )
+
+    def transition(
+        self,
+        space: str,
+        actor: Actor,
+        item_id: int,
+        to: str,
+        *,
+        comment: str = "",
+        refs: Optional[list[str]] = None,
+        taint: bool = False,
+        coverage: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
+        target = ItemState(to)
+        report = _coverage_report(coverage) if coverage else None
+        with self._lock:
+            item = self._item(space, item_id)
+            current = ItemState(item["state"])
+            if target not in EDGES[current]:
+                raise BoardError(
+                    f"illegal transition {current.value} → {target.value}"
+                )
+            self._check_transition_authority(actor, item, current, target)
+            # No per-event addressing: delivery is the FEED projection — interest
+            # follows the assignment relation (see feed_for), so a send-back, an
+            # unblock, a cancel, or an acceptance reaches whoever holds the item
+            # without the store editorializing about who cares.
+            event = self.append_event(
+                space,
+                ITEM_TRANSITIONED,
+                actor,
+                item_id=item_id,
+                case_id=item["case_id"] or None,
+                payload={
+                    "from": current.value,
+                    "to": target.value,
+                    "comment": comment,
+                    "refs": list(refs or []),
+                    # Observability Phase 3 (E17c): the hand-off's structured coverage
+                    # report, the coworker's own claim; only written when given.
+                    **({"coverage": report} if report else {}),
+                },
+                taint=taint,
+            )
+        return self.get_item(space, item_id, actor=actor, seq=event["seq"])
+
+    def comment(
+        self,
+        space: str,
+        actor: Actor,
+        item_id: int,
+        body: str,
+        *,
+        refs: Optional[list[str]] = None,
+        taint: bool = False,
+        needs_attention: bool = False,
+    ) -> dict[str, Any]:
+        if not (body or "").strip():
+            raise BoardError("comment body is required")
+        if not isinstance(needs_attention, bool):
+            raise BoardError("needs_attention must be a boolean")
+        with self._lock:
+            item = self._item(space, item_id)
+            if actor.role == Role.WORKER and item_id not in self._worker_slice(
+                space, actor.id
+            ):
+                raise AuthorityError(
+                    f"worker {actor.id} may only comment on its assigned items"
+                    " and items linked to them"
+                )
+            return self.append_event(
+                space,
+                ITEM_COMMENTED,
+                actor,
+                item_id=item_id,
+                case_id=item["case_id"] or None,
+                payload={"body": body, "refs": list(refs or []),
+                         **({"needs_attention": True} if needs_attention else {})},
+                taint=taint,
+            )
+
+    def set_status(self, space: str, actor: Actor, item_id: int, text: str) -> dict[str, Any]:
+        """Display-only progress. Never an assignment, transition or wake signal."""
+        self._require(actor, {Role.WORKER}, "set_status")
+        if not isinstance(item_id, int) or isinstance(item_id, bool) or item_id < 1:
+            raise BoardError("item must be an explicit positive integer")
+        if not isinstance(text, str) or len(text) > 80 or len(text.splitlines()) > 1 or "\n" in text or "\r" in text:
+            raise BoardError("status must be one line of at most 80 characters")
+        with self._lock:
+            item = self.get_item(space, item_id, actor=actor)
+            if item["assignee"] != actor.id:
+                raise AuthorityError("set_status requires an item currently assigned to you")
+            if item["state"] in ("done", "canceled"):
+                raise BoardError("cannot update status on a finished item")
+            if item["status"] == text.strip():
+                return item
+            self.append_event(space, ITEM_STATUS, actor, item_id=item_id, payload={"text": text.strip()})
+            return self.get_item(space, item_id, actor=actor)
+
+    def assign(
+        self, space: str, actor: Actor, item_id: int, assignee: str
+    ) -> dict[str, Any]:
+        """Set the assignee. Not a message: the feed projection delivers it — the
+        new assignee's interest starts with this event, and the previous
+        assignee's interest ends with it (both hear it; see feed_for)."""
+        self._require(actor, {Role.USER, Role.LEAD}, "assign")
+        if not (assignee or "").strip():
+            raise BoardError("assignee is required")
+        with self._lock:
+            item = self._item(space, item_id)
+            state = ItemState(item["state"])
+            if state in (ItemState.DONE, ItemState.CANCELED):
+                raise BoardError(
+                    f"cannot assign an item in state {state.value} — reopen it first"
+                )
+            event = self.append_event(
+                space,
+                ITEM_ASSIGNED,
+                actor,
+                item_id=item_id,
+                case_id=item["case_id"] or None,
+                payload={"assignee": assignee, "previous": item["assignee"] or ""},
+            )
+            if self.journal is not None and item["case_id"]:
+                self.journal.sync_assignment(
+                    item["case_id"],
+                    space=space,
+                    item_id=item_id,
+                    assignee=assignee,
+                    previous=item["assignee"] or "",
+                )
+        return self.get_item(space, item_id, actor=actor, seq=event["seq"])
+
+    def claim(self, space: str, actor: Actor, item_id: int) -> dict[str, Any]:
+        """Self-assign an open, unassigned item. Nobody stamps a claim — the store
+        arbitrates: the open+unassigned check runs under the write lock, so when two
+        workers race for the same item, exactly one wins and the other gets a clean
+        error. A claim is a normal assignment event attributed to the claimer —
+        visible in the lead's subscription feed and revocable like any assignment
+        (reassign or cancel). Gated by the board's claim policy."""
+        self._require(actor, {Role.USER, Role.LEAD, Role.WORKER}, "claim")
+        with self._lock:
+            if actor.role == Role.WORKER and self.policy(space)["claims"] != "open":
+                raise AuthorityError(
+                    "claims are lead-only on this board — ask the lead to assign"
+                    " the item to you"
+                )
+            item = self._item(space, item_id)
+            if ItemState(item["state"]) is not ItemState.OPEN:
+                raise BoardError(
+                    f"item #{item_id} is {item['state']} — only open items can be"
+                    " claimed"
+                )
+            if item["assignee"]:
+                raise BoardError(
+                    f"item #{item_id} is already claimed by {item['assignee']}"
+                )
+            event = self.append_event(
+                space,
+                ITEM_ASSIGNED,
+                actor,
+                item_id=item_id,
+                case_id=item["case_id"] or None,
+                payload={"assignee": actor.id, "previous": "", "claimed": True},
+            )
+            if self.journal is not None and item["case_id"]:
+                self.journal.sync_assignment(
+                    item["case_id"],
+                    space=space,
+                    item_id=item_id,
+                    assignee=actor.id,
+                    previous="",
+                )
+        return self.get_item(space, item_id, actor=actor, seq=event["seq"])
+
+    def policy(self, space: str) -> dict[str, Any]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT claims FROM team_settings WHERE space = ?", (space,)
+            ).fetchone()
+        return {"claims": row["claims"] if row else "open"}
+
+    def set_policy(self, space: str, actor: Actor, *, claims: str) -> dict[str, Any]:
+        """Board-level policy. Settings, not history — like cursors, this is
+        infrastructure the log doesn't narrate."""
+        self._require(actor, {Role.USER, Role.LEAD}, "set_policy")
+        if claims not in CLAIM_POLICIES:
+            raise BoardError(
+                f"unknown claim policy: {claims} (use one of {CLAIM_POLICIES})"
+            )
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO team_settings (space, claims) VALUES (?, ?)"
+                " ON CONFLICT(space) DO UPDATE SET claims = ?",
+                (space, claims, claims),
+            )
+            self._conn.commit()
+        return {"claims": claims}
+
+    def link(
+        self, space: str, actor: Actor, src: int, kind: str, dst: int
+    ) -> dict[str, Any]:
+        self._require(actor, {Role.USER, Role.LEAD}, "link")
+        if kind not in LINK_KINDS:
+            raise BoardError(f"unknown link kind: {kind} (use one of {LINK_KINDS})")
+        if src == dst:
+            raise BoardError("an item cannot link to itself")
+        with self._lock:
+            self._item(space, src)
+            self._item(space, dst)
+            if kind == "parent" and self._would_cycle(space, src, dst):
+                raise BoardError("parent link would create a cycle")
+            return self.append_event(
+                space,
+                ITEM_LINKED,
+                actor,
+                item_id=src,
+                payload={"src": src, "kind": kind, "dst": dst},
+            )
+
+    def comments(self, space: str, item_id: int) -> list[dict[str, Any]]:
+        """Attributed comments on an item — standalone comments plus the notes
+        carried on transitions (a `blocked` explanation lives with its event)."""
+        out = []
+        for event in self.events(
+            space, kinds=[ITEM_COMMENTED, ITEM_TRANSITIONED], item_id=item_id
+        ):
+            body = (
+                event["payload"].get("body")
+                if event["kind"] == ITEM_COMMENTED
+                else event["payload"].get("comment")
+            )
+            if body:
+                out.append(
+                    {
+                        "seq": event["seq"],
+                        "ts": event["ts"],
+                        "author": event["actor"],
+                        "role": event["actor_role"],
+                        "body": body,
+                        "taint": event["taint"],
+                    }
+                )
+        return out
+
+    def close(self) -> None:
+        self._conn.close()
+
+    # ------------------------------------------------------------------- internals
+
+    def _apply(
+        self,
+        space: str,
+        seq: int,
+        ts: str,
+        kind: str,
+        actor_id: str,
+        item_id: Optional[int],
+        payload: dict[str, Any],
+    ) -> None:
+        """Fold one event into the projections. The ONLY writer of item, link,
+        and attachment-reference projections — shared by live appends and
+        rebuild(), so replay always reproduces the materialized state."""
+        if kind == ITEM_CREATED:
+            self._conn.execute(
+                """
+                INSERT INTO team_items
+                    (space, id, title, description, criteria, state, assignee,
+                     creator, case_id, refs, created_ts, updated_seq)
+                VALUES (?, ?, ?, ?, ?, ?, '', ?, ?, '[]', ?, ?)
+                """,
+                (
+                    space,
+                    item_id,
+                    payload.get("title") or "",
+                    payload.get("description") or "",
+                    payload.get("criteria") or "",
+                    ItemState.OPEN.value,
+                    actor_id,
+                    payload.get("case") or "",
+                    ts,
+                    seq,
+                ),
+            )
+            if payload.get("proposal"):
+                self._conn.execute("UPDATE team_items SET proposal = ? WHERE space = ? AND id = ?",
+                    (_canonical(payload["proposal"]), space, item_id))
+            if payload.get("parent") is not None:
+                self._conn.execute(
+                    "INSERT OR IGNORE INTO team_links (space, src, kind, dst)"
+                    " VALUES (?, ?, 'parent', ?)",
+                    (space, item_id, payload["parent"]),
+                )
+        elif kind == ITEM_TRANSITIONED:
+            self._conn.execute(
+                "UPDATE team_items SET state = ?, updated_seq = ?, status = '', status_ts = ''"
+                " WHERE space = ? AND id = ?",
+                (payload.get("to"), seq, space, item_id),
+            )
+            self._merge_refs(space, item_id, payload.get("refs"))
+        elif kind == ITEM_COMMENTED:
+            self._merge_refs(space, item_id, payload.get("refs"))
+            self._merge_attachment_refs(
+                space, item_id, payload.get("attachments"), seq
+            )
+        elif kind == ITEM_ASSIGNED:
+            self._conn.execute(
+                "UPDATE team_items SET assignee = ?, updated_seq = ?, status = '', status_ts = ''"
+                " WHERE space = ? AND id = ?",
+                (payload.get("assignee") or "", seq, space, item_id),
+            )
+        elif kind == ITEM_STATUS:
+            self._conn.execute(
+                "UPDATE team_items SET status = ?, status_ts = ? WHERE space = ? AND id = ?",
+                (payload.get("text") or "", ts, space, item_id),
+            )
+        elif kind == ITEM_LINKED:
+            self._conn.execute(
+                "INSERT OR IGNORE INTO team_links (space, src, kind, dst)"
+                " VALUES (?, ?, ?, ?)",
+                (space, payload.get("src"), payload.get("kind"), payload.get("dst")),
+            )
+        # Comment bodies and journal entries have no materialized state: their
+        # projections read straight off the (indexed) log. Only the artifact
+        # refs a comment carries fold onto the item; authoritative attachment
+        # markers also fold into their indexed projection.
+
+    def _merge_refs(
+        self, space: str, item_id: Optional[int], refs: Optional[list]
+    ) -> None:
+        if not refs or item_id is None:
+            return
+        row = self._conn.execute(
+            "SELECT refs FROM team_items WHERE space = ? AND id = ?",
+            (space, item_id),
+        ).fetchone()
+        if row is None:
+            return
+        merged = json.loads(row["refs"] or "[]")
+        merged.extend(str(ref) for ref in refs if str(ref) not in merged)
+        self._conn.execute(
+            "UPDATE team_items SET refs = ? WHERE space = ? AND id = ?",
+            (json.dumps(merged), space, item_id),
+        )
+
+    def _merge_attachment_refs(
+        self,
+        space: str,
+        item_id: Optional[int],
+        attachments: Optional[list],
+        seq: int,
+    ) -> None:
+        if not attachments or item_id is None:
+            return
+        for stored in attachments:
+            self._conn.execute(
+                "INSERT OR IGNORE INTO team_attachment_refs"
+                " (space, stored, item_id, event_seq) VALUES (?, ?, ?, ?)",
+                (space, validate_stored_name(str(stored)), item_id, seq),
+            )
+
+    def _backfill_legacy_attachment_refs(self) -> None:
+        """Snapshot pre-provenance refs once when the projection is introduced.
+
+        Old attach events were indistinguishable from generic comment refs. Rows
+        grandfathered at upgrade use event_seq=0 so rebuild preserves that fixed
+        compatibility boundary; refs added after the migration are never inferred.
+        """
+        rows = self._conn.execute(
+            "SELECT space, id, refs FROM team_items"
+        ).fetchall()
+        for row in rows:
+            try:
+                refs = json.loads(row["refs"] or "[]")
+            except (TypeError, json.JSONDecodeError):
+                continue
+            for ref in refs:
+                stored = stored_name(str(ref))
+                if stored is None:
+                    continue
+                try:
+                    stored = validate_stored_name(stored)
+                except BoardError:
+                    continue
+                self._conn.execute(
+                    "INSERT OR IGNORE INTO team_attachment_refs"
+                    " (space, stored, item_id, event_seq) VALUES (?, ?, ?, 0)",
+                    (row["space"], stored, row["id"]),
+                )
+
+    def _check_transition_authority(
+        self, actor: Actor, item: dict[str, Any], current: ItemState, target: ItemState
+    ) -> None:
+        if actor.role == Role.SYSTEM:
+            raise AuthorityError("system events cannot transition items")
+        if target == ItemState.DONE and actor.role == Role.WORKER:
+            raise AuthorityError(
+                "workers finish by moving to review — done is the verdict after"
+                " verification"
+            )
+        if actor.role == Role.WORKER:
+            if item["assignee"] != actor.id:
+                raise AuthorityError(
+                    f"worker {actor.id} is not assigned item #{item['id']}"
+                )
+            if target not in WORKER_TARGETS:
+                raise AuthorityError(
+                    f"workers may move their item to"
+                    f" {sorted(state.value for state in WORKER_TARGETS)} only"
+                )
+
+    def _worker_slice(self, space: str, worker_id: str) -> set[int]:
+        # Assigned items, items the worker filed itself, and items directly
+        # linked to either — its slice of the board, nothing more.
+        rows = self._conn.execute(
+            "SELECT id FROM team_items WHERE space = ?"
+            " AND (assignee = ? OR creator = ?)",
+            (space, worker_id, worker_id),
+        ).fetchall()
+        mine = {row["id"] for row in rows}
+        if not mine:
+            return set()
+        linked = self._conn.execute(
+            "SELECT src, dst FROM team_links WHERE space = ?", (space,)
+        ).fetchall()
+        out = set(mine)
+        for row in linked:
+            if row["src"] in mine:
+                out.add(row["dst"])
+            if row["dst"] in mine:
+                out.add(row["src"])
+        return out
+
+    def _item_visible_to(
+        self,
+        space: str,
+        actor: Actor,
+        item: dict[str, Any],
+        *,
+        worker_slice: Optional[set[int]] = None,
+        claims_open: Optional[bool] = None,
+    ) -> bool:
+        """Whether an actor may read one item through any board surface."""
+        if actor.role != Role.WORKER:
+            return True
+        if worker_slice is None:
+            worker_slice = self._worker_slice(space, actor.id)
+        if item["id"] in worker_slice:
+            return True
+        if claims_open is None:
+            claims_open = self.policy(space)["claims"] == "open"
+        return (
+            claims_open
+            and item["state"] == ItemState.OPEN.value
+            and not item["assignee"]
+        )
+
+    def _links_of(self, space: str, item_id: int) -> list[dict[str, Any]]:
+        rows = self._conn.execute(
+            "SELECT src, kind, dst FROM team_links WHERE space = ?"
+            " AND (src = ? OR dst = ?)",
+            (space, item_id, item_id),
+        ).fetchall()
+        out = []
+        for row in rows:
+            if row["src"] == item_id:
+                out.append({"kind": row["kind"], "item": row["dst"]})
+            else:
+                inverse = {"parent": "child", "verifies": "verified_by"}.get(row["kind"], "blocked_by")
+                out.append({"kind": inverse, "item": row["src"]})
+        return out
+
+    def _would_cycle(self, space: str, src: int, dst: int) -> bool:
+        # Walking up from dst: if we reach src, making dst the parent of src closes
+        # a loop.
+        current, hops = dst, 0
+        while hops < 1000:
+            row = self._conn.execute(
+                "SELECT dst FROM team_links WHERE space = ? AND src = ?"
+                " AND kind = 'parent'",
+                (space, current),
+            ).fetchone()
+            if row is None:
+                return False
+            if row["dst"] == src:
+                return True
+            current, hops = row["dst"], hops + 1
+        return True
+
+    def _item(self, space: str, item_id: int) -> dict[str, Any]:
+        row = self._conn.execute(
+            "SELECT * FROM team_items WHERE space = ? AND id = ?", (space, item_id)
+        ).fetchone()
+        if row is None:
+            raise BoardError(f"no item #{item_id} in space '{space}'")
+        return _row_to_item(row)
+
+    def _next_item_id(self, space: str) -> int:
+        row = self._conn.execute(
+            "SELECT MAX(id) AS top FROM team_items WHERE space = ?", (space,)
+        ).fetchone()
+        return int(row["top"] or 0) + 1
+
+    def event_count(self, space: str) -> int:
+        """How many records a space holds — presence probe for the grant-time
+        notice and the migration collision check. No actor: counts, not content."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT COUNT(*) FROM team_events WHERE space = ?", (space,)
+            ).fetchone()
+        return int(row[0]) if row else 0
+
+    def rekey_space(self, old: str, new: str) -> bool:
+        """Move one space's records under a new key — the twentieth-pass one-time
+        path→git migration. `space` participates in the hash chain, so the chain
+        is honestly RECOMPUTED in seq order (a wholesale re-key, not tampering).
+        Refuses (returns False) when the target space already has events — the
+        dumb collision rule: git key wins, the old space stays dormant."""
+        if old == new:
+            return True
+        with self._lock:
+            has_new = self._conn.execute(
+                "SELECT 1 FROM team_events WHERE space = ? LIMIT 1", (new,)
+            ).fetchone()
+            if has_new:
+                return False
+            rows = self._conn.execute(
+                "SELECT * FROM team_events WHERE space = ? ORDER BY seq", (old,)
+            ).fetchall()
+            try:
+                prev = GENESIS
+                for row in rows:
+                    record = {
+                        "ts": row["ts"],
+                        "space": new,
+                        "kind": row["kind"],
+                        "actor": row["actor"],
+                        "actor_role": row["actor_role"],
+                        "item_id": row["item_id"],
+                        "case_id": row["case_id"],
+                        "recipient": row["recipient"],
+                        "payload": row["payload"],
+                        "taint": row["taint"],
+                        "prev_hash": prev,
+                    }
+                    record["hash"] = _hash(record)
+                    self._conn.execute(
+                        "UPDATE team_events SET space = ?, prev_hash = ?, hash = ? "
+                        "WHERE seq = ?",
+                        (new, prev, record["hash"], row["seq"]),
+                    )
+                    prev = record["hash"]
+                for table in (
+                    "team_items",
+                    "team_links",
+                    "team_attachment_refs",
+                    "team_settings",
+                ):
+                    self._conn.execute(
+                        f"UPDATE {table} SET space = ? WHERE space = ?", (new, old)
+                    )
+                # Cursor keys embed the space as a suffix ("feed:<actor>:<space>",
+                # "sub:<sub>:<space>") — rewrite the suffix, keep consumed positions.
+                cur_rows = self._conn.execute(
+                    "SELECT cursor_key FROM team_cursors"
+                    " WHERE cursor_key LIKE ? ESCAPE '\\'",
+                    ("%" + _like_escape(":" + old),),
+                ).fetchall()
+                for crow in cur_rows:
+                    new_key = crow["cursor_key"][: -len(old)] + new
+                    self._conn.execute(
+                        "UPDATE OR REPLACE team_cursors SET cursor_key = ? "
+                        "WHERE cursor_key = ?",
+                        (new_key, crow["cursor_key"]),
+                    )
+                meta = self._conn.execute(
+                    "SELECT watermark FROM team_meta WHERE space = ?", (old,)
+                ).fetchone()
+                if meta is not None and rows:
+                    self._conn.execute(
+                        "DELETE FROM team_meta WHERE space = ?", (old,)
+                    )
+                    self._conn.execute(
+                        "INSERT INTO team_meta (space, head_hash, watermark) "
+                        "VALUES (?, ?, ?) ON CONFLICT(space) DO UPDATE SET "
+                        "head_hash = excluded.head_hash, watermark = excluded.watermark",
+                        (new, prev, meta["watermark"]),
+                    )
+                elif meta is not None:
+                    self._conn.execute("DELETE FROM team_meta WHERE space = ?", (old,))
+            except Exception:
+                self._conn.rollback()
+                raise
+            self._conn.commit()
+        return True
+
+    def _head_hash(self, space: str) -> str:
+        row = self._conn.execute(
+            "SELECT head_hash FROM team_meta WHERE space = ?", (space,)
+        ).fetchone()
+        return row["head_hash"] if row else GENESIS
+
+    def _require(self, actor: Actor, roles: set[Role], verb: str) -> None:
+        if actor.role not in roles:
+            raise AuthorityError(
+                f"{verb} requires one of"
+                f" {sorted(role.value for role in roles)} (actor {actor.id} is"
+                f" {actor.role.value})"
+            )
+
+
+def _like_escape(text: str) -> str:
+    """Quote LIKE metacharacters so a literal string matches only itself. Space
+    keys are filesystem paths, where `_` (LIKE's single-character wildcard) is
+    ordinary — left raw it also matches a neighbouring space's rows."""
+    for char in ("\\", "%", "_"):
+        text = text.replace(char, "\\" + char)
+    return text
+
+
+def _canonical(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+
+
+def _hash(record: dict[str, Any], *, fields: tuple[str, ...] = _HASHED_FIELDS) -> str:
+    material = _canonical({key: record[key] for key in fields})
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def _row_to_item(row: sqlite3.Row) -> dict[str, Any]:
+    item = dict(row)
+    item["proposal"] = json.loads(item.get("proposal") or "null")
+    try:
+        item["refs"] = json.loads(item.get("refs") or "[]")
+    except json.JSONDecodeError:
+        item["refs"] = []
+    return item
+
+
+def _row_to_event(row: sqlite3.Row) -> dict[str, Any]:
+    event = dict(row)
+    try:
+        event["payload"] = json.loads(event.get("payload") or "{}")
+    except json.JSONDecodeError:
+        event["payload"] = {}
+    return event
+
+
+def validate_text_page(offset: int, max_chars: int) -> None:
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        raise BoardError("offset must be a non-negative integer")
+    if isinstance(max_chars, bool) or not isinstance(max_chars, int) or not 1 <= max_chars <= 16000:
+        raise BoardError("max_chars must be between 1 and 16000")
+
+
+def text_page(text: str, offset: int, max_chars: int) -> dict:
+    end = min(len(text), offset + max_chars)
+    return {"text": text[offset:end], "offset": offset, "next_offset": end,
+            "total_chars": len(text), "has_more": end < len(text)}
+
+
+COVERAGE_AREAS = ("code", "secrets", "deps", "iac")
+
+
+def _coverage_report(raw: Any) -> dict[str, dict[str, Any]]:
+    """A hand-off's coverage report, `{area: {ran, findings, reason?}}` (observability Phase 3,
+    E17c): areas from the fixed list, `ran` a flag, `findings` a count, `reason` a short text
+    (why a scan could not run). Anything else is refused, so the checks read only facts."""
+    if not isinstance(raw, dict):
+        raise BoardError("coverage must be an object of {area: {ran, findings, reason}}")
+    out: dict[str, dict[str, Any]] = {}
+    for area, value in raw.items():
+        if area not in COVERAGE_AREAS:
+            raise BoardError(f"coverage area must be one of {list(COVERAGE_AREAS)}, not {area!r}")
+        if not isinstance(value, dict) or not isinstance(value.get("ran"), bool):
+            raise BoardError(f"coverage[{area!r}] needs ran: true or false")
+        findings = value.get("findings", 0)
+        if isinstance(findings, bool) or not isinstance(findings, int) or findings < 0:
+            raise BoardError(f"coverage[{area!r}].findings must be a count")
+        entry: dict[str, Any] = {"ran": value["ran"], "findings": findings}
+        if value.get("reason"):
+            entry["reason"] = str(value["reason"])[:300]
+        out[area] = entry
+    return out

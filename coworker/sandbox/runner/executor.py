@@ -1,0 +1,609 @@
+"""The persistent shell executor. Standard library only.
+
+This module runs in two places: in the OpenWorker process (direct mode, imported
+through `coworker.tools.shell`) and inside a sandbox as part of the tool runner,
+which is packed into one zipapp and must not import anything outside this package.
+So it may import only the standard library and its sibling modules.
+
+`LocalExecutor` keeps one long-lived shell process, so `cd`, `export`, activated venvs,
+etc. persist across `run_shell` calls (unlike a per-call `subprocess.run`).
+
+The shell is OS-native: `/bin/bash` on POSIX, `powershell.exe` (`-Command -` REPL) on
+Windows. Each backend has its own marker/exit-code protocol and interrupt mechanism, but
+the `Executor` contract (and the parsed `{marker} {exit_code} {cwd}` trailer) is identical.
+
+Safety here is permission-gating (high-risk tool -> approval) + per-command timeout +
+best-effort non-interactive enforcement. A timed-out command is interrupted (SIGINT to the
+foreground child on POSIX, Ctrl-Break to the child group on Windows); the shell survives so
+session state is preserved.
+
+Background tasks (`run_shell` with `run_in_background`) get their own detached process,
+NOT the persistent shell, so a dev server can run while the session keeps working. They
+are deliberately not killed by `close()` (which the timeout-recovery path calls); they end
+when they exit or via `shell_task_kill`.
+"""
+
+from __future__ import annotations
+
+import base64
+import os
+import queue
+import signal
+import subprocess
+import sys
+import threading
+import time
+import uuid
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Any, Callable, Optional, Sequence
+
+_IS_WINDOWS = sys.platform == "win32"
+
+# Foreground timeout bounds: long enough for installs/builds/test runs by default, capped so
+# a model-requested timeout can't wedge the turn for more than ten minutes.
+_DEFAULT_TIMEOUT = 120.0
+_MAX_TIMEOUT = 600.0
+
+# Env defaults that discourage commands from blocking on a prompt.
+_NONINTERACTIVE_ENV = {
+    "GIT_TERMINAL_PROMPT": "0",
+    "DEBIAN_FRONTEND": "noninteractive",
+    "PYTHONUNBUFFERED": "1",
+    "PIP_NO_INPUT": "1",
+}
+
+
+class Executor(ABC):
+    @abstractmethod
+    def run(self, command: str, timeout: Optional[float] = None) -> dict[str, Any]: ...
+
+    def run_background(self, command: str) -> dict[str, Any]:
+        return {"error": "background execution is not supported by this executor"}
+
+    def background_output(self, task_id: str, wait_seconds: float = 0) -> dict[str, Any]:
+        return {"error": "background execution is not supported by this executor"}
+
+    def background_kill(self, task_id: str) -> dict[str, Any]:
+        return {"error": "background execution is not supported by this executor"}
+
+    def interrupt(self) -> None:  # pragma: no cover - default no-op
+        pass
+
+    def close(self) -> None:  # pragma: no cover - default no-op
+        pass
+
+
+def _child_pids_darwin(parent: int) -> list[int]:
+    if sys.platform != "darwin":
+        return []
+    try:
+        import ctypes
+
+        lib = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+        buf = (ctypes.c_int * 256)()
+        count = lib.proc_listchildpids(parent, buf, ctypes.sizeof(buf))
+        return [int(pid) for pid in buf[: max(count, 0)] if pid > 0]
+    except (OSError, AttributeError):
+        return []
+
+
+class _BackgroundTask:
+    """One detached background command: its own process (not the persistent shell), a
+    reader thread draining output into a buffer, and an incremental-read cursor."""
+
+    def __init__(self, task_id: str, command: str, cwd: str, env: dict[str, str]):
+        self.id = task_id
+        self.command = command
+        if _IS_WINDOWS:
+            argv = ["powershell.exe", "-NoProfile", "-Command", command]
+            spawn_kwargs: dict[str, Any] = {
+                "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP
+            }
+        else:
+            argv = ["/bin/bash", "-c", command]
+            spawn_kwargs = {"start_new_session": True}
+        self.proc = subprocess.Popen(
+            argv,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=cwd,
+            text=True,
+            # Never let one non-UTF-8 byte in a command's output (a binary dump, a
+            # Latin-1 log line) kill the reader thread; keep the rest of the output.
+            errors="replace",
+            bufsize=1,
+            env=env,
+            **spawn_kwargs,
+        )
+        self._lock = threading.Lock()
+        self._lines: list[str] = []
+        self._cursor = 0
+        self._reader = threading.Thread(target=self._read_loop, daemon=True)
+        self._reader.start()
+
+    def _read_loop(self) -> None:
+        assert self.proc.stdout is not None
+        for line in self.proc.stdout:
+            with self._lock:
+                self._lines.append(line)
+
+    def read_new(self) -> str:
+        with self._lock:
+            new = "".join(self._lines[self._cursor :])
+            self._cursor = len(self._lines)
+        return new
+
+    def has_new(self) -> bool:
+        """Unread output exists — without moving the cursor, so a waiter can look
+        without consuming what the caller is about to read."""
+        with self._lock:
+            return len(self._lines) > self._cursor
+
+    def drain(self, timeout: float) -> None:
+        """After the process exits, give the reader thread a moment to append the
+        last lines, so an exit-triggered read does not miss the final output."""
+        self._reader.join(timeout=timeout)
+
+    def kill(self) -> None:
+        if self.proc.poll() is not None:
+            return
+        if _IS_WINDOWS:
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(self.proc.pid)],
+                    capture_output=True,
+                )
+            except (OSError, subprocess.SubprocessError):
+                pass
+            return
+        try:
+            os.killpg(os.getpgid(self.proc.pid), signal.SIGTERM)
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+
+
+class LocalExecutor(Executor):
+    def __init__(
+        self,
+        *,
+        cwd: str | Path,
+        env: Optional[dict[str, str]] = None,
+        base_env: Optional[dict[str, str]] = None,
+        shell_path: Optional[str] = None,
+        default_timeout: float = _DEFAULT_TIMEOUT,
+        # Memory safety net only (OPE-186): what the MODEL sees is bounded by the engine's
+        # tool-result cap (head + marker + tail, full text in a spill file), which needs
+        # the whole output to spill. This tail-keep cap now only stops a runaway command
+        # from filling memory; it used to be 20,000 and silently dropped the beginning.
+        max_output_chars: int = 2_000_000,
+        # Directories appended to PATH (last, so the user's own copies win).
+        extra_path_dirs: Sequence[str] = (),
+    ) -> None:
+        self.cwd = str(Path(cwd).expanduser().resolve())
+        self.default_timeout = default_timeout
+        self.max_output_chars = max_output_chars
+        self._marker = f"__COWORKER_DONE_{uuid.uuid4().hex}__"
+        # Ends the PowerShell parse check's answer (Windows only; see run()).
+        self._parse_marker = f"__COWORKER_PARSED_{uuid.uuid4().hex}__"
+        self._is_windows = _IS_WINDOWS
+        self._bg_tasks: dict[str, _BackgroundTask] = {}
+        self._bg_counter = 0
+        # Set by interrupt_now() (user Stop) — run()'s read loop treats it like an
+        # early deadline, so the in-flight foreground command dies within one tick.
+        self._abort = threading.Event()
+
+        # Pick a native shell per-OS. POSIX drives bash line-by-line; Windows drives
+        # PowerShell in `-Command -` mode, which is a true stdin REPL (executes
+        # incrementally, and cwd/env persist across commands).
+        if shell_path is None:
+            shell_path = "powershell.exe" if self._is_windows else "/bin/bash"
+        self._shell_path = shell_path
+        self._env = {
+            **(os.environ if base_env is None else base_env),
+            **_NONINTERACTIVE_ENV,
+            **(env or {}),
+        }
+        for extra in extra_path_dirs:
+            path = self._env.get("PATH", "")
+            if extra not in path.split(os.pathsep):
+                self._env["PATH"] = f"{path}{os.pathsep}{extra}" if path else extra
+        self._spawn()
+
+    def _spawn(self) -> None:
+        """Start (or restart) the shell process and its reader. Reused for self-healing:
+        if a command times out and the shell is hard-closed, the next `run` respawns here
+        in the last known `cwd` (in-shell env/vars are lost, but the session continues).
+        """
+        if self._is_windows:
+            argv = [
+                self._shell_path,
+                "-NoProfile",
+                "-NoLogo",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "-",
+            ]
+            # New process group so a timeout can deliver Ctrl-Break to the child (and only
+            # the child), without signaling our own process.
+            spawn_kwargs: dict[str, Any] = {
+                "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP
+            }
+        else:
+            argv = [self._shell_path]
+            spawn_kwargs = {"start_new_session": True}
+
+        self._proc = subprocess.Popen(
+            argv,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=self.cwd,
+            text=True,
+            # Never let one non-UTF-8 byte in a command's output (a binary dump, a
+            # Latin-1 log line) kill the reader thread; keep the rest of the output.
+            errors="replace",
+            bufsize=1,
+            env=self._env,
+            **spawn_kwargs,
+        )
+        self._queue: "queue.Queue[Optional[str]]" = queue.Queue()
+        self._reader = threading.Thread(target=self._read_loop, daemon=True)
+        self._reader.start()
+
+        if self._is_windows and self._proc.stdin is not None:
+            # Silence the REPL prompt so it never pollutes captured command output.
+            self._proc.stdin.write("function prompt { '' }\n")
+            self._proc.stdin.flush()
+
+    def _read_loop(self) -> None:
+        try:
+            assert self._proc.stdout is not None
+            for line in self._proc.stdout:
+                self._queue.put(line)
+        finally:
+            self._queue.put(None)  # EOF sentinel
+
+    def run(
+        self,
+        command: str,
+        timeout: Optional[float] = None,
+        on_output: Optional[Callable[[str], None]] = None,
+    ) -> dict[str, Any]:
+        """`on_output`, when given, is called with each line as it arrives (the tool runner
+        uses it for the live view). The returned result is the same either way."""
+        if self._proc.poll() is not None:
+            # Shell exited (e.g. hard-closed after a prior command's timeout). Respawn so
+            # the session self-heals rather than wedging every future command.
+            self._spawn()
+        if self._proc.stdin is None:
+            return self._result(
+                command, None, "", timed_out=False, error="shell not running"
+            )
+
+        timeout = timeout or self.default_timeout
+        self._abort.clear()
+        deadline = time.monotonic() + timeout
+
+        if self._is_windows:
+            # PowerShell's `-Command -` REPL skips a line it cannot parse, so the trailer's
+            # `$?` still holds the previous (successful) trailer and the result said exit 0.
+            # An unclosed quote was worse: it swallowed the trailer and hung to the timeout.
+            # So parse first, with PowerShell's own parser; on errors nothing runs.
+            checked = self._powershell_parse_check(command, deadline)
+            if checked is not None:
+                return checked
+
+        # Run the command, then emit a marker line with exit code + cwd.
+        self._proc.stdin.write(command + "\n")
+        if self._is_windows and "\n" in command.strip("\n"):
+            # The REPL keeps reading a statement that spans lines (`foreach (...) {` ... `}`)
+            # until an empty line, as in an interactive console. Without one, the trailer
+            # was read into the block and the call hung until its timeout. The parse check
+            # above guarantees the command is complete, so this line only ends it.
+            self._proc.stdin.write("\n")
+        self._proc.stdin.write(self._trailer())
+        self._proc.stdin.flush()
+
+        interrupted = False
+        timed_out = False
+        aborted = False
+        exit_code: Optional[int] = None
+        lines: list[str] = []
+
+        while True:
+            if self._abort.is_set():
+                # User Stop: reuse the deadline path this tick (interrupt-and-resync on
+                # POSIX, decisive shell kill on Windows) instead of waiting out the timeout.
+                aborted = True
+                deadline = time.monotonic()
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                if self._is_windows:
+                    # PowerShell has no reliable "interrupt one command, keep the REPL"
+                    # primitive, so don't try to resync — kill the shell tree decisively.
+                    # The next run() respawns in the last cwd (session continues).
+                    timed_out = True
+                    self.close()
+                    break
+                if not interrupted:
+                    # First deadline: interrupt the running command and keep reading
+                    # until ITS marker arrives, so the stream stays in sync for the
+                    # next command. SIGINT makes the command exit and the trailer
+                    # printf emit the marker.
+                    interrupted = True
+                    timed_out = True
+                    self._interrupt()
+                    deadline = time.monotonic() + 3.0  # grace to resync on the marker
+                    continue
+                # Grace expired and still no marker: the shell is wedged. Hard-kill
+                # so future commands don't desync (session state is lost).
+                self.close()
+                break
+            try:
+                item = self._queue.get(timeout=min(remaining, 0.5))
+            except queue.Empty:
+                continue
+            if item is None:
+                break  # shell died
+            if self._marker in item:
+                exit_code = _parse_exit_code(item, self._marker)
+                cwd = _parse_cwd(item, self._marker)
+                if cwd:
+                    self.cwd = cwd
+                break
+            lines.append(item)
+            if on_output is not None:
+                try:
+                    on_output(item)
+                except Exception:  # the live view must never break the command
+                    on_output = None
+
+        output = "".join(lines)
+        truncated = len(output) > self.max_output_chars
+        if truncated:
+            # Keep the TAIL: builds and test runners put the verdict at the end.
+            output = output[-self.max_output_chars :]
+        return self._result(
+            command,
+            exit_code,
+            output,
+            timed_out=timed_out,
+            truncated=truncated,
+            error="interrupted by user" if aborted else None,
+        )
+
+    def _powershell_parse_check(
+        self, command: str, deadline: float
+    ) -> Optional[dict[str, Any]]:
+        """Parse `command` in the running PowerShell before it is sent. Returns None when it
+        parses (the caller runs it), else the finished result: exit code 1 and PowerShell's
+        own error text, the same text and code `powershell -Command` gives. The command
+        travels as base64, so no quoting in it can break the check line; the check's
+        variables are removed again so the session never sees them.
+
+        When the command parses, the same line also clears `$LASTEXITCODE`, so the trailer
+        reads only a native program that ran in THIS command. Before, a failing cmdlet
+        reported the code of a native program from an earlier call (`cmd /c exit 3`, then
+        a failed `Get-Item`, said 3). Like bash, where the trailer's `printf` resets `$?`,
+        a later call no longer sees the previous call's code; each result carries its own."""
+        assert self._proc.stdin is not None
+        encoded = base64.b64encode(command.encode("utf-8")).decode("ascii")
+        self._proc.stdin.write(
+            "$__cwSrc=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String("
+            f"'{encoded}'));$__cwErr=$null;"
+            "$null=[Management.Automation.Language.Parser]::ParseInput("
+            "$__cwSrc,[ref]$null,[ref]$__cwErr);$__cwN=@($__cwErr).Count;"
+            "if($__cwN){(New-Object Management.Automation.ParseException (,$__cwErr)).Message}"
+            "else{$global:LASTEXITCODE=$null};"
+            "Remove-Variable __cwSrc,__cwErr -ErrorAction Ignore;"
+            f'"`n{self._parse_marker} $__cwN";Remove-Variable __cwN -ErrorAction Ignore\n'
+        )
+        self._proc.stdin.flush()
+
+        lines: list[str] = []
+        while True:
+            aborted = self._abort.is_set()
+            remaining = deadline - time.monotonic()
+            if aborted or remaining <= 0:
+                # Same as a command that overran on Windows: kill the shell, the next
+                # run() respawns it in the last cwd.
+                self.close()
+                return self._result(
+                    command,
+                    None,
+                    "",
+                    timed_out=not aborted,
+                    error="interrupted by user" if aborted else None,
+                )
+            try:
+                item = self._queue.get(timeout=min(remaining, 0.5))
+            except queue.Empty:
+                continue
+            if item is None:
+                return self._result(
+                    command, None, "".join(lines), timed_out=False, error="shell exited"
+                )
+            if self._parse_marker in item:
+                count = _parse_exit_code(item, self._parse_marker)
+                break
+            lines.append(item)
+        if not count:
+            return None
+        # A parse error is the command failing, not the tool: like bash's syntax error,
+        # it is a non-zero exit code with the shell's message as the output.
+        return self._result(command, 1, "".join(lines).strip("\n") + "\n", timed_out=False)
+
+    def interrupt_now(self) -> None:
+        """User Stop: make an in-flight foreground `run()` bail on its next read tick
+        (≤0.5s). Thread-safe; a no-op when nothing is running. Background tasks are
+        left alone — they're explicitly fire-and-forget."""
+        self._abort.set()
+
+    # -- background tasks ---------------------------------------------------------
+    def run_background(self, command: str) -> dict[str, Any]:
+        self._bg_counter += 1
+        task_id = f"bg-{self._bg_counter}"
+        try:
+            task = _BackgroundTask(task_id, command, self.cwd, self._env)
+        except OSError as exc:
+            return {"error": f"failed to start background task: {exc}"}
+        self._bg_tasks[task_id] = task
+        return {
+            "task_id": task_id,
+            "command": command,
+            "status": "running",
+            "note": "use shell_task_output to read its output (wait_seconds=N to wait for "
+            "it to exit or print more), shell_task_kill to stop it",
+        }
+
+    def background_output(self, task_id: str, wait_seconds: float = 0) -> dict[str, Any]:
+        task = self._bg_tasks.get(task_id)
+        if task is None:
+            return {"error": f"unknown task: {task_id}"}
+        # Wait (bounded) until the task exits or prints something new. Without this a
+        # model whose next step depends on the task has to poll, and every poll is a
+        # full model call: measured at 297 polls on one background job in a sealed
+        # evaluation run. A sleep via run_shell is the only alternative and cannot
+        # return early. Capped at the shell's own ceiling so a tool call never outlives
+        # what run_shell would allow.
+        started = time.monotonic()
+        deadline = started + max(0.0, min(float(wait_seconds or 0), _MAX_TIMEOUT))
+        while time.monotonic() < deadline:
+            if task.proc.poll() is not None or task.has_new() or self._abort.is_set():
+                break
+            time.sleep(min(0.25, max(0.0, deadline - time.monotonic())))
+        if task.proc.poll() is not None:
+            task.drain(0.5)
+        output = task.read_new()
+        truncated = len(output) > self.max_output_chars
+        if truncated:
+            output = output[-self.max_output_chars :]
+        exit_code = task.proc.poll()
+        return {
+            "task_id": task_id,
+            "status": "running" if exit_code is None else "exited",
+            "exit_code": exit_code,
+            "output": output,
+            "truncated": truncated,
+            "waited_seconds": round(time.monotonic() - started, 1),
+        }
+
+    def background_kill(self, task_id: str) -> dict[str, Any]:
+        task = self._bg_tasks.get(task_id)
+        if task is None:
+            return {"error": f"unknown task: {task_id}"}
+        task.kill()
+        try:
+            task.proc.wait(timeout=5)
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        return {
+            "task_id": task_id,
+            "status": "running" if task.proc.poll() is None else "killed",
+            "exit_code": task.proc.poll(),
+        }
+
+    def _trailer(self) -> str:
+        """Command appended after each user command. Emits one line `<marker> <exit> <cwd>`
+        parsed by `_parse_exit_code` / `_parse_cwd`. Reads the exit status of the *preceding*
+        command, so it must run as its own statement right after it."""
+        if self._is_windows:
+            # PowerShell: `$?` is the success bool; `$LASTEXITCODE` is the exit code of the
+            # last native program in this command (cleared before it, see
+            # `_powershell_parse_check`). Success → 0; else the program's code, falling back
+            # to 1.
+            return (
+                f'"`n{self._marker} '
+                f"$(if ($?) {{0}} else {{ if ($LASTEXITCODE) {{$LASTEXITCODE}} else {{1}} }}) "
+                f'$($PWD.Path)"\n'
+            )
+        return f'printf "\\n%s %s %s\\n" "{self._marker}" "$?" "$PWD"\n'
+
+    def _interrupt(self) -> None:
+        # Interrupt the running command, not the shell itself, so the session survives; the
+        # queued trailer then emits the marker and the stream resyncs.
+        if self._is_windows:
+            # Ctrl-Break to the child's process group (best-effort). If the marker never
+            # resyncs, run()'s grace timeout hard-closes the shell.
+            try:
+                self._proc.send_signal(signal.CTRL_BREAK_EVENT)
+            except (OSError, ValueError):
+                pass
+            return
+        try:
+            found = subprocess.run(
+                ["pgrep", "-P", str(self._proc.pid)],
+                capture_output=True,
+                text=True,
+            )
+            pids = found.stdout.split()
+            if found.returncode not in (0, 1):
+                # pgrep itself failed. Inside the macOS sandbox it cannot reach the service
+                # it lists processes with; the system library can still list OUR children.
+                pids = [str(pid) for pid in _child_pids_darwin(self._proc.pid)]
+            for pid in pids:
+                try:
+                    os.kill(int(pid), signal.SIGINT)
+                except (ProcessLookupError, ValueError, OSError):
+                    pass
+        except (FileNotFoundError, OSError):
+            pass
+
+    def interrupt(self) -> None:
+        self._interrupt()
+
+    def close(self) -> None:
+        if self._is_windows:
+            # Kill the whole tree — a timed-out command may have spawned children that
+            # `terminate()` (the shell only) would orphan. Then reap so `poll()` reliably
+            # reports the exit, which the next run()'s respawn check depends on.
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(self._proc.pid)],
+                    capture_output=True,
+                )
+            except (OSError, subprocess.SubprocessError):
+                pass
+            try:
+                self._proc.wait(timeout=5)
+            except (subprocess.TimeoutExpired, OSError):
+                pass
+            return
+        try:
+            self._proc.terminate()
+        except (ProcessLookupError, OSError):
+            pass
+
+    def _result(
+        self, command, exit_code, output, *, timed_out, truncated=False, error=None
+    ):
+        result = {
+            "command": command,
+            "cwd": self.cwd,
+            "exit_code": exit_code,
+            "output": output,
+            "timed_out": timed_out,
+            "truncated": truncated,
+        }
+        if error:
+            result["error"] = error
+        return result
+
+
+def _parse_exit_code(line: str, marker: str) -> Optional[int]:
+    parts = line.strip().split()
+    try:
+        return int(parts[parts.index(marker) + 1])
+    except (ValueError, IndexError):
+        return None
+
+
+def _parse_cwd(line: str, marker: str) -> Optional[str]:
+    parts = line.strip().split()
+    try:
+        return " ".join(parts[parts.index(marker) + 2 :]) or None
+    except (ValueError, IndexError):
+        return None

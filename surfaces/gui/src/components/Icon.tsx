@@ -2,27 +2,35 @@
 // currentColor, rounded caps/joins. Replaces emoji in the chrome for a crisp, consistent look.
 
 export type IconName =
+  | "stretch"
+  | "unstretch"
   | "sparkle"
   | "logo"
   | "sidebar"
   | "sidebarRight"
   | "signOut"
   | "chat"
+  | "workList"
   | "diamond"
   | "book"
   | "search"
   | "folder"
   | "folderPlus"
   | "plus"
+  | "brain"
   | "clock"
   | "sliders"
   | "gear"
   | "inbox"
+  | "monitor"
+  | "cloud"
   | "code"
   | "wrench"
   | "pencil"
   | "branch"
   | "arrowLeft"
+  | "arrowRight"
+  | "team"
   | "copy"
   | "refresh"
   | "panelClose"
@@ -42,6 +50,8 @@ export type IconName =
   | "table"
   | "mic"
   | "stop"
+  | "warning"
+  | "user"
   | "x";
 
 export function Icon({
@@ -109,6 +119,17 @@ export function Icon({
           <path d="M15 4.5v15" />
         </svg>
       );
+    case "team":
+      return <svg {...s}><circle cx="9" cy="7" r="3" /><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M18 13a5 5 0 0 1 3 5v3" /></svg>;
+    case "arrowRight":
+      return <svg {...s}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+    case "user":
+      return (
+        <svg {...s}>
+          <circle cx="12" cy="8" r="3.6" />
+          <path d="M4.8 20.2c.9-3.6 3.7-5.4 7.2-5.4s6.3 1.8 7.2 5.4" />
+        </svg>
+      );
     case "signOut":
       return (
         <svg {...s}>
@@ -128,6 +149,21 @@ export function Icon({
         <svg {...s}>
           <path d="M12 3.2l7 2.8v5.1c0 4.3-2.9 7.4-7 9.7-4.1-2.3-7-5.4-7-9.7V6l7-2.8z" />
           <path d="M9.3 12.1l1.9 1.9 3.5-3.6" />
+        </svg>
+      );
+    case "monitor":
+      // A machine that is a real box (VM, server): screen on a stand.
+      return (
+        <svg {...s}>
+          <rect x="3" y="4" width="18" height="12" rx="1.5" />
+          <path d="M8 20h8M12 16v4" />
+        </svg>
+      );
+    case "cloud":
+      // A managed sandbox (Fly): cloud outline.
+      return (
+        <svg {...s}>
+          <path d="M7 18a4 4 0 0 1-.6-7.95A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9H7z" />
         </svg>
       );
     case "file":
@@ -182,12 +218,44 @@ export function Icon({
           <path d="M6 6l12 12M18 6L6 18" />
         </svg>
       );
+    // Full width and back (UX-060): two arrows out of / into the corners.
+    case "stretch":
+      return (
+        <svg {...s}>
+          <path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7" />
+        </svg>
+      );
+    case "unstretch":
+      return (
+        <svg {...s}>
+          <path d="M20 10h-6V4M14 10l6-6M4 14h6v6M10 14l-6 6" />
+        </svg>
+      );
+    case "warning":
+      // Caution triangle (Lucide-style): rounded triangle + exclamation. Marks the
+      // bypass-approvals mode in the picker — the one option that switches approvals off.
+      return (
+        <svg {...s}>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+        </svg>
+      );
     case "folderPlus":
       // Same clean folder body + a centered plus (Lucide-style).
       return (
         <svg {...s}>
           <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9l-.81-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h8.5" />
           <path d="M19 14v6M16 17h6" />
+        </svg>
+      );
+    case "brain":
+      // Adapted from Lucide's "brain" (ISC licence).
+      return (
+        <svg {...s}>
+          <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+          <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+          <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
         </svg>
       );
     case "plus":
@@ -239,6 +307,8 @@ export function Icon({
           <path d="M5 5.5h14c.8 0 1.5.7 1.5 1.5v7c0 .8-.7 1.5-1.5 1.5H9.5L5.5 19v-3H5c-.8 0-1.5-.7-1.5-1.5V7c0-.8.7-1.5 1.5-1.5z" />
         </svg>
       );
+    case "workList":
+      return <svg {...s}><rect x="3" y="4" width="4" height="4" rx="1" /><rect x="3" y="10" width="4" height="4" rx="1" /><rect x="3" y="16" width="4" height="4" rx="1" /><path d="M11 6h10M11 12h10M11 18h10" /></svg>;
     case "wrench":
       return (
         <svg {...s}>

@@ -1,8 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { getI18n, useTranslation } from "react-i18next";
 import type { Attachment, SessionUsage } from "../types";
 import { isPdfFile, readFile } from "../attach";
-import { getSettings, inspectPdf, sessionSkills, type SessionSkillRow } from "../api";
+import { ProjectBindMenu } from "./ProjectBindMenu";
+import { getSessionModelSettings, getSettings, inspectPdf, sessionSkills, setSessionModelSettings, type ModelControls, type SessionSkillRow } from "../api";
 import { formatTokens, totalTokens } from "../usage";
+import { clearDraft, loadDraft, saveDraft, type ComposerDraft } from "./composerDraft";
 import { Dropdown, type Option } from "./Dropdown";
 import { Icon } from "./Icon";
 import { Toggle } from "./Toggle";
@@ -20,14 +23,52 @@ import {
 // polished enough to ship, and Custom (config.toml auto-allow rules) is a power-user mode
 // with no in-app explanation. The server still honors both — a session already in one of
 // those modes keeps working; the picker just doesn't offer them.
-const PERMISSION_OPTIONS: Option[] = [
-  { value: "discuss", label: "闲聊", description: "闲聊探索 —— 不编辑、不执行命令" },
-  { value: "interactive", label: "需要审批", description: "编辑/执行命令前先询问" },
-  { value: "auto", label: "完全访问", description: "直接执行，不再询问" },
+// "auto" is the legacy wire value for Bypass approvals (server: Mode.BYPASS_APPROVALS) —
+// kept so saved sessions and configs keep working. Auto-Approve ("auto-approve") is the
+// reviewer mode (spec: reviewed-auto-mode.md); it appears only when the server says the
+// feature flag is on, wired in the settings pass — until then the picker omits it.
+// `caution` prefixes the label with a warning triangle; `gated` hides the entry unless the
+// server's auto_approve flag is on. Picker-local extensions of Dropdown's Option.
+type ModeOption = Option & { caution?: boolean; gated?: boolean };
+
+// "auto" is the legacy wire value for Bypass approvals (server: Mode.BYPASS_APPROVALS).
+// Auto-approve is `gated`: shown only when getSettings().auto_approve is true (the feature
+// flag, off by default).
+// Labels/descriptions are i18n keys (resolved at render via t()); kept as keys here so the
+// module-level constant stays outside the component without losing translation.
+const PERMISSION_OPTIONS: ModeOption[] = [
+  { value: "discuss", label: "composer.mode.discuss", description: "composer.mode.discuss_desc" },
+  { value: "interactive", label: "composer.mode.interactive", description: "composer.mode.interactive_desc" },
+  {
+    value: "auto-approve",
+    label: "composer.mode.auto_approve",
+    description: "composer.mode.auto_approve_desc",
+    gated: true,
+  },
+  {
+    // The wire value is the server's real name; "auto" (the legacy spelling saved by
+    // older sessions and configs) is folded onto it by `canonicalMode`.
+    value: "bypass-approvals",
+    label: "composer.mode.auto",
+    description: "composer.mode.auto_desc",
+    caution: true,
+  },
 ];
 
+/** The server's name for a mode value: the legacy "auto" reads as "bypass-approvals". */
+export function canonicalMode(value: string): string {
+  return value === "auto" ? "bypass-approvals" : value;
+}
+
+/** The picker's label for a mode value ("auto-approve" -> "Auto-approve"). Exported so the
+ * transcript's mode markers read the same names the user just chose from. */
+export function modeLabel(value: string): string {
+  const option = PERMISSION_OPTIONS.find((o) => o.value === canonicalMode(value));
+  return option ? getI18n().t(option.label) : value;
+}
+
 // No hardcoded model fallback: until the server supplies the list (a few seconds after a
-// cold app boot), the picker renders a disabled "正在加载模型…" chip. A baked-in list
+// cold app boot), the picker renders a disabled "Loading models…" chip. A baked-in list
 // goes stale and silently offers ids the backend never confirmed (caught 2026-07-21).
 
 // Drop the provider prefix for display (anthropic:claude-opus-4-8 → claude-opus-4-8); full id on hover.
@@ -45,14 +86,34 @@ const mergeAttachments = (cur: Attachment[], add: Attachment[]): Attachment[] =>
 };
 
 interface Props {
+  // Worker-pane variant: retain the shared input, attachments and send/stop;
+  // omit session rebinding, model changes and global native dictation controls.
+  compact?: boolean;
   mode: string;
   model: string;
   models?: string[];
+  // Entries of `models` this machine cannot run (a coworker's `models:` list names them
+  // regardless, spec §4): shown in the menu with a note, never hidden.
+  unavailableModels?: string[];
+  // The coworker's own `models:` list when none of it runs here: the "No model" chip
+  // names what would work instead of a bare warning.
+  wantedModels?: string[];
   modelLabels?: Record<string, string>; // curated display names (raw id when absent)
+  // UX-055: saved per-model settings (context size, thinking) for the picker's notes,
+  // and the way into Models & Keys' Pick a model dialog.
+  modelConfig?: Record<string, { context_size?: number; thinking?: boolean }>;
+  onPickModel?: () => void;
   // The model is FIXED once the session has history (§17): the picker renders ONLY on a fresh
   // session; after the first turn the fact lives in the topbar subtitle (§22) — no
   // interactive-then-disabled control.
   running: boolean;
+  // A proposal gate (team/items) is awaiting the user: the engine is suspended,
+  // so `running` is true — but typing must stay possible, because a typed reply
+  // IS an answer (decline-with-feedback). Unblocks Send while the gate is up.
+  gateOpen?: boolean;
+  // What the open gate is, for the placeholder: a proposal to adjust, or a question
+  // whose answer the composer sends.
+  gateKind?: "proposal" | "question";
   connected: boolean;
   // False when the default model's provider has no key — the composer shows a "connect a model"
   // banner and routes sends to setup (preserving the draft) instead of dropping them.
@@ -65,6 +126,9 @@ interface Props {
   sessionId?: string;
   onInterrupt: () => void;
   onModeChange: (mode: string) => void;
+  // §11.6: a team worker has no mode of its own — approvals follow its lead. Renders a
+  // read-only chip in place of the Mode menu.
+  followsLead?: boolean;
   onModelChange: (model: string) => void;
   // When set (Code/Cowork), the Mode menu is shown. The folder/roots + branch controls left the
   // composer for the Session settings drawer (§22) — folder access is standing session config.
@@ -73,7 +137,19 @@ interface Props {
   // when" is one mental model. Absent handler = no toggle (e.g. Chat).
   unattended?: boolean;
   onUnattendedChange?: (on: boolean) => void;
+  // Attendance "auto" (the third position): the engine answers questions and requests
+  // by fixed rule while nobody is there. Absent handler = no toggle.
+  attendance?: "attended" | "inbox" | "auto";
+  onAutoAnswerChange?: (on: boolean) => void;
+  // The pending-approval card rendered above the input (plan / work-items / team / tool /
+  // folder requests). Attended sessions only — Unattended parks the prompt in the Inbox.
   approvalSlot?: ReactNode;
+  statusSlot?: ReactNode;
+  teamSlot?: ReactNode;
+  // The plan dock: rendered fused to the input box's top edge (flattens its corners).
+  planSlot?: ReactNode;
+  // UX-044: "View & edit…" in the Project memory submenu routes to the memory panel.
+  onOpenMemory?: () => void;
   // Push text + attachments into the composer (e.g. a start-panel task card). The `nonce` makes
   // repeated identical prefills re-apply; the user can still edit before sending.
   prefill?: { text: string; attachments?: Attachment[]; nonce: number };
@@ -89,9 +165,13 @@ interface Props {
   contextWindow?: number;
   // Settings toggle (default off): true shows the fill bar instead of the session total.
   contextBar?: boolean;
+  // §8.4 breaker tripped this turn: the mode chip says so quietly until the turn ends
+  // or an ask_user answer resets the streak.
+  reviewerPaused?: boolean;
 }
 
 export function Composer(props: Props) {
+  const { t } = useTranslation();
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   // "/" force-run (SKILLS-SPEC §4.1 #3). The popup derives from the draft: it is open while
@@ -136,6 +216,23 @@ export function Composer(props: Props) {
   };
   const [dragging, setDragging] = useState(false);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  // UX-044: which "This session" submenu is open (bindings live server-side).
+  const [bindMenu, setBindMenu] = useState<"memory" | "board" | null>(null);
+  // Bindings need a session and a workspace surface (Chat has neither).
+  const sessionRows = !props.compact && Boolean(props.sessionId && props.workspace !== undefined);
+  const bindRow = (icon: "book" | "table", label: string, kind: "memory" | "board") => (
+    <button
+      className={
+        "w-full flex items-center gap-2.5 px-3 py-1.5 text-ui text-left hover:bg-paper" +
+        (bindMenu === kind ? " bg-paper" : "")
+      }
+      onClick={() => setBindMenu(bindMenu === kind ? null : kind)}
+    >
+      <Icon name={icon} size={15} className="shrink-0 text-muted" />
+      <span className="flex-1">{label}</span>
+      <Icon name="chevronRight" size={12} className="shrink-0 text-faint" />
+    </button>
+  );
   const [dictation, setDictation] = useState<DictationStatus | null>(null);
   const [dictationBusy, setDictationBusy] = useState<string | null>(null);
   const [dictationError, setDictationError] = useState<string | null>(null);
@@ -144,6 +241,14 @@ export function Composer(props: Props) {
   const fileInput = useRef<HTMLInputElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const noticeTimer = useRef<number | null>(null);
+
+  // Latest draft, mirrored each render so unmount/cleanup and the session-switch effect can
+  // persist exactly what the user last typed, however state changes between renders.
+  const draftRef = useRef<ComposerDraft>({ text: "", attachments: [], skill: null });
+  draftRef.current = { text, attachments, skill: pendingSkill };
+  // The resetKey this Composer last rendered with; lets the session-switch effect know the
+  // session we're LEAVING in order to save its draft before restoring the incoming one.
+  const prevResetKey = useRef<string | undefined>(props.resetKey);
 
   // Rejected-attachment notice: visible ~8s, then clears (or on ✕).
   const showAttachNotice = (message: string) => {
@@ -156,31 +261,68 @@ export function Composer(props: Props) {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    const max = parseFloat(getComputedStyle(el).lineHeight || "22") * 4;
+    // The cap must include the vertical PADDING: scrollHeight does, so a
+    // padding-blind cap left the box ~20px short and scrolled the top padding
+    // (plus the first line) out of the clip while typing (OPE-106). Six lines —
+    // team briefs outgrew four.
+    const cs = getComputedStyle(el);
+    const pad =
+      (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    const max = (parseFloat(cs.lineHeight) || 22) * 6 + pad;
     const next = Math.min(el.scrollHeight, max);
     el.style.height = `${Math.max(next, 24)}px`;
     el.style.overflowY = el.scrollHeight > max ? "auto" : "hidden";
   }, [text]);
 
-  // Clear the draft when the conversation changes, so a half-typed message / picked file doesn't
-  // bleed from one session into another. Declared BEFORE the prefill effect: when both fire in
-  // the same render (the Skills doorway starts a new session AND prefills it), effects run in
-  // declaration order — clear first, then the prefill lands on the fresh session.
+  // Persist the unsent draft per conversation: when the active session changes, save the
+  // half-typed message / picked file under the session we're LEAVING, then restore whatever
+  // draft is saved for the session we're ENTERING (rather than unconditionally wiping the box).
+  // Declared BEFORE the prefill effect: when both fire in the same render (the Skills doorway
+  // starts a new session AND prefills it), effects run in declaration order — the restore
+  // runs first, so the prefill still lands on top of the fresh session.
   useEffect(() => {
-    setText("");
-    setAttachments([]);
-    setPendingSkill(null);
+    const prev = prevResetKey.current;
+    const next = props.resetKey;
+    prevResetKey.current = next;
+    // Save the outgoing draft so it isn't lost on a session switch (first mount: nothing to save).
+    if (prev && prev !== next) saveDraft(prev, draftRef.current);
+    // Restore the incoming session's saved draft (none → empty box).
+    const restored = loadDraft(next);
+    // StrictMode replays effect cleanup before the restored state renders. Keep
+    // that cleanup from persisting the initial empty state over the saved draft.
+    draftRef.current = restored ?? { text: "", attachments: [], skill: null };
+    setText(restored?.text ?? "");
+    setAttachments(restored?.attachments ?? []);
+    setPendingSkill(restored?.skill ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.resetKey]);
+
+  // Save the draft when the composer unmounts (e.g. navigating to Settings/Inbox or closing
+  // the session view), so it survives leaving the page and is restored when you come back.
+  useEffect(() => {
+    const persist = () => {
+      if (prevResetKey.current) saveDraft(prevResetKey.current, draftRef.current);
+    };
+    window.addEventListener("pagehide", persist);
+    window.addEventListener("beforeunload", persist);
+    return () => {
+      persist();
+      window.removeEventListener("pagehide", persist);
+      window.removeEventListener("beforeunload", persist);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Apply a prefill (text + attachments) pushed from outside, then focus the composer. Applied at
   // most once per nonce (a ref guards against StrictMode/re-render double-fires), and attachments
   // are de-duplicated so the same file never lands twice.
-  const appliedNonce = useRef<number>(-1);
   useEffect(() => {
     const p = props.prefill;
-    if (!p || p.nonce === appliedNonce.current) return;
-    appliedNonce.current = p.nonce;
+    if (!p) return;
+    // No once-per-nonce ref guard: StrictMode's dev double-effect re-runs the
+    // clear above AFTER a guarded prefill had applied, leaving the composer
+    // empty. Re-applying is safe — setText is idempotent and the attachment
+    // merge de-duplicates — and the [nonce] dep still scopes when this fires.
     setText(p.text);
     if (p.attachments?.length) setAttachments((cur) => mergeAttachments(cur, p.attachments!));
     textareaRef.current?.focus();
@@ -190,7 +332,7 @@ export function Composer(props: Props) {
   // Dictation is intentionally native-only: the browser/dev build remains a local server client
   // and never turns on the browser microphone or ships audio anywhere.
   useEffect(() => {
-    if (!isTauri()) return;
+    if (props.compact || !isTauri()) return;
     const refresh = (event?: Event) => {
       const supplied = (event as CustomEvent<DictationStatus> | undefined)?.detail;
       if (supplied) {
@@ -271,7 +413,7 @@ export function Composer(props: Props) {
     for (const file of list) {
       if (isPdfFile(file) && file.size > maxMb * 1024 * 1024) {
         showAttachNotice(
-          `${file.name} skipped — ${(file.size / 1024 / 1024).toFixed(1)} MB is over your ${maxMb} MB limit (Settings → Token savings)`,
+          t("composer.pdf_too_big", { name: file.name, mb: (file.size / 1024 / 1024).toFixed(1), limit: maxMb }),
         );
         continue;
       }
@@ -284,12 +426,12 @@ export function Composer(props: Props) {
         const info = await inspectPdf(a.data_url).catch(() => null);
         if (info?.ok && (info.pages ?? 0) > maxPages) {
           showAttachNotice(
-            `${a.name} skipped — ${info.pages} pages is over your ${maxPages}-page limit (Settings → Token savings)`,
+            t("composer.pdf_too_many_pages", { name: a.name, pages: info.pages, limit: maxPages }),
           );
           continue;
         }
         if (info && !info.ok) {
-          showAttachNotice(`${a.name} skipped — ${info.error || "could not read PDF"}`);
+          showAttachNotice(t("composer.pdf_unreadable", { name: a.name, error: info.error || t("composer.pdf_could_not_read") }));
           continue;
         }
       }
@@ -313,12 +455,13 @@ export function Composer(props: Props) {
     // While the "/" popup is open the draft is a query, not a message — never send it.
     if (slashQuery !== null) return;
     // The visible "/name " prefix is UI state, not message text — strip it for the send;
-    // the skill rides as its own field.
+    // the skill rides as its own field. (Named `body`, not `t`, so it can't shadow i18n's t.)
     const skill = prefixIntact ? pendingSkill!.name : undefined;
-    const t = (skill ? text.slice(skill.length + 1) : text).trim();
+    const body = (skill ? text.slice(skill.length + 1) : text).trim();
     if (
-      (!t && attachments.length === 0 && !skill) ||
-      props.running ||
+      !props.connected ||
+      (!body && attachments.length === 0 && !skill) ||
+      (props.running && !props.gateOpen) ||
       dictation?.recording ||
       dictationBusy
     )
@@ -328,13 +471,20 @@ export function Composer(props: Props) {
       props.onConnectModel?.();
       return;
     }
-    props.onSend(t, attachments, skill);
+    props.onSend(body, attachments, skill);
     setText("");
     setAttachments([]);
     setPendingSkill(null);
+    // The message is away — drop the persisted draft so it isn't restored on a later visit.
+    if (props.resetKey) clearDraft(props.resetKey);
   };
 
   const onKey = (e: React.KeyboardEvent) => {
+    // Enter confirms the active IME candidate before it means "send". WebKit may
+    // report the composition keydown with the legacy 229 key code, so keep that
+    // fallback alongside the standards-based isComposing flag.
+    if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
+
     if (slashQuery !== null) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -380,9 +530,9 @@ export function Composer(props: Props) {
     setDictationError(null);
     try {
       if (dictation?.recording) {
-        setDictationBusy("正在转写…");
+        setDictationBusy(t("composer.starting_transcribe"));
         const transcript = await stopDictation();
-        if (transcript === null) throw new Error("无法转写你的录音。");
+        if (transcript === null) throw new Error(t("composer.err_transcribe"));
         if (transcript.trim()) {
           setText((draft) => (draft.trim() ? `${draft.trimEnd()} ${transcript.trim()}` : transcript.trim()));
         }
@@ -392,17 +542,17 @@ export function Composer(props: Props) {
       }
 
       const status = dictation || (await getDictationStatus());
-      if (!status) throw new Error("语音听写不可用。");
+      if (!status) throw new Error(t("composer.err_dictation_unavailable"));
       if (!status.supported || !status.model_verified || !status.test_passed) {
         props.onConfigureVoiceInput?.();
         return;
       }
-      setDictationBusy("正在启动麦克风…");
+      setDictationBusy(t("composer.starting_mic"));
       const recording = await startDictation();
-      if (!recording?.recording) throw new Error("无法启动麦克风。");
+      if (!recording?.recording) throw new Error(t("composer.err_mic_start"));
       setDictation(recording);
     } catch (error) {
-      setDictationError(error instanceof Error ? error.message : "语音听写不可用。");
+      setDictationError(error instanceof Error ? error.message : t("composer.err_dictation_unavailable"));
       const status = await getDictationStatus();
       if (status) setDictation(status);
     } finally {
@@ -411,15 +561,67 @@ export function Composer(props: Props) {
   };
 
   const modelsLoaded = !!(props.models && props.models.length);
+  // UX-055: the picker groups models by where they run and notes each one's saved
+  // context and thinking; the label drops the provider when it sits on the row's note.
+  const localPrefixes = ["ollama:", "llamacpp:", "vllm:"];
+  const isLocalModel = (m: string) => localPrefixes.some((p) => m.startsWith(p));
   const modelOptions: Option[] = Array.from(
     new Set([props.model, ...(props.models || [])]),
-  ).map((m) => ({
-    value: m,
-    label: props.modelLabels?.[m] || shortModel(m),
-  }));
+  ).sort((a, b) => Number(isLocalModel(b)) - Number(isLocalModel(a))).map((m) => {
+    const full = props.modelLabels?.[m] || shortModel(m);
+    const [name, provider] = full.split(" · ");
+    const cfg = props.modelConfig?.[m];
+    const notes = isLocalModel(m)
+      ? [cfg?.context_size ? `${Math.round(cfg.context_size / 1024)}K` : "", cfg?.thinking ? t("composer.model.thinking") : ""]
+      : [provider || (m.includes(":") ? m.split(":")[0] : "")];
+    return {
+      value: m,
+      label: name,
+      group: t(isLocalModel(m) ? "composer.model.group_local" : "composer.model.group_cloud"),
+      meta: notes.filter(Boolean).join(" · "),
+      ...(props.unavailableModels?.includes(m)
+        ? { description: t("onmachine.composer.model_unavailable") }
+        : {}),
+    };
+  });
 
   const iconBtn =
-    "w-7 h-7 grid place-items-center rounded-md text-muted hover:text-ink hover:bg-paper shrink-0";
+    "w-7 h-7 grid place-items-center rounded-md text-faint hover:text-ink hover:bg-paper shrink-0";
+
+  // UX-048: the model pill shows the model NAME; provider and the context line live in its
+  // tooltip. Curated labels read "Claude Sonnet 4.6 · Anthropic" — the part before the dot is
+  // the name (same split the old header subtitle used). The context ring (OPE-42 meter, now
+  // inside the pill) needs a known window; the setting governs the ring, never the tooltip.
+  const fullModelLabel = props.modelLabels?.[props.model] || shortModel(props.model);
+  const modelName = fullModelLabel.split(" · ")[0];
+  const hasUsage = !!props.usage && totalTokens(props.usage) > 0;
+  const ctxPct =
+    hasUsage && props.contextWindow
+      ? Math.min(100, Math.round((props.usage!.context / props.contextWindow) * 100))
+      : null;
+  const ctxLine = !hasUsage
+    ? ""
+    : ctxPct !== null
+      ? t("onmachine.composer.context_line", {
+          pct: ctxPct,
+          used: formatTokens(props.usage!.context),
+          window: formatTokens(props.contextWindow as number),
+        })
+      : t("onmachine.composer.context_unknown", { used: formatTokens(props.usage!.context) });
+  const providerName =
+    fullModelLabel.split(" · ")[1] ||
+    (props.model.includes(":") ? props.model.split(":")[0] : "");
+  const modelTip = (
+    <>
+      <div className="dd-tip-title">{modelName}</div>
+      {providerName && <div className="dd-tip-sub">{providerName}</div>}
+      <div className="dd-tip-row">
+        <ContextRing pct={ctxPct} size={14} />
+        <span>{ctxLine || t("onmachine.composer.no_usage")}</span>
+      </div>
+      <div className="dd-tip-hint">{t("onmachine.composer.click_change_model")}</div>
+    </>
+  );
 
   // The send button is accent only when there's something to send — subtle grey otherwise, so the
   // composer isn't carrying a constant blue dot.
@@ -429,10 +631,11 @@ export function Composer(props: Props) {
 
   return (
     <div className="composer-wrap px-6 pb-5 pt-4">
+      {props.statusSlot && <div className="max-w-3xl mx-auto mb-3">{props.statusSlot}</div>}
       {props.approvalSlot}
 
       {dictationError && (
-        <div className="max-w-3xl mx-auto mb-2 px-1 text-[12px] text-red-600" role="alert">
+        <div className="max-w-3xl mx-auto mb-2 px-1 text-meta text-red-600" role="alert">
           {dictationError}
         </div>
       )}
@@ -441,13 +644,13 @@ export function Composer(props: Props) {
       {attachNotice && (
         <div
           data-testid="attach-notice"
-          className="max-w-3xl mx-auto mb-1.5 flex items-center gap-2 rounded-lg border border-warnInk/30 bg-warnSoft px-3 py-1.5 text-[12.5px] text-warnInk"
+          className="max-w-3xl mx-auto mb-1.5 flex items-center gap-2 rounded-lg border border-warnInk/30 bg-warnSoft px-3 py-1.5 text-ui text-warnInk"
         >
           <span className="flex-1">{attachNotice}</span>
           <button
             className="shrink-0 opacity-60 hover:opacity-100"
             onClick={() => setAttachNotice(null)}
-            title="关闭"
+            title={t("common.dismiss")}
           >
             ✕
           </button>
@@ -463,9 +666,12 @@ export function Composer(props: Props) {
         </div>
       )}
 
+      {props.teamSlot}
+      {props.planSlot}
       <div
         className={
-          "composer max-w-3xl mx-auto rounded-2xl border border-line bg-panel shadow-sm" +
+          "composer max-w-3xl mx-auto rounded-2xl border border-ink/[0.08] bg-panel shadow-[0_1px_2px_rgba(0,0,0,0.03),0_4px_14px_-10px_rgba(0,0,0,0.08)]" +
+          (props.planSlot ? " rounded-t-none" : "") +
           (dragging ? " dragging" : "")
         }
         onDragOver={(e) => {
@@ -482,11 +688,11 @@ export function Composer(props: Props) {
         {/* "/" force-run popup — in-flow above the textarea; rows are the session's
             effective menu only (muted/disabled skills never appear). */}
         {slashQuery !== null && (
-          <div className="px-2 pt-2" data-testid="skill-popup" role="listbox" aria-label="Skills">
+          <div className="px-2 pt-2" data-testid="skill-popup" role="listbox" aria-label={t("onmachine.composer.skills_aria")}>
             {slashSkills === null ? (
-              <div className="px-2 py-1.5 text-[12px] text-faint">Loading skills…</div>
+              <div className="px-2 py-1.5 text-meta text-faint">{t("onmachine.composer.skills_loading")}</div>
             ) : slashMatches.length === 0 ? (
-              <div className="px-2 py-1.5 text-[12px] text-faint">No matching skills.</div>
+              <div className="px-2 py-1.5 text-meta text-faint">{t("onmachine.composer.skills_none")}</div>
             ) : (
               slashMatches.map((s, i) => (
                 <button
@@ -500,9 +706,9 @@ export function Composer(props: Props) {
                   onMouseEnter={() => setSlashIndex(i)}
                   onClick={() => pickSkill(s)}
                 >
-                  <span className="text-[13px] font-medium text-accent shrink-0">/{s.name}</span>
-                  <span className="text-[12px] text-faint truncate flex-1">{s.description}</span>
-                  <span className="text-[10.5px] px-1.5 py-0.5 rounded-full border border-line text-faint shrink-0">
+                  <span className="text-ui font-medium text-accent shrink-0">/{s.name}</span>
+                  <span className="text-meta text-faint truncate flex-1">{s.description}</span>
+                  <span className="text-label px-1.5 py-0.5 rounded-full border border-line text-faint shrink-0">
                     {s.scope}
                   </span>
                 </button>
@@ -511,9 +717,14 @@ export function Composer(props: Props) {
           </div>
         )}
         <textarea
+          aria-label={props.placeholder}
           ref={textareaRef}
-          className="w-full block px-3.5 pt-3.5 pb-1.5 text-[14.5px]"
-          placeholder={props.placeholder || "向数字同事提问…（拖入或粘贴文件）"}
+          className="w-full block px-3.5 pt-3.5 pb-1.5 text-body"
+          placeholder={
+            props.gateOpen
+              ? t(props.gateKind === "question" ? "composer.placeholder_question" : "composer.placeholder_gate")
+              : props.placeholder || t("composer.placeholder")
+          }
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKey}
@@ -522,29 +733,61 @@ export function Composer(props: Props) {
         />
 
         {/* Three-control row (§22): + attach · Mode ⌄ …(right)… model (fresh only) · send */}
-        <div className="px-2.5 pb-2.5 pt-1 flex items-center gap-1.5">
+        <div className="px-2.5 pb-2.5 pt-1 flex min-w-0 items-center gap-1.5">
           {/* + attach menu */}
           <div className="relative">
             <button
               className={iconBtn + (attachMenuOpen ? " bg-paper text-ink" : "")}
-              title="附件"
-              aria-label="附件"
+              title={t("composer.attach")}
+              aria-label={t("composer.attach")}
               onClick={() => setAttachMenuOpen((v) => !v)}
             >
               <Icon name="plus" size={17} />
             </button>
             {attachMenuOpen && (
               <>
-                <div className="fixed inset-0 z-30" onClick={() => setAttachMenuOpen(false)} />
-                <div className="absolute z-40 bottom-full mb-1 left-0 min-w-[180px] rounded-xl border border-line bg-panel shadow-2xl py-1.5">
-                  {attachItem("image", "图片", () => pickFiles("image/*"))}
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => {
+                    setAttachMenuOpen(false);
+                    setBindMenu(null);
+                  }}
+                />
+                <div className="absolute z-40 bottom-full mb-1 left-0 min-w-[200px] rounded-xl border border-line bg-panel shadow-2xl py-1.5">
+                  {sessionRows && (
+                    <div className="px-3 pt-1 pb-0.5 text-[10.5px] font-medium text-faint">
+                      {t("composer.attach_this_message")}
+                    </div>
+                  )}
+                  {attachItem("image", t("composer.attach_image"), () => pickFiles("image/*"))}
                   {attachItem("file", "PDF", () => pickFiles("application/pdf,.pdf"))}
                   {attachItem(
                     "fileCode",
-                    "其他文件",
+                    t("composer.attach_other"),
                     () => pickFiles("text/*,.md,.csv,.json,.yaml,.yml,.log,.py,.ts,.tsx,.js,.rs,.go,.toml"),
                   )}
+                  {sessionRows && (
+                    <>
+                      <div className="my-1 border-t border-line" />
+                      <div className="px-3 pt-0.5 pb-0.5 text-[10.5px] font-medium text-faint">
+                        {t("composer.attach_this_session")}
+                      </div>
+                      {bindRow("book", t("composer.bind_memory"), "memory")}
+                      {bindRow("table", t("composer.bind_board"), "board")}
+                    </>
+                  )}
                 </div>
+                {bindMenu && props.sessionId && (
+                  <ProjectBindMenu
+                    sessionId={props.sessionId}
+                    kind={bindMenu}
+                    onClose={() => {
+                      setBindMenu(null);
+                      setAttachMenuOpen(false);
+                    }}
+                    onOpenMemory={props.onOpenMemory}
+                  />
+                )}
               </>
             )}
           </div>
@@ -570,62 +813,92 @@ export function Composer(props: Props) {
                   return <i key={index} style={{ height: Math.round(4 + level * 24) }} />;
                 })}
               </span>
-              <span className="text-[12px] text-muted tabular-nums">{recordingTime}</span>
+              <span className="text-meta text-muted tabular-nums">{recordingTime}</span>
             </div>
+          ) : props.followsLead ? (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-meta text-muted shrink-0"
+              data-testid="mode-follows-lead"
+              title={t("onmachine.composer.follows_lead_title")}
+            >
+              {t("onmachine.composer.follows_lead")}
+            </span>
           ) : props.workspace !== undefined ? (
             <ModeMenu
+              reviewerPaused={props.reviewerPaused}
               mode={props.mode}
               onModeChange={props.onModeChange}
               unattended={props.unattended}
               onUnattendedChange={props.onUnattendedChange}
+              attendance={props.attendance}
+              onAutoAnswerChange={props.onAutoAnswerChange}
             />
           ) : null}
 
-          {dictationBusy === "正在转写…" && <span className="text-[11.5px] text-accent">正在转写…</span>}
+          {dictationBusy === t("composer.starting_transcribe") && <span className="text-meta text-accent">{dictationBusy}</span>}
 
           <span className="ml-auto" />
-
-          {/* token usage (OPE-42) — a quiet chip; hidden until the server reports usage.
-              Shows the context-window fill bar alone (the session total lives in the
-              popover), or the session total when there's no window / the bar is off. */}
-          {!dictation?.recording && props.usage && totalTokens(props.usage) > 0 && (
-            <UsageChip
-              usage={props.usage}
-              contextWindow={props.contextWindow}
-              contextBar={props.contextBar}
-              model={props.model}
-              modelLabels={props.modelLabels}
-            />
-          )}
 
           {/* model — a quiet chip, now for the session's whole life (§17 rev 2026-07-22:
               mid-session switching shipped, so the picker stays actionable; the topbar
               subtitle still states the current model). */}
-          {!dictation?.recording && (needsModel ? (
+          {!props.compact && !dictation?.recording && (needsModel ? (
             <button
               className="pill model-warn chip"
               onClick={() => props.onConnectModel?.()}
-              title="连接模型"
-              aria-label="未连接模型 —— 请连接模型"
+              title={
+                props.wantedModels?.length
+                  ? t("onmachine.composer.runs_on_models", {
+                      models: props.wantedModels.map(shortModel).join(t("onmachine.list_or")),
+                    })
+                  : t("composer.model.connect")
+              }
+              aria-label={t("composer.model.none_aria")}
             >
-              <span className="pill-label">无模型</span>
+              <span className="pill-label">{t("composer.model.none")}</span>
               <span className="model-warn-ico" aria-hidden>⚠</span>
             </button>
           ) : modelsLoaded ? (
-            <Dropdown value={props.model} options={modelOptions} onChange={props.onModelChange} align="right" />
+            <Dropdown
+              value={props.model}
+              options={modelOptions}
+              onChange={props.onModelChange}
+              align="right"
+              displayLabel={modelName}
+              tooltip={modelTip}
+              searchFrom={6}
+              searchPlaceholder={t("composer.model.search")}
+              testId="model-picker"
+              footer={
+                props.onPickModel ? (
+                  <button onClick={props.onPickModel} data-testid="model-picker-pick">
+                    + {t("composer.model.pick_or_configure")}
+                  </button>
+                ) : null
+              }
+              leading={
+                props.contextBar === true && hasUsage ? (
+                  <ContextRing pct={ctxPct} label={ctxLine} testId="usage-chip" />
+                ) : null
+              }
+            />
           ) : (
             <button
               className="pill chip text-faint cursor-default"
               disabled
               data-testid="models-loading"
-              title="正在从服务器获取模型列表"
+              title={t("composer.model.loading_title")}
             >
-              <span className="pill-label">正在加载模型…</span>
+              <span className="pill-label">{t("composer.model.loading")}</span>
             </button>
           ))}
 
+          {!props.compact && modelsLoaded && props.sessionId && (
+            <SessionModelControls sessionId={props.sessionId} model={props.model} onPickModel={props.onPickModel} />
+          )}
+
           {/* mic — immediately before send (owner call, DMG #28 walkthrough) */}
-          {isTauri() && (
+          {!props.compact && isTauri() && (
             <button
               className={
                 iconBtn +
@@ -638,22 +911,22 @@ export function Composer(props: Props) {
               title={
                 dictationBusy ||
                 (dictation?.recording
-                  ? "停止录音并转写"
+                  ? t("composer.voice.stop_transcribe")
                   : voiceReady
-                    ? "开始本地语音听写"
-                    : "在设置中配置语音输入")
+                    ? t("composer.voice.start_dictation")
+                    : t("composer.voice.configure"))
               }
-              aria-label={dictation?.recording ? "停止听写" : voiceReady ? "开始听写" : "在设置中配置语音输入"}
+              aria-label={dictation?.recording ? t("composer.voice.stop_dictation") : voiceReady ? t("composer.voice.start_dictation_btn") : t("composer.voice.configure")}
               aria-disabled={!voiceReady && !dictation?.recording}
             >
               <Icon name={dictation?.recording ? "stop" : "mic"} size={16} />
             </button>
           )}
 
-          {/* send / stop */}
-          {props.running ? (
-            <button className="btn danger" onClick={props.onInterrupt}>
-              ⏹ 停止
+          {/* send / stop — a pending gate re-opens Send: the reply resolves it */}
+          {props.running && !props.gateOpen ? (
+            <button className="btn danger shrink-0" onClick={props.onInterrupt}>
+              {t("composer.stop")}
             </button>
           ) : (
             <button
@@ -665,8 +938,8 @@ export function Composer(props: Props) {
               }
               onClick={submit}
               disabled={!props.connected || !!dictation?.recording || !!dictationBusy}
-              title={needsModel ? "连接模型后才能发送" : undefined}
-              aria-label="发送"
+              title={needsModel ? t("composer.connect_to_send") : undefined}
+              aria-label={t("common.send")}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 19V5M5 12l7-7 7 7" />
@@ -676,150 +949,51 @@ export function Composer(props: Props) {
         </div>
       </div>
       <span className="sr-only" role="status" aria-live="polite">
-        {dictation?.recording ? `正在聆听，${recordingTime}` : dictationBusy || ""}
+        {dictation?.recording ? t("composer.listening_sr", { time: recordingTime }) : dictationBusy || ""}
       </span>
     </div>
   );
 }
 
-// Token-usage chip + popover (OPE-42). Trigger: a tiny context-fill meter (only when the
-// active model's window is known) + the session's total token count. Click → per-model
-// breakdown. Tokens only, never dollars (true cost is unknowable client-side — discounted
-// pricing, per-provider cache billing).
-function UsageChip({
-  usage,
-  contextWindow,
-  contextBar,
-  model,
-  modelLabels,
+// Context ring (OPE-42 meter, UX-048 placement): a small ring at the left of the model name
+// and inside its hover card. Accent arc = context-window fill, warn color from 80%; with no
+// known window (custom / Ollama models) the track renders empty. The old popover is gone —
+// the hover card carries the figures.
+function ContextRing({
+  pct,
+  size = 12,
+  label,
+  testId,
 }: {
-  usage: SessionUsage;
-  contextWindow?: number;
-  contextBar?: boolean;
-  model: string;
-  modelLabels?: Record<string, string>;
+  pct: number | null;
+  size?: number;
+  label?: string;
+  testId?: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const total = totalTokens(usage);
-  const pct = contextWindow
-    ? Math.min(100, Math.round((usage.context / contextWindow) * 100))
-    : null;
-  // Settings can hide the bar; without a known window there is nothing to fill either.
-  const showBar = pct !== null && contextBar === true;
-  const labelFor = (id: string) =>
-    id === "unknown" ? "Unknown model" : modelLabels?.[id] || shortModel(id);
-  // One field per line, session-summed (owner ask 2026-07-28). Values are cumulative
-  // across the whole session, never just the last turn; "Input" is the fresh
-  // (uncached) share — the cached share sits in the cache rows at its own price.
-  const stat = (label: string, value: number) => (
-    <div className="flex items-baseline justify-between text-[11.5px] leading-snug">
-      <span className="text-faint">{label}</span>
-      <span className="text-ink tabular-nums">{formatTokens(value)}</span>
-    </div>
-  );
+  const color = pct !== null && pct >= 80 ? "var(--warn-ink)" : "var(--accent)";
+  const fill = pct === null ? 0 : Math.max(pct, 3);
   return (
-    <div className="relative">
-      <button
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11.5px] text-muted hover:text-ink hover:bg-paper shrink-0"
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Token usage"
-        title={
-          showBar
-            ? `Context window ${pct}% full · ${formatTokens(total)} tokens this session`
-            : `Token usage this session: ${formatTokens(total)}`
-        }
-        data-testid="usage-chip"
-      >
-        {/* The bar is the context-window fill; pairing it with the session TOTAL read as
-            "total is N% of the window", which it never was. Bar alone when we have a
-            window, the session total only when we don't (so the chip is never empty). */}
-        {showBar ? (
-          <span className="w-12 h-1.5 rounded-full bg-line overflow-hidden" aria-hidden="true">
-            <span
-              className="block h-full bg-accent transition-all"
-              style={{ width: `${Math.max(pct as number, 4)}%` }}
-            />
-          </span>
-        ) : (
-          <span className="tabular-nums">{formatTokens(total)}</span>
-        )}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div
-            className="absolute z-40 bottom-full mb-1 right-0 w-[280px] rounded-xl border border-line bg-panel shadow-2xl p-3"
-            role="menu"
-            data-testid="usage-popover"
-          >
-            {contextWindow ? (
-              <div className="mb-2.5">
-                <div className="text-[10.5px] uppercase tracking-[0.06em] text-faint font-semibold mb-1">
-                  Context window
-                </div>
-                <div className="h-1.5 rounded-full bg-line overflow-hidden">
-                  <div
-                    className="h-full bg-accent transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <div className="mt-1 text-[11.5px] text-muted tabular-nums">
-                  {formatTokens(usage.context)} of {formatTokens(contextWindow)} · {pct}%
-                </div>
-              </div>
-            ) : usage.context > 0 ? (
-              <div className="mb-2.5 text-[11.5px] text-muted tabular-nums">
-                In context now: {formatTokens(usage.context)} tokens
-              </div>
-            ) : null}
-            <div className="text-[10.5px] uppercase tracking-[0.06em] text-faint font-semibold mb-1">
-              Session totals
-            </div>
-            <div className="flex flex-col gap-1.5">
-              {Object.entries(usage.byModel).map(([id, t]) => (
-                <div key={id}>
-                  <div className="text-[12px] text-ink font-medium truncate" title={id}>
-                    {labelFor(id)}
-                  </div>
-                  {/* Every row is a session sum. With a cache split, the input rows are
-                      the three BILLING CLASSES of input (each priced differently) and
-                      read as components: uncached + cache reads + cache writes = total.
-                      Without one (Ollama, compat vendors), plain "Input" says it all. */}
-                  <div className="mt-0.5 flex flex-col gap-0.5">
-                    {t.cache_read + t.cache_write > 0 ? (
-                      <>
-                        {stat("Uncached input", t.input)}
-                        {stat("Cache reads", t.cache_read)}
-                        {stat("Cache writes", t.cache_write)}
-                        {stat("Total input", t.input + t.cache_read + t.cache_write)}
-                      </>
-                    ) : (
-                      stat("Input", t.input)
-                    )}
-                    {stat("Output", t.output)}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-2 pt-2 border-t border-line flex items-baseline justify-between text-[11.5px]">
-              <span className="text-faint">Total</span>
-              <span className="text-ink tabular-nums">{formatTokens(total)} tokens</span>
-            </div>
-            {model && !modelLabels?.[model] && contextWindow === undefined && (
-              <div className="mt-1 text-[10.5px] text-faint leading-snug">
-                Context meter unavailable for custom models.
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+    <span
+      className="relative inline-block rounded-full shrink-0"
+      style={{
+        width: size,
+        height: size,
+        background: `conic-gradient(${color} ${fill}%, color-mix(in srgb, currentColor 18%, transparent) 0)`,
+      }}
+      data-testid={testId}
+      aria-label={label}
+      role={label ? "img" : undefined}
+    >
+      <span
+        className="absolute rounded-full"
+        style={{ inset: Math.max(2, Math.round(size / 7)), background: "var(--tip-hole, var(--panel))" }}
+        aria-hidden="true"
+      />
+    </span>
   );
 }
 
-// The composer's Mode menu (§22): a quiet "模式 ⌄" chip opening the five permission options with
+// The composer's Mode menu (§22): a quiet "Mode ⌄" chip opening the five permission options with
 // the current one marked, plus — when the session supports it — the "Send approvals to Inbox"
 // toggle at the bottom (the old standalone InboxControl, folded in).
 function ModeMenu({
@@ -827,31 +1001,60 @@ function ModeMenu({
   onModeChange,
   unattended,
   onUnattendedChange,
+  attendance,
+  onAutoAnswerChange,
+  reviewerPaused,
 }: {
   mode: string;
   onModeChange: (mode: string) => void;
   unattended?: boolean;
   onUnattendedChange?: (on: boolean) => void;
+  attendance?: "attended" | "inbox" | "auto";
+  onAutoAnswerChange?: (on: boolean) => void;
+  reviewerPaused?: boolean;
 }) {
+  // A session saved under the legacy "auto" spelling is the same mode as the picker's
+  // "bypass-approvals" entry: compare on the canonical value so its tick shows.
+  const canonical = canonicalMode(mode);
+  const inboxOn = attendance ? attendance === "inbox" : !!unattended;
+  const autoOn = attendance === "auto";
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const current = PERMISSION_OPTIONS.find((o) => o.value === mode);
+  // The Auto-Approve entry is gated on the server flag. Fetch once on first open; a session
+  // already IN auto-approve mode always shows its own entry so the current mode is legible
+  // even if the flag was later turned off.
+  const [autoApproveEnabled, setAutoApproveEnabled] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    getSettings()
+      .then((s) => setAutoApproveEnabled(s.auto_approve === true))
+      .catch(() => {});
+  }, [open]);
+  const options = PERMISSION_OPTIONS.filter(
+    (o) => !o.gated || autoApproveEnabled || o.value === canonical,
+  );
+  const current = PERMISSION_OPTIONS.find((o) => o.value === canonical);
   return (
     <div className="relative">
       {/* Borderless, and it names the CHOSEN mode (owner ask 2026-07-11, competitor composer
-          comparison): "需要审批 ⌄" not a generic "模式 ⌄" pill. aria-label stays
-          "模式" so the accessible name is stable across mode changes. */}
+          comparison): "Ask for approval ⌄" not a generic "Mode ⌄" pill. aria-label stays
+          "Mode" so the accessible name is stable across mode changes. */}
       <button
-        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[12px] text-muted hover:text-ink hover:bg-paper shrink-0"
+        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-meta text-muted hover:text-ink hover:bg-paper shrink-0"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="模式"
+        aria-label={t("composer.mode_label")}
         title={
-          `Mode: ${current?.label || mode}` +
-          (unattended ? " · 审批将进入收件箱" : "")
+          `${t("composer.mode_label")}: ${current ? t(current.label) : mode}` +
+          (reviewerPaused && mode === "auto-approve" ? " · " + t("composer.reviewer_paused_tip") : "") +
+          (unattended ? " · " + t("composer.approvals_to_inbox") : "")
         }
       >
-        {current?.label || mode}
+        {current ? t(current.label) : mode}
+        {reviewerPaused && mode === "auto-approve" && (
+          <span className="text-label text-warnInk" data-testid="mode-paused">· {t("composer.paused")}</span>
+        )}
         <Icon name="chevronDown" size={11} className="text-faint" />
       </button>
       {open && (
@@ -862,7 +1065,7 @@ function ModeMenu({
             role="menu"
             data-testid="mode-menu"
           >
-            {PERMISSION_OPTIONS.map((o) => (
+            {options.map((o) => (
               <button
                 key={o.value}
                 className="w-full flex flex-col items-start px-2.5 py-1.5 rounded-lg text-left hover:bg-paper"
@@ -873,13 +1076,17 @@ function ModeMenu({
               >
                 <span
                   className={
-                    "text-[13px] " + (o.value === mode ? "font-medium text-accent" : "text-ink")
+                    "flex items-center text-ui " +
+                    (o.value === canonical ? "font-medium text-accent" : "text-ink")
                   }
                 >
-                  {o.label}
-                  {o.value === mode && <span className="ml-1.5">✓</span>}
+                  {o.caution && (
+                    <Icon name="warning" size={13} className="mr-1.5 shrink-0 text-warnInk" />
+                  )}
+                  {t(o.label)}
+                  {o.value === canonical && <span className="ml-1.5">✓</span>}
                 </span>
-                <span className="text-[11px] text-faint leading-snug">{o.description}</span>
+                <span className="text-label text-faint leading-snug">{t(o.description ?? "")}</span>
               </button>
             ))}
             {onUnattendedChange && (
@@ -887,18 +1094,33 @@ function ModeMenu({
                 <div className="my-1 border-t border-line" />
                 <div className="flex items-center gap-2 px-2.5 py-1.5">
                   <span className="flex-1 min-w-0">
-                    <span className="block text-[13px] text-ink">将审批发送到收件箱</span>
-                    <span className="block text-[11px] text-faint leading-snug">
-                      审批与提问将进入收件箱；智能体继续工作。
+                    <span className="block text-ui text-ink">{t("composer.approvals_to_inbox")}</span>
+                    <span className="block text-label text-faint leading-snug">
+                      {t("composer.approvals_to_inbox_help")}
                     </span>
                   </span>
                   <Toggle
-                    checked={!!unattended}
+                    checked={inboxOn}
                     onChange={onUnattendedChange}
-                    title="将审批发送到收件箱"
+                    title={t("composer.send_approvals_to_inbox")}
                   />
                 </div>
               </>
+            )}
+            {onAutoAnswerChange && (
+              <div className="flex items-center gap-2 px-2.5 py-1.5" data-testid="auto-answer-row">
+                <span className="flex-1 min-w-0">
+                  <span className="block text-ui text-ink">{t("composer.answer_for_me")}</span>
+                  <span className="block text-label text-faint leading-snug">
+                    {t("composer.answer_for_me_help")}
+                  </span>
+                </span>
+                <Toggle
+                  checked={autoOn}
+                  onChange={onAutoAnswerChange}
+                  title={t("composer.answer_for_me")}
+                />
+              </div>
             )}
           </div>
         </>
@@ -911,7 +1133,7 @@ function ModeMenu({
 function attachItem(icon: "image" | "file" | "fileCode", label: string, onClick: () => void) {
   return (
     <button
-      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[13px] text-left hover:bg-paper"
+      className="w-full flex items-center gap-2.5 px-3 py-1.5 text-ui text-left hover:bg-paper"
       onClick={onClick}
     >
       <Icon name={icon} size={15} className="shrink-0 text-muted" /> {label}
@@ -920,6 +1142,7 @@ function attachItem(icon: "image" | "file" | "fileCode", label: string, onClick:
 }
 
 function AttachChip({ a, onRemove }: { a: Attachment; onRemove: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className={"attach-chip" + (a.kind === "image" ? " img" : "")}>
       {a.kind === "image" ? (
@@ -930,9 +1153,219 @@ function AttachChip({ a, onRemove }: { a: Attachment; onRemove: () => void }) {
           <span className="attach-name">{a.name}</span>
         </>
       )}
-      <button className="attach-x" onClick={onRemove} title="移除">
+      <button className="attach-x" onClick={onRemove} title={t("common.remove")}>
         ✕
       </button>
     </div>
+  );
+}
+
+
+// UX-056: beside the model, this session's reasoning effort (a grey pill showing the
+// level; click for a slider over the model's own levels) and thinking switch (a brain;
+// click to flip). Each appears only when the model has it — the server says which
+// (providers/model_controls.py). The model's default is a tick on the track and
+// "Default" under its name; a session that differs gets a small dot and a Reset.
+// No accent colour here: the composer stays muted.
+function SessionModelControls({
+  sessionId,
+  model,
+  onPickModel,
+}: {
+  sessionId: string;
+  model: string;
+  onPickModel?: () => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [controls, setControls] = useState<ModelControls | null>(null);
+  const [thinking, setThinking] = useState<boolean | null>(null);
+  const [effort, setEffort] = useState<string | null>(null);
+  const [drag, setDrag] = useState<number | null>(null);
+  const [hover, setHover] = useState<number | null>(null);
+  useEffect(() => {
+    let live = true;
+    setControls(null);
+    getSessionModelSettings(sessionId, model)
+      .then((s) => {
+        if (!live) return;
+        setControls(s.controls || null);
+        setThinking(s.thinking ?? null);
+        setEffort(s.reasoning_effort ?? null);
+      })
+      .catch(() => live && setControls(null));
+    return () => {
+      live = false;
+    };
+  }, [sessionId, model]);
+  const apply = (values: { thinking?: boolean | null; reasoning_effort?: string | null }) =>
+    setSessionModelSettings(sessionId, values).then((r) => {
+      if (!r.ok) return;
+      setThinking(r.thinking ?? null);
+      setEffort(r.reasoning_effort ?? null);
+    });
+  if (!controls) return null;
+  const think = controls.thinking.support === "supported" ? controls.thinking : null;
+  const reason = controls.reasoning.support === "supported" && (controls.reasoning.levels || []).length ? controls.reasoning : null;
+  if (!think && !reason) return null;
+  const levels = reason?.levels || [];
+  const label = (lvl: string) => t(`composer.model.effort_${lvl}`, { defaultValue: lvl });
+
+  const thinkOn = thinking ?? !!think?.default;
+  const thinkChanged = thinking !== null && thinking !== !!think?.default;
+  const level = effort ?? reason?.default ?? levels[0];
+  const effortChanged = effort !== null && effort !== reason?.default;
+  const at = Math.max(0, levels.indexOf(level));
+  // While dragging, the thumb follows the pointer's nearest level; it saves on release.
+  const shown = drag ?? at;
+  // The first and last levels sit at the very ends of the track: the thumb (30px, 3px
+  // inset) touches the edge there. A stop's centre is 18px in from each end at most.
+  const frac = (i: number) => (levels.length > 1 ? i / (levels.length - 1) : 0.5);
+  const centre = (i: number) => `calc(18px + (100% - 36px) * ${frac(i)})`;
+  const choose = (i: number) => {
+    const lvl = levels[Math.max(0, Math.min(levels.length - 1, i))];
+    if (!lvl || lvl === level) return;
+    const value = lvl === reason?.default ? null : lvl;
+    // Show the new level at once, so the thumb stays where it was let go of instead of
+    // sliding back to the old level until the server answers.
+    setEffort(value);
+    apply({ reasoning_effort: value });
+  };
+  // More than three levels crowd the row: name the ends, the current level and the
+  // default; the rest show when the pointer is over their stop.
+  const named = (i: number) =>
+    levels.length <= 3 || i === 0 || i === levels.length - 1 || i === shown || levels[i] === reason?.default;
+  const nearest = (clientX: number, el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const f = (clientX - r.left - 18) / Math.max(1, r.width - 36);
+    return Math.max(0, Math.min(levels.length - 1, Math.round(f * (levels.length - 1))));
+  };
+  const dot = <span className="w-[5px] h-[5px] rounded-full bg-muted" aria-hidden />;
+
+  return (
+    <>
+      {reason && (
+        <div className="relative shrink-0">
+          <button
+            className={"inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-meta text-ink " + (open ? "bg-lineStrong/60" : "bg-paper hover:bg-line")}
+            title={t("composer.model.effort_label")}
+            onClick={() => setOpen((v) => !v)}
+            data-testid="effort-pill"
+          >
+            {effortChanged && dot}
+            {label(level)}
+          </button>
+          {open && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+              <div className="absolute z-40 bottom-full mb-2 right-0 w-[340px] rounded-2xl border border-line bg-panel shadow-2xl px-[18px] pt-4 pb-3" data-testid="effort-menu">
+                <div className="flex items-baseline gap-2 text-ui">
+                  <span className="text-faint">{t("composer.model.effort_label")}</span>
+                  <span className="font-semibold">{label(levels[shown] || level)}</span>
+                  {effortChanged && (
+                    <button className="ml-auto text-meta text-muted underline underline-offset-2 hover:text-ink" onClick={() => apply({ reasoning_effort: null })} data-testid="effort-reset">
+                      {t("composer.model.reset_to", { level: label(reason.default || "") })}
+                    </button>
+                  )}
+                </div>
+                <div className="flex justify-between text-meta text-faint mt-3.5 mb-1.5">
+                  <span>{t("composer.model.faster")}</span>
+                  <span>{t("composer.model.smarter")}</span>
+                </div>
+                <div
+                  className="relative h-[34px] rounded-[10px] bg-paper cursor-pointer touch-none outline-none focus-visible:ring-1 focus-visible:ring-lineStrong"
+                  role="slider"
+                  tabIndex={0}
+                  aria-label={t("composer.model.effort_label")}
+                  aria-valuemin={0}
+                  aria-valuemax={levels.length - 1}
+                  aria-valuenow={shown}
+                  aria-valuetext={label(levels[shown])}
+                  onPointerDown={(e) => {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    setDrag(nearest(e.clientX, e.currentTarget));
+                  }}
+                  onPointerMove={(e) => {
+                    const i = nearest(e.clientX, e.currentTarget);
+                    if (drag !== null) setDrag(i);
+                    setHover(i);
+                  }}
+                  onPointerLeave={() => setHover(null)}
+                  onPointerUp={(e) => {
+                    const i = nearest(e.clientX, e.currentTarget);
+                    setDrag(null);
+                    choose(i);
+                  }}
+                  onPointerCancel={() => setDrag(null)}
+                  onKeyDown={(e) => {
+                    const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key];
+                    if (step) choose(at + step);
+                    else if (e.key === "Home") choose(0);
+                    else if (e.key === "End") choose(levels.length - 1);
+                    else return;
+                    e.preventDefault();
+                  }}
+                  data-testid="effort-slider"
+                >
+                  <div className="absolute inset-y-0 left-0 rounded-[10px] bg-lineStrong" style={{ width: `calc(${centre(shown)} + 15px)` }} />
+                  {levels.map((lvl, i) =>
+                    i === shown ? null : lvl === reason.default ? (
+                      <span key={lvl} className="absolute top-1/2 w-[2px] h-3 -mt-1.5 -ml-px rounded-sm bg-muted" style={{ left: centre(i) }} />
+                    ) : (
+                      <span key={lvl} className="absolute top-1/2 w-1 h-1 -mt-0.5 -ml-0.5 rounded-full bg-faint" style={{ left: centre(i) }} />
+                    ),
+                  )}
+                  <span
+                    className={"absolute top-[3px] w-[30px] h-[28px] -ml-[15px] rounded-[9px] bg-panel shadow pointer-events-none " + (drag === null ? "transition-[left]" : "")}
+                    style={{ left: centre(shown) }}
+                    data-testid="effort-thumb"
+                  />
+                </div>
+                <div className="relative h-[34px] text-[12px] text-faint">
+                  {levels.map((lvl, i) => (
+                    <span
+                      key={lvl}
+                      className={
+                        "absolute top-1.5 -translate-x-1/2 whitespace-nowrap text-center transition-opacity " +
+                        (i === shown ? "text-ink font-semibold " : "") +
+                        (named(i) || i === hover ? "opacity-100" : "opacity-0")
+                      }
+                      style={{ left: centre(i) }}
+                    >
+                      {label(lvl)}
+                      {lvl === reason.default && <small className="block text-[10.5px] font-normal text-muted">{t("composer.model.default")}</small>}
+                    </span>
+                  ))}
+                </div>
+                {onPickModel && (
+                  <div className="flex justify-end mt-2.5 text-meta">
+                    <button className="text-muted hover:text-ink" onClick={() => { setOpen(false); onPickModel(); }}>
+                      {t("composer.model.model_defaults")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      {think && (
+        <button
+          className={"relative w-7 h-7 grid place-items-center rounded-md hover:bg-paper shrink-0 " + (thinkOn ? "text-ink" : "text-faint")}
+          title={t(thinkOn ? "composer.model.thinking_on" : "composer.model.thinking_off") + (thinkChanged ? "" : ` · ${t("composer.model.default")}`)}
+          aria-label={t("composer.model.thinking_label")}
+          aria-pressed={thinkOn}
+          onClick={() => {
+            const next = !thinkOn;
+            apply({ thinking: next === !!think.default ? null : next });
+          }}
+          data-testid="thinking-toggle"
+        >
+          <Icon name="brain" size={16} />
+          {!thinkOn && <span className="absolute w-[18px] h-[1.6px] bg-faint rotate-[-45deg] rounded-sm" aria-hidden />}
+          {thinkChanged && <span className="absolute top-[3px] right-[3px] w-[5px] h-[5px] rounded-full bg-muted" aria-hidden />}
+        </button>
+      )}
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   cloudLogin,
   connectManaged,
@@ -25,27 +26,31 @@ import { Spinner } from "./AutomationQuickstart";
 // Step 2's benefit rows (§41): managed connectors with LIVE prod OAuth apps only,
 // each framed by the job it does (detail copy stays ONE line even with a Connect
 // pill — wrap made rows jump between states). gmail + google_calendar ship as one
-// combined grayed "即将推出" row — both ride the same Google app, gated on
+// combined grayed "Coming soon" row — both ride the same Google app, gated on
 // Google verification/CASA; give them rows when it lands.
 const TOOL_ROWS = [
-  { name: "outlook", benefit: "掌控你的邮件", detail: "Outlook —— 分类邮件、起草回复、管理日历。" },
-  { name: "slack", benefit: "跟上 Slack", detail: "Slack —— 查看动态、回复提及、发布更新。" },
-  { name: "github", benefit: "提交代码", detail: "GitHub —— 审查 PR、关注 issue、回复 @提及。" },
-  { name: "notion", benefit: "随手查阅笔记", detail: "Notion —— 搜索页面、查询数据库、起草文档。" },
-  { name: "hubspot", benefit: "保持 CRM 更新", detail: "HubSpot —— 更新商机、记录备注、准备通话。" },
-  { name: "attio", benefit: "掌握每段关系", detail: "Attio —— 搜索记录、查看时间线、记录备注。" },
+  { name: "outlook", benefitKey: "onboarding.tool_outlook_benefit", detailKey: "onboarding.tool_outlook_detail" },
+  { name: "slack", benefitKey: "onboarding.tool_slack_benefit", detailKey: "onboarding.tool_slack_detail" },
+  { name: "github", benefitKey: "onboarding.tool_github_benefit", detailKey: "onboarding.tool_github_detail" },
+  { name: "notion", benefitKey: "onboarding.tool_notion_benefit", detailKey: "onboarding.tool_notion_detail" },
+  { name: "hubspot", benefitKey: "onboarding.tool_hubspot_benefit", detailKey: "onboarding.tool_hubspot_detail" },
+  { name: "attio", benefitKey: "onboarding.tool_attio_benefit", detailKey: "onboarding.tool_attio_detail" },
 ];
 const TOOLS_SOON = ["gmail", "google_calendar"];
 
 export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "automations") => void }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
 
   // -- step 1: model (provider gallery ⇄ key form, shared machinery) ---------------
   const ps = useProviderSetup();
   const [skipConfirm, setSkipConfirm] = useState(false);
 
+  // Ready = a saved key, a proven keyless runtime, or a completed OAuth sign-in
+  // (subscription providers set signed_in, not configured+needs_key).
   const anyReady =
-    ps.providers.some((p) => p.configured && p.needs_key) || ps.keylessOk.size > 0;
+    ps.providers.some((p) => (p.configured && p.needs_key) || (p.auth === "oauth" && p.signed_in)) ||
+    ps.keylessOk.size > 0;
   // In the form with typed-but-untested input, Next verifies+saves first (tester
   // catch 2026-07-12: a manual Test-then-Continue two-step reads as a puzzle).
   const nextFromForm = !!ps.sel && ps.dirty && ps.secretFilled;
@@ -119,9 +124,9 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
         {step === 0 && (
           <section data-testid="ob-step-model" className="flex-1 min-h-0 flex flex-col">
             {/* Persistent header — stays put while the region below swaps (§39). */}
-            <h1 className="text-[19px] font-semibold">欢迎使用 OpenWorker<span className="beta-tag">BETA</span></h1>
-            <p className="text-[13px] text-muted mt-0.5 mb-4">
-              选择一个模型服务商即可开始 —— OpenWorker 使用你自己的密钥运行，密钥与数据都留在本机。
+            <h1 className="text-title font-semibold">{t("onboarding.welcome")}<span className="beta-tag">BETA</span></h1>
+            <p className="text-ui text-muted mt-0.5 mb-4">
+              {t("onboarding.model_intro")}
             </p>
 
             {!ps.sel ? (
@@ -139,28 +144,28 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
             {/* Persistent footer (§39). */}
             <div className="flex items-center gap-3 pt-5">
               {!skipConfirm ? (
-                <button className="text-[12.5px] text-faint hover:text-muted" onClick={() => setSkipConfirm(true)}>
-                  跳过设置
+                <button className="text-ui text-faint hover:text-muted" onClick={() => setSkipConfirm(true)}>
+                  {t("onboarding.skip_setup")}
                 </button>
               ) : (
-                <span className="text-[12.5px] text-muted">
-                  没有模型什么都用不了 ——{" "}
+                <span className="text-ui text-muted">
+                  {t("onboarding.skip_warn_pref")}{" "}
                   <button className="text-accent" onClick={() => finish()}>
-                    仍要跳过
+                    {t("onboarding.skip_anyway")}
                   </button>
                 </span>
               )}
               <button
-                className="ml-auto px-6 py-2 rounded-full bg-ink text-panel text-[13px] disabled:opacity-40"
+                className="ml-auto px-6 py-2 rounded-full bg-ink text-panel text-ui disabled:opacity-40"
                 disabled={!canNext || ps.verify.state === "testing"}
                 onClick={advance}
                 data-testid="ob-continue"
               >
-                {ps.verify.state === "testing" ? "检查中…" : "下一步"}
+                {ps.verify.state === "testing" ? t("onboarding.checking") : t("onboarding.next")}
               </button>
             </div>
-            <p className="text-[11px] text-faint mt-3">
-              可随时在 设置 ▸ 模型 中启用或隐藏模型。
+            <p className="text-label text-faint mt-3">
+              {t("onboarding.models_settings_hint")}
             </p>
           </section>
         )}
@@ -172,13 +177,13 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
              slot keeps its place but flips to a green congrats, and every row grows a quiet
              Connect pill. The gated Google pair is ONE combined grayed row. */
           <section data-testid="ob-step-tools" className="flex-1 min-h-0 flex flex-col">
-            <h1 className="text-[19px] font-semibold">连接你的日常工具</h1>
-            <p className="text-[13px] text-muted mt-0.5 mb-3">
-              仅聊天只能给建议。连接后，你的同事才能真正干活：
+            <h1 className="text-title font-semibold">{t("onboarding.connect_tools_title")}</h1>
+            <p className="text-ui text-muted mt-0.5 mb-3">
+              {t("onboarding.connect_tools_intro")}
             </p>
 
             <div className="flex-1 min-h-0 overflow-y-auto pr-1" data-testid="ob-tool-gallery">
-              {TOOL_ROWS.map(({ name, benefit, detail }) => {
+              {TOOL_ROWS.map(({ name, benefitKey, detailKey }) => {
                 const c = connectors.find((x) => x.name === name);
                 if (!c) return null;
                 return (
@@ -189,20 +194,21 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
                   >
                     <ConnectorBadge connector={c} size={34} title={c.title} />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[13.5px] font-semibold leading-tight">{benefit}</span>
-                      <span className="block text-[12px] text-muted truncate">{detail}</span>
+                      <span className="block text-ui font-semibold leading-tight">{t(benefitKey)}</span>
+                      <span className="block text-meta text-muted truncate">{t(detailKey)}</span>
                     </span>
                     {cloud?.signed_in &&
                       (c.connected ? (
-                        <span className="text-[12px] text-ok font-medium shrink-0">✓ 已连接</span>
+                        <span className="text-meta text-ok font-medium shrink-0">{t("onboarding.connected_ok")}</span>
                       ) : pendingTool === name ? (
-                        <span className="text-[12px] text-muted shrink-0">请在浏览器中确认…</span>
+                        <span className="text-meta text-muted shrink-0">{t("onboarding.check_browser")}</span>
                       ) : (
                         <button
-                          className="shrink-0 rounded-full border border-line px-4 py-1.5 text-[12.5px] font-medium hover:border-lineStrong"
+                          className="shrink-0 rounded-full border border-line px-4 py-1.5 text-ui font-medium hover:border-lineStrong"
                           onClick={() => startTool(name)}
                         >
-                          连接</button>
+                          {t("onboarding.connect")}
+                        </button>
                       ))}
                   </div>
                 );
@@ -216,14 +222,14 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
                   })}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13.5px] font-semibold leading-tight text-faint">
-                    Gmail 与 Google 日历
+                  <span className="block text-ui font-semibold leading-tight text-faint">
+                    {t("onboarding.google_pair_title")}
                   </span>
-                  <span className="block text-[12px] text-faint truncate">
-                    即将推出 —— 等待 Google 应用审核。
+                  <span className="block text-meta text-faint truncate">
+                    {t("onboarding.google_pair_detail")}
                   </span>
                 </span>
-                {cloud?.signed_in && <span className="text-[11.5px] text-faint shrink-0">即将推出</span>}
+                {cloud?.signed_in && <span className="text-meta text-faint shrink-0">{t("onboarding.coming_soon")}</span>}
               </div>
             </div>
 
@@ -232,34 +238,33 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
                 returns from the browser (§41). */}
             {!cloud?.signed_in ? (
               <div className="mt-3.5 rounded-xl border border-line bg-paper px-4 py-3 flex items-center gap-3.5 shrink-0">
-                <span className="flex-1 text-[12.5px] text-muted leading-snug">
-                  <span className="block text-[13px] font-semibold text-ink mb-0.5">
-                    登录以一键连接
+                <span className="flex-1 text-ui text-muted leading-snug">
+                  <span className="block text-ui font-semibold text-ink mb-0.5">
+                    {t("onboarding.signin_for_oneclick")}
                   </span>
-                  OpenWorker 处理 20+ 工具的 OAuth —— 无需开发者后台，无需粘贴密钥。
-                  令牌留在本机。
+                  {t("onboarding.signin_band_desc")}
                 </span>
                 {signinPhase ? (
-                  <span className="inline-flex items-center gap-2 text-[12.5px] text-muted shrink-0">
+                  <span className="inline-flex items-center gap-2 text-ui text-muted shrink-0">
                     <Spinner />
                     {signinPhase === "opening" ? (
-                      "正在打开浏览器…"
+                      t("onboarding.opening_browser")
                     ) : (
                       <>
-                        等待中…{" "}
+                        {t("onboarding.waiting")}{" "}
                         <button
                           className="underline hover:text-ink"
                           onClick={() => setSigninPhase(null)}
                           data-testid="ob-signin-cancel"
                         >
-                          取消
+                          {t("onboarding.cancel")}
                         </button>
                       </>
                     )}
                   </span>
                 ) : (
                   <button
-                    className="shrink-0 px-5 py-2 rounded-full bg-ink text-panel text-[13px]"
+                    className="shrink-0 px-5 py-2 rounded-full bg-ink text-panel text-ui"
                     onClick={async () => {
                       setSigninPhase("opening");
                       await cloudLogin().catch(() => {});
@@ -267,7 +272,7 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
                     }}
                     data-testid="ob-cloud-signin"
                   >
-                    登录
+                    {t("onboarding.sign_in")}
                   </button>
                 )}
               </div>
@@ -276,11 +281,13 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
                 className="mt-3.5 rounded-xl border border-line bg-okSoft px-4 py-3 shrink-0"
                 data-testid="ob-tools-signedin"
               >
-                <span className="block text-[13px] font-semibold text-ok mb-0.5">
-                  🎉 已登录{cloud.account ? `（${cloud.account}）` : ""}
+                <span className="block text-ui font-semibold text-ok mb-0.5">
+                  {cloud.account
+                    ? t("onboarding.signed_in_as", { account: cloud.account })
+                    : t("onboarding.signed_in")}
                 </span>
-                <span className="block text-[12.5px] text-muted">
-                  点击上方工具一键连接 —— 或随时在连接器页面添加。
+                <span className="block text-ui text-muted">
+                  {t("onboarding.signed_in_desc")}
                 </span>
               </div>
             )}
@@ -289,23 +296,24 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
             <div className="flex items-center mt-3.5">
               {cloud?.signed_in ? (
                 <button
-                  className="ml-auto px-6 py-2 rounded-full bg-ink text-panel text-[13px] shrink-0"
+                  className="ml-auto px-6 py-2 rounded-full bg-ink text-panel text-ui shrink-0"
                   onClick={() => setStep(2)}
                   data-testid="ob-continue-tools"
                 >
-                  下一步</button>
+                  {t("onboarding.next")}
+                </button>
               ) : (
                 <button
-                  className="ml-auto px-5 py-2 rounded-full border border-line text-[13px] text-muted hover:text-ink hover:border-lineStrong shrink-0"
+                  className="ml-auto px-5 py-2 rounded-full border border-line text-ui text-muted hover:text-ink hover:border-lineStrong shrink-0"
                   onClick={() => setStep(2)}
                   data-testid="ob-tools-skip"
                 >
-                  不登录继续
+                  {t("onboarding.continue_without_signin")}
                 </button>
               )}
             </div>
-            <p className="text-[11px] text-faint mt-3">
-              连接器页面还有 30+ 工具 —— 可随时添加或移除。令牌留在本机。
+            <p className="text-label text-faint mt-3">
+              {t("onboarding.more_tools_hint")}
             </p>
           </section>
         )}
@@ -313,11 +321,11 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
         {step === 2 && (
           <section data-testid="ob-step-done" className="flex-1 min-h-0 flex flex-col overflow-y-auto">
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-okSoft text-ok grid place-items-center mx-auto mb-3 text-[22px]">
+              <div className="w-12 h-12 rounded-full bg-okSoft text-ok grid place-items-center mx-auto mb-3 text-title">
                 ✓
               </div>
-              <h1 className="text-[19px] font-semibold mb-1">设置完成</h1>
-              <p className="text-[13px] text-muted mb-5">两种好的开始方式：</p>
+              <h1 className="text-title font-semibold mb-1">{t("onboarding.youre_set_up")}</h1>
+              <p className="text-ui text-muted mb-5">{t("onboarding.two_ways")}</p>
             </div>
 
             <button
@@ -325,13 +333,13 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
               onClick={() => finish("automations")}
               data-testid="ob-cta-automation"
             >
-              <span className="w-9 h-9 rounded-lg bg-accentSoft text-accent grid place-items-center text-[15px] shrink-0">
+              <span className="w-9 h-9 rounded-lg bg-accentSoft text-accent grid place-items-center text-body shrink-0">
                 ◷
               </span>
               <span className="flex-1 min-w-0 text-left">
-                <b className="block text-[13.5px]">创建你的第一个自动化</b>
-                <span className="text-[12px] text-muted">
-                  周报摘要、晨间简报 —— 选个模板，两分钟就能跑起来。
+                <b className="block text-ui">{t("onboarding.cta_automation_title")}</b>
+                <span className="text-meta text-muted">
+                  {t("onboarding.cta_automation_desc")}
                 </span>
               </span>
               <span className="text-faint self-center">›</span>
@@ -341,13 +349,13 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
               onClick={() => finish("work")}
               data-testid="ob-start"
             >
-              <span className="w-9 h-9 rounded-lg bg-accentSoft text-accent grid place-items-center text-[15px] shrink-0">
+              <span className="w-9 h-9 rounded-lg bg-accentSoft text-accent grid place-items-center text-body shrink-0">
                 ✦
               </span>
               <span className="flex-1 min-w-0 text-left">
-                <b className="block text-[13.5px]">开始与同事协作</b>
-                <span className="text-[12px] text-muted">
-                  开个会话直接问 —— 分析文件、起草、调研、构建。
+                <b className="block text-ui">{t("onboarding.cta_work_title")}</b>
+                <span className="text-meta text-muted">
+                  {t("onboarding.cta_work_desc")}
                 </span>
               </span>
               <span className="text-faint self-center">›</span>
@@ -356,8 +364,8 @@ export function Onboarding({ onDone }: { onDone: (next?: "work" | "gallery" | "a
             {/* The Specialist-coworkers gallery card and the per-session-scope line stay HIDDEN
                 (owner call 2026-07-12); the finish("gallery") plumbing remains for their return. */}
 
-            <p className="text-[11px] text-faint text-center mt-auto pt-5">
-              可随时重跑此设置：设置 ▸ 外观 ▸ 重新运行设置。
+            <p className="text-label text-faint text-center mt-auto pt-5">
+              {t("onboarding.replay_hint")}
             </p>
           </section>
         )}

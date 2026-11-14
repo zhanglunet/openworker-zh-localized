@@ -1,17 +1,35 @@
-// Token-usage chip (OPE-42): after a turn reports usage, a quiet meter+count chip appears
-// in the composer's bottom row; clicking it opens the per-model breakdown popover with the
-// context-window fill. The fake agent attaches fixed usage to every echo turn
-// (input 1k / output 200 / cache_read 8k / cache_write 800 — 10k per turn), and the
-// settings fixture maps the default model to a 200k context window.
+// Context meter (OPE-42, UX-048 placement): the composer's model pill shows the model NAME;
+// hovering it opens a card (model, provider, context ring + line, "Click to change model").
+// The Settings switch adds the ring to the pill itself. The fake agent attaches fixed usage to
+// every echo turn (input 1k / output 200 / cache_read 8k / cache_write 800), and the settings
+// fixture maps the default model to a 200k context window.
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
 
-test("usage chip appears after a turn and opens the breakdown popover", async ({ page }) => {
+const modelPill = (page: import("@playwright/test").Page) =>
+  page.locator(".dd button").filter({ hasText: "Claude Opus 4.8" });
+
+test("model pill: name only; hover card carries provider, context line and the click hint", async ({ page }) => {
   await page.goto("/");
   await page.getByText("Draft the launch note").first().click();
 
-  // Fresh session: no usage yet — the chip is hidden entirely.
+  const pill = modelPill(page);
+  await expect(pill).toBeVisible();
+  await expect(pill).toHaveText(/Claude Opus 4.8/);
+  await expect(pill).not.toHaveText(/Anthropic/);
+  await expect(pill).not.toHaveAttribute("title", /.+/); // the card replaces the native title
   await expect(page.getByTestId("usage-chip")).toHaveCount(0);
+
+  // Fresh session: no usage yet.
+  await pill.hover();
+  const tip = page.getByTestId("dd-tip");
+  await expect(tip).toBeVisible();
+  await expect(tip).toContainText("Claude Opus 4.8");
+  await expect(tip).toContainText("Anthropic");
+  await expect(tip).toContainText("No usage yet");
+  await expect(tip).toContainText("Click to change model");
+  await page.mouse.move(10, 10);
+  await expect(tip).toHaveCount(0);
 
   const box = page.getByPlaceholder(/Ask the coworker/);
   await box.fill("hello");
@@ -20,37 +38,26 @@ test("usage chip appears after a turn and opens the breakdown popover", async ({
     timeout: 10_000,
   });
 
-  // Default: no bar (owner ask 2026-07-30) — the chip states the session total
-  // (1k + 200 + 8k + 800 = 10k). The bar is opt-in via Settings.
-  const chip = page.getByTestId("usage-chip");
-  await expect(chip).toContainText("10k");
+  // In-context size = prompt side of the last turn: 1k + 8k + 800 = 9.8k of 200k = 5%.
+  // Session totals stay on release hold (owner call 2026-08-24): context figures only.
+  await pill.hover();
+  await expect(tip).toContainText("Context 5% · 9.8k of 200k");
+  await expect(tip).not.toContainText(/tokens|Uncached/);
+  await expect(page.getByTestId("usage-chip")).toHaveCount(0); // ring in the pill is opt-in
+  await page.mouse.move(10, 10);
 
-  // Popover: context fill (9.8k prompt-side of 200k = 5%) + per-model breakdown.
-  await chip.click();
-  const pop = page.getByTestId("usage-popover");
-  await expect(pop).toBeVisible();
-  await expect(pop).toContainText("Context window");
-  await expect(pop).toContainText("9.8k of 200k · 5%");
-  await expect(pop).toContainText("Session totals");
-  await expect(pop).toContainText("Claude Opus 4.8 · Anthropic");
-  // Cache split present → the input rows read as components of Total input.
-  await expect(pop).toContainText("Uncached input");
-  await expect(pop).toContainText("Cache reads");
-  await expect(pop).toContainText("Cache writes");
-  // Total input = fresh 1k + cache_read 8k + cache_write 800 (cumulative billed input).
-  await expect(pop).toContainText("Total input");
-  await expect(pop).toContainText("9.8k");
-  await expect(pop).toContainText("10k tokens");
-
-  // Second turn accumulates (totals double), and the scrim click closes the popover.
-  await page.mouse.click(10, 10);
-  await expect(pop).toHaveCount(0);
+  // Context is a level, not a sum — a second identical turn leaves the line unchanged.
   await box.fill("again");
   await box.press("Enter");
   await expect(page.getByText("Echo: again", { exact: false }).first()).toBeVisible({
     timeout: 10_000,
   });
-  await expect(chip).toContainText("20k");
+  await pill.hover();
+  await expect(tip).toContainText("Context 5% · 9.8k of 200k");
+
+  // Opening the menu hides the card.
+  await pill.click();
+  await expect(tip).toHaveCount(0);
 });
 
 test("usage resets on a new session", async ({ page }) => {
@@ -59,23 +66,27 @@ test("usage resets on a new session", async ({ page }) => {
   const box = page.getByPlaceholder(/Ask the coworker/);
   await box.fill("hello");
   await box.press("Enter");
-  await expect(page.getByTestId("usage-chip")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("Echo: hello", { exact: false }).first()).toBeVisible({ timeout: 10_000 });
+  await modelPill(page).hover();
+  await expect(page.getByTestId("dd-tip")).toContainText("Context 5%");
+  await page.mouse.move(10, 10);
 
   // "＋ New session" wipes the transcript — and the usage accumulation with it.
   await page.getByRole("button", { name: /New session/ }).first().click();
-  await expect(page.getByTestId("usage-chip")).toHaveCount(0);
+  await modelPill(page).hover();
+  await expect(page.getByTestId("dd-tip")).toContainText("No usage yet");
 });
 
-test("Settings toggle turns the context bar on; default is the session total", async ({ page }) => {
+test("Settings switch puts the context ring in the pill", async ({ page }) => {
   await page.goto("/");
   await page.getByText("Draft the launch note").first().click();
   const box = page.getByPlaceholder(/Ask the coworker/);
   await box.fill("hello");
   await box.press("Enter");
-  const chip = page.getByTestId("usage-chip");
-  await expect(chip).toContainText("10k", { timeout: 10_000 }); // default: total, no bar
+  await expect(page.getByText("Echo: hello", { exact: false }).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId("usage-chip")).toHaveCount(0); // default: no ring
 
-  // Turn the bar ON in Settings -> General.
+  // Turn the ring ON in Settings -> General.
   await page.getByTestId("account-row").click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.getByTestId("context-bar-toggle")).not.toBeChecked();
@@ -87,13 +98,12 @@ test("Settings toggle turns the context bar on; default is the session total", a
   ]);
   expect(req.postDataJSON()).toEqual({ context_bar: true });
 
-  // Reload so the app re-reads settings: the chip is now the fill bar, not a number.
+  // Reload so the app re-reads settings: the ring sits in the pill with the context label.
   await page.goto("/");
   await page.getByText("Draft the launch note").first().click();
   await page.getByPlaceholder(/Ask the coworker/).fill("hello");
   await page.getByPlaceholder(/Ask the coworker/).press("Enter");
-  const bar = page.getByTestId("usage-chip");
-  await expect(bar).toBeVisible({ timeout: 10_000 });
-  await expect(bar).not.toContainText("10k");
-  await expect(bar).toHaveAttribute("title", /Context window 5% full/);
+  const ring = page.getByTestId("usage-chip");
+  await expect(ring).toBeVisible({ timeout: 10_000 });
+  await expect(ring).toHaveAttribute("aria-label", /Context 5% · 9.8k of 200k/);
 });

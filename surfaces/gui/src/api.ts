@@ -1,25 +1,66 @@
-import type { SessionInfo, WsEvent } from "./types";
+import i18n from "i18next";
+import {
+  approvalMessage,
+  connectorResponseMessage,
+  directoryResponseMessage,
+  itemsResponseMessage,
+  planResponseMessage,
+  questionResponseMessage,
+  teamResponseMessage,
+  toolResponseMessage,
+} from "./cardPayloads";
+import type { GroupedQuestion, QuestionOption, SessionInfo, WsEvent } from "./types";
+import type { DayBoundary, FeedbackWhere, RollupGroup, TurnFeedback, TurnFooter } from "./obs3";
 
 declare const __COWORKER_DEV_TOKEN__: string;
 
 // Endpoint resolution order: runtime-injected globals (Tauri sets `window.__COWORKER_HTTP__`
-// for its dynamically-chosen sidecar port) → Vite env → the 127.0.0.1:8765 dev default. This
-// keeps a single codebase: browser `npm run dev` hits 8765; the desktop shell hits its sidecar.
-const httpBase = (): string =>
+// for its dynamically-chosen sidecar port) → Vite env → same-origin when the page itself is
+// served over https (the hosted dashboard: the service serves both SPA and API) → the
+// 127.0.0.1:8765 dev default. This keeps a single codebase: browser `npm run dev` hits 8765;
+// the desktop shell hits its sidecar; machines.openworker.com talks to itself.
+const servedOverHttps = (): boolean =>
+  typeof location !== "undefined" && location.protocol === "https:";
+export const httpBase = (): string =>
   (globalThis as any).__COWORKER_HTTP__ ||
   (import.meta as any).env?.VITE_COWORKER_HTTP ||
-  "http://127.0.0.1:8765";
+  (servedOverHttps() ? location.origin : "http://127.0.0.1:8765");
 const wsBase = (): string =>
   (globalThis as any).__COWORKER_WS__ ||
   (import.meta as any).env?.VITE_COWORKER_WS ||
-  "ws://127.0.0.1:8765";
+  (servedOverHttps() ? `wss://${location.host}` : "ws://127.0.0.1:8765");
 const apiToken = (): string =>
   (globalThis as any).__COWORKER_API_TOKEN__ ||
   (import.meta as any).env?.VITE_COWORKER_API_TOKEN ||
   (typeof __COWORKER_DEV_TOKEN__ === "string" ? __COWORKER_DEV_TOKEN__ : "");
 
+// The org this browser acts in (hosted multi-tenant only; empty elsewhere). Set at cloud
+// boot from /v1/me and by the org switcher; rides every request so the backend's resolver
+// needs no per-endpoint plumbing. HTTP carries it as a header; a browser WebSocket cannot
+// set headers, so there it is a query parameter (org ids are tenant labels, not secrets).
+let activeOrg = "";
+export function setActiveOrg(orgId: string): void {
+  activeOrg = orgId;
+}
+export function getActiveOrg(): string {
+  return activeOrg;
+}
+
 // All local REST calls pass through this module, so a module-local wrapper applies launch
 // authentication without asking every endpoint helper to remember the security header.
+/** Fired (once per burst) when OUR OWN backend answers 401: the launch token this
+ * window carries no longer matches the running service — a sidecar restarted under a
+ * dev GUI that baked the old token, or a stale tab. The App renders a plain signed-out
+ * state instead of crashing on the error body (ledger 2026-09-01: `undefined.includes`). */
+export const API_UNAUTHORIZED = "openworker:api-unauthorized";
+let unauthorizedAnnounced = 0;
+const announceUnauthorized = () => {
+  const now = Date.now();
+  if (now - unauthorizedAnnounced < 2000) return;
+  unauthorizedAnnounced = now;
+  window.dispatchEvent(new CustomEvent(API_UNAUTHORIZED));
+};
+
 const fetch = (
   input: RequestInfo | URL,
   init: RequestInit = {},
@@ -27,14 +68,83 @@ const fetch = (
   const headers = new Headers(init.headers);
   const token = apiToken();
   if (token) headers.set("X-OpenWorker-Token", token);
-  return globalThis.fetch(input, { ...init, headers });
+  if (activeOrg) headers.set("X-OCW-Org", activeOrg);
+  return globalThis.fetch(input, { ...init, headers }).then((res) => {
+    // Only the local sidecar's own 401 means "this window is signed out". A machine or
+    // cloud call (/m/… proxies, cloud routes) returning 401 is that machine's problem
+    // and is handled where the call is made.
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (res.status === 401 && url.startsWith(httpBase()) && !url.includes("/v1/machines/") && !url.includes("/v1/cloud/")) {
+      announceUnauthorized();
+    }
+    return res;
+  });
 };
+
+// A Sec-WebSocket-Protocol entry must be an RFC 6455 token — no '@', '=', etc.
+// Desktop tokens (hex) and Auth0 JWTs (base64url + dots) qualify; anything else
+// (dev/test tokens) rides a base64url envelope the backend unwraps. Passing an
+// invalid subprotocol would THROW from the constructor and blank the render.
+const WS_TOKEN_SAFE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+const wsSafeToken = (token: string): string =>
+  WS_TOKEN_SAFE.test(token)
+    ? token
+    : "ow.b64." +
+      btoa(token).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
 const openWebSocket = (url: string): WebSocket => {
   const token = apiToken();
+  const target = activeOrg
+    ? `${url}${url.includes("?") ? "&" : "?"}org=${encodeURIComponent(activeOrg)}`
+    : url;
   return token
-    ? new WebSocket(url, ["openworker", token])
-    : new WebSocket(url);
+    ? new WebSocket(target, ["openworker", wsSafeToken(token)])
+    : new WebSocket(target);
+};
+
+// -- remote homes: machine-aware session routing (remote-home-design.md P1c) ---
+// A session that lives on a joined machine is reached through the controller's
+// proxy prefix — "a machine is just a different base URL". This module-local map
+// (fed by getAllSessions and session creation) lets every session-scoped helper
+// below route transparently; unknown sessions resolve to the local sidecar.
+const sessionMachines = new Map<string, string>();
+
+export function registerSessionMachine(sessionId: string, machineId: string | null | undefined): void {
+  if (machineId) sessionMachines.set(sessionId, machineId);
+  else sessionMachines.delete(sessionId);
+}
+
+export function machineOfSession(sessionId: string): string | null {
+  return sessionMachines.get(sessionId) ?? null;
+}
+
+/** Union view (spec §"Union view on the signed-in desktop"): machines from
+ * the hosted cloud registry ride the sidecar's cloud proxy. In the GUI their
+ * ids wear a `cloud:` prefix, so ONE mapping — here — decides which base a
+ * machine id resolves to, and every consumer keeps passing opaque ids. */
+export const CLOUD_ID_PREFIX = "cloud:";
+export const isCloudMachineId = (mid: string): boolean => mid.startsWith(CLOUD_ID_PREFIX);
+
+/** Admin base for one machine (rename/remove/sessions/secrets live under it). */
+export const machineApi = (mid: string): string =>
+  isCloudMachineId(mid)
+    ? `${httpBase()}/v1/cloud/machines/${mid.slice(CLOUD_ID_PREFIX.length)}`
+    : `${httpBase()}/v1/machines/${mid}`;
+
+const machineWsPath = (mid: string): string =>
+  isCloudMachineId(mid)
+    ? `/ws/cloud/machines/${mid.slice(CLOUD_ID_PREFIX.length)}/p`
+    : `/ws/machines/${mid}/p`;
+
+/** Base URL of an ENGINE: the local sidecar, or a joined machine through the
+ * controller's proxy — "a machine is just a different base URL". Pages scoped
+ * by the Settings machine picker pass the picked machine id through. */
+export const engineBase = (machineId?: string | null): string =>
+  machineId ? `${machineApi(machineId)}/p` : httpBase();
+
+const sessionApiBase = (sessionId: string): string => {
+  const mid = sessionMachines.get(sessionId);
+  return mid ? `${machineApi(mid)}/p` : httpBase();
 };
 
 export interface Health {
@@ -62,8 +172,10 @@ export async function getHealth(): Promise<Health> {
   return res.json();
 }
 
-export async function getRecentWorkspaces(): Promise<RecentWorkspace[]> {
-  const res = await fetch(`${httpBase()}/v1/workspaces/recent`);
+export async function getRecentWorkspaces(machineId?: string | null): Promise<RecentWorkspace[]> {
+  // Remote homes: a machine's recents are ITS recents (paths on that machine).
+  const base = engineBase(machineId);
+  const res = await fetch(`${base}/v1/workspaces/recent`);
   return (await res.json()).workspaces ?? [];
 }
 
@@ -82,6 +194,7 @@ export async function pickFolderViaServer(): Promise<string | null> {
 export async function openWorkspace(
   path: string,
   create = false,
+  machineId?: string | null,
 ): Promise<{
   path: string;
   ok: boolean;
@@ -89,11 +202,49 @@ export async function openWorkspace(
   git_branch?: string | null;
   command_trust?: WorkspaceCommandTrust;
 }> {
-  const res = await fetch(`${httpBase()}/v1/workspaces/open`, {
+  // Validation happens on the machine the path lives on — the box answers
+  // exists/not-a-dir/git-branch for ITS filesystem.
+  const base = engineBase(machineId);
+  const res = await fetch(`${base}/v1/workspaces/open`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path, create }),
   });
+  return res.json();
+}
+
+/** UX-029 "Start in a temporary folder": create the conversation's temp dir at send time
+ * (git-init'd for code-family work). Idempotent. */
+export async function createTempWorkspace(
+  sessionId: string,
+  git = true,
+  machineId?: string | null,
+): Promise<{ ok: boolean; path?: string; git?: boolean; error?: string }> {
+  // Remote homes: the temp dir must exist on the machine the session RUNS on
+  // (explicit id — the session may be too new for the routing map).
+  const base = engineBase(machineId);
+  const res = await fetch(`${base}/v1/workspaces/temp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId, git }),
+  });
+  return res.json();
+}
+
+/** UX-029 "Save as project…": move a session's temporary folder to a real location.
+ * Callers reconnect afterwards so the engine rebinds to the new path. */
+export async function saveSessionAsProject(
+  sessionId: string,
+  path: string,
+): Promise<{ ok: boolean; path?: string; error?: string }> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/save-as-project`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path }),
+    },
+  );
   return res.json();
 }
 
@@ -120,6 +271,51 @@ export async function getSessions(workspace?: string): Promise<SessionInfo[]> {
   return (await res.json()).sessions ?? [];
 }
 
+/** Sessions of one machine's list, tagged and registered for machine-aware
+ * routing. Works for joined and `cloud:` machines alike — machineApi is the
+ * routing seam. */
+async function machineSessions(m: Machine): Promise<SessionInfo[]> {
+  try {
+    const res = await fetch(`${machineApi(m.id)}/sessions`);
+    const data = await res.json();
+    const rows: SessionInfo[] = data.sessions ?? [];
+    for (const s of rows) {
+      s.machine = m.id;
+      s.machine_name = m.name;
+      if (!data.live) s.machine_offline = true;
+      registerSessionMachine(s.session_id, m.id);
+    }
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+/** Local sessions + every machine's sessions — joined AND cloud (union v1.5)
+ * — tagged with machine id/name and registered for machine-aware routing.
+ * The controller answers from the live box while it's connected and from its
+ * stored snapshot while it's offline (`machine_offline` marks those rows) —
+ * greyed, never vanished. A signed-out/expired cloud session only hides the
+ * cloud rows, never the rest. */
+export async function getAllSessions(): Promise<SessionInfo[]> {
+  const local = await getSessions();
+  for (const s of local) registerSessionMachine(s.session_id, null);
+  let remote: SessionInfo[] = [];
+  try {
+    const joined = getMachines()
+      .then(({ machines }) => machines)
+      .catch(() => [] as Machine[]);
+    const cloud = getCloudMachines()
+      .then((info) => (info.session === "ok" ? info.machines : []))
+      .catch(() => [] as Machine[]);
+    const machines = (await Promise.all([joined, cloud])).flat();
+    remote = (await Promise.all(machines.map(machineSessions))).flat();
+  } catch {
+    /* machines API unavailable — local list is still the truth for This Mac */
+  }
+  return [...local, ...remote];
+}
+
 // A structured connector-delivered inbound message (§3.1). Attached to the user message it framed,
 // for display only — the model still sees the framed `content`; this drives the ConnectorMessageCard.
 export interface MessageSource {
@@ -131,6 +327,26 @@ export interface MessageSource {
   sender_name: string; // resolved; may equal the id
   ts: number; // epoch seconds
   text: string; // the RAW message (what the card shows)
+  // Board wakes only (connector === "board"): the digest as structured rows, so
+  // the BoardWakeCard renders collapsed summaries instead of re-parsing prose.
+  board?: { rows: BoardWakeRow[]; check_in?: boolean };
+}
+
+// One digest event on a board wake. `note` is a UI-clamped excerpt of a hand-off
+// comment (the full text lives on the board).
+export interface BoardWakeRow {
+  kind: "assigned" | "claimed" | "moved" | "filed" | "comment" | "chat" | "waiting" | string;
+  item?: number | null;
+  title?: string;
+  actor?: string;
+  to?: string;
+  from?: string;
+  assignee?: string;
+  refs?: string[];
+  note?: string;
+  // `waiting` only: a worker is waiting on the lead's decision for this tool call.
+  tool?: string;
+  prompt_id?: string;
 }
 
 // A transcript message from GET /v1/sessions/{id}/messages. Kept permissive (open shape) because
@@ -148,12 +364,21 @@ export interface ConversationMessage {
 }
 
 export async function getSessionMessages(sessionId: string): Promise<ConversationMessage[]> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${sessionId}/messages`);
+  const mid = sessionMachines.get(sessionId);
+  if (mid) {
+    // Controller-view endpoint: live (and re-cached) while the box is
+    // connected, the last synced copy — read-only — while it's offline.
+    const res = await fetch(
+      `${machineApi(mid)}/sessions/${encodeURIComponent(sessionId)}/messages`,
+    );
+    return (await res.json()).messages ?? [];
+  }
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${sessionId}/messages`);
   return (await res.json()).messages ?? [];
 }
 
 export async function renameSession(sessionId: string, title: string): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}`, {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title }),
@@ -165,7 +390,7 @@ export async function setSessionFlags(
   sessionId: string,
   flags: { pinned?: boolean; archived?: boolean },
 ): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}`, {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(flags),
@@ -174,8 +399,166 @@ export async function setSessionFlags(
 }
 
 export async function deleteSession(sessionId: string): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}`, { method: "DELETE" });
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}`, { method: "DELETE" });
   return res.json();
+}
+
+// Agent teams (OPE-96): the session's board — items on the workspace-keyed space.
+export interface BoardItem {
+  id: number;
+  title: string;
+  description: string;
+  criteria: string;
+  state: "open" | "in_progress" | "blocked" | "review" | "done" | "canceled" | string;
+  assignee: string;
+  creator: string;
+  refs: string[];
+  links: { kind: string; item: number }[];
+  // Blocked rows only: the latest blocker comment, clamped ("need tfvars…").
+  blocker?: string;
+  waiting?: { prompt_id: string; tool: string; preview: string };
+  status?: string;
+  status_ts?: string;
+  created_ts?: string;
+}
+
+export interface Board {
+  space: string | null;
+  name: string;
+  items: BoardItem[];
+}
+
+export interface JournalCase {
+  case: string;
+  entries: number;
+  last_ts: string;
+}
+
+export async function getBoard(sessionId: string): Promise<Board> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/board`);
+  return res.json();
+}
+
+export async function getTeamSummary(sessionId: string, teamId: string): Promise<import("./teamView").TeamSummary> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/teams/${encodeURIComponent(teamId)}/summary`);
+  if (!res.ok) throw new Error("Team summary unavailable");
+  const data = await res.json();
+  if (!Array.isArray(data.items) || !Array.isArray(data.workers) || !data.lead || !data.totals || !data.counts) throw new Error("Team summary unavailable");
+  return data;
+}
+
+// One event in an item's merged timeline (the detail pane renders the item's
+// whole story: filed → assigned/claimed → moves → comments, with attachments).
+export interface BoardTimelineEvent {
+  seq: number;
+  ts: string;
+  actor: string;
+  kind: "created" | "assigned" | "claimed" | "moved" | "comment" | string;
+  to?: string;
+  assignee?: string;
+  body?: string;
+  refs?: string[];
+}
+
+export type BoardItemDetail = BoardItem & { timeline?: BoardTimelineEvent[] };
+
+export async function getBoardItem(
+  sessionId: string,
+  id: number,
+): Promise<BoardItemDetail | { error: string }> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/board/item?id=${id}`,
+  );
+  return res.json();
+}
+
+// Attachment bytes → an object URL for <img>. The module fetch wrapper carries
+// the sidecar token, which a bare <img src> cannot.
+export async function fetchBoardAttachment(
+  sessionId: string,
+  stored: string,
+): Promise<string | null> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/board/attachment?name=${encodeURIComponent(stored)}`,
+  );
+  if (!res.ok) return null;
+  return URL.createObjectURL(await res.blob());
+}
+
+// A pure note on an item — never changes state; the assignee hears it via its feed.
+export async function boardComment(
+  sessionId: string,
+  item: number,
+  body: string,
+): Promise<{ ok?: boolean; error?: string }> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/board/comment`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item, body }),
+    },
+  );
+  return res.json();
+}
+
+export async function boardTransition(
+  sessionId: string,
+  item: number,
+  to: string,
+  comment = "",
+): Promise<BoardItem | { error: string }> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/board/transition`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ item, to, comment }),
+  });
+  return res.json();
+}
+
+export interface ChatMessage {
+  seq: number;
+  ts: string;
+  author: string;
+  author_role: "user" | "lead" | "worker" | string;
+  text: string;
+  mentions: string[];
+}
+
+export interface TeamChat {
+  enabled: boolean;
+  team_id?: string;
+  members: { name: string; persona: string; role: string }[];
+  messages: ChatMessage[];
+}
+
+// Team calls ride the machine of the session they belong to (connectors-across-machines
+// spec §6): a team lives where its lead session lives, so its chat and the box's journal
+// resolve through the same seam sessions use. No session id = the local sidecar.
+const teamApiBase = (sessionId?: string): string =>
+  sessionId ? sessionApiBase(sessionId) : httpBase();
+
+export async function getTeamChat(teamId: string, sessionId?: string): Promise<TeamChat> {
+  const res = await fetch(`${teamApiBase(sessionId)}/v1/teams/${encodeURIComponent(teamId)}/chat`);
+  return res.json();
+}
+
+export async function postTeamChat(
+  teamId: string,
+  text: string,
+  sessionId?: string,
+): Promise<ChatMessage | { error: string }> {
+  const res = await fetch(`${teamApiBase(sessionId)}/v1/teams/${encodeURIComponent(teamId)}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  return res.json();
+}
+
+export async function getJournalCases(sessionId?: string): Promise<JournalCase[]> {
+  const res = await fetch(`${teamApiBase(sessionId)}/v1/teams/journal`);
+  return (await res.json()).cases ?? [];
 }
 
 export interface ArtifactInfo {
@@ -185,6 +568,9 @@ export interface ArtifactInfo {
   kind: "markdown" | "html" | "image" | "code" | "text" | string;
   size: number;
   modified_at: number;
+  // Which rail surface opened it — drives the viewer's breadcrumb ("Artifacts" vs
+  // "Files"). Absent = artifacts (UX-037).
+  origin?: "artifacts" | "files";
 }
 
 export interface ArtifactContent {
@@ -200,13 +586,13 @@ export interface ArtifactContent {
 }
 
 export async function getArtifacts(sessionId: string): Promise<ArtifactInfo[]> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/artifacts`);
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/artifacts`);
   return (await res.json()).artifacts ?? [];
 }
 
 export async function readArtifact(sessionId: string, path: string): Promise<ArtifactContent> {
   const q = new URLSearchParams({ path });
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/artifacts/read?${q.toString()}`);
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/artifacts/read?${q.toString()}`);
   return res.json();
 }
 
@@ -216,7 +602,7 @@ export async function revealArtifact(
   path: string,
   mode: "reveal" | "open" = "reveal",
 ): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/artifacts/reveal`, {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/artifacts/reveal`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path, mode }),
@@ -234,8 +620,27 @@ export interface RootInfo {
 }
 
 export async function getRoots(sessionId: string): Promise<RootInfo[]> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/roots`);
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/roots`);
   return (await res.json()).roots ?? [];
+}
+
+// -- async subagents (OPE-257): the Running section's registry view ----------
+export interface AgentTaskInfo {
+  id: string;
+  label: string;
+  task: string;
+  mode: string; // "read_only" | "inherit"
+  status: string; // running | waiting | done | error | canceled
+  note?: string;
+  created: number;
+  finished?: number | null;
+  usage?: Record<string, { input: number; output: number; cache_read: number; cache_write: number; turns: number }>;
+  icon_seed?: number;
+}
+
+export async function getAgentTasks(sessionId: string): Promise<AgentTaskInfo[]> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/tasks`);
+  return (await res.json()).agents ?? [];
 }
 
 export async function addRoot(
@@ -243,7 +648,7 @@ export async function addRoot(
   path: string,
   writable: boolean,
 ): Promise<{ ok: boolean; error?: string; roots?: RootInfo[] }> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/roots`, {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/roots`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path, writable }),
@@ -257,7 +662,29 @@ export async function removeRoot(
 ): Promise<{ ok: boolean; error?: string; roots?: RootInfo[] }> {
   const q = new URLSearchParams({ path });
   const res = await fetch(
-    `${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/roots?${q.toString()}`,
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/roots?${q.toString()}`,
+    { method: "DELETE" },
+  );
+  return res.json();
+}
+
+// -- the session's allowed sites (OPE-219) -------------------------------------
+// The answer carries the session's sandbox as the header chip shows it.
+type SitesAnswer = { ok: boolean; error?: string; sandbox?: any };
+
+export async function allowSessionSite(sessionId: string, host: string): Promise<SitesAnswer> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/sites`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ host }),
+  });
+  return res.json();
+}
+
+export async function removeSessionSite(sessionId: string, host: string): Promise<SitesAnswer> {
+  const q = new URLSearchParams({ host });
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/sites?${q.toString()}`,
     { method: "DELETE" },
   );
   return res.json();
@@ -273,6 +700,10 @@ export interface McpServer {
   // "needs_auth" (no tokens yet) | "authorizing" (browser sign-in in flight)
   status: string;
   auth?: "oauth" | null;
+  // http server whose anonymous connect hit a 401/403 — offer OAuth sign-in.
+  auth_hint?: boolean;
+  // Epoch seconds of the last successful explicit Test (persisted server-side).
+  last_test_at?: number | null;
   last_error?: string | null;
   tool_count: number | null;
   config: Record<string, any>;
@@ -310,6 +741,40 @@ export async function getMcpTools(
   name: string,
 ): Promise<{ ok: boolean; error?: string; tools: { name: string; description: string }[] }> {
   const res = await fetch(`${httpBase()}/v1/mcp/${encodeURIComponent(name)}/tools`);
+  return res.json();
+}
+
+// OPE-136 §4/§5: the server's standing trust — which tools carry a durable "don't ask"
+// rule, plus whether the legacy server-wide requires_approval:false is still present.
+export async function getMcpTrust(
+  name: string,
+): Promise<{ ok: boolean; tools: string[]; legacy_dont_ask: boolean }> {
+  const res = await fetch(`${httpBase()}/v1/mcp/${encodeURIComponent(name)}/trust`);
+  return res.json();
+}
+
+export async function revokeMcpTrust(name: string, tool: string) {
+  const res = await fetch(
+    `${httpBase()}/v1/mcp/${encodeURIComponent(name)}/trust/${encodeURIComponent(tool)}`,
+    { method: "DELETE" },
+  );
+  return res.json();
+}
+
+/** Migrate the legacy server-wide don't-ask flag to named per-tool trust rules. */
+export async function convertMcpTrust(
+  name: string,
+): Promise<{ ok: boolean; error?: string; trusted?: string[] }> {
+  const res = await fetch(`${httpBase()}/v1/mcp/${encodeURIComponent(name)}/trust/convert`, {
+    method: "POST",
+  });
+  return res.json();
+}
+
+/** Reveal the global mcp.json in the OS file manager — the ONE file every custom
+ * server lives in (the per-server Configuration mirror was removed in its favor). */
+export async function revealMcpConfig(): Promise<{ ok: boolean; error?: string; path?: string }> {
+  const res = await fetch(`${httpBase()}/v1/mcp/config/reveal`, { method: "POST" });
   return res.json();
 }
 
@@ -450,7 +915,7 @@ export interface Connector {
   mcp?: boolean; // MCP-backed one-click (vendor-hosted MCP + local OAuth — no cloud sign-in)
   allowed_users: string[]; // the allow-list (managed inline in the Connectors tab)
   allowed_user_names?: Record<string, string | null>; // id → display name (people directory)
-  approval_owner_ids?: string[]; // Manual Slack: humans allowed to resolve approvals
+  approval_owner_ids?: string[]; // Manual Slack / Telegram: humans allowed to resolve approvals
   approval_owner_names?: Record<string, string | null>;
   recent?: RecentSender[]; // recently-seen senders on a connected two-way connector
   unauthorized?: ParkedMessage[]; // parked messages from unallowed senders (§19)
@@ -536,18 +1001,19 @@ export async function cloudLogout(): Promise<{ ok: boolean }> {
 
 export async function connectManaged(
   name: string,
-  options?: { access?: "read" | "write" },
-): Promise<{ ok: boolean; error?: string }> {
+  options?: { access?: "read" | "write"; flow?: "install" },
+): Promise<{ ok: boolean; error?: string; signed_in?: boolean }> {
   const res = await fetch(
     `${httpBase()}/v1/connectors/${encodeURIComponent(name)}/connect-managed`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       // `access` names a broker-defined consent tier (hubspot read | write).
-      // GitHub needs no flow choice: the broker is authorize-first — one connect
-      // links an existing App installation or redirects on to the install page.
+      // Normal connect links existing grants; explicit Add installation opens
+      // GitHub's account/repository consent picker even when grants already exist.
       body: JSON.stringify({
         ...(options?.access ? { access: options.access } : {}),
+        ...(name === "github" && options?.flow ? { flow: options.flow } : {}),
       }),
     },
   );
@@ -574,8 +1040,8 @@ export interface ConnectorTool {
   requires_approval: boolean;
 }
 
-export async function getConnectors(): Promise<Connector[]> {
-  const res = await fetch(`${httpBase()}/v1/connectors`);
+export async function getConnectors(machineId?: string | null): Promise<Connector[]> {
+  const res = await fetch(`${engineBase(machineId)}/v1/connectors`);
   return (await res.json()).connectors ?? [];
 }
 
@@ -591,22 +1057,60 @@ export async function connectConnector(
   return res.json();
 }
 
-export async function disconnectConnector(name: string): Promise<{ ok: boolean }> {
-  const res = await fetch(`${httpBase()}/v1/connectors/${encodeURIComponent(name)}/disconnect`, {
-    method: "POST",
-  });
+/** Machine-scope connector list, STRICT: a non-ok answer throws so the
+ * remote panel renders "unreachable" — never an empty list that reads as
+ * "no connectors exist". Lives here so the module's auth wrapper applies
+ * (a component-level fetch bypasses the sidecar token — learned live). */
+export async function getMachineConnectorsStrict(machineId: string): Promise<Connector[]> {
+  const res = await fetch(`${engineBase(machineId)}/v1/connectors`);
+  if (!res.ok) throw new Error("machine unreachable");
+  return (await res.json()).connectors ?? [];
+}
+
+export async function disconnectConnector(
+  name: string,
+  machineId?: string | null,
+): Promise<{ ok: boolean }> {
+  const res = await fetch(
+    `${engineBase(machineId)}/v1/connectors/${encodeURIComponent(name)}/disconnect`,
+    { method: "POST" },
+  );
+  return res.json();
+}
+
+/** Remote manual connect (union view): the connector FIELDS are sealed in
+ * this tab to the machine's pinned key — every relay in between (the
+ * desktop's acceptor, or our cloud) carries ciphertext only. The box unseals
+ * and runs its own connect, validation included. */
+export async function connectConnectorSealed(
+  machineId: string,
+  name: string,
+  sealedB64: string,
+): Promise<{ ok: boolean; account?: string; error?: string }> {
+  const res = await fetch(
+    `${machineApi(machineId)}/connectors/${encodeURIComponent(name)}/connect-sealed`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sealed_b64: sealedB64 }),
+    },
+  );
   return res.json();
 }
 
 export async function updateConnectorTools(
   name: string,
   enabled: Record<string, boolean>,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; error?: string; tools?: Record<string, boolean> }> {
-  const res = await fetch(`${httpBase()}/v1/connectors/${encodeURIComponent(name)}/tools`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ enabled }),
-  });
+  const res = await fetch(
+    `${engineBase(machineId)}/v1/connectors/${encodeURIComponent(name)}/tools`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    },
+  );
   return res.json();
 }
 
@@ -625,6 +1129,7 @@ export interface AuditEvent {
   result_preview: string;
   reason: string;
   resource: string;
+  call_id?: string;
 }
 
 export async function getAudit(params: {
@@ -632,8 +1137,11 @@ export async function getAudit(params: {
   session_id?: string;
   connector?: string;
   tool?: string;
+  // OPE-238: one tool call's rows (the "changes made without asking" summary links here).
+  call_id?: string;
 } = {}): Promise<AuditEvent[]> {
   const q = new URLSearchParams();
+  if (params.call_id) q.set("call_id", params.call_id);
   if (params.limit) q.set("limit", String(params.limit));
   if (params.session_id) q.set("session_id", params.session_id);
   if (params.connector) q.set("connector", params.connector);
@@ -677,28 +1185,62 @@ export interface SurfaceVisibility {
   code: boolean;
 }
 
+/** Visible governance (remote-home-design.md §Audit export): what this machine
+ * exports, where, and how far along. Off everywhere unless an org policy turned it on. */
+export interface AuditExportStatus {
+  enabled: boolean;
+  sink: "" | "cloud" | "http";
+  url?: string;
+  exported: number;
+  pending: number;
+  last_error?: string;
+}
+
 export interface ModelSettings {
   provider: string;
   model: string;
   models: string[];
+  audit_export?: AuditExportStatus;
   has_key: boolean;
   model_ready: boolean; // can the default model's provider actually run (any provider)?
   source: "env" | "store" | null;
   onboarded: boolean;
   surfaces: SurfaceVisibility;
   scratch_base: string;
+  // Feature worktrees (Code coworker): present on servers from 2026-11-07.
+  worktree_location?: "in_repo" | "sibling" | "custom";
+  worktree_custom_dir?: string;
+  worktree_branch_prefix?: string;
+  worktree_fetch_first?: boolean;
+  worktree_cleanup_on_archive?: boolean;
+  worktree_prune_days?: number;
+  worktree_setup_command?: string;
   secrets_path: string;  // OS-native on-disk location the server reports (not hardcoded)
   // Sidebar layout preference (§7): "flat" = the persona accordions / today's list; "grouped" =
   // bounded per-persona cards. Defaults to "flat" (absent → flat) so the GUI is robust to an older
   // backend that hasn't shipped the field yet.
-  nav_layout?: "flat" | "grouped";
+  nav_layout?: "flat" | "grouped" | "machine";
   // Sidebar: sessions shown per group before "Show more" (default 5, 1–50).
   sessions_peek?: number;
   // Composer: show the context-window fill bar (default FALSE; absent → the chip shows
   // the session total). The usage popover keeps both numbers regardless.
   context_bar?: boolean;
+  // #611: collapse the live reasoning stream while a turn runs (default FALSE). When on,
+  // the reasoning is hidden during the run, but its finalized form still appears after.
+  hide_reasoning_running?: boolean;
+  // Auto-Approve mode (spec §1.5): the feature flag that offers the reviewer mode, and its
+  // shadow-eval sibling. Both default FALSE and are absent on older backends — the composer
+  // hides the Auto-Approve mode entry unless auto_approve is explicitly true.
+  auto_approve?: boolean;
+  auto_approve_shadow?: boolean;
+  // Which reviewer Auto-Approve uses (OPE-224), and whether each decision-model reviewer
+  // has a key. Absent on older backends, meaning the session model.
+  auto_approve_reviewer?: ReviewerChoice;
+  auto_approve_reviewer_keys?: Partial<Record<"openai-decisions" | "jev", boolean>>;
   // Curated-matrix display names ({full id → "GLM-5.2 · via Together"}); custom models absent.
   model_labels?: Record<string, string>;
+  // Per-model settings the user saved (model_config.json), keyed by model id.
+  model_config?: Record<string, ModelConfigRecord>;
   // {full id → context window in tokens}, verified matrix entries only — drives the
   // composer's context-fill meter (absent id → the meter hides). Optional for older backends.
   model_context_windows?: Record<string, number>;
@@ -724,8 +1266,9 @@ export interface PdfSettings {
 /** Persist the Token-savings PDF settings (fallback mode + attach thresholds). */
 export async function setPdfSettings(
   patch: Partial<PdfSettings>,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; error?: string } & Partial<PdfSettings>> {
-  const res = await fetch(`${httpBase()}/v1/settings/pdf`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/pdf`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
@@ -742,8 +1285,9 @@ export interface CompactionSettings {
 /** Persist the auto-compaction overrides (threshold %, token cap, summarizer model). */
 export async function setCompactionSettings(
   patch: Partial<CompactionSettings>,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/settings/compaction`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/compaction`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
@@ -763,6 +1307,72 @@ export async function inspectPdf(
   return res.json();
 }
 
+// -- Settings ▸ Customization ▸ Web search (UX-058) --------------------------------
+// One provider is active; every provider keeps its own key in the machine's secret store
+// (never returned here — only whether one exists and where it came from).
+export type WebSearchProviderInfo = {
+  name: string;
+  display_name: string;
+  key_mode: "none" | "optional" | "required";
+  key_url: string;
+  has_key: boolean;
+  key_source: "store" | "env" | null;
+  // The environment variable the key comes from, when key_source is "env".
+  key_env: string;
+  // Whether `web_fetch` can read pages through this provider (Exa, Firecrawl, Tavily).
+  supports_fetch: boolean;
+};
+export type WebSearchInfo = {
+  provider: string;
+  fetch_via_provider: boolean;
+  providers: WebSearchProviderInfo[];
+};
+type WebSearchResult = { ok: boolean; error?: string } & Partial<WebSearchInfo>;
+
+export async function getWebSearch(machineId?: string | null): Promise<WebSearchInfo> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search`);
+  if (!res.ok) throw new Error(`web-search: ${res.status}`);
+  return res.json();
+}
+
+/** Make `name` the active search service. A 400 (a keyed service with no key) comes back
+ * as `{ok: false, error}` with the server's plain message. */
+export async function setWebSearchProvider(name: string, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider: name }),
+  });
+  return res.json();
+}
+
+/** "Test and save": the server runs one search with the key before storing it. */
+export async function setWebSearchKey(name: string, apiKey: string, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search/keys/${encodeURIComponent(name)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ api_key: apiKey }),
+  });
+  return res.json();
+}
+
+export async function clearWebSearchKey(name: string, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search/keys/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+  return res.json();
+}
+
+/** "Fetch pages through the search service" — honoured while the active provider offers it. */
+export async function setFetchViaProvider(enabled: boolean, machineId?: string | null): Promise<WebSearchResult> {
+  const res = await fetch(`${engineBase(machineId)}/v1/web-search/fetch-via-provider`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
+  return res.json();
+}
+
 /** Persist whether the composer shows the context-window fill bar. */
 export async function setContextBar(
   shown: boolean,
@@ -775,6 +1385,95 @@ export async function setContextBar(
   return res.json();
 }
 
+/** #611: persist whether the composer suppresses the live reasoning stream while a turn runs. */
+export async function setHideReasoningRunning(
+  hidden: boolean,
+): Promise<{ ok: boolean; hide_reasoning_running?: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/hide-reasoning`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hide_reasoning_running: hidden }),
+  });
+  return res.json();
+}
+
+type AutoApproveResult = {
+  ok: boolean;
+  auto_approve?: boolean;
+  auto_approve_shadow?: boolean;
+  error?: string;
+};
+
+/** Toggle the Auto-Approve feature flag (spec §1.5); applies to the next session build. */
+export async function setAutoApprove(on: boolean): Promise<AutoApproveResult> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ auto_approve: on }),
+  });
+  return res.json();
+}
+
+/** Toggle shadow evaluation (Part 6 step 3): the reviewer records but never decides. */
+export async function setAutoApproveShadow(on: boolean): Promise<AutoApproveResult> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-shadow`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ auto_approve_shadow: on }),
+  });
+  return res.json();
+}
+
+export type ReviewerChoice = "session" | "openai-decisions" | "jev";
+
+/** Choose which reviewer Auto-Approve uses (OPE-224); open sessions switch at once. */
+export async function setAutoApproveReviewer(
+  choice: ReviewerChoice,
+): Promise<{ ok: boolean; auto_approve_reviewer?: ReviewerChoice; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-reviewer`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ auto_approve_reviewer: choice }),
+  });
+  return res.json();
+}
+
+export type ShadowSummary = {
+  reviewer: ReviewerChoice;
+  days: number;
+  checks: number;
+  run: number;
+  asked: number;
+  stopped: number;
+  decided: number;
+  matched: number;
+};
+
+/** Shadow results of the chosen reviewer, last 30 days (OPE-224). */
+export async function getShadowSummary(): Promise<ShadowSummary> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-shadow-summary`);
+  return res.json();
+}
+
+/** Write every shadow check of the chosen reviewer to a CSV; returns where it was saved. */
+export async function exportShadowResults(): Promise<{ ok: boolean; path?: string; rows?: number; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-shadow-export`, { method: "POST" });
+  return res.json();
+}
+
+/** Save the API key a decision-model reviewer needs. The key is never sent back. */
+export async function setAutoApproveReviewerKey(
+  reviewer: "openai-decisions" | "jev",
+  apiKey: string,
+): Promise<{ ok: boolean; auto_approve_reviewer_keys?: Record<string, boolean>; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/auto-approve-reviewer-key`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reviewer, api_key: apiKey }),
+  });
+  return res.json();
+}
+
 /** Persist how many sessions a sidebar group shows before "Show more". */
 export async function setSessionsPeek(
   n: number,
@@ -783,6 +1482,32 @@ export async function setSessionsPeek(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sessions_peek: n }),
+  });
+  return res.json();
+}
+
+// Feature worktrees (Code coworker, 2026-11-07): where they go, how branches are named,
+// fetch-first, cleanup, and the optional per-repo setup command.
+export interface WorktreeSettings {
+  worktree_location: "in_repo" | "sibling" | "custom";
+  worktree_custom_dir: string;
+  worktree_branch_prefix: string;
+  worktree_fetch_first: boolean;
+  worktree_cleanup_on_archive: boolean;
+  worktree_prune_days: number;
+  worktree_setup_command: string;
+}
+
+export async function setWorktreeSettings(
+  changes: Partial<{
+    location: string; custom_dir: string; branch_prefix: string; fetch_first: boolean;
+    cleanup_on_archive: boolean; prune_days: number; setup_command: string;
+  }>,
+): Promise<{ ok: boolean; error?: string } & Partial<WorktreeSettings>> {
+  const res = await fetch(`${httpBase()}/v1/settings/worktrees`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
   });
   return res.json();
 }
@@ -811,8 +1536,8 @@ export async function setSurfaces(
 
 /** Persist the sidebar layout preference (flat ↔ grouped-by-persona); read back from getSettings. */
 export async function setNavLayout(
-  layout: "flat" | "grouped",
-): Promise<{ ok: boolean; nav_layout?: "flat" | "grouped"; error?: string }> {
+  layout: "flat" | "grouped" | "machine",
+): Promise<{ ok: boolean; nav_layout?: "flat" | "grouped" | "machine"; error?: string }> {
   const res = await fetch(`${httpBase()}/v1/settings/nav-layout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -844,19 +1569,36 @@ function announcePersonasChanged() {
   window.dispatchEvent(new CustomEvent(PERSONAS_CHANGED));
 }
 
+export interface TeamMemberDecision {
+  persona: string;
+  name?: string;
+  connectors: string[];
+  approval_guidance?: string;
+  // The human's FINAL model choice for this worker — sent only when the gate offered
+  // a model picker (the server supplied `runnable_models`).
+  model?: string;
+}
+
 export interface Persona {
   id: string;
   name: string;
   icon: string;
   tagline: string;
-  needs_workspace: boolean;
+  requires_folder: boolean; // folder gate — drives project-scoping
   builtin: boolean;
-  family: string;
-  workspace: string; // "git" | "project" | "deliverable" | "none" — drives project-scoping
   tools: string[];
   enabled: boolean;
   surfaced: boolean;
   default: boolean;
+  // Distribution flag (ships:false = internal builds only) + settings-page group.
+  ships?: boolean;
+  group?: string; // "general" | "security"
+  version?: string;
+  installed_at?: string;
+  // Ordered allowed models (spec §4). Empty/absent = any model. `models_available` =
+  // the entries THIS machine can run (its keys, its Ollama), annotated by the server.
+  models?: string[];
+  models_available?: string[];
 }
 
 export interface PersonaConsent {
@@ -865,11 +1607,16 @@ export interface PersonaConsent {
   description: string;
   tools: string[];
   risk: string[];
-  connectors: boolean;
+  // "all" (general builtins) or the declared allowlist — [] means no connector access.
+  connectors: "all" | string[];
   mcp: string[];
   messaging: boolean;
   recommended_mode: string;
-  recommended_models: string[];
+  models?: string[];
+  recommended_models: string[]; // old name of `models`, one release
+  recommends?: { kind: string; ref: string; reason: string; tier: string }[];
+  version?: string;
+  replaces?: { version: string; installed_at: string; capabilities_grew: boolean } | null;
   source: string | null;
   builtin: boolean;
 }
@@ -879,11 +1626,26 @@ export async function getPersonas(): Promise<Persona[]> {
   return (await res.json()).personas;
 }
 
+/** Personas plus the build flag: `internal` builds may show unshipped coworkers + the Gallery. */
+/** Session list of ONE machine (controller view): live rows when connected,
+ * the stored snapshot otherwise. */
+export async function getMachineSessionsList(machineId: string): Promise<SessionInfo[]> {
+  const res = await fetch(`${machineApi(machineId)}/sessions`);
+  return (await res.json()).sessions ?? [];
+}
+
+export async function getPersonasIndex(machineId?: string | null): Promise<{ personas: Persona[]; internal: boolean }> {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas`);
+  const body = await res.json();
+  return { personas: body.personas ?? [], internal: !!body.internal };
+}
+
 export async function updatePersona(
   id: string,
   body: { enabled?: boolean; surfaced?: boolean; default?: boolean },
+  machineId?: string | null,
 ): Promise<{ ok: boolean; personas?: Persona[]; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/personas/${encodeURIComponent(id)}`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/${encodeURIComponent(id)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -896,8 +1658,9 @@ export async function updatePersona(
 /** Uninstall a non-builtin persona (its snapshot + state). Local; works signed out. */
 export async function deletePersona(
   id: string,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; personas?: Persona[]; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/personas/${encodeURIComponent(id)}`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
   const out = await res.json();
@@ -955,10 +1718,24 @@ export async function getCloudGalleryDetail(slug: string): Promise<GalleryDetail
   return res.json();
 }
 
+/** Sharing v1 (OPE-7): zip a coworker's bundle into `dir`; the zip is the import format. */
+export async function exportPersona(
+  id: string,
+  dir: string,
+): Promise<{ ok: boolean; path?: string; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/personas/${encodeURIComponent(id)}/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dir }),
+  });
+  return res.json();
+}
+
 export async function installPersona(
-  body: { dir?: string; git_url?: string; gallery_slug?: string },
+  body: { dir?: string; git_url?: string; gallery_slug?: string; zip_b64?: string; filename?: string },
+  machineId?: string | null,
 ): Promise<{ ok: boolean; consent?: PersonaConsent[]; personas?: Persona[]; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/personas/install`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/install`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -994,17 +1771,33 @@ export interface PersonaDetail {
   icon: string;
   tagline: string;
   description: string;
+  media: string[]; // bundle media/ screenshots, served via /v1/personas/{id}/media/{name}
+  builtin: boolean;
+  group: string;
   enabled: boolean; // persona on/off (shown in the picker)
+  surfaced: boolean;
+  default: boolean;
   tools: string[];
-  recommended_models: string[];
+  models?: string[]; // ordered allowed models (spec §4); [] = any
+  models_available?: string[]; // the ones this machine can run
+  recommended_models: string[]; // old name of `models`, one release
   default_permission_mode: string;
-  workspace: string;
+  requires_folder: boolean; // folder gate (workspace-scratch-design.md)
   recommends: PersonaRecommendation[];
   default_connections: PersonaDefaultConnection[];
 }
 
-export async function getPersonaDetail(id: string): Promise<PersonaDetail> {
-  const res = await fetch(`${httpBase()}/v1/personas/${encodeURIComponent(id)}`);
+/** Fetch one bundle screenshot with launch auth and hand back an object URL. */
+export async function getPersonaMediaUrl(id: string, name: string, machineId?: string | null): Promise<string> {
+  const res = await fetch(
+    `${engineBase(machineId)}/v1/personas/${encodeURIComponent(id)}/media/${encodeURIComponent(name)}`,
+  );
+  if (!res.ok) throw new Error(`media ${name}: ${res.status}`);
+  return URL.createObjectURL(await res.blob());
+}
+
+export async function getPersonaDetail(id: string, machineId?: string | null): Promise<PersonaDetail> {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/${encodeURIComponent(id)}`);
   return res.json();
 }
 
@@ -1013,8 +1806,9 @@ export async function setPersonaConnection(
   id: string,
   connector: string,
   enabled: boolean,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; default_connections?: PersonaDefaultConnection[]; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/personas/${encodeURIComponent(id)}/connections`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/${encodeURIComponent(id)}/connections`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ connector, enabled }),
@@ -1026,8 +1820,9 @@ export async function setPersonaConnection(
 export async function setPersonaEnabled(
   id: string,
   enabled: boolean,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; personas?: Persona[]; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/personas/${encodeURIComponent(id)}/enable`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/${encodeURIComponent(id)}/enable`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ enabled }),
@@ -1068,7 +1863,7 @@ export async function getSessionConnections(
 ): Promise<SessionConnections> {
   const q = persona ? `?persona=${encodeURIComponent(persona)}` : "";
   const res = await fetch(
-    `${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/connections${q}`,
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/connections${q}`,
   );
   return res.json();
 }
@@ -1083,7 +1878,7 @@ export async function setSessionConnection(
   enabled: boolean,
   clear = false,
 ): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/connections`, {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/connections`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ connector, enabled, ...(clear ? { clear: true } : {}) }),
@@ -1123,16 +1918,17 @@ export interface SkillUploadPreview {
   files?: string[];
 }
 
-const skillUrl = (path = "") => `${httpBase()}/v1/skills${path}`;
+const skillUrl = (path = "", machineId?: string | null) =>
+  `${engineBase(machineId)}/v1/skills${path}`;
 const jsonPost = (body: unknown, method = "POST") => ({
   method,
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(body),
 });
 
-export async function listSkills(workspace?: string): Promise<SkillRow[]> {
+export async function listSkills(workspace?: string, machineId?: string | null): Promise<SkillRow[]> {
   const qs = workspace ? `?workspace=${encodeURIComponent(workspace)}` : "";
-  const res = await fetch(skillUrl(qs));
+  const res = await fetch(skillUrl(qs, machineId));
   return (await res.json()).skills ?? [];
 }
 
@@ -1142,16 +1938,17 @@ export async function createSkill(body: {
   instructions: string;
   scope?: "global" | "project";
   workspace?: string;
-}): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(skillUrl(), jsonPost(body));
+}, machineId?: string | null): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(skillUrl("", machineId), jsonPost(body));
   return res.json();
 }
 
 export async function updateSkill(
   name: string,
   patch: { description?: string; instructions?: string; enabled?: boolean; workspace?: string },
+  machineId?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(skillUrl(`/${encodeURIComponent(name)}`), jsonPost(patch, "PATCH"));
+  const res = await fetch(skillUrl(`/${encodeURIComponent(name)}`, machineId), jsonPost(patch, "PATCH"));
   return res.json();
 }
 
@@ -1164,9 +1961,10 @@ export async function revealSkill(name: string): Promise<{ ok: boolean; error?: 
 export async function deleteSkill(
   name: string,
   workspace?: string,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
   const qs = workspace ? `?workspace=${encodeURIComponent(workspace)}` : "";
-  const res = await fetch(skillUrl(`/${encodeURIComponent(name)}${qs}`), { method: "DELETE" });
+  const res = await fetch(skillUrl(`/${encodeURIComponent(name)}${qs}`, machineId), { method: "DELETE" });
   return res.json();
 }
 
@@ -1182,8 +1980,9 @@ export async function moveSkill(
 export async function stageSkillUpload(
   dataB64: string,
   filename = "",
+  machineId?: string | null,
 ): Promise<SkillUploadPreview> {
-  const res = await fetch(skillUrl("/upload"), jsonPost({ data_b64: dataB64, filename }));
+  const res = await fetch(skillUrl("/upload", machineId), jsonPost({ data_b64: dataB64, filename }));
   return res.json();
 }
 
@@ -1191,8 +1990,9 @@ export async function confirmSkillUpload(
   token: string,
   scope: "global" | "project" = "global",
   workspace?: string,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch(skillUrl("/upload/confirm"), jsonPost({ token, scope, workspace }));
+  const res = await fetch(skillUrl("/upload/confirm", machineId), jsonPost({ token, scope, workspace }));
   return res.json();
 }
 
@@ -1203,7 +2003,7 @@ export async function sessionSkills(
 ): Promise<SessionSkillRow[]> {
   const qs = workspace ? `?workspace=${encodeURIComponent(workspace)}` : "";
   const res = await fetch(
-    `${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/skills${qs}`,
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/skills${qs}`,
   );
   return (await res.json()).skills ?? [];
 }
@@ -1215,7 +2015,7 @@ export async function setSessionSkill(
   opts: { clear?: boolean; workspace?: string } = {},
 ): Promise<{ skills?: SessionSkillRow[]; ok?: boolean; error?: string }> {
   const res = await fetch(
-    `${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/skills`,
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/skills`,
     jsonPost({
       skill,
       enabled,
@@ -1229,8 +2029,9 @@ export async function setSessionSkill(
 // -- Inbox + Unattended -------------------------------------------------------
 export interface InboxItem {
   id: string;
+  tool_call_id?: string;
   session_id: string;
-  kind: "approval" | "question" | "notification" | "directory" | "plan";
+  kind: "approval" | "question" | "notification" | "directory" | "plan" | "tool" | "connector";
   title: string;
   body: string;
   state: "pending" | "resolved";
@@ -1239,10 +2040,14 @@ export interface InboxItem {
   created_at: string;
   resolved_at: string | null;
   visibility?: "inline" | "inbox";
-  // Question metadata (ask_user): quick-reply choices + a free-text escape.
-  options?: string[];
+  // Question metadata (ask_user): quick-reply choices + a free-text escape. Options may be rich
+  // {label, description, recommended, preview} objects (OPE-51); `questions` is the grouped form
+  // (stepper), whose resolution is a JSON object string keyed by header-or-question.
+  options?: QuestionOption[];
   allow_text?: boolean;
   multi?: boolean;
+  header?: string;
+  questions?: GroupedQuestion[];
   // Kind-specific payload (directory: {path, writable}; …).
   data?: Record<string, any>;
   // Originating-session context (server-joined) so the Inbox is self-contained.
@@ -1250,21 +2055,86 @@ export interface InboxItem {
   session_agent?: string | null;
   session_workspace?: string | null;
   session_exists?: boolean;
+  // Remote homes: set when the item came from a joined machine's inbox — the
+  // Inbox aggregates every connected machine (⌂ tag; resolve routes back).
+  machine?: string;
+  machine_name?: string;
+}
+
+// Which machine each aggregated inbox item came from, so resolve routes back
+// to the box that parked it. Fed by getInbox; ids are uuids, so cross-machine
+// collisions are not a practical concern.
+const inboxItemMachines = new Map<string, string>();
+
+/** A worker's waiting call lives on the same machine as the lead's item that names it, but
+ *  was never fetched here. Route it like that item (or like that session) before resolving. */
+export function routeInboxItemLike(id: string, like: { itemId?: string; sessionId?: string }): void {
+  const mid =
+    (like.itemId && inboxItemMachines.get(like.itemId)) || (like.sessionId && machineOfSession(like.sessionId)) || "";
+  if (id && mid) inboxItemMachines.set(id, mid);
 }
 
 export async function getInbox(sessionId?: string, state?: string): Promise<InboxItem[]> {
   const q = new URLSearchParams();
   if (sessionId) q.set("session_id", sessionId);
   if (state) q.set("state", state);
-  const res = await fetch(`${httpBase()}/v1/inbox?${q.toString()}`);
-  return (await res.json()).items;
+  // Per-session view: query the session's OWN home (local or its machine).
+  if (sessionId) {
+    const base = sessionApiBase(sessionId);
+    const res = await fetch(`${base}/v1/inbox?${q.toString()}`);
+    const items: InboxItem[] = (await res.json()).items ?? [];
+    const mid = machineOfSession(sessionId);
+    if (mid) for (const it of items) inboxItemMachines.set(it.id, mid);
+    return items;
+  }
+  // Cross-session Inbox: aggregate this Mac + every CONNECTED machine —
+  // joined AND cloud (union v1.5: a cloud box's parked approval was invisible
+  // before this, a silent stall the machine-events drill hit live). An
+  // offline box's parked items are unreachable AND unanswerable — listing them
+  // would only offer dead buttons; they return with the machine.
+  const local = fetch(`${httpBase()}/v1/inbox?${q.toString()}`)
+    .then(async (r) => ((await r.json()).items ?? []) as InboxItem[])
+    .catch(() => [] as InboxItem[]);
+  const machineInbox = async (m: Machine): Promise<InboxItem[]> => {
+    try {
+      const r = await fetch(`${engineBase(m.id)}/v1/inbox?${q.toString()}`);
+      const items: InboxItem[] = (await r.json()).items ?? [];
+      for (const it of items) {
+        it.machine = m.id;
+        it.machine_name = m.name;
+        inboxItemMachines.set(it.id, m.id);
+      }
+      return items;
+    } catch {
+      return [] as InboxItem[];
+    }
+  };
+  const joined = getMachines()
+    .then(({ machines }) => machines)
+    .catch(() => [] as Machine[]);
+  const cloud = getCloudMachines()
+    .then((info) => (info.session === "ok" ? info.machines : []))
+    .catch(() => [] as Machine[]);
+  const remote = Promise.all([joined, cloud])
+    .then((lists) =>
+      Promise.all(lists.flat().filter((m) => m.connected).map(machineInbox)),
+    )
+    .then((lists) => lists.flat())
+    .catch(() => [] as InboxItem[]);
+  const [mine, theirs] = await Promise.all([local, remote]);
+  // Oldest-first within the merge, matching the server's ordering instinct.
+  return [...mine, ...theirs].sort((a, b) =>
+    (a.created_at || "").localeCompare(b.created_at || ""),
+  );
 }
 
 export async function resolveInboxItem(
   id: string,
   resolution: string,
 ): Promise<{ ok: boolean }> {
-  const res = await fetch(`${httpBase()}/v1/inbox/${encodeURIComponent(id)}/resolve`, {
+  const mid = inboxItemMachines.get(id);
+  const base = engineBase(mid);
+  const res = await fetch(`${base}/v1/inbox/${encodeURIComponent(id)}/resolve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ resolution }),
@@ -1290,8 +2160,11 @@ export interface RecentChannel {
   last_text: string | null;
 }
 
-export async function getSubscriptions(): Promise<Subscription[]> {
-  const res = await fetch(`${httpBase()}/v1/subscriptions`);
+/** A machine's channel subscriptions (session → channel). Session-scoped
+ * callers pass the session's machine: the list lives on the engine that owns
+ * the session, and the dashboard's own origin answers with something else. */
+export async function getSubscriptions(machineId?: string | null): Promise<Subscription[]> {
+  const res = await fetch(`${engineBase(machineId)}/v1/subscriptions`);
   return (await res.json()).subscriptions ?? [];
 }
 
@@ -1302,17 +2175,20 @@ export interface InboxBinding {
   target: string; // chat_id, e.g. "C0BEJNCQQ8Y"
 }
 
-export async function getInboxRouting(): Promise<InboxBinding[]> {
-  const res = await fetch(`${httpBase()}/v1/inbox/routing`);
+export async function getInboxRouting(machineId?: string | null): Promise<InboxBinding[]> {
+  const res = await fetch(`${engineBase(machineId)}/v1/inbox/routing`);
   return (await res.json()).bindings ?? [];
 }
 
+/** Approvals routing is per machine (UX-049): pass the machine whose
+ * sessions' approvals this binding governs; default = the local engine. */
 export async function setInboxBinding(
   name: string,
   channel: string | null,
   target: string,
+  machineId?: string | null,
 ): Promise<{ ok: boolean; bindings?: InboxBinding[]; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/inbox/routing/binding`, {
+  const res = await fetch(`${engineBase(machineId)}/v1/inbox/routing/binding`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, channel, target }),
@@ -1333,19 +2209,41 @@ export async function getUnrouted(): Promise<UnroutedItem[]> {
   return (await res.json()).items ?? [];
 }
 
-export async function getRecentChannels(): Promise<RecentChannel[]> {
-  const res = await fetch(`${httpBase()}/v1/channels/recent`);
+export async function getRecentChannels(machineId?: string | null): Promise<RecentChannel[]> {
+  const res = await fetch(`${engineBase(machineId)}/v1/channels/recent`);
   return (await res.json()).channels ?? [];
 }
 
+/** The session already answering a source, as the cloud reports it (one
+ * session across all of the user's machines answers a channel or repo). */
+export interface SubscriptionHolder {
+  session_id: string;
+  title: string;
+  machine_id: string; // "desktop" = This Mac
+  source: string;
+}
+
+export interface SubscribeResult {
+  ok: boolean;
+  channel?: string;
+  error?: string; // "held" when another session answers it — see held_by
+  held_by?: SubscriptionHolder;
+  also?: SubscriptionHolder[];
+  move_allowed?: boolean;
+  registered?: boolean; // false = local-only (nothing managed to register)
+}
+
+/** Subscribe goes to the machine that owns the session (its box registers the
+ * claim at the cloud before writing locally); `move` takes over a held source. */
 export async function subscribeChannel(
   sessionId: string,
   channel: string,
-): Promise<{ ok: boolean; channel?: string; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/subscriptions`, {
+  opts: { move?: boolean } = {},
+): Promise<SubscribeResult> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/subscriptions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, channel }),
+    body: JSON.stringify({ session_id: sessionId, channel, move: !!opts.move }),
   });
   return res.json();
 }
@@ -1354,7 +2252,7 @@ export async function unsubscribeChannel(
   sessionId: string,
   channel: string,
 ): Promise<{ ok: boolean; removed?: boolean }> {
-  const res = await fetch(`${httpBase()}/v1/subscriptions/remove`, {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/subscriptions/remove`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, channel }),
@@ -1362,11 +2260,41 @@ export async function unsubscribeChannel(
   return res.json();
 }
 
+// Who answers when the agent asks (server: coworker/unattended.py). "attended" = inline,
+// "inbox" = parked in the Inbox until someone returns, "auto" = the engine answers by
+// fixed rule and refuses anything only a person could approve.
+export type Attendance = "attended" | "inbox" | "auto";
+
 export async function getUnattended(sessionId: string): Promise<boolean> {
   const res = await fetch(
-    `${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
   );
   return (await res.json()).unattended;
+}
+
+export async function getAttendance(sessionId: string): Promise<Attendance> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
+  );
+  const body = await res.json();
+  const value = body.attendance;
+  if (value === "inbox" || value === "auto") return value;
+  return body.unattended ? "inbox" : "attended";
+}
+
+export async function setAttendance(
+  sessionId: string,
+  attendance: Attendance,
+): Promise<{ ok: boolean; unattended: boolean; attendance: Attendance }> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attendance }),
+    },
+  );
+  return res.json();
 }
 
 export async function setUnattended(
@@ -1374,7 +2302,7 @@ export async function setUnattended(
   unattended: boolean,
 ): Promise<{ ok: boolean; unattended: boolean }> {
   const res = await fetch(
-    `${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/unattended`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1384,9 +2312,263 @@ export async function setUnattended(
   return res.json();
 }
 
-export async function getSettings(): Promise<ModelSettings> {
-  const res = await fetch(`${httpBase()}/v1/settings`);
+// Auto-Approve metering (§1.7): per-session reviewer counts from the durable audit rows.
+export interface ReviewerBucket {
+  checks: number;
+  allow: number;
+  deny: number;
+  unsure: number;
+  tokens_in: number;
+  tokens_out: number;
+  // Cached-prefix share of the input, billed at ~10%. Without it the badge only ever
+  // showed the FRESH tokens — a fraction of what a check really processes.
+  cache_read: number;
+  cache_write: number;
+}
+export interface ReviewerStats {
+  live: ReviewerBucket;   // the mode actually deciding (Mode.AUTO_APPROVE)
+  shadow: ReviewerBucket; // shadow evaluation: recorded next to the human's own decisions
+}
+
+export async function getReviewerStats(sessionId: string): Promise<ReviewerStats> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${sessionId}/reviewer-stats`);
   return res.json();
+}
+
+// -- Settings ▸ Sandbox (UX-051 A): machine-level provider, network profile, credential grants --
+export interface SandboxCredentialEntry {
+  name: string;
+  title?: string;
+  path?: string; // a file or a folder under the home folder
+  hosts?: string[];
+  does?: string;
+  label?: "credential" | "configuration"; // what is in it
+  enabled: boolean;
+  kind?: "file" | "folder" | ""; // display only: what the path is on this machine ("" = missing)
+  shipped?: boolean; // display only: in the default list
+}
+// UX-053: the Windows one-time setup, as the page sees it (null off Windows).
+export interface WindowsSetupInfo {
+  state: "not_set_up" | "older" | "broken" | "ready";
+  set_up_at: string; // ISO date, "" when unknown
+  problem: string;
+  can_elevate: boolean; // this user can answer the administrator prompt
+  command: string; // to hand to an administrator
+}
+export interface SandboxToolchainEntry {
+  name: string;
+  title?: string;
+  path: string;
+  enabled: boolean;
+  exists?: boolean; // on this machine
+  shipped?: boolean; // in the default list (cannot be removed, only switched off)
+}
+export interface SandboxSettings {
+  platform: string;
+  provider: string; // "" = the default rule
+  effective_provider: string;
+  refused: string;
+  // `state` is what the page shows next to a provider. "needs_download": OpenShell is in
+  // place except for the base image (about 5 GB, pulled once); the radio stays enabled.
+  providers: { name: string; usable: boolean; why: string; state?: "ready" | "needs_download" | "unavailable" }[];
+  windows_setup: WindowsSetupInfo | null;
+  network_profile: string; // "allowlist" | "open"
+  network_profiles: { name: string }[];
+  network_sites: { group: string; hosts: string[] }[]; // the catalogue the sites dialog offers, "host:port"
+  network_hosts: string[]; // the sites the machine ticked, "host:port"; empty until it ticks some
+  credentials: SandboxCredentialEntry[]; // only the entries the user added (UX-053 v5)
+  credential_presets: SandboxCredentialEntry[]; // the "A CLI's login" picker: shipped, not yet added
+  toolchains: SandboxToolchainEntry[];
+  config_path: string;
+}
+
+export async function getSandboxSettings(machineId?: string | null): Promise<SandboxSettings> {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox`);
+  return res.json();
+}
+
+export async function setSandboxSettings(
+  patch: Partial<Pick<SandboxSettings, "provider" | "network_profile" | "network_hosts" | "credentials" | "toolchains">>,
+  machineId?: string | null,
+): Promise<{ ok: boolean; error?: string; rebuilt_sessions?: string[] } & Partial<SandboxSettings>> {
+  // `rebuilt_sessions`: after a provider change, the sessions whose engine the server
+  // dropped so their next connection rebuilds them under the new rule.
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  return res.json();
+}
+
+// OB-6: Settings ▸ Machine ▸ Observability — where recordings go and what they include, on
+// the machine that ran the work. Keys and header values are write-only: answers carry
+// masked hints ("pk-lf-••••••••3a91"), never a value.
+export type ObservabilityDestination =
+  | { kind: "off" }
+  | { kind: "langfuse"; host: string }
+  | { kind: "otlp"; url: string; header_names: string[] };
+export interface ObservabilityInclude {
+  messages: boolean;
+  tool_io: boolean;
+  context: boolean;
+  names: boolean;
+}
+export interface ObservabilitySettings {
+  record: boolean;
+  retention_days: 7 | 30 | 90;
+  destination: ObservabilityDestination;
+  include: ObservabilityInclude;
+  secrets: { public_key?: string; secret_key?: string; headers?: Record<string, string> };
+  managed: { by: string; name: string; at: string } | null;
+  notice: string | null;
+}
+export interface ObservabilitySecretsIn {
+  public_key?: string;
+  secret_key?: string;
+  headers?: Record<string, string>;
+}
+export interface ObservabilityStatus {
+  state: "off" | "sending" | "retrying" | "failed" | "managed";
+  last_sent_at: number | null; // seconds
+  sent: number;
+  sent_today: number;
+  failed: number;
+  dropped: number;
+  last_error: string;
+  // Model calls outside any session today (through this machine's model address; F-4).
+  outside_today?: { calls: number; tokens: number };
+}
+
+export async function getObservabilitySettings(machineId?: string | null): Promise<ObservabilitySettings> {
+  const res = await fetch(`${engineBase(machineId)}/v1/observability/settings`);
+  return res.json();
+}
+
+export async function setObservabilitySettings(
+  patch: Partial<Pick<ObservabilitySettings, "record" | "retention_days" | "destination">> & {
+    include?: Partial<ObservabilityInclude>;
+    secrets?: ObservabilitySecretsIn;
+  },
+  machineId?: string | null,
+): Promise<{ ok: boolean; error?: string } & Partial<ObservabilitySettings>> {
+  const res = await fetch(`${engineBase(machineId)}/v1/observability/settings`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  return res.json();
+}
+
+export async function getObservabilityStatus(machineId?: string | null): Promise<ObservabilityStatus> {
+  // "Today" is your day, even for a machine in another time zone (Phase 3 TD3-2).
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  const res = await fetch(`${engineBase(machineId)}/v1/observability/status?day_start_ms=${midnight.getTime()}`);
+  return res.json();
+}
+
+export async function sendObservabilityTest(
+  machineId?: string | null,
+): Promise<{ ok: boolean; status: number; text: string; ms?: number }> {
+  const res = await fetch(`${engineBase(machineId)}/v1/observability/test`, { method: "POST" });
+  return res.json();
+}
+
+/** One session's recording, content included, as a file the browser saves. */
+export async function downloadSessionRecording(sessionId: string, machineId?: string | null): Promise<boolean> {
+  const res = await fetch(`${engineBase(machineId)}/v1/sessions/${encodeURIComponent(sessionId)}/recording`);
+  if (!res.ok) return false;
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `recording-${sessionId.replace(/[^A-Za-z0-9_.-]/g, "_")}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+
+/** A machine's sessions (id and title), for picking one recording to save. */
+export async function getMachineSessions(machineId?: string | null): Promise<{ session_id: string; title?: string | null }[]> {
+  const res = await fetch(`${engineBase(machineId)}/v1/sessions`);
+  return (await res.json()).sessions ?? [];
+}
+
+// OPE-207: the readiness checklist behind Settings ▸ Sandbox (the rows `openworker machine
+// sandbox status` prints, with a key and whether the app may fix each one itself), and
+// the guided setup job that walks it on the machine where sessions run.
+export interface SandboxReadinessStep {
+  key: string;
+  what: string;
+  ok: boolean;
+  hint: string; // a note (what was found, why it failed); never a command
+  fixable: boolean; // the setup job does this one itself on that machine
+  command: string; // what to run in a terminal there when the app cannot
+  docs: string; // a page explaining the requirement, or ""
+}
+export interface SandboxReadiness {
+  platform: string;
+  supported: boolean;
+  steps: SandboxReadinessStep[];
+  all_ok: boolean;
+}
+export type SandboxSetupRowState = "pending" | "fixing" | "fixed" | "ok" | "needs_you" | "failed";
+export interface SandboxSetupState {
+  status: "idle" | "running" | "done" | "needs_you" | "failed" | "cancelled";
+  rows: (SandboxReadinessStep & { state: SandboxSetupRowState })[];
+  progress: { layers_total: number; layers_done: number; last_line: string; elapsed_s: number } | null;
+  error: string;
+  elapsed_s: number;
+}
+
+export async function getSandboxReadiness(machineId?: string | null): Promise<SandboxReadiness> {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox/readiness`);
+  return res.json();
+}
+
+export async function getSandboxSetup(machineId?: string | null): Promise<SandboxSetupState> {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox/setup`);
+  return res.json();
+}
+
+export async function startSandboxSetup(machineId?: string | null): Promise<SandboxSetupState> {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox/setup`, { method: "POST" });
+  return res.json();
+}
+
+export async function cancelSandboxSetup(machineId?: string | null): Promise<SandboxSetupState> {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox/setup/cancel`, { method: "POST" });
+  return res.json();
+}
+
+// UX-053: "Set up now" in the Windows setup dialog. The server runs the elevated setup
+// (Windows shows its own prompt), proves the wall in a throwaway sandbox, and makes the
+// Windows sandbox the machine's choice. Blocks until Windows answers, unlike the OpenShell
+// setup job above, which is polled.
+export async function runSandboxSetup(
+  machineId?: string | null,
+): Promise<{ ok: boolean; error?: string; said?: string; checked?: string } & Partial<SandboxSettings>> {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox/windows/setup`, { method: "POST" });
+  return res.json();
+}
+
+export async function runSandboxRemove(machineId?: string | null): Promise<{ ok: boolean; error?: string; said?: string } & Partial<SandboxSettings>> {
+  const res = await fetch(`${engineBase(machineId)}/v1/settings/sandbox/windows/remove`, { method: "POST" });
+  return res.json();
+}
+
+export async function getSettings(machineId?: string | null, timeoutMs = 10_000): Promise<ModelSettings> {
+  // A hung server must end in an error the page can show (#43), never an endless "Loading…".
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${engineBase(machineId)}/v1/settings`, { signal: ctrl.signal });
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function setModelKey(
@@ -1438,6 +2620,73 @@ export async function setOnboarded(value: boolean): Promise<{ ok: boolean; onboa
   return res.json();
 }
 
+// -- Memory (MEMORY-SPEC §5.3/§6: the memory screen, user rules, toast Undo) ----
+
+export interface MemoryEntry {
+  id: number;
+  scope: string;
+  content: string;
+  summary: string;
+  created_at: string;
+}
+
+export interface MemorySettings {
+  enabled: boolean;
+  user_rules: string;
+}
+
+// Fired whenever memory changes from OUTSIDE the memory screen — today the agent
+// saving or editing one mid-conversation. The screen only loads its list on mount, so
+// without this it sits there stale and the user reads "Nothing yet" seconds after a
+// save actually landed (owner-hit 2026-07-28).
+export const MEMORY_CHANGED = "coworker:memory-changed";
+export function announceMemoryChanged() {
+  window.dispatchEvent(new CustomEvent(MEMORY_CHANGED));
+}
+
+export async function getMemory(machineId?: string | null): Promise<MemoryEntry[]> {
+  const res = await fetch(`${engineBase(machineId)}/v1/memory`);
+  return (await res.json()).memory ?? [];
+}
+
+export async function updateMemory(
+  id: number,
+  content: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/memory/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  return res.json();
+}
+
+export async function deleteMemory(id: number): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/memory/${id}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function deleteAllMemory(): Promise<{ ok: boolean; deleted: number }> {
+  const res = await fetch(`${httpBase()}/v1/memory`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function getMemorySettings(machineId?: string | null): Promise<MemorySettings> {
+  const res = await fetch(`${engineBase(machineId)}/v1/memory/settings`);
+  return res.json();
+}
+
+export async function setMemorySettings(
+  patch: Partial<MemorySettings>,
+): Promise<MemorySettings> {
+  const res = await fetch(`${httpBase()}/v1/memory/settings`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  return res.json();
+}
+
 // -- model providers (OpenAI, Ollama, …) --------------------------------------
 export interface ProviderField {
   key: string;
@@ -1464,12 +2713,298 @@ export interface ProviderInfo {
   recommended_model: string | null; // pre-filled default for this provider (e.g. qwen3-coder:30b)
   blurb?: string; // one-line note under the title ("Uses X's OpenAI-compatible API…")
   key_set_at?: string | null; // ISO date the key was last (re)saved — absent for env-only config
+  // Where the key comes from: saved in Settings, the provider's environment variable, or
+  // nowhere. "env" keys cannot be removed from the app, so the card hides "Remove key" and
+  // names the variable instead (#742). Absent on an older backend → treated as "store".
+  key_source?: "store" | "env" | null;
+  env_key?: string | null; // the variable's name, when it is set
   last_used_at?: number | null; // epoch secs the provider last served a completion
+  // OAuth providers (auth === "oauth"): browser sign-in instead of a key form.
+  auth?: string | null;
+  // How Models & Keys groups it: a server on the user's own hardware, a plan signed
+  // into, or an API key. Absent on an older backend → treated as an API key.
+  kind?: "local" | "subscription" | "api_key";
+  is_custom?: boolean; // user-created OpenAI-compatible provider
+  // Local servers only: whether the server answers right now (cached probe).
+  alive?: boolean;
+  // llama.cpp on a Mac (UX-057): OpenWorker can set it up and run it, and what it runs.
+  setup_here?: boolean;
+  managed?: { phase: LlamaCppPhase; model: string | null };
+  signed_in?: boolean;
+  account?: string | null; // signed-in account label (email or id)
+  authorizing?: boolean;
+  last_error?: string | null;
+}
+
+// -- ChatGPT-subscription provider sign-in (OAuth; tokens never reach the GUI) ------
+export interface OpenRouterAuthStatus {
+  connected: boolean;
+  authorizing: boolean;
+  attempt_id: string | null;
+  authorize_url: string | null;
+  error: string | null;
+}
+
+export async function openRouterAuth(
+  action: "status" | "signin" | "complete" | "cancel" | "disconnect",
+  body: Record<string, unknown> = {},
+): Promise<OpenRouterAuthStatus> {
+  const response = await fetch(`${httpBase()}/v1/providers/openrouter-account/${action}`, action === "status" ? undefined : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error("OpenRouter authentication request failed");
+  return response.json();
+}
+
+export interface CodexAuthStatus {
+  signed_in: boolean;
+  account?: string | null;
+  authorizing: boolean;
+  last_error?: string | null;
+  authorize_url?: string | null;
+}
+
+export async function codexSignin(): Promise<{ ok: boolean }> {
+  const res = await fetch(`${httpBase()}/v1/providers/openai-codex/signin`, { method: "POST" });
+  return res.json();
+}
+
+export async function codexAuthStatus(): Promise<CodexAuthStatus> {
+  const res = await fetch(`${httpBase()}/v1/providers/openai-codex/status`);
+  return res.json();
+}
+
+export async function codexSignout(): Promise<{ ok: boolean }> {
+  const res = await fetch(`${httpBase()}/v1/providers/openai-codex/signout`, { method: "POST" });
+  return res.json();
+}
+
+// -- per-model settings, the machine, and what local servers hold ----------------------
+
+export interface ModelConfigRecord {
+  context_size?: number;
+  max_output_tokens?: number;
+  thinking?: boolean;
+  reasoning_effort?: string;
+  temperature?: number;
+  top_p?: number;
+  compaction_threshold_pct?: number;
+  default?: boolean;
+}
+
+export interface ModelSettingValue {
+  value: number | boolean | string;
+  from: "user" | "recommended";
+}
+
+export interface ModelRecommendation {
+  name: string;
+  context_max: number | null;
+  context_for_agents: number | null;
+  max_output_tokens: number | null;
+  thinking: { available: boolean; default: boolean };
+  sampling: Record<string, number>;
+  notes: string;
+  source: string;
+}
+
+/** One model's settings in force, each with where it came from. */
+export interface ModelConfigView {
+  model: string;
+  context_size?: ModelSettingValue;
+  max_output_tokens?: ModelSettingValue;
+  thinking?: ModelSettingValue;
+  reasoning_effort?: ModelSettingValue;
+  temperature?: ModelSettingValue;
+  top_p?: ModelSettingValue;
+  compaction_threshold_pct?: ModelSettingValue;
+  default: ModelSettingValue;
+  recommendation?: ModelRecommendation;
+}
+
+export async function getModelConfig(model: string): Promise<ModelConfigView> {
+  const res = await fetch(`${httpBase()}/v1/settings/model-config?model=${encodeURIComponent(model)}`);
+  return res.json();
+}
+
+export async function setModelConfig(
+  model: string,
+  values: Partial<Record<keyof ModelConfigRecord, number | boolean | string | null>>,
+): Promise<ModelConfigView & { ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/settings/model-config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model, values }),
+  });
+  return res.json();
+}
+
+export async function removeModelConfig(model: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`${httpBase()}/v1/settings/model-config/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model }),
+  });
+  return res.json();
+}
+
+/** This session's thinking switch and effort level (UX-055, the ⚙ beside the model). */
+// UX-056: what a model lets the user set per session (providers/model_controls.py).
+export interface ModelControls {
+  thinking: { support: "supported" | "not_supported"; default?: boolean | null };
+  reasoning: { support: "supported" | "not_supported"; levels?: string[]; default?: string | null };
+}
+
+export interface SessionModelControls {
+  // What this session changed; null = the model's default.
+  thinking: boolean | null;
+  reasoning_effort: string | null;
+  controls: ModelControls;
+}
+
+export async function getSessionModelSettings(sessionId: string, model = ""): Promise<SessionModelControls> {
+  const q = model ? `?model=${encodeURIComponent(model)}` : "";
+  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/model-settings${q}`);
+  return res.json();
+}
+
+export async function setSessionModelSettings(
+  sessionId: string,
+  values: { thinking?: boolean | null; reasoning_effort?: string | null },
+): Promise<{ ok: boolean; error?: string } & Partial<SessionModelControls>> {
+  const res = await fetch(`${httpBase()}/v1/sessions/${encodeURIComponent(sessionId)}/model-settings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(values),
+  });
+  return res.json();
+}
+
+/** This machine, for the "Your system" section. */
+export interface SystemFacts {
+  processor: string;
+  graphics: string;
+  kind: "apple_silicon" | "nvidia" | "dgx_spark" | "jetson" | "cpu";
+  memory_bytes: number | null;
+  gpu_memory_bytes: number | null;
+  storage_free_bytes: number | null;
+  storage_total_bytes: number | null;
+  model_memory_bytes: number | null;
+  runs_well_up_to_bytes: number | null;
+}
+
+export async function getSystemFacts(): Promise<SystemFacts> {
+  const res = await fetch(`${httpBase()}/v1/system`);
+  return res.json();
+}
+
+/** One model a local server holds, as the settings table shows it. */
+export interface LocalModelRow {
+  model: string; // full id, e.g. ollama:qwen3-coder:30b
+  name: string;
+  size_bytes: number | null;
+  tools: boolean | null; // null: the server did not say
+  thinking: boolean | null;
+  vision: boolean | null;
+  remote: boolean;
+  parameter_size: string | null;
+  quantization: string | null;
+  context_max: number | null;
+  context: number | null;
+  context_from: "user" | "machine" | "server";
+  fit: "runs_well" | "tight" | "too_large" | "cloud" | "unknown";
+  recommendation: string | null;
+}
+
+export async function getLocalModels(
+  provider: string,
+): Promise<{ provider: string; models: LocalModelRow[]; alive?: boolean; error?: string }> {
+  // A stuck request must end in an error the page can show, never an endless blank.
+  const res = await fetch(`${httpBase()}/v1/providers/${encodeURIComponent(provider)}/models`, {
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// -- llama.cpp set up and run by OpenWorker (UX-057) ---------------------------------
+export type LlamaCppPhase = "idle" | "installing" | "downloading" | "loading" | "checking" | "running" | "failed";
+export type ModelFit = "runs_well" | "tight" | "too_large" | "unknown";
+export type LlamaCppChoice =
+  | { kind: "suggested"; id: string }
+  | { kind: "ollama"; name: string }
+  | { kind: "file"; path: string };
+
+export interface LlamaCppSetup {
+  supported: boolean;
+  brew: string | null;
+  installed: { path: string; version: string | null } | null;
+  install_command: string;
+  cache_dir: string;
+  cache_free_bytes: number | null;
+  suggested: {
+    id: string;
+    name: string;
+    vendor: string | null;
+    quant: string | null;
+    features: string[];
+    size: number | null;
+    fit: ModelFit;
+    downloaded: boolean;
+    // The model's licence, named and linked before Download (from its Hugging Face card).
+    license: string | null;
+    license_url: string | null;
+  }[];
+  ollama: { name: string; path: string; size: number; fit: ModelFit }[];
+  ollama_pull: { name: string; size: number | null; fit: ModelFit; command: string }[];
+  phase: LlamaCppPhase;
+  lines: string[];
+  // `verifying`: the file is down and its sha256 is being checked against Hugging Face's.
+  progress: { done: number; total: number; seconds_left: number | null; verifying?: boolean } | null;
+  model: { name: string; detail: string | null; alias: string; download?: boolean; context?: number; file?: string } | null;
+  error: string | null;
+  check: { answers: boolean; tools: boolean } | null;
+  // "unverified": the Hugging Face API was unreachable, so the download's checksum was not checked.
+  note: "unverified" | null;
+  // Seconds until the next try while Hugging Face rate-limits the download.
+  retry_in: number | null;
+  address: string | null;
+  autostart: boolean;
+  last_choice: LlamaCppChoice | null;
+}
+
+async function llamacppPost(path: string, body?: unknown): Promise<LlamaCppSetup & { ok?: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/llamacpp/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function getLlamaCppSetup(): Promise<LlamaCppSetup> {
+  const res = await fetch(`${httpBase()}/v1/llamacpp/setup`, { signal: AbortSignal.timeout(15_000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+export const installLlamaCpp = () => llamacppPost("install");
+export const startLlamaCpp = (choice: LlamaCppChoice) => llamacppPost("start", { choice });
+export const stopLlamaCpp = () => llamacppPost("stop");
+export const cancelLlamaCpp = () => llamacppPost("cancel");
+export const setLlamaCppAutostart = (on: boolean) => llamacppPost("autostart", { on });
+export async function pickGgufFile(): Promise<{ ok: boolean; path?: string; canceled?: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/llamacpp/pick-file`, { method: "POST" });
+  return res.json();
 }
 
 export async function getProviders(): Promise<ProviderInfo[]> {
   const res = await fetch(`${httpBase()}/v1/providers`);
-  return res.json();
+  const data = await res.json();
+  // A backend without providers (the hosted control plane — models live on
+  // each machine) answers 404 JSON; an object where an array belongs must
+  // not reach render code (it crashed the whole app, owner-hit 2026-08-30).
+  return Array.isArray(data) ? data : [];
 }
 
 export async function setProvider(
@@ -1480,6 +3015,20 @@ export async function setProvider(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, fields }),
+  });
+  return res.json();
+}
+
+/** Create a named, user-configured OpenAI-compatible provider. */
+export async function createCustomProvider(
+  name: string,
+  title: string,
+  fields: Record<string, string>,
+): Promise<{ ok: boolean; error?: string; provider?: string }> {
+  const res = await fetch(`${httpBase()}/v1/providers/custom`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, title, fields }),
   });
   return res.json();
 }
@@ -1496,7 +3045,7 @@ export async function removeProvider(name: string): Promise<{ ok: boolean; error
 export async function verifyProvider(
   name: string,
   fields: Record<string, string>,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; warning?: string }> {
   const res = await fetch(`${httpBase()}/v1/providers/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1510,8 +3059,10 @@ export function detectProvider(apiKey: string): string | null {
   const key = (apiKey || "").trim();
   if (!key) return null;
   if (key.startsWith("sk-ant-")) return "anthropic";
+  if (key.startsWith("sk-orca-")) return "orcarouter";
   if (key.startsWith("sk-or-")) return "openrouter";
   if (key.startsWith("AIza")) return "gemini";
+  if (key.startsWith("nvapi-")) return "nvidia";
   if (key.startsWith("sk-") || key.startsWith("sk_")) return "openai";
   return null;
 }
@@ -1566,6 +3117,9 @@ export interface Automation {
   // without asking. `entry` is the raw record entry — the revoke handle; `target` is
   // null for legacy name-only entries.
   always_allowed: { entry: string; tool: string; target: string | null }[];
+  // Phase 3 (E26c): a joined machine's automation, listed beside this machine's.
+  machine_id?: string | null;
+  machine_name?: string;
 }
 
 export interface AutomationRun {
@@ -1579,11 +3133,77 @@ export interface AutomationRun {
   artifacts: string[];
   error: string | null;
   trigger: string;
+  // OB-18 (Phase 3): from the run's own recorded turns. Absent on older engines.
+  turns?: number;
+  total?: number | null;
+  at_least?: boolean;
+  active_ms?: number | null;
+  duration_ms?: number | null;
+  warn?: number | null;
+  checks?: string[];
+  check_titles?: string[];
+  health?: "ok" | "failed" | "skipped" | "did_not_finish" | "unknown";
+  first_turn_id?: string | null;
+  first_turn_seq?: number | null;
+}
+
+export interface FailedInARow {
+  count: number;
+  last_error: string | null;
+  run_id?: string;
+  session_id?: string;
+  turn_id?: string | null;
+}
+
+// Phase 3 (E26c, V3-16): automations live on the machine that runs them. The list joins this
+// machine's with each joined machine's (through the controller's proxy), and every
+// automation call goes to the machine its task came from, as sessions do.
+const automationMachines = new Map<string, string>();
+// The map is filled by getAutomations(); a call made before the list ever loaded (a reload
+// straight into a remote automation's page) would route to the local engine and 404. So
+// an unknown id loads the list once first (OPE-261).
+async function automationBase(id: string): Promise<string> {
+  if (!automationMachines.has(id)) {
+    try {
+      await getAutomations();
+    } catch {
+      /* offline: fall through to the local engine, as before */
+    }
+  }
+  return engineBase(automationMachines.get(id) ?? null);
+}
+export function machineOfAutomation(id: string): string | null {
+  return automationMachines.get(id) ?? null;
+}
+
+async function machineAutomations(m: Machine): Promise<Automation[]> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 4000); // an offline machine must not hold the list
+  try {
+    const res = await fetch(`${engineBase(m.id)}/v1/automations`, { signal: ctl.signal });
+    if (!res.ok) return [];
+    const tasks: Automation[] = (await res.json()).tasks ?? [];
+    return tasks.map((t) => ({ ...t, machine_id: m.id, machine_name: m.name }));
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function getAutomations(): Promise<Automation[]> {
   const res = await fetch(`${httpBase()}/v1/automations`);
-  return (await res.json()).tasks ?? [];
+  const local: Automation[] = (await res.json()).tasks ?? [];
+  let machines: Machine[] = [];
+  try {
+    machines = ((await getMachines()).machines || []).filter((m) => m.connected);
+  } catch {
+    machines = [];
+  }
+  const remote = (await Promise.all(machines.map(machineAutomations))).flat();
+  for (const t of local) automationMachines.delete(t.id);
+  for (const t of remote) if (t.machine_id) automationMachines.set(t.id, t.machine_id);
+  return [...local, ...remote];
 }
 
 // Fired after any automation mutation the sidebar should reflect immediately
@@ -1626,7 +3246,7 @@ export function connectEvents(
 
 /** Advance the automation's seen mark — clears its unseen-runs badge (UX-023). */
 export async function markAutomationSeen(id: string): Promise<{ ok: boolean }> {
-  const res = await fetch(`${httpBase()}/v1/automations/${id}/seen`, { method: "POST" });
+  const res = await fetch(`${await automationBase(id)}/v1/automations/${id}/seen`, { method: "POST" });
   return res.json();
 }
 
@@ -1648,13 +3268,18 @@ export async function createAutomation(payload: {
   return res.json();
 }
 
-export async function getAutomation(id: string): Promise<{ task: Automation; runs: AutomationRun[] }> {
-  const res = await fetch(`${httpBase()}/v1/automations/${encodeURIComponent(id)}`);
-  return res.json();
+export async function getAutomation(id: string): Promise<{ task: Automation; runs: AutomationRun[]; failed_in_a_row?: FailedInARow | null }> {
+  const res = await fetch(`${await automationBase(id)}/v1/automations/${encodeURIComponent(id)}`);
+  const body = await res.json();
+  // A remote automation's run sessions live on its machine: route them there.
+  const mid = automationMachines.get(id) ?? null;
+  for (const r of body.runs || []) if (r.session_id) registerSessionMachine(r.session_id, mid);
+  if (body.task && mid) body.task = { ...body.task, machine_id: mid };
+  return body;
 }
 
 export async function updateAutomation(id: string, changes: Record<string, any>) {
-  const res = await fetch(`${httpBase()}/v1/automations/${encodeURIComponent(id)}`, {
+  const res = await fetch(`${await automationBase(id)}/v1/automations/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(changes),
@@ -1663,7 +3288,7 @@ export async function updateAutomation(id: string, changes: Record<string, any>)
 }
 
 export async function deleteAutomation(id: string) {
-  const res = await fetch(`${httpBase()}/v1/automations/${encodeURIComponent(id)}`, { method: "DELETE" });
+  const res = await fetch(`${await automationBase(id)}/v1/automations/${encodeURIComponent(id)}`, { method: "DELETE" });
   return res.json();
 }
 
@@ -1679,14 +3304,16 @@ export interface PreparedRun {
 
 /** Prepare a live manual run: returns the session to open + the opening prompt to send. */
 export async function runAutomation(id: string): Promise<PreparedRun> {
-  const res = await fetch(`${httpBase()}/v1/automations/${encodeURIComponent(id)}/run`, { method: "POST" });
-  return res.json();
+  const res = await fetch(`${await automationBase(id)}/v1/automations/${encodeURIComponent(id)}/run`, { method: "POST" });
+  const body = await res.json();
+  if (body?.session_id) registerSessionMachine(body.session_id, automationMachines.get(id) ?? null);
+  return body;
 }
 
 /** Mark a manual run complete after its first turn finished. */
 export async function finalizeAutomationRun(id: string, runId: string) {
   const res = await fetch(
-    `${httpBase()}/v1/automations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/finalize`,
+    `${await automationBase(id)}/v1/automations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/finalize`,
     { method: "POST" },
   );
   return res.json();
@@ -1743,9 +3370,10 @@ export async function getSlackDirectory(
 export async function getSlackChannels(
   teamId: string,
   q = "",
+  machineId?: string | null,
 ): Promise<{ ok: boolean; error?: string; channels?: SlackChannelEntry[] }> {
   const res = await fetch(
-    `${httpBase()}/v1/connectors/slack/workspaces/${encodeURIComponent(teamId)}/channels?q=${encodeURIComponent(q)}`,
+    `${engineBase(machineId)}/v1/connectors/slack/workspaces/${encodeURIComponent(teamId)}/channels?q=${encodeURIComponent(q)}`,
   );
   return res.json();
 }
@@ -1795,6 +3423,32 @@ export async function removeSlackApprovalOwner(
   userId: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const res = await fetch(`${httpBase()}/v1/connectors/slack/approval-owners/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId }),
+  });
+  return res.json();
+}
+
+export async function addTelegramApprovalOwner(
+  userId: string,
+  displayName?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/connectors/telegram/approval-owners/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      ...(displayName ? { name: displayName } : {}),
+    }),
+  });
+  return res.json();
+}
+
+export async function removeTelegramApprovalOwner(
+  userId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`${httpBase()}/v1/connectors/telegram/approval-owners/remove`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user_id: userId }),
@@ -1945,25 +3599,84 @@ export async function getSlackStatus(): Promise<SlackStatus> {
 
 export type Handlers = {
   onEvent: (event: WsEvent) => void;
-  onOpen?: () => void;
+  /** `reconnected` is true when this open follows an unexpected drop — the caller
+   * should reload what it may have missed (transcript tail, parked prompts). */
+  onOpen?: (reconnected: boolean) => void;
   onClose?: () => void;
+  /** The server refused to build this session (its sandbox cannot be used) and closed
+   * the socket for good (close code 4403). No reconnect follows: retrying would only
+   * repeat the refusal every few seconds. The reason arrived as an `error` event. */
+  onRefused?: () => void;
 };
 
+/** Close code the server uses for a session it refused to build (see app.py). */
+export const WS_CLOSE_SESSION_REFUSED = 4403;
+
+/** Reconnect backoff for a dropped session socket: 1s, 2s, 4s, 8s, then 15s. */
+export const SESSION_RECONNECT_MS = [1000, 2000, 4000, 8000, 15000];
+
 export class Session {
-  private ws: WebSocket;
+  private ws!: WebSocket;
   // Payloads sent before the socket finished opening, replayed on `onopen`. Belt-and-suspenders
   // against the first message being dropped if the user sends in the connect window.
   private outbox: object[] = [];
+  private readonly url: string;
+  private readonly handlers: Handlers;
+  private closed = false;
+  private attempts = 0;
+  private timer: number | null = null;
 
-  constructor(sessionId: string, workspace: string, agent: string, handlers: Handlers) {
+  constructor(
+    sessionId: string,
+    workspace: string,
+    agent: string,
+    handlers: Handlers,
+    machine?: string | null,
+  ) {
     const q = `?workspace=${encodeURIComponent(workspace)}&agent=${encodeURIComponent(agent)}`;
-    this.ws = openWebSocket(`${wsBase()}/ws/session/${sessionId}${q}`);
-    this.ws.onmessage = (e) => handlers.onEvent(JSON.parse(e.data));
-    this.ws.onopen = () => {
-      this.flush();
-      handlers.onOpen?.();
+    // Remote homes: a session on a joined machine rides the bridged socket —
+    // same protocol, different base path (the controller splices it to the box).
+    const path = machine
+      ? `${machineWsPath(machine)}/ws/session/${sessionId}`
+      : `/ws/session/${sessionId}`;
+    this.url = `${wsBase()}${path}${q}`;
+    this.handlers = handlers;
+    this.connect();
+  }
+
+  /** Open (or re-open) the socket. A drop the caller did not ask for schedules a retry
+   * with capped backoff — a bridged machine session rides two hops (controller + box),
+   * and either one restarting used to leave the view dead until the user navigated
+   * away (ledger 2026-09-01: the v14 rollover blanked the bridged view). */
+  private connect() {
+    if (this.closed) return;
+    const reconnected = this.attempts > 0;
+    const ws = openWebSocket(this.url);
+    this.ws = ws;
+    ws.onmessage = (e) => {
+      try {
+        this.handlers.onEvent(JSON.parse(e.data));
+      } catch {
+        /* malformed frame — ignore */
+      }
     };
-    this.ws.onclose = () => handlers.onClose?.();
+    ws.onopen = () => {
+      this.attempts = 0;
+      this.flush();
+      this.handlers.onOpen?.(reconnected);
+    };
+    ws.onclose = (ev) => {
+      this.handlers.onClose?.();
+      if (this.closed) return;
+      if (ev.code === WS_CLOSE_SESSION_REFUSED) {
+        this.closed = true; // final: the server said this session cannot be built as configured
+        this.handlers.onRefused?.();
+        return;
+      }
+      const delay = SESSION_RECONNECT_MS[Math.min(this.attempts, SESSION_RECONNECT_MS.length - 1)];
+      this.attempts += 1;
+      this.timer = window.setTimeout(() => this.connect(), delay);
+    };
   }
 
   private flush() {
@@ -1996,27 +3709,48 @@ export class Session {
   }
 
   approve(decision: string) {
-    this.send({ type: "approval", decision });
+    this.send(approvalMessage(decision));
+  }
+
+  /** §8.4 "Allow anyway": register a ONE-SHOT exact-action approval for a reviewer-denied
+   *  tool call. The caller follows up with a normal user message so the agent retries. */
+  allowAnyway(name: string, args: any) {
+    this.send({ type: "allow_anyway", name, arguments: args ?? {} });
   }
 
   // Reply to a `request_directory` prompt: grant a folder (with access level) or decline.
   respondDirectory(granted: boolean, path?: string, writable?: boolean) {
-    this.send({ type: "directory_response", granted, ...(path ? { path } : {}), writable: !!writable });
+    this.send(directoryResponseMessage(granted, path, writable));
+  }
+
+  // Reply to a `request_tool` prompt: install the pinned build, or skip the check.
+  respondTool(approved: boolean) {
+    this.send(toolResponseMessage(approved));
   }
 
   // Reply to a `propose_plan` prompt: approve (choosing the execution mode) or reject with feedback.
   respondPlan(approved: boolean, mode?: string, feedback?: string) {
-    this.send({
-      type: "plan_response",
-      approved,
-      ...(mode ? { mode } : {}),
-      ...(feedback ? { feedback } : {}),
-    });
+    this.send(planResponseMessage(approved, mode, feedback));
+  }
+
+  // Spec §11.6: the human's per-worker decisions ride the response — connectors ticked
+  // on the card (within the offered ceiling) and the approval mode; by roster index.
+  respondTeam(approved: boolean, feedback?: string, enableChat?: boolean, members?: TeamMemberDecision[]) {
+    this.send(teamResponseMessage(approved, feedback, enableChat, members));
+  }
+
+  // Reply to a `request_connector` / `grant_connector` prompt.
+  respondConnector(approved: boolean) {
+    this.send(connectorResponseMessage(approved));
+  }
+
+  respondItems(approved: boolean, feedback?: string) {
+    this.send(itemsResponseMessage(approved, feedback));
   }
 
   // Answer a live `ask_user` prompt (attended sessions; unattended ones answer via the Inbox).
   respondQuestion(answer: string) {
-    this.send({ type: "question_response", answer });
+    this.send(questionResponseMessage(answer));
   }
 
   interrupt() {
@@ -2041,6 +3775,8 @@ export class Session {
     // Detach before closing: this socket's async `close` event may land AFTER the
     // successor session's `open` (observed when switching into an automation-run
     // session), and a torn-down socket must not clobber the new one's connected state.
+    this.closed = true;
+    if (this.timer !== null) window.clearTimeout(this.timer);
     this.ws.onopen = null;
     this.ws.onmessage = null;
     this.ws.onclose = null;
@@ -2048,15 +3784,1152 @@ export class Session {
   }
 }
 
+// -- project bindings (pass 20 / UX-044) ---------------------------------------
 
-export async function fetchProviderModels(
+export interface ProjectMenu {
+  kind: "memory" | "board";
+  bound: string | null;
+  derived: { kind: "git" | "folder"; label: string; full: string; key: string } | null;
+  named: { name: string; key: string }[];
+}
+
+export async function getProjectMenu(sessionId: string, kind: "memory" | "board"): Promise<ProjectMenu> {
+  const r = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${sessionId}/project-menu?kind=${kind}`);
+  return r.json();
+}
+
+export async function setProjectBinding(
+  sessionId: string,
+  kind: "memory" | "board",
+  name: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const r = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${sessionId}/bindings`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, name }),
+  });
+  return r.json();
+}
+
+export async function nameCurrentProject(
+  sessionId: string,
+  kind: "memory" | "board",
   name: string,
-  fields: Record<string, string>,
-): Promise<{ ok: boolean; models?: string[]; error?: string }> {
-  const res = await fetch(`${httpBase()}/v1/providers/models`, {
+): Promise<{ ok: boolean; error?: string }> {
+  const r = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${sessionId}/project-name`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, fields }),
+    body: JSON.stringify({ kind, name }),
   });
+  return r.json();
+}
+
+// -- remote homes: machines (remote-home-design.md P1b) ------------------------
+
+export interface Machine {
+  id: string;
+  name: string;
+  fingerprint: string;
+  app_version: string;
+  created_at: number;
+  last_seen: number | null;
+  connected: boolean;
+  // Public halves only (older backends omit them): what a browser seals key
+  // deploys to, and the fingerprint the user checks with `openworker machine status`.
+  seal_pubkey?: string;
+  seal_fingerprint?: string;
+  // Union view: where this row lives. Absent = the local registry; "cloud"
+  // rows carry the `cloud:` id prefix and ride the sidecar's cloud proxy.
+  origin?: "local" | "cloud";
+  // Where the machine came from: "" (absent) = the user brought it, "fly" =
+  // one of our managed sandboxes (provenance_ref = its sandbox id).
+  provenance?: string;
+  provenance_ref?: string;
+}
+
+// -- managed sandboxes (spec §Fly sandboxes) -----------------------------------
+
+export type SandboxPhase =
+  | "provisioning"
+  | "joining"
+  | "online"
+  | "offline"
+  | "stuck"
+  | "asleep"
+  | "failed";
+
+export interface Sandbox {
+  id: string;
+  name: string;
+  owner: string;
+  mine: boolean;
+  state: string;
+  phase: SandboxPhase;
+  error: string;
+  machine_id: string;
+  connected: boolean;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SandboxesInfo {
+  sandboxes: Sandbox[];
+  // The caller's effective per-user cap (0 = the feature is off for them)
+  // and how many of theirs count against it.
+  cap: number;
+  used: number;
+}
+
+/** Hosted only. A backend without the route (desktop, older service) answers
+ * cap 0 — the page then shows nothing about sandboxes. */
+export async function getSandboxes(): Promise<SandboxesInfo> {
+  try {
+    const r = await fetch(`${httpBase()}/v1/sandboxes`);
+    if (!r.ok) return { sandboxes: [], cap: 0, used: 0 };
+    const d = await r.json();
+    return { sandboxes: d.sandboxes ?? [], cap: Number(d.cap ?? 0), used: Number(d.used ?? 0) };
+  } catch {
+    return { sandboxes: [], cap: 0, used: 0 };
+  }
+}
+
+export async function createSandbox(
+  name?: string,
+): Promise<{ sandbox?: Sandbox; error?: string }> {
+  const r = await fetch(`${httpBase()}/v1/sandboxes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(name ? { name } : {}),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const detail = d?.detail;
+    return { error: typeof detail === "string" ? detail : detail?.message || `HTTP ${r.status}` };
+  }
+  return { sandbox: d.sandbox };
+}
+
+export async function deleteSandbox(id: string): Promise<{ removed?: string; error?: string }> {
+  const r = await fetch(`${httpBase()}/v1/sandboxes/${encodeURIComponent(id)}`, { method: "DELETE" });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const detail = d?.detail;
+    return { error: typeof detail === "string" ? detail : detail?.message || `HTTP ${r.status}` };
+  }
+  return d;
+}
+
+export interface CloudMachinesInfo {
+  // "signed_out" hides the cloud section entirely; "expired" shows a
+  // sign-in-again row; "unreachable" = network trouble, shown like offline.
+  session: "ok" | "signed_out" | "expired" | "unreachable";
+  org?: { id: string; name: string } | null;
+  machines: Machine[];
+}
+
+/** The hosted cloud registry, through the sidecar's proxy (desktop only —
+ * the hosted service itself has no such route). Ids come back prefixed so
+ * every existing consumer routes them through the proxy automatically. */
+export async function getCloudMachines(): Promise<CloudMachinesInfo> {
+  // Only an explicit session state from the proxy counts. A backend without
+  // the route (older sidecar, hosted service) answers something else — that
+  // is "no cloud attachment here", i.e. signed_out, never an error state.
+  try {
+    const r = await fetch(`${httpBase()}/v1/cloud/machines`);
+    if (!r.ok) return { session: "signed_out", machines: [] };
+    const data = await r.json();
+    const session = ["ok", "signed_out", "expired", "unreachable"].includes(data.session)
+      ? (data.session as CloudMachinesInfo["session"])
+      : "signed_out";
+    const machines: Machine[] = (data.machines ?? []).map((m: Machine) => ({
+      ...m,
+      id: CLOUD_ID_PREFIX + m.id,
+      origin: "cloud" as const,
+    }));
+    return { session, org: data.org, machines };
+  } catch {
+    return { session: "signed_out", machines: [] };
+  }
+}
+
+/** Fired on `window` by whoever learns the fleet changed (a machine joined,
+ * was removed, a sandbox came up) so pickers elsewhere reload their list. */
+export const MACHINES_CHANGED = "openworker:machines-changed";
+
+export async function getMachines(): Promise<{ machines: Machine[]; armed: boolean }> {
+  const r = await fetch(`${httpBase()}/v1/machines`);
+  return r.json();
+}
+
+/** Opening the "Add a machine" card arms enrollment: mints ONE single-use
+ * token with a 10-minute window and returns the join URL to show the user. */
+export async function armEnrollment(): Promise<{ join_url: string; expires_at: number }> {
+  const r = await fetch(`${httpBase()}/v1/remote/arm`, { method: "POST" });
+  return r.json();
+}
+
+export async function disarmEnrollment(): Promise<void> {
+  await fetch(`${httpBase()}/v1/remote/arm`, { method: "DELETE" });
+}
+
+export async function renameMachine(
+  id: string,
+  name: string,
+): Promise<{ machine?: { id: string; name: string }; error?: string }> {
+  const r = await fetch(machineApi(id), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  return r.json();
+}
+
+export async function removeMachine(id: string): Promise<{ removed?: string; error?: string }> {
+  const r = await fetch(machineApi(id), { method: "DELETE" });
+  return r.json();
+}
+
+/** The MACHINE's own settings (models it offers, its default) via the proxy —
+ * what the composer's picker shows when a draft runs on that machine. */
+export async function getMachineSettings(machineId: string): Promise<ModelSettings> {
+  const r = await fetch(`${engineBase(machineId)}/v1/settings`);
+  return r.json();
+}
+
+// -- deployment mode (remote-home-design.md §Cloud dashboard) ------------------
+// The SAME bundle serves the desktop sidecar and the acceptor-only cloud
+// service; the backend's capabilities flag — fetched once at boot — decides
+// which surfaces exist. Module-level so leaf components can read it without
+// prop-drilling; App sets it before the first post-boot render.
+export type AppMode = "desktop" | "cloud";
+let appMode: AppMode = "desktop";
+
+export function setAppMode(mode: AppMode): void {
+  appMode = mode;
+}
+
+export function isCloudMode(): boolean {
+  return appMode === "cloud";
+}
+
+// Capability flags (spec §"Deployments and the UI"): features gate on NAMED
+// flags, not on the mode — a new deployment is a different capabilities
+// response, zero UI changes. `wallet` is the first flag migrated; the rest
+// follow in the Settings rehaul.
+let walletAvailable = true;
+export function setWalletAvailable(available: boolean): void {
+  walletAvailable = available;
+}
+/** Does this backend hold a key wallet? false → key deploys are sealed in
+ * the BROWSER and relayed (OPE-149). */
+export function hasWallet(): boolean {
+  return walletAvailable;
+}
+
+/** Login config a hosted deployment advertises (server-driven, like the mode
+ * flag itself — the bundle carries no deployment-specific identifiers). */
+export interface CloudAuthConfig {
+  kind: string; // "auth0"
+  domain: string;
+  client_id: string;
+  audience: string;
+}
+
+// The broker (OpenWorker Cloud API) a hosted deployment pairs with — set from
+// /v1/capabilities so the dashboard can start a managed OAuth connect for a
+// machine from the browser (spec §Cloud-dashboard connect-direct).
+let cloudBase = "";
+export function getCloudBase(): string {
+  return cloudBase;
+}
+export function setCloudBase(base: string): void {
+  cloudBase = (base || "").replace(/\/$/, "");
+}
+
+export async function getCapabilities(): Promise<{
+  mode: AppMode;
+  wallet: boolean;
+  auth?: CloudAuthConfig;
+  cloud?: { base: string };
+}> {
+  try {
+    const r = await fetch(`${httpBase()}/v1/capabilities`);
+    const d = await r.json();
+    if (d.cloud?.base) setCloudBase(String(d.cloud.base));
+    return {
+      mode: d.mode === "cloud" ? "cloud" : "desktop",
+      wallet: d.wallet !== false, // absent (desktop sidecar) → has a wallet
+      ...(d.auth ? { auth: d.auth as CloudAuthConfig } : {}),
+      ...(d.cloud?.base ? { cloud: { base: String(d.cloud.base) } } : {}),
+    };
+  } catch {
+    return { mode: "desktop", wallet: true }; // older sidecars have no endpoint
+  }
+}
+
+/** How the hosted backend resolves this browser's token: identity + org
+ * memberships (the switcher's data). Desktop has no such endpoint. */
+export interface MeInfo {
+  actor: string;
+  email: string;
+  org_id: string;
+  admin: boolean;
+  orgs: { id: string; name: string; role: string }[];
+  // Per-tenant policy flags for the resolved org (deployment-wide flags ride
+  // /v1/capabilities). Absent on older backends → everything allowed.
+  policies?: { key_push?: boolean; sandbox_cap?: number };
+}
+
+export async function getMe(): Promise<MeInfo> {
+  const r = await fetch(`${httpBase()}/v1/me`);
+  if (!r.ok) throw new Error(`me: ${r.status}`);
+  return r.json();
+}
+
+// -- device-flow approval (`openworker join` — typed-code, GitHub-style) --
+
+export interface DeviceRequestDetail {
+  user_code: string;
+  name: string;
+  fingerprint: string;
+  expires_at: number;
+}
+
+/** Look up a pending join request by its typed code. 404 → null (unknown,
+ * expired, or already decided). */
+export async function getDeviceRequest(code: string): Promise<DeviceRequestDetail | null> {
+  const r = await fetch(`${httpBase()}/v1/remote/device/${encodeURIComponent(code)}`);
+  if (!r.ok) return null;
+  return r.json();
+}
+
+export async function approveDeviceRequest(code: string): Promise<boolean> {
+  const r = await fetch(
+    `${httpBase()}/v1/remote/device/${encodeURIComponent(code)}/approve`,
+    { method: "POST" },
+  );
+  return r.ok;
+}
+
+export async function denyDeviceRequest(code: string): Promise<boolean> {
+  const r = await fetch(
+    `${httpBase()}/v1/remote/device/${encodeURIComponent(code)}/deny`,
+    { method: "POST" },
+  );
+  return r.ok;
+}
+
+export interface WalletProfile {
+  profile: string;
+  type?: string | null;
+  account?: string | null;
+  expired?: boolean;
+}
+
+/** Wallet contents by name/type only — values never reach the browser. */
+export async function getWalletProfiles(): Promise<WalletProfile[]> {
+  const r = await fetch(`${httpBase()}/v1/wallet`);
+  return (await r.json()).profiles ?? [];
+}
+
+export interface MachineSecretRow {
+  profile: string;
+  deployed_at: number;
+  stale: boolean;
+  missing_from_wallet: boolean;
+}
+
+export async function getMachineSecrets(machineId: string): Promise<MachineSecretRow[]> {
+  const r = await fetch(`${machineApi(machineId)}/secrets`);
+  return (await r.json()).secrets ?? [];
+}
+
+/** Wallet deploy: NAMES only — the sidecar resolves values from its own store,
+ * seals them to the machine's pinned key, and pushes. */
+/** Grant handoff (spec §Remote OAuth): which profile keys a connector's
+ * grant carries, and whether it may move to a machine at all. One grant,
+ * one holder — the move deploys these sealed, then This Mac forgets. */
+export async function getConnectorHandoffInfo(name: string): Promise<{
+  ok: boolean;
+  portable?: boolean;
+  reason?: string;
+  profiles?: string[];
+  needs_delegation?: boolean;
+}> {
+  const res = await fetch(
+    `${httpBase()}/v1/connectors/${encodeURIComponent(name)}/handoff-info`,
+  );
   return res.json();
+}
+
+/** Handoff step for managed grants: mark their broker connections
+ * machine-held so the machine can renew by possession. Passing the target
+ * machine's seal_pubkey also mints the machine credential (managed events):
+ * the broker then routes the connection's events to that machine's sealed
+ * queue, and the credential is stamped into the moving profiles. */
+export async function delegateConnector(
+  name: string,
+  sealPubkey?: string,
+  // Hosted machines only: the machines service's own id, so the broker can
+  // wake a sleeping sandbox when an event arrives for this grant.
+  machineId?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(
+    `${httpBase()}/v1/connectors/${encodeURIComponent(name)}/delegate`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...(sealPubkey ? { seal_pubkey: sealPubkey } : {}),
+        ...(machineId ? { machine_id: machineId } : {}),
+      }),
+    },
+  );
+  return res.json();
+}
+
+/** Connect-direct-to-machine (machines spec §Remote OAuth): OAuth completes
+ * in this browser as usual, but the sidecar's callback ships the grant —
+ * delegated and sealed — to the named machine and stores nothing locally.
+ * Desktop only (the sidecar owns the OAuth loopback); needs cloud sign-in. */
+// Which broker provider serves a connector (mirrors the sidecar's map).
+const PROVIDER_FOR_CONNECTOR: Record<string, string> = {
+  gmail: "google",
+  google_calendar: "google",
+  google_drive: "google",
+  slack: "slack",
+  notion: "notion",
+  attio: "attio",
+  hubspot: "hubspot",
+  github: "github",
+  outlook: "microsoft",
+};
+
+/** Browser connect-direct (hosted dashboard): ask the broker for the
+ * consent URL in browser mode — the result comes back to THIS tab by
+ * postMessage, delegated to the machine, and the tab seals it to the
+ * machine's pinned key. Returns the authorize URL to open in a popup. */
+export async function beginBrowserManagedConnect(
+  name: string,
+  machineId: string,
+  sealPubkey: string,
+  opts: { access?: string; flow?: string } = {},
+): Promise<{ ok: boolean; authorize_url?: string; error?: string }> {
+  const provider = PROVIDER_FOR_CONNECTOR[name];
+  const base = getCloudBase();
+  if (!provider) return { ok: false, error: i18n.t("misc.api.no_managed_oauth", { name }) };
+  if (!base) return { ok: false, error: i18n.t("misc.api.no_cloud_api") };
+  const token = apiToken();
+  if (!token) return { ok: false, error: "not signed in" };
+  const r = await globalThis.fetch(`${base}/v1/oauth/${encodeURIComponent(provider)}/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      connector: name,
+      mode: "browser",
+      redirect: window.location.origin,
+      machine_id: machineId.replace(/^cloud:/, ""),
+      seal_pubkey: sealPubkey,
+      ...(opts.access ? { access: opts.access } : {}),
+      ...(opts.flow ? { flow: opts.flow } : {}),
+    }),
+  });
+  if (!r.ok) {
+    let detail = `HTTP ${r.status}`;
+    try {
+      const d = await r.json();
+      detail = typeof d.detail === "string" ? d.detail : detail;
+    } catch {
+      /* keep */
+    }
+    return { ok: false, error: detail };
+  }
+  const d = await r.json();
+  return { ok: true, authorize_url: d.authorize_url };
+}
+
+/** Relay a browser-sealed broker grant to the machine (the box stores it
+ * through its own routine). Ciphertext only leaves this tab. */
+export async function connectManagedGrantSealed(
+  machineId: string,
+  name: string,
+  sealedB64: string,
+): Promise<{ ok: boolean; account?: string; error?: string }> {
+  const res = await fetch(
+    `${machineApi(machineId)}/connectors/${encodeURIComponent(name)}/managed-grant-sealed`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sealed_b64: sealedB64 }),
+    },
+  );
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: d.error || d.message || `HTTP ${res.status}` };
+  return d;
+}
+
+export async function beginManagedConnectOnMachine(
+  machineId: string,
+  name: string,
+  machineName: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(
+    `${httpBase()}/v1/connectors/${encodeURIComponent(name)}/connect-managed`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ machine_id: machineId, machine_name: machineName }),
+    },
+  );
+  return res.json();
+}
+
+/** Complete a machine-scope disconnect of a MANAGED grant: the box deleted
+ * its copy but cannot reach the broker (no session), so the desktop revokes
+ * the connector's broker connections — killing the delegation so events stop
+ * queueing for a machine that no longer listens. Best-effort, idempotent. */
+export async function revokeCloudConnections(
+  name: string,
+): Promise<{ ok: boolean; revoked?: number }> {
+  const res = await fetch(
+    `${httpBase()}/v1/cloud/connections/${encodeURIComponent(name)}/revoke`,
+    { method: "POST" },
+  );
+  return res.json();
+}
+
+/** The handoff's forget step: local deletion only — never the broker
+ * disconnect, which would revoke the delegation the machine now lives on. */
+export async function forgetConnectorLocal(name: string): Promise<{ ok: boolean }> {
+  const res = await fetch(
+    `${httpBase()}/v1/connectors/${encodeURIComponent(name)}/forget-local`,
+    { method: "POST" },
+  );
+  return res.json();
+}
+
+export async function deployMachineSecrets(
+  machineId: string,
+  profiles: string[],
+): Promise<{ ok?: boolean; deployed?: string[]; error?: string }> {
+  const r = await fetch(`${machineApi(machineId)}/secrets`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profiles }),
+  });
+  return r.json();
+}
+
+/** Browser-sealed deploy (OPE-149): the payload was sealed IN THIS TAB to
+ * the machine's pinned key; the backend is a blind relay. `hashes` feed the
+ * staleness ledger only. */
+export async function deploySealedSecrets(
+  machineId: string,
+  sealedB64: string,
+  profiles: string[],
+  hashes: Record<string, string>,
+): Promise<{ ok?: boolean; deployed?: string[]; error?: string }> {
+  const r = await fetch(`${machineApi(machineId)}/secrets`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sealed_b64: sealedB64, profiles, hashes }),
+  });
+  return r.json();
+}
+
+export async function revokeMachineSecrets(
+  machineId: string,
+  profiles: string[],
+): Promise<{ ok?: boolean; revoked?: string[]; error?: string }> {
+  const r = await fetch(`${machineApi(machineId)}/secrets`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profiles }),
+  });
+  return r.json();
+}
+
+
+// --- Cloud views for connectors across machines (UX-049) ----------------------
+// The dashboard talks to the broker directly with the user's token; the
+// desktop goes through the sidecar's explicit /v1/cloud/... routes so the
+// token never leaves it. Same shapes either way.
+
+async function brokerFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  if (isCloudMode() && getCloudBase()) {
+    const token = apiToken();
+    return globalThis.fetch(`${getCloudBase()}${path}`, {
+      ...init,
+      headers: { ...(init.headers || {}), Authorization: `Bearer ${token}` },
+    });
+  }
+  return fetch(`${httpBase()}/v1/cloud${path.replace(/^\/v1/, "")}`, init);
+}
+
+const JSON_POST = (body: unknown): RequestInit => ({
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+
+export interface CloudHolder {
+  machine_id: string; // "" = the anonymous pre-machine-id delegation
+  delegated_at: string;
+  events: boolean;
+}
+
+export interface CloudConnection {
+  connection_id: string;
+  connector: string;
+  provider: string;
+  status: string;
+  provider_account?: string | null;
+  tenant_metadata?: Record<string, unknown> | null;
+  holders: CloudHolder[];
+  default_machine_id: string; // "" | "desktop" | machine id
+  copyable: boolean; // false = the provider rotates refresh tokens: one holder only
+  // Per workspace / installation (UX-049): which machine answers mentions nobody
+  // subscribed to, and which coworker (a persona id on that machine) starts the session.
+  routing: Record<string, { machine_id: string; persona: string }>;
+}
+
+/** Set one half or both of a scope's routing line. machineId "" keeps;
+ * persona undefined keeps, "" clears. */
+export async function setScopeRouting(
+  connectionId: string,
+  scope: string,
+  machineId = "",
+  persona?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await brokerFetch(
+    `/v1/connections/${encodeURIComponent(connectionId)}/routing`,
+    JSON_POST({ scope, machine_id: machineId, ...(persona === undefined ? {} : { persona }) }),
+  );
+  return res.ok ? { ok: true } : { ok: false, error: `http ${res.status}` };
+}
+
+export async function getCloudConnections(): Promise<CloudConnection[]> {
+  const res = await brokerFetch("/v1/connections");
+  if (!res.ok) return [];
+  return (await res.json()).connections ?? [];
+}
+
+/** Add a holder for `connectionId` on a machine (Enable): the broker mints
+ * that machine's credential, returned once. */
+export async function delegateConnection(
+  connectionId: string,
+  sealPubkey: string,
+  machineId: string,
+): Promise<{ ok: boolean; user_id?: string; machine_credential?: string; error?: string }> {
+  const res = await brokerFetch(
+    `/v1/connections/${encodeURIComponent(connectionId)}/delegate`,
+    JSON_POST({ seal_pubkey: sealPubkey, machine_id: machineId }),
+  );
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: body.detail || body.error || `http ${res.status}` };
+  return { ok: true, user_id: body.user_id, machine_credential: body.machine_credential };
+}
+
+export async function setDefaultMachine(
+  connectionId: string,
+  machineId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await brokerFetch(
+    `/v1/connections/${encodeURIComponent(connectionId)}/default-machine`,
+    JSON_POST({ machine_id: machineId }),
+  );
+  return res.ok ? { ok: true } : { ok: false, error: `http ${res.status}` };
+}
+
+/** Disconnect on ONE machine at the broker (the machine forgets its own copy). */
+export async function forgetHolder(connectionId: string, machineId: string): Promise<boolean> {
+  const res = await brokerFetch(
+    `/v1/connections/${encodeURIComponent(connectionId)}/holders/${encodeURIComponent(machineId)}`,
+    { method: "DELETE" },
+  );
+  return res.ok;
+}
+
+export interface CloudSubscription {
+  source: string;
+  connector: string;
+  machine_id: string; // "desktop" | machine id
+  session_id: string;
+  connection_id: string;
+  team_id: string;
+  title: string;
+  state: "active" | "orphan";
+  created_at: string;
+}
+
+export async function getCloudSubscriptions(connector = ""): Promise<CloudSubscription[]> {
+  const res = await brokerFetch(`/v1/subscriptions${connector ? `?connector=${encodeURIComponent(connector)}` : ""}`);
+  if (!res.ok) return [];
+  return (await res.json()).subscriptions ?? [];
+}
+
+export async function removeCloudSubscription(source: string): Promise<boolean> {
+  const res = await brokerFetch("/v1/subscriptions/remove", JSON_POST({ source }));
+  return res.ok;
+}
+
+export interface Person {
+  source: string;
+  connector: string;
+  scope: string; // Slack team id | GitHub installation id
+  member: string; // Slack user id | GitHub login
+  name: string;
+  added_at: string;
+  pinned?: boolean; // the user themself: always listed, never removable
+}
+
+export async function getPeople(connector: string, scope = ""): Promise<Person[]> {
+  const q = new URLSearchParams({ connector, ...(scope ? { scope } : {}) }).toString();
+  const res = await brokerFetch(`/v1/people?${q}`);
+  if (!res.ok) return [];
+  return (await res.json()).people ?? [];
+}
+
+export async function addPerson(
+  connector: string,
+  scope: string,
+  member: string,
+  name = "",
+): Promise<{ ok: boolean; error?: string }> {
+  const res = await brokerFetch("/v1/people", JSON_POST({ connector, scope, member, name }));
+  return res.ok ? { ok: true } : { ok: false, error: `http ${res.status}` };
+}
+
+export async function removePerson(connector: string, scope: string, member: string): Promise<boolean> {
+  const res = await brokerFetch("/v1/people/remove", JSON_POST({ connector, scope, member }));
+  return res.ok;
+}
+
+// Configurations (connectors-across-machines spec §10): repositories × event ×
+// who × send to. One object per configuration (its rows grouped by the broker).
+export type ConfigurationEvent = "mention" | "named_mention" | "pr_open" | "pr_merge" | "issue_open";
+
+export interface ConfigurationTarget {
+  kind: "existing" | "new";
+  machine_id: string; // "desktop" | broker machine id
+  session_id?: string;
+  title?: string;
+  persona?: string;
+  models?: string[];
+  base_dir?: string;
+  worktree?: boolean;
+  skills?: string[];
+  instructions?: string;
+  board?: string;
+  memory?: string;
+  // Spec §11.5: the spawned session's approval mode (default "auto-approve") and whether
+  // its prompts go to the Inbox (default true) — decided when the configuration is written.
+  approval_mode?: "interactive" | "auto-approve" | "bypass-approvals" | string;
+  unattended?: boolean;
+}
+
+export interface Configuration {
+  config_id: string;
+  connector: string;
+  installation_id: string;
+  repos: string[]; // "owner/repo", or "owner" = all repositories
+  event: ConfigurationEvent | string;
+  name: string;
+  who: string[];
+  target: ConfigurationTarget;
+  state: "active" | "orphan" | string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export async function getConfigurations(connector = "github"): Promise<Configuration[]> {
+  const res = await brokerFetch(`/v1/configurations?connector=${encodeURIComponent(connector)}`);
+  if (!res.ok) return [];
+  return (await res.json()).configurations ?? [];
+}
+
+export interface ConfigurationError {
+  ok: false;
+  error: string; // "held" | "name_taken" | "subscribed" | http message
+  held_by?: Record<string, unknown>;
+}
+
+export async function addConfiguration(body: {
+  connector?: string;
+  installation_id?: string;
+  repos: string[];
+  event: string;
+  name?: string;
+  who?: string[];
+  target: ConfigurationTarget;
+}): Promise<{ ok: true; configuration: Configuration } | ConfigurationError> {
+  const res = await brokerFetch("/v1/configurations", JSON_POST({ connector: "github", ...body }));
+  const data = await res.json().catch(() => ({}));
+  if (res.ok) return { ok: true, configuration: data.configuration };
+  const detail = data.detail ?? data;
+  return { ok: false, error: typeof detail === "string" ? detail : detail?.error || `http ${res.status}`, held_by: detail?.held_by };
+}
+
+export async function editConfiguration(
+  configId: string,
+  body: { who?: string[]; target?: ConfigurationTarget },
+): Promise<{ ok: true; configuration: Configuration } | ConfigurationError> {
+  const res = await brokerFetch(`/v1/configurations/${encodeURIComponent(configId)}/edit`, JSON_POST(body));
+  const data = await res.json().catch(() => ({}));
+  if (res.ok) return { ok: true, configuration: data.configuration };
+  const detail = data.detail ?? data;
+  return { ok: false, error: typeof detail === "string" ? detail : detail?.error || `http ${res.status}` };
+}
+
+export async function deleteConfiguration(configId: string): Promise<boolean> {
+  const res = await brokerFetch(`/v1/configurations/${encodeURIComponent(configId)}`, { method: "DELETE" });
+  return res.ok;
+}
+
+/** Box-to-box Enable: the SOURCE machine seals its profiles for `name`,
+ * stamped with the target's grant, to the target's pinned key. Ciphertext
+ * only; the caller relays it to the target's deploy route. */
+export async function handoffSealedFromMachine(
+  sourceMachineId: string,
+  name: string,
+  sealPubkey: string,
+  grant: { user_id?: string; machine_credential?: string },
+): Promise<{ ok: boolean; sealed_b64?: string; profiles?: string[]; error?: string; reason?: string }> {
+  const res = await fetch(
+    `${machineApi(sourceMachineId)}/p/v1/connectors/${encodeURIComponent(name)}/handoff-sealed`,
+    JSON_POST({ seal_pubkey: sealPubkey, grant }),
+  );
+  return res.json();
+}
+
+/** Move's forget step on a source MACHINE (the desktop has forgetConnectorLocal). */
+export async function forgetConnectorOnMachine(sourceMachineId: string, name: string): Promise<{ ok: boolean }> {
+  const res = await fetch(
+    `${machineApi(sourceMachineId)}/p/v1/connectors/${encodeURIComponent(name)}/forget-local`,
+    { method: "POST" },
+  );
+  return res.json();
+}
+
+// -- Observability (Phase 1): recorded turns and steps of a session ----------------------------
+// Served by the engine (technical design §12); `sessionApiBase` reaches a remote machine's
+// session through the machine proxy, like the transcript.
+
+export interface RecordedTurn {
+  turn_id: string;
+  seq: number;
+  kind: string;
+  trigger: string;
+  status: string;
+  started_at: number;
+  duration_ms: number | null;
+  stamp: Record<string, any>;
+  buckets: Record<string, any>;
+  usage: Record<string, any>;
+  // The approval mode and auto-approver at turn start (UX-059 OB-1 header pill).
+  approval_mode?: string | null;
+  attended?: boolean | null;
+  reviewer?: { active?: boolean; shadow?: boolean; kind?: string | null; model?: string | null } | null;
+  // OB-3: how many issues the turn's checks found (warnings count on the tab).
+  issues?: { warn: number; info: number };
+  // OB-7: team workers' turns this (lead) turn woke, worked out on read. Display only.
+  workers?: RecordedWorkerRow[];
+  // Format 1.3 (OB-17): why the turn started; absent before 1.3.
+  wake?: { reason?: string; kinds?: string[]; item_ids?: string[]; board_seq?: number | null; batched?: number | null;
+    deferred?: { by: string; ms: number } | null; by?: string | null } | null;
+  automation?: { task_id: string; run_id: string; trigger: string } | null;
+  // The turn's first and last message ids, and its warning checks (T3-14: the turn list
+  // finds a turn's part of the conversation by the answer's id, and searches issue titles).
+  first_message_id?: string | null;
+  last_message_id?: string | null;
+  issue_checks?: string[];
+}
+
+// One worker turn under a lead's turn (OB-7). `tokens` are the worker's own, never the lead's.
+export interface RecordedWorkerRow {
+  session_id: string;
+  turn_id: string;
+  seq: number | null;
+  name: string | null;
+  started_at: number;
+  duration_ms: number | null;
+  status: string;
+  tokens: number;
+  at_least: boolean;
+  team_id: string | null;
+  item_ids: string[];
+  via: string | null;
+}
+
+// One turn's Issues (OB-3): what the checks in signals.yaml found, what was fine, what did not
+// apply. `text` is the engine's English sentence; `facts` what it was built from.
+export interface TurnIssue {
+  check: string;
+  severity: "warn" | "info";
+  step_id: string | null;
+  step_seq: number | null;
+  text: string;
+  facts: Record<string, any>;
+}
+export interface TurnIssues {
+  turn_id: string;
+  signals_version?: string;
+  warn: number;
+  info: number;
+  seen?: boolean;
+  issues: TurnIssue[];
+  fine: { check: string; text: string; facts?: Record<string, any> }[];
+  not_checked: { check: string; text: string; facts?: Record<string, any> }[];
+}
+
+export interface RecordedStep {
+  step_id: string;
+  turn_id: string | null;
+  parent_step_id: string | null;
+  seq: number | null;
+  kind: string;
+  name: string;
+  started_at: number;
+  duration_ms: number | null;
+  status: string;
+  call_id: string | null;
+  message_id: string | null;
+  shadow: boolean;
+  after_turn: boolean;
+  attrs: Record<string, any>;
+  content?: Record<string, any>;
+}
+
+async function recordingGet(sessionId: string, path: string): Promise<any> {
+  const res = await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}${path}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function getRecordedTurns(sessionId: string): Promise<RecordedTurn[]> {
+  return (await recordingGet(sessionId, "/turns")).turns ?? [];
+}
+
+export async function getTurnSteps(sessionId: string, turnId: string): Promise<RecordedStep[]> {
+  return (await recordingGet(sessionId, `/turns/${encodeURIComponent(turnId)}/steps`)).steps ?? [];
+}
+
+export async function getStepDetail(sessionId: string, stepId: string): Promise<any> {
+  return (await recordingGet(sessionId, `/steps/${encodeURIComponent(stepId)}`)).step ?? null;
+}
+
+export async function getRecordedUsage(sessionId: string): Promise<any> {
+  return recordingGet(sessionId, "/usage");
+}
+
+export async function getTurnIssues(sessionId: string, turnId: string): Promise<TurnIssues | null> {
+  const r = await recordingGet(sessionId, `/turns/${encodeURIComponent(turnId)}/issues`);
+  return r && Array.isArray(r.issues) ? (r as TurnIssues) : null;
+}
+
+/** Opening a session's Issues clears its amber ring in the sidebar (TD2-4). */
+export async function markIssuesSeen(sessionId: string): Promise<void> {
+  await fetch(`${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/issues/seen`, { method: "POST" });
+}
+
+// -- Observability Phase 3: rollups over many turns (technical-design.md §4) -------------------
+// Every rollup goes to the machine that ran the work; the desktop sends its own local day
+// boundaries (TD3-2). Tokens only.
+
+export interface UsageRollup {
+  groups: RollupGroup[];
+  no_turn: { calls: number; total: number };
+  not_checked: number;
+  kept_from: number | null;
+  turns?: number;
+  deleted_session_turns?: number;
+  names?: Record<string, string>;
+  automations?: Record<string, string>;
+  machine?: { kind?: string; id?: string | null; name?: string };
+  // E28: a remote machine's last answer, served by the desktop while the machine is offline.
+  cached?: { as_of: number } | null;
+}
+
+export async function getUsageRollup(
+  q: { from: number; to: number; days?: DayBoundary[]; group?: string; persona_id?: string },
+  machineId?: string | null,
+): Promise<UsageRollup> {
+  const p = new URLSearchParams({ from: String(q.from), to: String(q.to), group: q.group || "all" });
+  if (q.days?.length) p.set("days", JSON.stringify(q.days));
+  if (q.persona_id) p.set("persona_id", q.persona_id);
+  const res = await fetch(`${engineBase(machineId)}/v1/observability/rollup?${p}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export interface HeavyTurn {
+  turn_id: string;
+  session_id: string;
+  title: string | null;
+  seq: number | null;
+  session_deleted: boolean;
+  persona_id: string | null;
+  model_ids: string[];
+  total: number;
+  at_least: boolean;
+  active_ms: number | null;
+  status: string;
+  found_open: boolean;
+  warn: number | null;
+  checks: string[];
+  started_at: number;
+  run_id?: string | null;
+  task_id?: string | null;
+}
+
+export async function getHeaviestTurns(from: number, to: number, machineId?: string | null, limit = 20,
+                                       personaId?: string | null): Promise<{ turns: HeavyTurn[]; names?: Record<string, string> }> {
+  const p = new URLSearchParams({ from: String(from), to: String(to), order: "tokens", limit: String(limit) });
+  if (personaId) p.set("persona_id", personaId);
+  const res = await fetch(`${engineBase(machineId)}/v1/observability/turns?${p}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export interface ApproverCounts {
+  checks: number;
+  allowed: number;
+  asked: number;
+  blocked: number;
+  could_not_run: number;
+  median_ms: number | null;
+}
+export interface ApproverStrip extends ApproverCounts {
+  overridden: number;
+  tokens: number;
+  shadow_checks: number;
+  // T3-6: each reviewer's own overrides and model tokens (live checks only; the strip's
+  // `tokens` total has the shadow checks too)
+  by_reviewer: (ApproverCounts & { kind: string; overridden?: number; tokens?: number })[];
+  shown: boolean;
+}
+
+// T3-10: the Ratings card on Usage (counts, reasons, and the turns rated 👎)
+export interface RatedDownTurn {
+  turn_id: string;
+  session_id: string;
+  title: string | null;
+  seq: number | null;
+  session_deleted: boolean;
+  persona_id: string | null;
+  started_at: number;
+  reasons: string[];
+  note: string | null;
+  auto_approved: number;
+}
+export interface RatingsSummary {
+  up: number;
+  down: number;
+  reasons: Record<string, number>;
+  down_turns: RatedDownTurn[];
+  more: number;
+  names?: Record<string, string>;
+}
+
+export async function getRatings(from: number, to: number, personaId?: string | null): Promise<RatingsSummary> {
+  const who = personaId ? `&persona_id=${encodeURIComponent(personaId)}` : "";
+  const res = await fetch(`${engineBase(null)}/v1/observability/ratings?from=${from}&to=${to}${who}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function getApproverStrip(from: number, to: number, machineId?: string | null,
+                                       personaId?: string | null): Promise<ApproverStrip> {
+  const who = personaId ? `&persona_id=${encodeURIComponent(personaId)}` : "";
+  const res = await fetch(`${engineBase(machineId)}/v1/observability/approver?from=${from}&to=${to}${who}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// OB-5: the numbers under each answer, and its rating.
+export async function getSessionFooters(sessionId: string): Promise<{ turns: TurnFooter[]; recording: boolean; where?: FeedbackWhere }> {
+  return recordingGet(sessionId, "/footers");
+}
+
+export async function putTurnFeedback(
+  sessionId: string,
+  turnId: string,
+  body: { rating: "up" | "down" | null; reasons?: string[]; note?: string },
+): Promise<{ feedback: TurnFeedback | null; where: FeedbackWhere; error?: string }> {
+  const res = await fetch(
+    `${sessionApiBase(sessionId)}/v1/sessions/${encodeURIComponent(sessionId)}/turns/${encodeURIComponent(turnId)}/feedback`,
+    { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+  return data;
+}
+
+// OB-15: "How it's been doing", one row per coworker version, on the machine it lives on.
+export interface VersionFileChange {
+  path: string;
+  kind: "added" | "removed" | "edited";
+  lines?: number;
+  skill?: string;
+  from_version?: string | null;
+  to_version?: string | null;
+}
+export interface DoingRow {
+  fp: string | null;
+  current: boolean;
+  unknown_version: boolean;
+  first_seen: number | null;
+  last_seen: number | null;
+  before_kept: boolean;
+  runs: number;
+  automation_runs: number;
+  turns: number;
+  checked: number;
+  with_warn: number;
+  not_checked: number;
+  median_tokens: number | null;
+  at_least: boolean;
+  approvals_per_run: number | null;
+  up: number;
+  down: number;
+  too_few: boolean;
+  models: string[];
+  changed: { from: string; files: VersionFileChange[] } | null;
+  model_line?: { kind: "first" | "unchanged" | "changed" | "several"; models?: string[]; from?: string; to?: string };
+  /** T3-15: the version's number, oldest first ("v1") */
+  version_n?: number | null;
+}
+export interface PersonaDoing {
+  persona_id: string;
+  kept_from: number | null;
+  min_runs: number;
+  rows: DoingRow[];
+  total: number;
+  runs: number;
+}
+
+export async function getPersonaDoing(personaId: string, machineId?: string | null, days = 30): Promise<PersonaDoing> {
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/${encodeURIComponent(personaId)}/doing?days=${days}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function getPersonaVersionDiff(
+  personaId: string, from: string, to: string, machineId?: string | null,
+): Promise<{ files: (VersionFileChange & { diff: string })[]; error?: string }> {
+  const p = new URLSearchParams({ from, to });
+  const res = await fetch(`${engineBase(machineId)}/v1/personas/${encodeURIComponent(personaId)}/versions/diff?${p}`);
+  return res.json();
+}
+
+/** A recorded step by its tool call id (an evidence link, OB-16): the session's turns are
+ * searched newest first. Null when the call was not recorded. */
+export async function findStepByCall(sessionId: string, callId: string): Promise<{ step: RecordedStep; turn: RecordedTurn } | null> {
+  const turns = await getRecordedTurns(sessionId);
+  for (const turn of [...turns].reverse()) {
+    const steps = await getTurnSteps(sessionId, turn.turn_id);
+    const step = steps.find((s) => s.call_id === callId && s.kind === "tool");
+    if (step) return { step, turn };
+  }
+  return null;
 }

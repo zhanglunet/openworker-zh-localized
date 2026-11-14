@@ -19,10 +19,14 @@ from chat.completions in ways the converters must absorb:
 
 from __future__ import annotations
 
+import logging
+
 import json
+import os
 import re
 from typing import Any, Optional
 
+from .effort import EffortPlan, anthropic_effort, mentions_effort
 from .base import (
     AssistantTurn,
     ModelCapabilities,
@@ -38,15 +42,56 @@ def _usage_from(usage: Any) -> Optional[TokenUsage]:
     """Messages-API usage object → normalized counts (input_tokens excludes cache)."""
     if usage is None:
         return None
+    read = getattr(usage, "cache_read_input_tokens", None)
+    write = getattr(usage, "cache_creation_input_tokens", None)
+    thinking = getattr(getattr(usage, "output_tokens_details", None), "thinking_tokens", None)
     return TokenUsage(
         input=int(getattr(usage, "input_tokens", 0) or 0),
         output=int(getattr(usage, "output_tokens", 0) or 0),
-        cache_read=int(getattr(usage, "cache_read_input_tokens", 0) or 0),
-        cache_write=int(getattr(usage, "cache_creation_input_tokens", 0) or 0),
+        cache_read=int(read or 0),
+        cache_write=int(write or 0),
+        reasoning=None if thinking is None else int(thinking),
+        cache_read_reported=read is not None,
+        cache_write_reported=write is not None,
     )
 
-# Required by the Messages API; a ceiling, not a spend target.
-DEFAULT_MAX_TOKENS = 16000
+
+def _merge_final_usage(usage: Optional[TokenUsage], final: Any) -> Optional[TokenUsage]:
+    """The stream's last `message_delta` usage holds the call's totals (observability E3):
+    every count it carries replaces the opening event's."""
+    if final is None:
+        return usage
+    usage = usage or TokenUsage()
+    for attr, field in (("input_tokens", "input"), ("output_tokens", "output")):
+        value = getattr(final, attr, None)
+        if value:
+            setattr(usage, field, int(value))
+    read = getattr(final, "cache_read_input_tokens", None)
+    if read is not None:
+        usage.cache_read, usage.cache_read_reported = int(read), True
+    write = getattr(final, "cache_creation_input_tokens", None)
+    if write is not None:
+        usage.cache_write, usage.cache_write_reported = int(write), True
+    thinking = getattr(getattr(final, "output_tokens_details", None), "thinking_tokens", None)
+    if thinking is not None:
+        usage.reasoning = int(thinking)
+    return usage
+
+# Required by the Messages API; a ceiling, not a spend target. Sized for file
+# generation, not just chat: a coworker writing a self-contained HTML report ships the
+# whole file inside one tool call's arguments, and 16k proved too small in the field
+# (the call truncates mid-arguments and the write fails). Current Claude models all
+# accept ≥32k output.
+DEFAULT_MAX_TOKENS = 32000
+# The SDK refuses a NON-streaming request whose max_tokens implies more than ten minutes
+# of generation at its pessimistic 128k tokens/hour (max_tokens > 21,333) unless the caller
+# sets its own timeout. complete() callers (reviewer, summaries, titles) legitimately run
+# with the default cap, so above the ceiling the request carries an explicit timeout sized
+# to the SDK's own estimate for the largest default request.
+NONSTREAMING_TOKEN_CEILING = 128_000 * 600 // 3600
+LONG_REQUEST_TIMEOUT = 900.0
+
+logger = logging.getLogger(__name__)
 
 # Extended thinking is ON by default (owner call 2026-07-23: no user-facing setting —
 # most users wouldn't know what a budget is; a per-turn composer control is future work).
@@ -84,6 +129,37 @@ def _uses_budget_thinking(model: str) -> bool:
 # the same call. Beta header + param, beta messages endpoint.
 _FALLBACK_BETA = "server-side-fallback-2026-06-01"
 _FALLBACK_MODEL = "claude-opus-4-8"
+
+
+# DIAGNOSTIC INSTRUMENT, off unless COWORKER_CACHE_DIAGNOSTICS=1 in the environment.
+# In one long Fable 5.1 session, one call in six failed to reuse the conversation
+# cache and rewrote the whole prompt at 1.25x input — three quarters of the session's cost.
+# Replaying those exact requests off-container caches perfectly, so the cause is not the
+# content we send and cannot be found from the recorded data. This asks Anthropic directly:
+# each request carries the previous response's id, and the reply names the reason the cache
+# prefix could not be reused. Never enabled in a normal run — it changes the request.
+_CACHE_DIAGNOSTICS_BETA = "cache-diagnosis-2026-04-07"
+
+
+def _outbound_fingerprints(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Diagnostic only: a short hash per outbound message (plus system and tools), so two
+    consecutive requests can be diffed offline to find the first message that changed."""
+    import hashlib
+
+    def h(obj: Any) -> str:
+        return hashlib.sha1(
+            json.dumps(obj, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()[:12]
+
+    return {
+        "system": h(kwargs.get("system")),
+        "tools": h(kwargs.get("tools")),
+        "messages": [h(m) for m in kwargs.get("messages") or []],
+    }
+
+
+def _cache_diagnostics_on() -> bool:
+    return (os.environ.get("COWORKER_CACHE_DIAGNOSTICS") or "").strip() not in ("", "0")
 
 
 def _needs_refusal_fallback(model: str) -> bool:
@@ -372,9 +448,38 @@ def _reasoning_text(thinking_blocks: list[dict[str, Any]]) -> Optional[str]:
     return text or None
 
 
-def _thinking_extras(thinking_blocks: list[dict[str, Any]]) -> dict[str, Any]:
-    """Raw blocks → the `_anthropic` sidecar convert_messages replays (empty when none)."""
-    return {"_anthropic": {"blocks": thinking_blocks}} if thinking_blocks else {}
+def _effort_record(plan: Optional[EffortPlan], fallback_note: Optional[str]) -> Optional[dict[str, Any]]:
+    if plan is None:
+        return None
+    if fallback_note:
+        return plan.without_param(fallback_note).record()
+    return plan.record()
+
+
+def _anthropic_extras(
+    thinking_blocks: list[dict[str, Any]],
+    stop_reason: Any = None,
+    *,
+    cache_diagnostics: Optional[dict[str, Any]] = None,
+    outbound_hashes: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """The `_anthropic` sidecar persisted on the assistant message (empty when nothing
+    to keep): raw thinking blocks, which convert_messages replays verbatim, and the raw
+    `stop_reason` (OPE-173) so values the engine's finish_reason map collapses —
+    `pause_turn`, `stop_sequence` → "stop" — stay recoverable from a saved session.
+    convert_messages only reads `blocks`; other providers strip the whole key."""
+    sidecar: dict[str, Any] = {}
+    if thinking_blocks:
+        sidecar["blocks"] = thinking_blocks
+    if stop_reason:
+        sidecar["stop_reason"] = stop_reason
+    # Diagnostic only: Anthropic's reason for not reusing the prompt cache on this call,
+    # recorded on the message so it can be read back from a finished run.
+    if cache_diagnostics:
+        sidecar["cache_diagnostics"] = cache_diagnostics
+    if outbound_hashes:
+        sidecar["outbound_hashes"] = outbound_hashes
+    return {"_anthropic": sidecar} if sidecar else {}
 
 
 class AnthropicProvider(ProviderClient):
@@ -387,6 +492,9 @@ class AnthropicProvider(ProviderClient):
         secrets: Any = None,
         thinking_budget: Optional[int] = None,
     ):
+        # Diagnostic only (see _cache_diagnostics_on): the id of the previous response, so
+        # the next request can ask why the cache prefix was not reused.
+        self._last_message_id: Optional[str] = None
         # Mirrors OpenAIProvider: the SDK client is built lazily so engines can be assembled
         # before any key exists; the key resolves at call time (explicit → env → SecretStore).
         # Tests inject a `client` directly. `thinking_budget` (tokens, from the provider
@@ -396,6 +504,9 @@ class AnthropicProvider(ProviderClient):
         self._secrets = secrets
         self.default_model = default_model
         self.thinking_budget = thinking_budget or 0
+        # Models whose endpoint rejected `output_config.effort` this run (OPE-176): the
+        # parameter is not sent to them again; the record says so.
+        self._effort_rejected: set[str] = set()
 
     def _ensure_client(self) -> Any:
         if self._client is None:
@@ -418,6 +529,7 @@ class AnthropicProvider(ProviderClient):
         messages: list[dict[str, Any]],
         tools: Optional[list[dict[str, Any]]],
         settings: dict[str, Any],
+        effort: Optional[EffortPlan] = None,
     ) -> dict[str, Any]:
         system, converted = convert_messages(messages)
         if "stop" in settings and "stop_sequences" not in settings:
@@ -434,12 +546,28 @@ class AnthropicProvider(ProviderClient):
                 # 4.6+/Claude 5 family: adaptive only (budget_tokens 400s on 4.7+);
                 # display opt-in or the trace text arrives empty.
                 filtered["thinking"] = {"type": "adaptive", "display": "summarized"}
+        if effort is not None and effort.params:
+            # OPE-176: a configured level becomes `output_config.effort` (adaptive models)
+            # or the thinking budget (budget-mode models); the floor below still applies.
+            filtered.update(effort.params)
         thinking = filtered.get("thinking") or {}
         if thinking.get("type") == "enabled":
             # Budget must fit under max_tokens.
             budget = int(thinking.get("budget_tokens") or 0)
             floor = max(DEFAULT_MAX_TOKENS, budget + 4096)
-            if int(filtered.get("max_tokens") or 0) <= budget:
+            requested = int(filtered.get("max_tokens") or 0)
+            if requested <= budget:
+                if requested:
+                    # A configured max_output_tokens (OPE-177) that does not clear the
+                    # budget would be rejected by the API; say so rather than silently
+                    # sending a different ceiling than the one configured.
+                    logger.warning(
+                        "max_output_tokens=%d is not above the thinking budget (%d); "
+                        "sending max_tokens=%d instead",
+                        requested,
+                        budget,
+                        floor,
+                    )
                 filtered["max_tokens"] = floor
         if thinking.get("type") in ("enabled", "adaptive"):
             # Sampling knobs are rejected alongside thinking (and removed outright on 4.7+).
@@ -462,18 +590,34 @@ class AnthropicProvider(ProviderClient):
         tools: Optional[list[dict[str, Any]]] = None,
         **settings: Any,
     ) -> AssistantTurn:
+        plan = self._effort_plan(model, settings)
         kwargs = self._request_kwargs(
-            model=model, messages=messages, tools=tools, settings=settings
+            model=model, messages=messages, tools=tools, settings=settings, effort=plan
         )
+        if int(kwargs.get("max_tokens") or 0) > NONSTREAMING_TOKEN_CEILING:
+            kwargs.setdefault("timeout", LONG_REQUEST_TIMEOUT)
         client = self._ensure_client()
-        if _needs_refusal_fallback(model):
-            response = client.beta.messages.create(
-                **kwargs,
-                betas=[_FALLBACK_BETA],
-                fallbacks=[{"model": _FALLBACK_MODEL}],
-            )
-        else:
-            response = client.messages.create(**kwargs)
+        # Stream-and-accumulate, not a plain create: the SDK REFUSES non-streaming
+        # requests whose max_tokens could exceed ~10 minutes (ValueError before any
+        # network I/O). With DEFAULT_MAX_TOKENS=32000 that killed every consumer of
+        # the non-streaming path — the auto-approve reviewer errored on ALL rows
+        # for every Anthropic model (found by the 2026-08-31 eval run; fail-closed,
+        # so verdicts fell back to asking a human). get_final_message() returns the
+        # same Message shape create() would.
+        def _final(kw: dict[str, Any]) -> Any:
+            if _needs_refusal_fallback(model):
+                with client.beta.messages.stream(
+                    **kw,
+                    betas=[_FALLBACK_BETA],
+                    fallbacks=[{"model": _FALLBACK_MODEL}],
+                ) as stream:
+                    return stream.get_final_message()
+            with client.messages.stream(**kw) as stream:
+                return stream.get_final_message()
+
+        response, kwargs, fallback_note = self._call_with_effort_fallback(
+            model, kwargs, _final
+        )
 
         text_parts: list[str] = []
         tool_calls: list[ToolCall] = []
@@ -513,12 +657,46 @@ class AnthropicProvider(ProviderClient):
             finish_reason=_STOP_REASON_MAP.get(stop_reason, stop_reason),
             raw=response,
             reasoning=_reasoning_text(thinking_blocks),
-            extras=_thinking_extras(thinking_blocks),
+            extras=_anthropic_extras(thinking_blocks, stop_reason),
             usage=_usage_from(getattr(response, "usage", None)),
+            output_limit=kwargs.get("max_tokens"),
+            effort=_effort_record(plan, fallback_note),
         )
 
     def capabilities(self, model: str) -> ModelCapabilities:
         return capabilities_for(model)
+
+    # -- reasoning effort (OPE-176) ---------------------------------------------------
+
+    def _effort_plan(self, model: str, settings: dict[str, Any]) -> Optional[EffortPlan]:
+        level = settings.get("reasoning_effort")
+        if not level:
+            return None
+        if model in self._effort_rejected:
+            return EffortPlan(
+                str(level),
+                None,
+                {},
+                "endpoint rejected output_config.effort earlier in this run; not sent",
+            )
+        return anthropic_effort(model, str(level), budget_mode=_uses_budget_thinking(model))
+
+    def _call_with_effort_fallback(self, model: str, kwargs: dict[str, Any], fn: Any):
+        """Run `fn(kwargs)`; if the endpoint rejects the effort parameter (HTTP 400 naming
+        it), drop it, remember the model, and run once more. Returns (result, kwargs
+        actually used, fallback note or None). Any other error propagates unchanged."""
+        try:
+            return fn(kwargs), kwargs, None
+        except Exception as exc:
+            if "output_config" in kwargs and mentions_effort(exc):
+                self._effort_rejected.add(model)
+                retry = {k: v for k, v in kwargs.items() if k != "output_config"}
+                return (
+                    fn(retry),
+                    retry,
+                    "endpoint rejected output_config.effort; resent without it",
+                )
+            raise
 
     def stream(
         self,
@@ -528,19 +706,39 @@ class AnthropicProvider(ProviderClient):
         tools: Optional[list[dict[str, Any]]] = None,
         **settings: Any,
     ):
+        plan = self._effort_plan(model, settings)
         kwargs = self._request_kwargs(
-            model=model, messages=messages, tools=tools, settings=settings
+            model=model, messages=messages, tools=tools, settings=settings, effort=plan
         )
         kwargs["stream"] = True
         client = self._ensure_client()
-        if _needs_refusal_fallback(model):
-            events = client.beta.messages.create(
-                **kwargs,
-                betas=[_FALLBACK_BETA],
-                fallbacks=[{"model": _FALLBACK_MODEL}],
-            )
-        else:
-            events = client.messages.create(**kwargs)
+        diagnosing = _cache_diagnostics_on()
+        outbound_hashes = _outbound_fingerprints(kwargs) if diagnosing else None
+
+        def _open(kw: dict[str, Any]) -> Any:
+            if _needs_refusal_fallback(model):
+                extra: dict[str, Any] = {}
+                betas = [_FALLBACK_BETA]
+                if diagnosing:
+                    betas.append(_CACHE_DIAGNOSTICS_BETA)
+                    extra["diagnostics"] = {
+                        "previous_message_id": self._last_message_id
+                    }
+                return client.beta.messages.create(
+                    **kw,
+                    betas=betas,
+                    fallbacks=[{"model": _FALLBACK_MODEL}],
+                    **extra,
+                )
+            if diagnosing:
+                return client.beta.messages.create(
+                    **kw,
+                    betas=[_CACHE_DIAGNOSTICS_BETA],
+                    diagnostics={"previous_message_id": self._last_message_id},
+                )
+            return client.messages.create(**kw)
+
+        events, kwargs, fallback_note = self._call_with_effort_fallback(model, kwargs, _open)
 
         text_parts: list[str] = []
         tool_accum: dict[int, dict[str, str]] = {}
@@ -551,14 +749,23 @@ class AnthropicProvider(ProviderClient):
         usage: Optional[TokenUsage] = None
 
         last_message_delta: Any = None
+        cache_diagnostics: Optional[dict[str, Any]] = None
         for event in events:
             kind = getattr(event, "type", None)
             if kind == "message_start":
                 # Prompt-side counts (input + cache split) ride the opening event.
-                usage = (
-                    _usage_from(getattr(getattr(event, "message", None), "usage", None))
-                    or usage
-                )
+                started = getattr(event, "message", None)
+                usage = _usage_from(getattr(started, "usage", None)) or usage
+                if diagnosing and started is not None:
+                    self._last_message_id = getattr(started, "id", None)
+                    diag = getattr(started, "diagnostics", None)
+                    if diag is not None:
+                        try:
+                            cache_diagnostics = (
+                                diag if isinstance(diag, dict) else diag.model_dump()
+                            )
+                        except Exception:  # noqa: BLE001
+                            cache_diagnostics = {"raw": str(diag)}
             elif kind == "content_block_start":
                 block = getattr(event, "content_block", None)
                 block_kind = getattr(block, "type", None)
@@ -609,13 +816,8 @@ class AnthropicProvider(ProviderClient):
                 reason = getattr(last_message_delta, "stop_reason", None)
                 if reason:
                     stop_reason = reason
-                # Final (cumulative) output-token count rides message_delta.usage.
-                out = int(
-                    getattr(getattr(event, "usage", None), "output_tokens", 0) or 0
-                )
-                if out:
-                    usage = usage or TokenUsage()
-                    usage.output = out
+                # The final (cumulative) counts ride message_delta.usage.
+                usage = _merge_final_usage(usage, getattr(event, "usage", None))
 
         _raise_on_refusal(stop_reason, last_message_delta)
         tool_calls = []
@@ -634,7 +836,14 @@ class AnthropicProvider(ProviderClient):
                 tool_calls=tool_calls,
                 finish_reason=_STOP_REASON_MAP.get(stop_reason, stop_reason),
                 reasoning=_reasoning_text(thinking_blocks),
-                extras=_thinking_extras(thinking_blocks),
+                extras=_anthropic_extras(
+                    thinking_blocks,
+                    stop_reason,
+                    cache_diagnostics=cache_diagnostics,
+                    outbound_hashes=outbound_hashes,
+                ),
                 usage=usage,
+                output_limit=kwargs.get("max_tokens"),
+                effort=_effort_record(plan, fallback_note),
             )
         )

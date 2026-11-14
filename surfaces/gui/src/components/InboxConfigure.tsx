@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   getConnectors,
   getDmRoute,
@@ -20,16 +21,17 @@ import type { SessionInfo } from "../types";
 import { ChannelPicker } from "./SubscriptionsChip";
 import { Icon } from "./Icon";
 
-// Inbox ▸ Configure (UX-DECISIONS §28): the former Connectors ▸ "消息路由" page,
+// Inbox ▸ Configure (UX-DECISIONS §28): the former Connectors ▸ "Messaging routing" page,
 // relocated whole — where inbox items go out (mirror channel), how inbound messages reach
 // sessions (DM route, channel subscriptions), and the Unrouted dead-letter. Moving it here
 // also deleted a duplication: the mirror channel used to be editable BOTH on this page and
 // via an inline configurator on the Inbox list.
 const CARD = "rounded-xl2 border border-line bg-panel";
-const SELECT = "px-2.5 py-1.5 rounded-lg border border-line bg-paper text-[13px] text-ink";
-const BTN_ACCENT_SM = "text-[12px] px-2.5 py-1 rounded-md bg-accent text-white disabled:opacity-50";
+const SELECT = "px-2.5 py-1.5 rounded-lg border border-line bg-paper text-ui text-ink";
+const BTN_ACCENT_SM = "text-meta px-2.5 py-1 rounded-md bg-accent text-white disabled:opacity-50";
 
 export function InboxConfigure() {
+  const { t } = useTranslation();
   return (
     <div data-testid="inbox-configure">
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -37,12 +39,12 @@ export function InboxConfigure() {
         <DmRouteCard />
       </div>
       <SubscriptionsCard />
-      {/* Unrouted = delivery FAILURES ("未能送达你的消息"), so it lives with
+      {/* Unrouted = delivery FAILURES ("messages that never reached you"), so it lives with
           the Inbox now (§28; previously with routing under Connectors, §26). */}
       <div className="mt-6" data-testid="unrouted-section">
-        <h3 className="text-[14px] font-semibold mb-1">未送达</h3>
-        <p className="text-[12.5px] text-muted mb-3">
-          入站消息与后台轮次中未能被认领的失败项 —— 不会无声消失。
+        <h3 className="text-body font-semibold mb-1">{t("inbox.unrouted_title")}</h3>
+        <p className="text-ui text-muted mb-3">
+          {t("inbox.unrouted_sub")}
         </p>
         <UnroutedTable />
       </div>
@@ -58,6 +60,7 @@ function InboxRoutingCard() {
   const [target, setTarget] = useState(""); // current default-binding address, e.g. "slack:C0123"
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { t: tt } = useTranslation();
 
   const load = () => {
     getRecentChannels().then(setRecent).catch(() => setRecent([]));
@@ -82,7 +85,7 @@ function InboxRoutingCard() {
     const [platform, id] = addr.includes(":") ? addr.split(":", 2) : ["slack", addr];
     const result = await setInboxBinding("default", platform, id);
     if (!result.ok) {
-      setError(result.error || "无法更新收件箱路由。");
+      setError(result.error || tt("inbox.routing_update_failed"));
       return;
     }
     setError(null);
@@ -92,7 +95,7 @@ function InboxRoutingCard() {
   const clear = async () => {
     const result = await setInboxBinding("default", null, "");
     if (!result.ok) {
-      setError(result.error || "无法清除收件箱路由。");
+      setError(result.error || tt("inbox.routing_clear_failed"));
       return;
     }
     setError(null);
@@ -122,13 +125,13 @@ function InboxRoutingCard() {
 
   return (
     <div className={CARD + " p-4"} data-testid="inbox-mirror-card">
-      <div className="font-semibold text-[13.5px] mb-1">无人值守审批</div>
-      <p className="text-[12px] text-muted mb-3">
-        无人值守会话发布「批准/拒绝」按钮的频道。当前镜像到{" "}
+      <div className="font-semibold text-ui mb-1">{tt("inbox.unattended_approvals")}</div>
+      <p className="text-meta text-muted mb-3">
+        {tt("inbox.mirror_desc_prefix")}{" "}
         <strong className="text-ink font-medium" title={target || undefined}>
-          {known ? `#${known}` : target || "仅应用内收件箱"}
+          {known ? `#${known}` : target || tt("inbox.in_app_inbox_only")}
         </strong>
-        。
+        {tt("inbox.mirror_desc_suffix")}
       </p>
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-muted shrink-0">
@@ -140,20 +143,20 @@ function InboxRoutingCard() {
           disabled={!draft.trim() || missingSlackOwner}
           onClick={save}
         >
-          设置
+          {tt("inbox.set")}
         </button>
         {target && (
-          <button className="text-[12px] text-danger/80 hover:text-danger" onClick={clear}>
-            清除
+          <button className="text-meta text-danger/80 hover:text-danger" onClick={clear}>
+            {tt("inbox.clear")}
           </button>
         )}
       </div>
       {missingSlackOwner && (
-      <p className="text-[11.5px] text-warnInk mt-2">
-        在将此处审批路由过去之前，请先在「集成 → Slack」下选择一位审批所有者。
-      </p>
+        <p className="text-meta text-warnInk mt-2">
+          {tt("inbox.missing_slack_owner")}
+        </p>
       )}
-      {error && <p className="text-[11.5px] text-warnInk mt-2">{error}</p>}
+      {error && <p className="text-meta text-warnInk mt-2">{error}</p>}
     </div>
   );
 }
@@ -162,6 +165,7 @@ function InboxRoutingCard() {
 function DmRouteCard() {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [dm, setDm] = useState<string>("");
+  const { t: tt } = useTranslation();
 
   const load = () => {
     getSessions().then(setSessions).catch(() => setSessions([]));
@@ -182,16 +186,16 @@ function DmRouteCard() {
 
   return (
     <div className={CARD + " p-4"}>
-      <div className="font-semibold text-[13.5px] mb-1">私信</div>
-      <p className="text-[12px] text-muted mb-3">
-        处理发送至机器人的私信的会话。若未设置，私信会暂存于下方「未送达」中。
+      <div className="font-semibold text-ui mb-1">{tt("inbox.direct_messages")}</div>
+      <p className="text-meta text-muted mb-3">
+        {tt("inbox.dm_desc")}
       </p>
       <div className="flex items-center gap-2">
         <span className="text-muted shrink-0">
           <Icon name="chat" size={16} />
         </span>
         <select className={"flex-1 " + SELECT} value={dm} onChange={(e) => choose(e.target.value)}>
-          <option value="">无会话 —— 暂存私信</option>
+          <option value="">{tt("inbox.dm_no_session")}</option>
           {real.map((s) => (
             <option key={s.session_id} value={s.session_id}>
               {s.title || s.session_id}
@@ -211,6 +215,7 @@ function SubscriptionsCard() {
   const [recent, setRecent] = useState<RecentChannel[]>([]);
   const [addSession, setAddSession] = useState("");
   const [addChannel, setAddChannel] = useState("");
+  const { t: tt } = useTranslation();
 
   const load = () => {
     getSubscriptions().then(setSubs).catch(() => setSubs([]));
@@ -224,9 +229,21 @@ function SubscriptionsCard() {
   }, []);
 
   const real = sessions.filter((s) => !s.session_id.startsWith("__"));
+  const [addErr, setAddErr] = useState<string | null>(null);
   const add = async () => {
     if (!addSession || !addChannel.trim()) return;
-    await subscribeChannel(addSession, addChannel.trim());
+    const r = await subscribeChannel(addSession, addChannel.trim());
+    if (!r.ok) {
+      // Held by another session (any machine): this global list only reports it —
+      // the move lives in the session's own Access panel.
+      setAddErr(
+        r.error === "held" && r.held_by
+          ? tt("misc.inbox_configure.held_by", { session: r.held_by.title || r.held_by.session_id })
+          : r.error || tt("misc.inbox_configure.add_failed"),
+      );
+      return;
+    }
+    setAddErr(null);
     setAddChannel("");
     load();
   };
@@ -241,17 +258,17 @@ function SubscriptionsCard() {
         <span className="text-muted shrink-0">
           <Icon name="plug" size={15} />
         </span>
-        <span className="font-semibold text-[13.5px]">频道订阅</span>
-        <span className="text-[12px] text-muted">—— 监听某频道的会话（入站）</span>
+        <span className="font-semibold text-ui">{tt("inbox.channel_subscriptions")}</span>
+        <span className="text-meta text-muted">{tt("inbox.subscriptions_sub")}</span>
       </div>
 
       {subs && subs.length > 0 ? (
-        <table className="w-full text-[13px]">
-          <thead className="text-[11px] uppercase tracking-[0.04em] text-faint">
+        <table className="w-full text-ui">
+          <thead className="text-label text-faint">
             <tr className="text-left">
-              <th className="font-medium px-4 py-2">会话</th>
-              <th className="font-medium px-4 py-2">监听</th>
-              <th className="font-medium px-4 py-2">收件箱路由至</th>
+              <th className="font-medium px-4 py-2">{tt("inbox.col_session")}</th>
+              <th className="font-medium px-4 py-2">{tt("inbox.col_listens_to")}</th>
+              <th className="font-medium px-4 py-2">{tt("inbox.col_inbox_routes_to")}</th>
               <th className="px-4 py-2" />
             </tr>
           </thead>
@@ -268,15 +285,15 @@ function SubscriptionsCard() {
                     </span>
                     {s.channel_name ? `#${s.channel_name}` : s.channel}
                     {s.channel_name && (
-                      <span className="text-[11px] text-faint">{s.channel}</span>
+                      <span className="text-label text-faint">{s.channel}</span>
                     )}
                   </span>
                   {s.collision && (
                     <span
-                      className="ml-1.5 text-[11px] text-warnInk bg-warnSoft/70 border border-warnInk/15 rounded px-1.5 py-0.5"
-                      title="此频道同时是你的收件箱路由目标 —— 入站与出站共用一个频道会把广播与请求/回复混在一起。"
+                      className="ml-1.5 text-label text-warnInk bg-warnSoft/70 border border-warnInk/15 rounded px-1.5 py-0.5"
+                      title={tt("inbox.collision_title")}
                     >
-                      ⚠ 冲突
+                      {tt("inbox.collides")}
                     </span>
                   )}
                 </td>
@@ -284,7 +301,7 @@ function SubscriptionsCard() {
                 <td className="px-4 py-2.5 text-right">
                   <button
                     className="text-faint hover:text-danger"
-                    title="取消订阅"
+                    title={tt("inbox.unsubscribe")}
                     onClick={() => remove(s.session_id, s.channel)}
                   >
                     ×
@@ -295,8 +312,8 @@ function SubscriptionsCard() {
           </tbody>
         </table>
       ) : (
-        <div className="px-4 py-3 text-[12.5px] text-muted">
-          尚未有频道订阅 —— 在下方添加一个，或请同事关注某频道。
+        <div className="px-4 py-3 text-ui text-muted">
+          {tt("inbox.no_subscriptions")}
         </div>
       )}
 
@@ -306,7 +323,7 @@ function SubscriptionsCard() {
           value={addSession}
           onChange={(e) => setAddSession(e.target.value)}
         >
-          <option value="">选择会话…</option>
+          <option value="">{tt("inbox.choose_session")}</option>
           {real.map((s) => (
             <option key={s.session_id} value={s.session_id}>
               {s.title || s.session_id}
@@ -314,10 +331,15 @@ function SubscriptionsCard() {
           ))}
         </select>
         <ChannelPicker value={addChannel} onChange={setAddChannel} recent={recent} onSubmit={add} />
-        <button className={BTN_ACCENT_SM}           disabled={!addSession || !addChannel.trim()} onClick={add}>
-          ＋ 订阅
+        <button className={BTN_ACCENT_SM} disabled={!addSession || !addChannel.trim()} onClick={add}>
+          {tt("inbox.subscribe")}
         </button>
       </div>
+      {addErr && (
+        <p className="text-label text-warnInk mt-1.5 leading-snug" data-testid="inbox-subscribe-error">
+          {addErr}
+        </p>
+      )}
     </div>
   );
 }
@@ -326,6 +348,7 @@ function SubscriptionsCard() {
 // and background turns that failed (e.g. a dead model). Read-only — for visibility/debugging.
 function UnroutedTable() {
   const [items, setItems] = useState<UnroutedItem[] | null>(null);
+  const { t: tt } = useTranslation();
 
   useEffect(() => {
     const load = () => getUnrouted().then(setItems).catch(() => setItems([]));
@@ -336,20 +359,20 @@ function UnroutedTable() {
 
   if (items && items.length === 0)
     return (
-      <div className={CARD + " p-4 text-[13px] text-muted"}>
-        这里什么都没有 —— 没有丢弃的消息或失败的轮次。
+      <div className={CARD + " p-4 text-ui text-muted"}>
+        {tt("inbox.unrouted_empty")}
       </div>
     );
 
   return (
     <div className={CARD + " overflow-hidden"}>
-      <table className="w-full text-[13px]">
-        <thead className="text-[11px] uppercase tracking-[0.04em] text-faint">
+      <table className="w-full text-ui">
+        <thead className="text-label text-faint">
           <tr className="text-left">
-            <th className="font-medium px-4 py-2">时间</th>
-            <th className="font-medium px-4 py-2">来源</th>
-            <th className="font-medium px-4 py-2">原因</th>
-            <th className="font-medium px-4 py-2">消息</th>
+            <th className="font-medium px-4 py-2">{tt("inbox.col_when")}</th>
+            <th className="font-medium px-4 py-2">{tt("inbox.col_source")}</th>
+            <th className="font-medium px-4 py-2">{tt("inbox.col_reason")}</th>
+            <th className="font-medium px-4 py-2">{tt("inbox.col_message")}</th>
           </tr>
         </thead>
         <tbody>
