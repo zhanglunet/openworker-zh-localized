@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-14T23:51:10+08:00",
+  "generatedAt": "2026-11-16T07:42:51Z",
   "branch": "main",
-  "head": "fd713c857e650db72218d27353111f58d4848025",
-  "shortHead": "fd713c85",
+  "head": "28eafe7fad3ffe587f00373c0fb27a2666e60a6e",
+  "shortHead": "28eafe7f",
   "totalFiles": 2952,
   "byExt": [
     {
@@ -418,6 +418,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "28eafe7f",
+      "date": "2026-11-16",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "b72a1196",
+      "date": "2026-11-14",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "fd713c85",
       "date": "2026-11-14",
       "subject": "Merge pull request #152 from zhanglunet/fix/sync-fail-loud"
@@ -466,19 +476,19 @@ export const repoReport = {
       "hash": "bd7419b5",
       "date": "2026-11-14",
       "subject": "Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl"
-    },
-    {
-      "hash": "3347e04a",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline"
-    },
-    {
-      "hash": "7a27cca5",
-      "date": "2026-11-14",
-      "subject": "test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "28eafe7f",
+      "date": "2026-11-16",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "b72a1196",
+      "date": "2026-11-14",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "fd713c85",
       "date": "2026-11-14",
@@ -1368,271 +1378,6 @@ export const repoReport = {
       "hash": "9b2b02f7",
       "date": "2026-11-09",
       "subject": "feat: PRD-341/T2 十二原则 checklist 最小实现——CHECKLIST 声明式数据（check_ref 全部指向 scripts/ 既有模块 zh_trigger_registry/zh_sources/consistency_check/zh_skill_ref/skillpack_snapshot/cn_skill_sync_check/trigger_probe/zh_intake_gate 零新建判定逻辑 R1）+run_checklist 每 skill 一份（§6.1 裁决）+机检器反射注入适配器 honest 三态映射（None=clean/真值 pass/假值 fail 带 reason/异常 fail 显形/未注册 fail 显形——零视为通过 R4）+manual JSON 附答只留痕不改状态非法指向显形拒绝（§6.2 裁决）+summarize 全库汇总视图 failing 清单+引擎零硬编码 R3（数据与逻辑分离 T4 预埋）+模块 stdlib-only R2 零复用预埋（16 例 pytest 全绿）（trend #1620)"
-    },
-    {
-      "hash": "af534369",
-      "date": "2026-11-09",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "20fb91f5",
-      "date": "2026-11-09",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "f08712be",
-      "date": "2026-11-09",
-      "subject": "docs: PRD-341/T1 设计——生产级 agent 十二原则（trend #1620）"
-    },
-    {
-      "hash": "23dcd085",
-      "date": "2026-11-09",
-      "subject": "docs: PRD-341/T1 生产级 agent 十二原则 checklist 设计——十二条自研原则逐条带检查形态封闭词表（P1-P9 机检全部 check_ref 指向既有机检器零新建判定逻辑/P10-P12 人工评审问题清单固定留痕）+checklist 声明式 JSON 数据驱动 R3（机检器零硬编码 T4 预埋）+结果三态 honest R4（pass/fail 带 reason/manual 带评审问题——零视为通过路径 T3 断言预埋）+NOASSERTION 来源零复用收紧（十二条从中文 skill 实际生产风险自研表述零翻译原仓）+与 PRD-199/227/303 重放包划界（check_ref 指向既有机检器复用结论零重复建设 T3 断言预埋）（trend #1620）"
-    },
-    {
-      "hash": "194cf360",
-      "date": "2026-11-08",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "0f68ecda",
-      "date": "2026-11-09",
-      "subject": "test: PRD-327/T4+T5 i18n 发布闸门划界断言 + 验收试运行（6 例，trend #1604 区段） (#108)"
-    },
-    {
-      "hash": "5d588d5c",
-      "date": "2026-11-08",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9a992077",
-      "date": "2026-11-09",
-      "subject": "feat: PRD-327/T3 国际化技能包发布闸门（7 例，trend #1604 区段） (#107)"
-    },
-    {
-      "hash": "ddb8b361",
-      "date": "2026-11-08",
-      "subject": "release: prepare SDK beta.2 and updated app-building skills (#857)"
-    },
-    {
-      "hash": "452d74da",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #855 from andrewyng/fix/sdk-partner-gaps"
-    },
-    {
-      "hash": "ae8b44f9",
-      "date": "2026-11-07",
-      "subject": "test(sdk): consume typed text deltas in tool-free qualification"
-    },
-    {
-      "hash": "f6a7fe36",
-      "date": "2026-11-07",
-      "subject": "Trace index in the right rail (#856)"
-    },
-    {
-      "hash": "0f488afa",
-      "date": "2026-11-07",
-      "subject": "fix(sdk): qualify provider flows and graceful budget summaries"
-    },
-    {
-      "hash": "0f31bd87",
-      "date": "2026-11-08",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "e8de9c51",
-      "date": "2026-11-08",
-      "subject": "feat: PRD-327/T2 国际化技能包——双语 SKILL.md + manifest（trend #670） (#106)"
-    },
-    {
-      "hash": "cfed6105",
-      "date": "2026-11-07",
-      "subject": "fix(sdk): regenerate policy-blocked signed tool batches safely"
-    },
-    {
-      "hash": "704f4d57",
-      "date": "2026-11-07",
-      "subject": "fix(sdk): integrate shared options and validate transport diagnostics"
-    },
-    {
-      "hash": "1dcaeaa4",
-      "date": "2026-11-07",
-      "subject": "feat(sdk): expose safe attempt streams and provider diagnostics"
-    },
-    {
-      "hash": "8cda95ea",
-      "date": "2026-11-07",
-      "subject": "feat(sdk): add turn context, history import and explicit session tools"
-    },
-    {
-      "hash": "6c40f67a",
-      "date": "2026-11-07",
-      "subject": "feat(sdk): preserve Gemini signatures across streamed tool conversations"
-    },
-    {
-      "hash": "444d2091",
-      "date": "2026-11-07",
-      "subject": "fix(runtime): reject reused tool call IDs before dispatch"
-    },
-    {
-      "hash": "e640b5b6",
-      "date": "2026-11-07",
-      "subject": "test(sdk): add opt-in live Anthropic cache qualification"
-    },
-    {
-      "hash": "6b90a322",
-      "date": "2026-11-07",
-      "subject": "feat(sdk): enable configurable Anthropic prompt caching"
-    },
-    {
-      "hash": "6c6b98b7",
-      "date": "2026-11-07",
-      "subject": "fix(sdk): report streaming usage and preserve tool activity context"
-    },
-    {
-      "hash": "19b123ec",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #854 from andrewyng/rp/code-persona"
-    },
-    {
-      "hash": "7dbae911",
-      "date": "2026-11-08",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9c682a20",
-      "date": "2026-11-08",
-      "subject": "docs: PRD-327/T1 设计——国际化形态（trend #1606） (#105)"
-    },
-    {
-      "hash": "d5c802d5",
-      "date": "2026-11-07",
-      "subject": "Sessions whose worktree was removed reopen in the repo root"
-    },
-    {
-      "hash": "c33fe004",
-      "date": "2026-11-07",
-      "subject": "Feature worktrees for the Code coworker, with settings"
-    },
-    {
-      "hash": "7c7a2941",
-      "date": "2026-11-07",
-      "subject": "code persona: promoted, with eight working principles and coding starters"
-    },
-    {
-      "hash": "6daa7816",
-      "date": "2026-11-07",
-      "subject": "Subagents keep a full record, plus observability fixes (#852)"
-    },
-    {
-      "hash": "4b8633c2",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #842 from andrewyng/issue/ope-244-observability-recorder-store"
-    },
-    {
-      "hash": "ab7431fd",
-      "date": "2026-11-07",
-      "subject": "Merge remote-tracking branch 'origin/main' into issue/ope-244-observability-recorder-store"
-    },
-    {
-      "hash": "709805e5",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #840 from andrewyng/issue/ope-250-models-page-loading"
-    },
-    {
-      "hash": "af58873c",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #839 from andrewyng/issue/ope-249-reviewer-uploads-settings"
-    },
-    {
-      "hash": "1d3f7346",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #837 from andrewyng/issue/ope-247-openai-model-prefix"
-    },
-    {
-      "hash": "258623ab",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #841 from andrewyng/issue/ope-251-ws-shutdown-hang"
-    },
-    {
-      "hash": "2932062b",
-      "date": "2026-11-07",
-      "subject": "Merge pull request #838 from andrewyng/issue/ope-248-powershell-exit-codes"
-    },
-    {
-      "hash": "9a66c1e3",
-      "date": "2026-11-07",
-      "subject": "fix(observability): close the gap with the background-subagents feature"
-    },
-    {
-      "hash": "22709a22",
-      "date": "2026-11-07",
-      "subject": "Merge branch 'main' into issue/ope-244-observability-recorder-store"
-    },
-    {
-      "hash": "e00f1a18",
-      "date": "2026-11-07",
-      "subject": "Merge branch 'main' into issue/ope-251-ws-shutdown-hang"
-    },
-    {
-      "hash": "af8d5796",
-      "date": "2026-11-07",
-      "subject": "Merge branch 'main' into issue/ope-250-models-page-loading"
-    },
-    {
-      "hash": "dc9d6da6",
-      "date": "2026-11-07",
-      "subject": "Merge branch 'main' into issue/ope-249-reviewer-uploads-settings"
-    },
-    {
-      "hash": "d29a44c1",
-      "date": "2026-11-07",
-      "subject": "Merge branch 'main' into issue/ope-248-powershell-exit-codes"
-    },
-    {
-      "hash": "220fcd17",
-      "date": "2026-11-07",
-      "subject": "Merge branch 'main' into issue/ope-247-openai-model-prefix"
-    },
-    {
-      "hash": "0899fc41",
-      "date": "2026-11-07",
-      "subject": "A live plan card above the composer (#851)"
-    },
-    {
-      "hash": "cf035e2d",
-      "date": "2026-11-07",
-      "subject": "Background subagents and a smarter side panel (#850)"
-    },
-    {
-      "hash": "c0323b3f",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "184bb222",
-      "date": "2026-11-08",
-      "subject": "test: PRD-313/T5 验收试运行——全链两遍逐字节一致+拒绝零写盘+红线终检+文档无密钥（trend #1580） (#104)"
-    },
-    {
-      "hash": "3ead2ab1",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "50a969dc",
-      "date": "2026-11-08",
-      "subject": "fix(tests): T4 断言文件重生成——补占位符漏替换 (#103)"
-    },
-    {
-      "hash": "d3a75386",
-      "date": "2026-11-07",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "7434add0",
-      "date": "2026-11-08",
-      "subject": "feat: PRD-313/T3 重放校验闸门——replay_gate 一票否决+require_gate 异常形态+错误码扩 REPLAY_GATE_REFUSED（trend #1578） (#102)"
     }
   ]
 } as const;
