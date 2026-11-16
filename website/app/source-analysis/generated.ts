@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-17T01:35:39+09:00",
+  "generatedAt": "2026-11-17T03:07:44+09:00",
   "branch": "main",
-  "head": "ec4b15112c5622aec91cdc1df9408b4a4287f376",
-  "shortHead": "ec4b1511",
-  "totalFiles": 2953,
+  "head": "6b94b0e18b000cad978016e2b953ce2c5fa2cceb",
+  "shortHead": "6b94b0e1",
+  "totalFiles": 2963,
   "byExt": [
     {
       "name": "py",
-      "count": 733
+      "count": 739
     },
     {
       "name": "rs",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 291
+      "count": 295
     },
     {
       "name": "mjs",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 630
+      "count": 634
     },
     {
       "name": "surfaces",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 237
+      "count": 241
     },
     {
       "name": "deploy",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 49
+      "count": 51
     },
     {
       "name": "docs-site",
@@ -418,6 +418,51 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "6b94b0e1",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #158 from zhanglunet/feat/prd-452-t5-translation-supervision-acceptance"
+    },
+    {
+      "hash": "2f1ed13a",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #157 from zhanglunet/feat/prd-452-t4-translation-supervision-boundary"
+    },
+    {
+      "hash": "8101f1c8",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #156 from zhanglunet/feat/prd-452-t3-translation-supervision-gate"
+    },
+    {
+      "hash": "8393c0d8",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #155 from zhanglunet/feat/prd-452-t2-translation-supervision-bench"
+    },
+    {
+      "hash": "4460f0b4",
+      "date": "2026-11-16",
+      "subject": "test(prd-452): T5 验收试运行——真实监督回路全链两遍逐字节一致+失败演练+链复跑（9 tests green，本链 35）"
+    },
+    {
+      "hash": "7ff38589",
+      "date": "2026-11-16",
+      "subject": "test(prd-452): T4 划界断言——收件箱裁决权零触碰+下游零导入+借鉴仓零符号+R1/R3/留痕钉值（8 tests green）"
+    },
+    {
+      "hash": "37e2598f",
+      "date": "2026-11-16",
+      "subject": "feat(prd-452): T3 监督回路闸门——原始记录重导放行 fail-closed（无裁决/批注挂起/反馈挂起/点头非最新）+收件箱入口过闸（6 tests green）"
+    },
+    {
+      "hash": "20e0d901",
+      "date": "2026-11-16",
+      "subject": "feat(prd-452): T2 翻译监督台内核——版本链+批注打包发回+回炉批注对照+关口未点头不进收件箱+点头落账（12 tests green）"
+    },
+    {
+      "hash": "6d1a0654",
+      "date": "2026-11-16",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "ec4b1511",
       "date": "2026-11-17",
       "subject": "Merge pull request #153 from zhanglunet/docs/prd-452-t1-translation-supervision-bench"
@@ -431,54 +476,54 @@ export const repoReport = {
       "hash": "28eafe7f",
       "date": "2026-11-16",
       "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "29ca000d",
-      "date": "2026-11-15",
-      "subject": "[PRD-452/T1] 翻译监督台设计草稿"
-    },
-    {
-      "hash": "b72a1196",
-      "date": "2026-11-14",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "fd713c85",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #152 from zhanglunet/fix/sync-fail-loud"
-    },
-    {
-      "hash": "3aeb47bf",
-      "date": "2026-11-15",
-      "subject": "ci(sync): 拆假绿——合并失败让运行变红"
-    },
-    {
-      "hash": "940d7265",
-      "date": "2026-11-14",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "0c929a67",
-      "date": "2026-11-14",
-      "subject": "Merge upstream OpenWorker ecb44549 (#151)"
-    },
-    {
-      "hash": "8acfb16b",
-      "date": "2026-11-14",
-      "subject": "Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20261114"
-    },
-    {
-      "hash": "795dd7df",
-      "date": "2026-11-14",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6efd8341",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "6b94b0e1",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #158 from zhanglunet/feat/prd-452-t5-translation-supervision-acceptance"
+    },
+    {
+      "hash": "2f1ed13a",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #157 from zhanglunet/feat/prd-452-t4-translation-supervision-boundary"
+    },
+    {
+      "hash": "8101f1c8",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #156 from zhanglunet/feat/prd-452-t3-translation-supervision-gate"
+    },
+    {
+      "hash": "8393c0d8",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #155 from zhanglunet/feat/prd-452-t2-translation-supervision-bench"
+    },
+    {
+      "hash": "4460f0b4",
+      "date": "2026-11-16",
+      "subject": "test(prd-452): T5 验收试运行——真实监督回路全链两遍逐字节一致+失败演练+链复跑（9 tests green，本链 35）"
+    },
+    {
+      "hash": "7ff38589",
+      "date": "2026-11-16",
+      "subject": "test(prd-452): T4 划界断言——收件箱裁决权零触碰+下游零导入+借鉴仓零符号+R1/R3/留痕钉值（8 tests green）"
+    },
+    {
+      "hash": "37e2598f",
+      "date": "2026-11-16",
+      "subject": "feat(prd-452): T3 监督回路闸门——原始记录重导放行 fail-closed（无裁决/批注挂起/反馈挂起/点头非最新）+收件箱入口过闸（6 tests green）"
+    },
+    {
+      "hash": "20e0d901",
+      "date": "2026-11-16",
+      "subject": "feat(prd-452): T2 翻译监督台内核——版本链+批注打包发回+回炉批注对照+关口未点头不进收件箱+点头落账（12 tests green）"
+    },
+    {
+      "hash": "6d1a0654",
+      "date": "2026-11-16",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "ec4b1511",
       "date": "2026-11-17",
@@ -1378,11 +1423,6 @@ export const repoReport = {
       "hash": "9a05b1eb",
       "date": "2026-11-09",
       "subject": "test: PRD-341/T5 十二原则 checklist 验收试运行——test_prd341_t5_acceptance.py（7 例全绿，链上 T2–T4 33 例仍绿）①真实 skill 全量试运行（十二项全跑 机检 9 过+manual 3 附答留痕→READY_FOR_HUMAN 闸门零替人拍板+双 skill batch_gate 汇总逐 skill 裁决平列+回放逐字节可复现）②失败演练三路全显形（机检 fail→BLOCKED 未过项显形零视为通过/manual 未附答→PENDING_MANUAL 问题清单显形/manual 项被篡改为 pass→TAMPERED R4 复核拒绝）③文档无密钥（T1 设计文档经 git show origin/trend/prd-341-t1-12factors-design 扫描零密钥/零 IP/外链仅 github 与 example 域）（trend #1620 的 T5 环节）"
-    },
-    {
-      "hash": "5c681859",
-      "date": "2026-11-09",
-      "subject": "test: PRD-341/T4 十二原则 checklist 划界断言——test_prd341_t4_boundary.py（7 例全绿）R3 数据驱动断言（run_checklist/checklist_gate 源码零原则 id 零机检器名复钉/gate 的 MANUAL_IDS is 数据模块同一 frozenset 单向引用/增补原则演练：运行时向 CHECKLIST 追加 P13 后 run_checklist 即覆盖新条目零改引擎代码 finally 还原零残留）+R2 零复用抽样断言（十二条 principle 全中文原创含 CJK 零英文 factor 术语/两模块 AST 零 humanlayer/12-factor/swe-agent 借鉴仓符号）+R1 复钉（check_ref 全部指向 scripts/ 既有模块）+与 199/227/303 划界（checklist_gate 单向只读消费零机检器模块导入）+与 PRD-303 重放包划界钉值（trend #1620 的 T4 环节）"
     }
   ]
 } as const;
