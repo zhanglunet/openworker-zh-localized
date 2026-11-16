@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-11-16T07:42:51Z",
+  "generatedAt": "2026-11-17T01:35:39+09:00",
   "branch": "main",
-  "head": "28eafe7fad3ffe587f00373c0fb27a2666e60a6e",
-  "shortHead": "28eafe7f",
-  "totalFiles": 2952,
+  "head": "ec4b15112c5622aec91cdc1df9408b4a4287f376",
+  "shortHead": "ec4b1511",
+  "totalFiles": 2953,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 290
+      "count": 291
     },
     {
       "name": "mjs",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 236
+      "count": 237
     },
     {
       "name": "deploy",
@@ -418,9 +418,24 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "ec4b1511",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #153 from zhanglunet/docs/prd-452-t1-translation-supervision-bench"
+    },
+    {
+      "hash": "9db06a75",
+      "date": "2026-11-16",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "28eafe7f",
       "date": "2026-11-16",
       "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "29ca000d",
+      "date": "2026-11-15",
+      "subject": "[PRD-452/T1] 翻译监督台设计草稿"
     },
     {
       "hash": "b72a1196",
@@ -461,28 +476,28 @@ export const repoReport = {
       "hash": "6efd8341",
       "date": "2026-11-14",
       "subject": "Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance"
-    },
-    {
-      "hash": "b7a34504",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary"
-    },
-    {
-      "hash": "57f66799",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates"
-    },
-    {
-      "hash": "bd7419b5",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl"
     }
   ],
   "weeklyCommits": [
     {
+      "hash": "ec4b1511",
+      "date": "2026-11-17",
+      "subject": "Merge pull request #153 from zhanglunet/docs/prd-452-t1-translation-supervision-bench"
+    },
+    {
+      "hash": "9db06a75",
+      "date": "2026-11-16",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "28eafe7f",
       "date": "2026-11-16",
       "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "29ca000d",
+      "date": "2026-11-15",
+      "subject": "[PRD-452/T1] 翻译监督台设计草稿"
     },
     {
       "hash": "b72a1196",
@@ -1368,16 +1383,6 @@ export const repoReport = {
       "hash": "5c681859",
       "date": "2026-11-09",
       "subject": "test: PRD-341/T4 十二原则 checklist 划界断言——test_prd341_t4_boundary.py（7 例全绿）R3 数据驱动断言（run_checklist/checklist_gate 源码零原则 id 零机检器名复钉/gate 的 MANUAL_IDS is 数据模块同一 frozenset 单向引用/增补原则演练：运行时向 CHECKLIST 追加 P13 后 run_checklist 即覆盖新条目零改引擎代码 finally 还原零残留）+R2 零复用抽样断言（十二条 principle 全中文原创含 CJK 零英文 factor 术语/两模块 AST 零 humanlayer/12-factor/swe-agent 借鉴仓符号）+R1 复钉（check_ref 全部指向 scripts/ 既有模块）+与 199/227/303 划界（checklist_gate 单向只读消费零机检器模块导入）+与 PRD-303 重放包划界钉值（trend #1620 的 T4 环节）"
-    },
-    {
-      "hash": "f9e7a1a6",
-      "date": "2026-11-09",
-      "subject": "feat: PRD-341/T3 十二原则 checklist 通过闸门——checklist_gate.py GATE_CODES 四码封闭（READY_FOR_HUMAN/PENDING_MANUAL/BLOCKED/TAMPERED）+checklist_gate 单 skill 通过闸门（机检 fail→BLOCKED failing 显形/机检全过 manual 未附答→PENDING_MANUAL 问题清单显形零视为通过 R4/全备→READY_FOR_HUMAN 荐人工拍板闸门零替人拍板/manual 项状态被篡改为 pass/fail→TAMPERED 显形拒绝 R4 复核 manual 只能是 manual）+batch_gate 全库汇总归重（消费 T2 summarize/任一非 READY 整库归重/逐 skill 裁决平列人工逐个拍板）+与 T2 串联三种真实产物逐一过闸+AST 只读消费零网络零机检器导入（10 例全绿，T2 16 例仍绿，trend #1620 的 T3 环节）"
-    },
-    {
-      "hash": "9b2b02f7",
-      "date": "2026-11-09",
-      "subject": "feat: PRD-341/T2 十二原则 checklist 最小实现——CHECKLIST 声明式数据（check_ref 全部指向 scripts/ 既有模块 zh_trigger_registry/zh_sources/consistency_check/zh_skill_ref/skillpack_snapshot/cn_skill_sync_check/trigger_probe/zh_intake_gate 零新建判定逻辑 R1）+run_checklist 每 skill 一份（§6.1 裁决）+机检器反射注入适配器 honest 三态映射（None=clean/真值 pass/假值 fail 带 reason/异常 fail 显形/未注册 fail 显形——零视为通过 R4）+manual JSON 附答只留痕不改状态非法指向显形拒绝（§6.2 裁决）+summarize 全库汇总视图 failing 清单+引擎零硬编码 R3（数据与逻辑分离 T4 预埋）+模块 stdlib-only R2 零复用预埋（16 例 pytest 全绿）（trend #1620)"
     }
   ]
 } as const;

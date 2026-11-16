@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-16T07:42:51Z
+更新时间：2026-11-17T01:35:39+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：28eafe7fad3ffe587f00373c0fb27a2666e60a6e
+当前提交：ec4b15112c5622aec91cdc1df9408b4a4287f376
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：2952
-- 当前提交：28eafe7f
+- 跟踪文件总数：2953
+- 当前提交：ec4b1511
 - 主要文件类型：
   - py: 733
   - rs: 436
   - json: 312
-  - md: 290
+  - md: 291
   - mjs: 273
   - ts: 254
   - tsx: 196
@@ -40,7 +40,7 @@
 - tests: 630 个文件
 - surfaces: 466 个文件
 - coworker: 309 个文件
-- docs: 236 个文件
+- docs: 237 个文件
 - deploy: 160 个文件
 - scripts: 49 个文件
 - docs-site: 42 个文件
@@ -245,7 +245,10 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-17 ec4b1511 Merge pull request #153 from zhanglunet/docs/prd-452-t1-translation-supervision-bench
+- 2026-11-16 9db06a75 docs: refresh generated site reports
 - 2026-11-16 28eafe7f chore: 更新上游哨兵水位（PRD-068）
+- 2026-11-15 29ca000d [PRD-452/T1] 翻译监督台设计草稿
 - 2026-11-14 b72a1196 docs: refresh generated site reports
 - 2026-11-14 fd713c85 Merge pull request #152 from zhanglunet/fix/sync-fail-loud
 - 2026-11-15 3aeb47bf ci(sync): 拆假绿——合并失败让运行变红
@@ -254,6 +257,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-14 8acfb16b Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20261114
 - 2026-11-14 795dd7df docs: refresh generated site reports
 - 2026-11-14 6efd8341 Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance
-- 2026-11-14 b7a34504 Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary
-- 2026-11-14 57f66799 Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates
-- 2026-11-14 bd7419b5 Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl
