@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-17T03:07:44+09:00",
+  "generatedAt": "2026-11-18T08:15:37+09:00",
   "branch": "main",
-  "head": "6b94b0e18b000cad978016e2b953ce2c5fa2cceb",
-  "shortHead": "6b94b0e1",
-  "totalFiles": 2963,
+  "head": "4aa39c92660197c99ffcf998c96c090501c0aa13",
+  "shortHead": "4aa39c92",
+  "totalFiles": 2974,
   "byExt": [
     {
       "name": "py",
-      "count": 739
+      "count": 745
     },
     {
       "name": "rs",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 295
+      "count": 300
     },
     {
       "name": "mjs",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 634
+      "count": 638
     },
     {
       "name": "surfaces",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 241
+      "count": 246
     },
     {
       "name": "deploy",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 51
+      "count": 53
     },
     {
       "name": "docs-site",
@@ -418,6 +418,36 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "4aa39c92",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T5：验收试运行（全链两遍逐字节一致+失败演练+链复跑+文档无密钥） (#164)"
+    },
+    {
+      "hash": "9f8cafc1",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T4：划界断言（下游载体零导入+借鉴仓零符号+红线钉值） (#163)"
+    },
+    {
+      "hash": "dd5e862d",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T3：契约闸门（LEDGER_DRIFT+一票否决） (#162)"
+    },
+    {
+      "hash": "0c5f8400",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T2：翻译技能契约内核（五件套注册+调用校验+append-only 账本） (#161)"
+    },
+    {
+      "hash": "2999a860",
+      "date": "2026-11-18",
+      "subject": "docs(prd-511): T1 翻译技能契约设计——契约五件套 schema/校验流程/四码闸门/划界表+PR 门槛四项自查 (#160)"
+    },
+    {
+      "hash": "7890d943",
+      "date": "2026-11-16",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "6b94b0e1",
       "date": "2026-11-17",
       "subject": "Merge pull request #158 from zhanglunet/feat/prd-452-t5-translation-supervision-acceptance"
@@ -446,39 +476,39 @@ export const repoReport = {
       "hash": "7ff38589",
       "date": "2026-11-16",
       "subject": "test(prd-452): T4 划界断言——收件箱裁决权零触碰+下游零导入+借鉴仓零符号+R1/R3/留痕钉值（8 tests green）"
-    },
-    {
-      "hash": "37e2598f",
-      "date": "2026-11-16",
-      "subject": "feat(prd-452): T3 监督回路闸门——原始记录重导放行 fail-closed（无裁决/批注挂起/反馈挂起/点头非最新）+收件箱入口过闸（6 tests green）"
-    },
-    {
-      "hash": "20e0d901",
-      "date": "2026-11-16",
-      "subject": "feat(prd-452): T2 翻译监督台内核——版本链+批注打包发回+回炉批注对照+关口未点头不进收件箱+点头落账（12 tests green）"
-    },
-    {
-      "hash": "6d1a0654",
-      "date": "2026-11-16",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "ec4b1511",
-      "date": "2026-11-17",
-      "subject": "Merge pull request #153 from zhanglunet/docs/prd-452-t1-translation-supervision-bench"
-    },
-    {
-      "hash": "9db06a75",
-      "date": "2026-11-16",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "28eafe7f",
-      "date": "2026-11-16",
-      "subject": "chore: 更新上游哨兵水位（PRD-068）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "4aa39c92",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T5：验收试运行（全链两遍逐字节一致+失败演练+链复跑+文档无密钥） (#164)"
+    },
+    {
+      "hash": "9f8cafc1",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T4：划界断言（下游载体零导入+借鉴仓零符号+红线钉值） (#163)"
+    },
+    {
+      "hash": "dd5e862d",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T3：契约闸门（LEDGER_DRIFT+一票否决） (#162)"
+    },
+    {
+      "hash": "0c5f8400",
+      "date": "2026-11-18",
+      "subject": "PRD-511/T2：翻译技能契约内核（五件套注册+调用校验+append-only 账本） (#161)"
+    },
+    {
+      "hash": "2999a860",
+      "date": "2026-11-18",
+      "subject": "docs(prd-511): T1 翻译技能契约设计——契约五件套 schema/校验流程/四码闸门/划界表+PR 门槛四项自查 (#160)"
+    },
+    {
+      "hash": "7890d943",
+      "date": "2026-11-16",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "6b94b0e1",
       "date": "2026-11-17",
@@ -1363,66 +1393,6 @@ export const repoReport = {
       "hash": "0e29857c",
       "date": "2026-11-11",
       "subject": "feat: PRD-369/T3 人工拍板收件箱批阅闸门——decision_inbox_gates.py mark_baseline+append_only_gate events 只增不删复核（基线锚删除与首事件改写 LEDGER_DRIFT 显形）+state_gate 条目状态与 events 双向对账（直接改写/回滚/删除三破坏 STATE_INCONSISTENT 显形——裁决必须双向一致 R1 落地）+gate_summary 多闸一票否决+ERROR_CODES 随模块导出（348 教训）+与 T2 串联（真实 add/approve(CHOICE)/reject 产物过闸全 pass）+闸门只读消费（零裁决调用 零网络）（13 例全绿，369 链+341 链仍绿，trend #1648 的 T3 环节）"
-    },
-    {
-      "hash": "2fad6e06",
-      "date": "2026-11-10",
-      "subject": "feat: PRD-369/T2 人工拍板收件箱最小实现——decision_inbox.py collect 三源只读汇聚（manual_review/answer_confirm/zh_disambiguation 词表封闭/五件套缺一 INBOX_ITEM_INCOMPLETE 防御分支显形拒绝入箱/manual questions 引用 341 问题清单+answers_ref 引用附答留痕）+InboxLedger 状态机（approve/reject 人批留痕/重复裁决 INBOX_DOUBLE_DECIDE/未知 id/携带 checklist 写/注册表写/附答代填载荷 INBOX_AUTO_EXEC_ATTEMPT 显形拒绝——零 checklist 状态改写零代填 R1 TAMPERED 红线继续 §6.1 零代填裁决/歧义项 approve 必带选中候选且须在列表内 INBOX_CHOICE_REQUIRED）+append-only events+view kind 过滤+与 PRD-341 run_checklist P10–P12 真实串联+AST 零网络零子进程（11 例全绿，341 链 33 例+355 链仍绿，trend #1648 的 T2 环节）"
-    },
-    {
-      "hash": "85cc04ba",
-      "date": "2026-11-10",
-      "subject": "feat: PRD-355/T2 中文 skill 调用重放包最小实现——zh_call_replay.py make_pack（决策 utterance/resolved_skill/status/candidates 投影/原文+归一化+登记册三重指纹+rules_version/length 齐校验；缺任一 PACK_INCOMPLETE）+replay 重放三步（三重指纹分别复核 INPUT_DRIFT 且漂移来源线索可区分——指令原文/登记册变/归一化变/lookup_fn 深拷贝解析层复算与 zh_trigger_registry.lookup+build_registry 真实串联零 skill 执行 R2/decisions 逐字节比对 MISMATCH 首分歧条显形含候选零静默 R3）+ReplayLedger append-only（R4）+AST 零网络零子进程（9 例全绿，341 链 33 例仍绿，trend #1634 的 T2 环节）"
-    },
-    {
-      "hash": "45d1080f",
-      "date": "2026-11-10",
-      "subject": "docs: PRD-369/T1 人工拍板收件箱设计——三类人工项统一收口（manual_review/answer_confirm/zh_disambiguation 词表封闭 R2）+证据四件套（fingerprint+questions/candidates 引用 341 附答留痕 R3）+零 checklist 状态改写零注册表写零附答代填（R1 AUTO_EXEC 拒绝——TAMPERED 红线继续）+歧义项 CHOICE_REQUIRED+append-only 拒绝留痕（R4）+plannotator/t3code 实测只借控制面形态+与 341/299 划界（trend #1648）"
-    },
-    {
-      "hash": "eb40ee1d",
-      "date": "2026-11-10",
-      "subject": "docs: PRD-355/T1 中文 skill 调用重放包设计——三件套（中文指令原文+归一化+注册表三重指纹/解析与歧义候选处理/结果摘要 R1）+重放零 skill 执行红线（只复算 lookup/resolve R2）+MISMATCH 含归一化差异线索显形零静默（R3）+append-only（R4）+AiSOC/OpenBot MIT 实测只借形态+与 285 升级快照/267 技能来源/341 checklist 划界（trend #1634）"
-    },
-    {
-      "hash": "52def00f",
-      "date": "2026-11-10",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "00f9c5dc",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #115 from zhanglunet/trend/prd-341-t5-acceptance"
-    },
-    {
-      "hash": "de236fed",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #114 from zhanglunet/trend/prd-341-t4-boundary"
-    },
-    {
-      "hash": "4063e590",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #113 from zhanglunet/trend/prd-341-t3-gate"
-    },
-    {
-      "hash": "040aab4a",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #112 from zhanglunet/trend/prd-341-t2-checklist-impl"
-    },
-    {
-      "hash": "dd8a6407",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #111 from zhanglunet/trend/prd-341-t1-12factors-design"
-    },
-    {
-      "hash": "413e399d",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #109 from zhanglunet/trend/prd-341-t1-design"
-    },
-    {
-      "hash": "9a05b1eb",
-      "date": "2026-11-09",
-      "subject": "test: PRD-341/T5 十二原则 checklist 验收试运行——test_prd341_t5_acceptance.py（7 例全绿，链上 T2–T4 33 例仍绿）①真实 skill 全量试运行（十二项全跑 机检 9 过+manual 3 附答留痕→READY_FOR_HUMAN 闸门零替人拍板+双 skill batch_gate 汇总逐 skill 裁决平列+回放逐字节可复现）②失败演练三路全显形（机检 fail→BLOCKED 未过项显形零视为通过/manual 未附答→PENDING_MANUAL 问题清单显形/manual 项被篡改为 pass→TAMPERED R4 复核拒绝）③文档无密钥（T1 设计文档经 git show origin/trend/prd-341-t1-12factors-design 扫描零密钥/零 IP/外链仅 github 与 example 域）（trend #1620 的 T5 环节）"
     }
   ]
 } as const;
