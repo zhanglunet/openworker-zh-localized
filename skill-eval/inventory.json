@@ -1,0 +1,137 @@
+{
+ "prd": 488,
+ "repo": "openworker-zh-localized",
+ "version": 1,
+ "generated_at": "2026-11-17",
+ "design_ref": "docs/plans/2026-11-17-prd-488-owzh-skill-evaluation-design.md",
+ "gate": "error-rate",
+ "thresholds": {
+  "min_sample_tasks": 20,
+  "min_relative_error_drop": 0.2,
+  "max_new_error_types": 0,
+  "overlap_similarity": 0.8
+ },
+ "scope_note": "中文技能包（coworker/personas/builtin/**/skills/；docs/enterprise/templates 与 harness/examples 为模板与示例）",
+ "skills": [
+  {
+   "id": "security-fix-pr",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/appsec-worker/skills/security-fix-pr/SKILL.md",
+   "text": "---\nname: security-fix-pr\ndescription: Turn triaged security findings into focused, reviewable fix PRs\n---\nPackage security fixes so a busy reviewer can approve them with confidence.\n\n1. One PR per theme (e.g. \"parameterize SQL in the reports module\"), never a mixed\n   security dump. Small diffs get reviewed; big ones get postponed.\n2. Branch naming: `security/<theme>` from the repo's default branch. Follow the repo's\n   existing commit-message style.\n3. Every fix commit carries its test: add or extend one that fails without the fix,\n   in the repo's existing test layout and idiom. If testing a fix isn't practical,\n   say so in the PR body instead of skipping silently.\n4. PR body structure (keep it tight):\n   - What was wrong, in plain language, with severity and why it matters HERE (one or\n     two sentences of reachability/impact, not scanner boilerplate).\n   - What the fix does, and what it deliberately does not change.\n   - How it was verified (test names, commands run).\n   - NEVER include secret values, exploit payloads, or step-by-step attack recipes in\n     a public PR — describe the class of issue instead.\n5. If the GitHub connector is available, open the PR with it; otherwise prepare the\n   branch and hand the user the exact push/PR commands.\n6. Fixing is yours; MERGING is the team's. Never merge your own security PR — deliver\n   it and summarize what a reviewer should scrutinize.\n",
+   "description": "Turn triaged security findings into focused, reviewable fix PRs",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "semgrep-review",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/appsec-worker/skills/semgrep-review/SKILL.md",
+   "text": "---\nname: semgrep-review\ndescription: Run a semgrep scan and turn findings into triaged, contextual fixes\n---\nRun a static-analysis pass with semgrep and own the findings end to end.\n\n1. Check the tool: `semgrep --version`. If it's missing, ask for it with\n   `request_tool(\"semgrep\", …)` rather than skipping the pass. If the user declines,\n   continue with a targeted manual review — read the routes/handlers, the auth and\n   session code, every query built by string concatenation, deserialization, and\n   outbound requests built from user input — and say in your report that the static\n   pass was manual, so the user knows the coverage is narrower than a full scan.\n   Note that community semgrep rules miss whole classes (e.g. SQL built through a\n   project's own DB wrapper), so reading the code is worth doing even when it runs.\n2. Scan the repo (from its root):\n   `semgrep scan --config auto --json --quiet -o /tmp/semgrep.json`\n   Use `--config auto` unless the repo carries its own rules (`.semgrep.yml`,\n   `semgrep.yml`) — prefer the repo's own configuration when present.\n3. Parse the JSON and triage EVERY finding — do not echo the raw report:\n   - Read the flagged code and enough surrounding context to judge reachability.\n   - Is the tainted input attacker-controlled or internal? Is there an upstream guard?\n   - Rate: critical / high / medium / low / noise, with a one-line justification each.\n4. Fix what's real, highest severity first:\n   - Match the codebase's own conventions (its validation helpers, escaping utilities,\n     parameterized-query style) — read neighboring code before writing the fix.\n   - Add or extend a test that fails without the fix where the test harness makes that\n     reasonable.\n   - Group fixes by theme (one branch per theme), never one giant mixed diff.\n5. For findings you judge noise, say WHY (e.g. constant input, dead code, framework\n   already escapes) — never silently drop them, and never add ignore rules to make the\n   scanner quiet without agreement.\n6. Deliver: a short findings table (severity · location · verdict · action) and the\n   fix branches/PRs. If the repo has no semgrep config, offer to commit a starter\n   `.semgrep.yml` pinned to the rulesets that mattered here.\n",
+   "description": "Run a semgrep scan and turn findings into triaged, contextual fixes",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "aws-posture",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/cloud-posture/skills/aws-posture/SKILL.md",
+   "text": "---\nname: aws-posture\ndescription: Read-only AWS posture check — public exposure, IAM blast radius, hygiene\n---\nCheck the live AWS account's security posture using strictly read-only CLI calls, then\nfix root causes in the IaC.\n\nHARD RULE: read-only means read-only — describe/list/get/simulate calls only. No\ncreate/put/update/delete/attach, no `terraform apply`, ever. If a fix is needed, it goes\ninto Terraform for the team to apply.\n\n1. Confirm access and scope: `aws sts get-caller-identity` (mask the account id to its\n   last 4 digits in anything you write). Ask which regions matter; default to the ones\n   the Terraform state uses.\n2. Sweep the high-signal surfaces, most exposed first:\n   - Public entry points: S3 buckets (`get-public-access-block`, bucket policies),\n     security groups open to 0.0.0.0/0 on sensitive ports, public RDS/ES endpoints,\n     ALB listeners without TLS.\n   - IAM blast radius: users with attached admin policies, wildcard `Action`/`Resource`\n     in customer-managed policies, stale access keys (`iam get-credential-report`),\n     roles with overly broad trust policies.\n   - Hygiene: CloudTrail on and multi-region, default EBS/S3 encryption, root-account\n     MFA (from the credential report).\n3. Cross-reference each finding against the repo's Terraform: is the risky config\n   defined in code (fix it there), drifted from code (flag the drift), or unmanaged\n   (propose importing it)?\n4. Deliver: an exposure-ranked posture report (finding · resource · evidence command ·\n   where it's defined · action), the IaC fix branch for what's code-managed, and a\n   short list of items needing a human decision. Every claim carries the exact\n   read-only command that evidences it, so the team can re-run and verify.\n",
+   "description": "Read-only AWS posture check — public exposure, IAM blast radius, hygiene",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "iac-scan",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/cloud-posture/skills/iac-scan/SKILL.md",
+   "text": "---\nname: iac-scan\ndescription: Scan Terraform/IaC with trivy config and fix what matters in code\n---\nScan the repo's infrastructure-as-code and turn findings into minimal, safe Terraform\nchanges.\n\n1. Pick the scanner (in this order — do NOT skip the scan if none is present):\n   - `trivy config . --format json -o /tmp/iac.json` (also covers Dockerfiles/k8s)\n   - `checkov -d . -o json > /tmp/iac.json` if the repo already uses it\n   - Neither installed: ask for trivy with `request_tool(\"trivy\", …)`. If the user\n     declines, review the Terraform by hand against the exposure checklist in step 2\n     and say in your report that the scan was manual.\n   Do not suggest tfsec — it is deprecated; `trivy config` is its successor.\n2. Triage by real exposure, reading the surrounding Terraform for each finding:\n   - Internet-reachable (0.0.0.0/0 ingress, public buckets/ALBs) first.\n   - Then identity blast radius (wildcard IAM, broad assume-role trust).\n   - Then encryption/logging hygiene.\n   Mark deliberate-looking configuration (a public website bucket, a bastion SG) as\n   \"intentional?\" and ask rather than auto-fix.\n3. Fix in the module where the resource is DEFINED (follow module sources), matching\n   the repo's Terraform style — variables, locals, and tags the way the codebase\n   already does them.\n4. Validate every change: `terraform fmt` on touched files, then `terraform init\n   -backend=false && terraform validate` when possible. Include `terraform plan`\n   output in the PR when the user can run it — NEVER run `terraform apply`.\n5. Deliver: exposure-ranked findings table (resource · issue · verdict · action), the\n   fix branch/PR, and any \"intentional?\" items awaiting a human decision. Offer a\n   pinned scanner config (e.g. `.trivyignore` with justifications) only for findings\n   the team explicitly accepts.\n",
+   "description": "Scan Terraform/IaC with trivy config and fix what matters in code",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "dependency-audit",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/dep-audit/skills/dependency-audit/SKILL.md",
+   "text": "---\nname: dependency-audit\ndescription: Scan lockfiles for vulnerable dependencies and triage by real reachability\n---\nAudit the project's dependencies and separate what's exploitable from what's noise.\n\n1. Identify the ecosystems present (package-lock.json / pnpm-lock.yaml / yarn.lock,\n   requirements*.txt / uv.lock / poetry.lock, go.sum, Cargo.lock, pyproject).\n2. Pick scanners that are present (check first; ask before installing):\n   - `osv-scanner --lockfile <each lockfile> --format json` (best cross-ecosystem)\n   - `npm audit --json` / `pip-audit -f json` / `trivy fs --scanners vuln . -f json`\n3. Deduplicate advisories across scanners (key on advisory id + package), then triage\n   each one by reading the code:\n   - Direct or transitive? (`npm ls <pkg>`, `pipdeptree -r -p <pkg>` or grep imports)\n   - Is the vulnerable functionality actually used here? Grep for the affected API;\n     an unreachable advisory in a dev-only tool is LOW no matter its CVSS.\n   - Verdict per advisory: fix-now / fix-soon / accept-with-note, one line of why.\n4. Map each fix-now to its smallest closing upgrade (advisory metadata's fixed-in\n   version); note when only a major closes it and what the migration entails.\n5. Deliver: an audit table (advisory · package · direct? · reachable? · verdict ·\n   smallest fix) ordered by real priority — then hand off to `safe-upgrade-pr` for the\n   actual upgrades. Offer a CI guard (e.g. an osv-scanner step) so new advisories\n   surface on PRs instead of in the next audit.\n",
+   "description": "Scan lockfiles for vulnerable dependencies and triage by real reachability",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "safe-upgrade-pr",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/dep-audit/skills/safe-upgrade-pr/SKILL.md",
+   "text": "---\nname: safe-upgrade-pr\ndescription: Ship minimal, test-verified dependency upgrades as focused PRs\n---\nTurn triaged advisories into upgrade PRs a reviewer can merge without fear.\n\n1. One branch per ecosystem (`security/deps-npm`, `security/deps-python`), smallest\n   viable bumps: the fixed-in patch/minor, not \"latest\". Majors get their own branch\n   and a migration note.\n2. Regenerate lockfiles with the repo's OWN toolchain (`npm install pkg@ver`,\n   `uv lock`, `poetry update pkg` …) — never hand-edit a lockfile.\n3. Verify before proposing: clean install, build, and the project's test suite. Red\n   suite → investigate; if the bump itself breaks the build, document what's entangled\n   and propose the next-smallest path instead of forcing it.\n4. PR body per upgrade: advisory id(s) closed, package old→new version, reachability\n   verdict from the audit (one line), and the verification commands run. Skip CVE\n   boilerplate walls — link the advisory instead.\n5. Leave `accept-with-note` advisories OUT of the PR; record them in the PR body's\n   \"consciously not fixed\" list with their justification, so the decision is visible\n   and revisitable.\n6. Never merge your own upgrade PR — deliver it with what a reviewer should check\n   (typically: lockfile diff sanity and the test run).\n",
+   "description": "Ship minimal, test-verified dependency upgrades as focused PRs",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "aws-posture@posture-worker",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/posture-worker/skills/aws-posture/SKILL.md",
+   "text": "---\nname: aws-posture\ndescription: Read-only AWS posture check — public exposure, IAM blast radius, hygiene\n---\nCheck the live AWS account's security posture using strictly read-only CLI calls, then\nfix root causes in the IaC.\n\nHARD RULE: read-only means read-only — describe/list/get/simulate calls only. No\ncreate/put/update/delete/attach, no `terraform apply`, ever. If a fix is needed, it goes\ninto Terraform for the team to apply.\n\n1. Confirm access and scope: `aws sts get-caller-identity` (mask the account id to its\n   last 4 digits in anything you write). Ask which regions matter; default to the ones\n   the Terraform state uses.\n2. Sweep the high-signal surfaces, most exposed first:\n   - Public entry points: S3 buckets (`get-public-access-block`, bucket policies),\n     security groups open to 0.0.0.0/0 on sensitive ports, public RDS/ES endpoints,\n     ALB listeners without TLS.\n   - IAM blast radius: users with attached admin policies, wildcard `Action`/`Resource`\n     in customer-managed policies, stale access keys (`iam get-credential-report`),\n     roles with overly broad trust policies.\n   - Hygiene: CloudTrail on and multi-region, default EBS/S3 encryption, root-account\n     MFA (from the credential report).\n3. Cross-reference each finding against the repo's Terraform: is the risky config\n   defined in code (fix it there), drifted from code (flag the drift), or unmanaged\n   (propose importing it)?\n4. Deliver: an exposure-ranked posture report (finding · resource · evidence command ·\n   where it's defined · action), the IaC fix branch for what's code-managed, and a\n   short list of items needing a human decision. Every claim carries the exact\n   read-only command that evidences it, so the team can re-run and verify.\n",
+   "description": "Read-only AWS posture check — public exposure, IAM blast radius, hygiene",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "iac-scan@posture-worker",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/posture-worker/skills/iac-scan/SKILL.md",
+   "text": "---\nname: iac-scan\ndescription: Scan Terraform/IaC with trivy config and fix what matters in code\n---\nScan the repo's infrastructure-as-code and turn findings into minimal, safe Terraform\nchanges.\n\n1. Pick the scanner (in this order — do NOT skip the scan if none is present):\n   - `trivy config . --format json -o /tmp/iac.json` (also covers Dockerfiles/k8s)\n   - `checkov -d . -o json > /tmp/iac.json` if the repo already uses it\n   - Neither installed: ask for trivy with `request_tool(\"trivy\", …)`. If the user\n     declines, review the Terraform by hand against the exposure checklist in step 2\n     and say in your report that the scan was manual.\n   Do not suggest tfsec — it is deprecated; `trivy config` is its successor.\n2. Triage by real exposure, reading the surrounding Terraform for each finding:\n   - Internet-reachable (0.0.0.0/0 ingress, public buckets/ALBs) first.\n   - Then identity blast radius (wildcard IAM, broad assume-role trust).\n   - Then encryption/logging hygiene.\n   Mark deliberate-looking configuration (a public website bucket, a bastion SG) as\n   \"intentional?\" and ask rather than auto-fix.\n3. Fix in the module where the resource is DEFINED (follow module sources), matching\n   the repo's Terraform style — variables, locals, and tags the way the codebase\n   already does them.\n4. Validate every change: `terraform fmt` on touched files, then `terraform init\n   -backend=false && terraform validate` when possible. Include `terraform plan`\n   output in the PR when the user can run it — NEVER run `terraform apply`.\n5. Deliver: exposure-ranked findings table (resource · issue · verdict · action), the\n   fix branch/PR, and any \"intentional?\" items awaiting a human decision. Offer a\n   pinned scanner config (e.g. `.trivyignore` with justifications) only for findings\n   the team explicitly accepts.\n",
+   "description": "Scan Terraform/IaC with trivy config and fix what matters in code",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "secret-scan",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/secrets-worker/skills/secret-scan/SKILL.md",
+   "text": "---\nname: secret-scan\ndescription: Hunt committed secrets with gitleaks and drive safe rotation\n---\nFind committed credentials and get them rotated and removed — without ever exposing them\nfurther yourself.\n\nABSOLUTE RULE: never print a secret's value — not in output, notes, todo items, commits,\nor PRs. Refer to every hit as \"<kind> in <file>:<line> (commit <short-sha>)\".\n\n1. Check the tool: `gitleaks version`. If it's missing, do NOT skip this scan and do not\n   stop the review — ask for it with `request_tool(\"gitleaks\", …)`. If the user declines,\n   or no pinned build exists for their platform, fall back to step 2b and say in your\n   report that the sweep was manual.\n2. Scan working tree AND history — history matters most: a secret deleted in HEAD is still\n   live in every clone, and it is the hit users are most surprised by.\n   a. With gitleaks:\n      `gitleaks detect --source . --report-format json --report-path /tmp/gitleaks.json`\n   b. Without it, do the same job by hand, and say so:\n      - working tree: `git grep -nIE '(api[_-]?key|secret|token|password|BEGIN [A-Z ]*PRIVATE KEY|AKIA[0-9A-Z]{16}|sk_(live|test)_[0-9a-zA-Z]{16,}|xox[baprs]-)'`\n      - history, including files deleted since: `git log -p --all -S 'AKIA' --pickaxe-all`\n        and `git log --diff-filter=D --name-only --pretty=format:%h -- '*.env*' '*credential*' '*secret*'`,\n        then read the removed contents with `git show <sha>^:<path>`.\n      - Pipe anything you read through a redactor rather than into your transcript, e.g.\n        `sed -E \"s/[A-Za-z0-9_\\\\-]{16,}/[REDACTED]/g\"` — the no-printing rule still applies.\n3. Triage each hit by reading its context:\n   - Real credential, test fixture, or example placeholder? Say which and why.\n   - For real ones: what does it grant access to, and is it plausibly still valid?\n4. For every real secret, in this order:\n   a. ROTATE first — tell the user exactly where to revoke/rotate it (the provider's\n      console page or CLI command). Rotation beats removal: history rewrite without\n      rotation is false comfort.\n   b. Remove it from the code: move to env vars or the project's secret store, matching\n      how this codebase already handles configuration.\n   c. Prevent recurrence: add/extend `.gitignore` for local secret files and offer a\n      `.gitleaks.toml` baseline plus a pre-commit hook.\n   d. History purge (git filter-repo/BFG) is DESTRUCTIVE and rewrites shared history —\n      describe the trade-off and only proceed if the user explicitly asks.\n5. Deliver: a hit list (kind · location · verdict · rotation status), the cleanup\n   branch/PR, and the prevention setup you added or recommend.\n",
+   "description": "Hunt committed secrets with gitleaks and drive safe rotation",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "secret-scan@security",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/security/skills/secret-scan/SKILL.md",
+   "text": "---\nname: secret-scan\ndescription: Hunt committed secrets with gitleaks and drive safe rotation\n---\nFind committed credentials and get them rotated and removed — without ever exposing them\nfurther yourself.\n\nABSOLUTE RULE: never print a secret's value — not in output, notes, todo items, commits,\nor PRs. Refer to every hit as \"<kind> in <file>:<line> (commit <short-sha>)\".\n\n1. Check the tool: `gitleaks version`. If it's missing, do NOT skip this scan and do not\n   stop the review — ask for it with `request_tool(\"gitleaks\", …)`. If the user declines,\n   or no pinned build exists for their platform, fall back to step 2b and say in your\n   report that the sweep was manual.\n2. Scan working tree AND history — history matters most: a secret deleted in HEAD is still\n   live in every clone, and it is the hit users are most surprised by.\n   a. With gitleaks:\n      `gitleaks detect --source . --report-format json --report-path /tmp/gitleaks.json`\n   b. Without it, do the same job by hand, and say so:\n      - working tree: `git grep -nIE '(api[_-]?key|secret|token|password|BEGIN [A-Z ]*PRIVATE KEY|AKIA[0-9A-Z]{16}|sk_(live|test)_[0-9a-zA-Z]{16,}|xox[baprs]-)'`\n      - history, including files deleted since: `git log -p --all -S 'AKIA' --pickaxe-all`\n        and `git log --diff-filter=D --name-only --pretty=format:%h -- '*.env*' '*credential*' '*secret*'`,\n        then read the removed contents with `git show <sha>^:<path>`.\n      - Pipe anything you read through a redactor rather than into your transcript, e.g.\n        `sed -E \"s/[A-Za-z0-9_\\\\-]{16,}/[REDACTED]/g\"` — the no-printing rule still applies.\n3. Triage each hit by reading its context:\n   - Real credential, test fixture, or example placeholder? Say which and why.\n   - For real ones: what does it grant access to, and is it plausibly still valid?\n4. For every real secret, in this order:\n   a. ROTATE first — tell the user exactly where to revoke/rotate it (the provider's\n      console page or CLI command). Rotation beats removal: history rewrite without\n      rotation is false comfort.\n   b. Remove it from the code: move to env vars or the project's secret store, matching\n      how this codebase already handles configuration.\n   c. Prevent recurrence: add/extend `.gitignore` for local secret files and offer a\n      `.gitleaks.toml` baseline plus a pre-commit hook.\n   d. History purge (git filter-repo/BFG) is DESTRUCTIVE and rewrites shared history —\n      describe the trade-off and only proceed if the user explicitly asks.\n5. Deliver: a hit list (kind · location · verdict · rotation status), the cleanup\n   branch/PR, and the prevention setup you added or recommend.\n",
+   "description": "Hunt committed secrets with gitleaks and drive safe rotation",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "security-fix-pr@security",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/security/skills/security-fix-pr/SKILL.md",
+   "text": "---\nname: security-fix-pr\ndescription: Turn triaged security findings into focused, reviewable fix PRs\n---\nPackage security fixes so a busy reviewer can approve them with confidence.\n\n1. One PR per theme (e.g. \"parameterize SQL in the reports module\"), never a mixed\n   security dump. Small diffs get reviewed; big ones get postponed.\n2. Branch naming: `security/<theme>` from the repo's default branch. Follow the repo's\n   existing commit-message style.\n3. Every fix commit carries its test: add or extend one that fails without the fix,\n   in the repo's existing test layout and idiom. If testing a fix isn't practical,\n   say so in the PR body instead of skipping silently.\n4. PR body structure (keep it tight):\n   - What was wrong, in plain language, with severity and why it matters HERE (one or\n     two sentences of reachability/impact, not scanner boilerplate).\n   - What the fix does, and what it deliberately does not change.\n   - How it was verified (test names, commands run).\n   - NEVER include secret values, exploit payloads, or step-by-step attack recipes in\n     a public PR — describe the class of issue instead.\n5. If the GitHub connector is available, open the PR with it; otherwise prepare the\n   branch and hand the user the exact push/PR commands.\n6. Fixing is yours; MERGING is the team's. Never merge your own security PR — deliver\n   it and summarize what a reviewer should scrutinize.\n",
+   "description": "Turn triaged security findings into focused, reviewable fix PRs",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  },
+  {
+   "id": "semgrep-review@security",
+   "kind": "skill",
+   "source_path": "coworker/personas/builtin/security/skills/semgrep-review/SKILL.md",
+   "text": "---\nname: semgrep-review\ndescription: Run a semgrep scan and turn findings into triaged, contextual fixes\n---\nRun a static-analysis pass with semgrep and own the findings end to end.\n\n1. Check the tool: `semgrep --version`. If it's missing, ask for it with\n   `request_tool(\"semgrep\", …)` rather than skipping the pass. If the user declines,\n   continue with a targeted manual review — read the routes/handlers, the auth and\n   session code, every query built by string concatenation, deserialization, and\n   outbound requests built from user input — and say in your report that the static\n   pass was manual, so the user knows the coverage is narrower than a full scan.\n   Note that community semgrep rules miss whole classes (e.g. SQL built through a\n   project's own DB wrapper), so reading the code is worth doing even when it runs.\n2. Scan the repo (from its root):\n   `semgrep scan --config auto --json --quiet -o /tmp/semgrep.json`\n   Use `--config auto` unless the repo carries its own rules (`.semgrep.yml`,\n   `semgrep.yml`) — prefer the repo's own configuration when present.\n3. Parse the JSON and triage EVERY finding — do not echo the raw report:\n   - Read the flagged code and enough surrounding context to judge reachability.\n   - Is the tainted input attacker-controlled or internal? Is there an upstream guard?\n   - Rate: critical / high / medium / low / noise, with a one-line justification each.\n4. Fix what's real, highest severity first:\n   - Match the codebase's own conventions (its validation helpers, escaping utilities,\n     parameterized-query style) — read neighboring code before writing the fix.\n   - Add or extend a test that fails without the fix where the test harness makes that\n     reasonable.\n   - Group fixes by theme (one branch per theme), never one giant mixed diff.\n5. For findings you judge noise, say WHY (e.g. constant input, dead code, framework\n   already escapes) — never silently drop them, and never add ignore rules to make the\n   scanner quiet without agreement.\n6. Deliver: a short findings table (severity · location · verdict · action) and the\n   fix branches/PRs. If the repo has no semgrep config, offer to commit a starter\n   `.semgrep.yml` pinned to the rulesets that mattered here.\n",
+   "description": "Run a semgrep scan and turn findings into triaged, contextual fixes",
+   "metrics": {
+    "sample_tasks": 0
+   }
+  }
+ ]
+}
