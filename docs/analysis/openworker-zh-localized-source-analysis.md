@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-19T00:13:25+09:00
+更新时间：2026-11-19T08:10:06+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：1797ba10949d47f7b898fc29da27949a5efedd5f
+当前提交：1f432ce2649755583d60ad032b973ddccdf47673
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：2985
-- 当前提交：1797ba10
+- 跟踪文件总数：2994
+- 当前提交：1f432ce2
 - 主要文件类型：
-  - py: 751
+  - py: 757
   - rs: 436
   - json: 313
-  - md: 304
+  - md: 306
   - mjs: 273
   - ts: 254
   - tsx: 196
@@ -28,7 +28,7 @@
   - svg: 51
   - [none]: 40
   - js: 38
-  - jsonl: 36
+  - jsonl: 37
   - yaml: 33
   - css: 27
   - toml: 25
@@ -37,12 +37,12 @@
 ## 3. 目录结构
 
 - harness: 920 个文件
-- tests: 642 个文件
+- tests: 646 个文件
 - surfaces: 466 个文件
 - coworker: 309 个文件
-- docs: 247 个文件
+- docs: 250 个文件
 - deploy: 160 个文件
-- scripts: 55 个文件
+- scripts: 57 个文件
 - docs-site: 42 个文件
 - website: 36 个文件
 - skills: 31 个文件
@@ -246,15 +246,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-19 1f432ce2 [PRD-535/T5] openworker-zh-localized 中文 skill 方法论包验收试运行（真实任务走包） (#172)
+- 2026-11-19 38145113 [PRD-535/T4] openworker-zh-localized 中文 skill 方法论包划界断言（无方法论包不成套） (#171)
+- 2026-11-19 807c67d5 [PRD-535/T3] openworker-zh-localized 中文 skill 方法论包方法论包校验闸门 (#170)
+- 2026-11-19 cb9156d2 [PRD-535/T2] 方法论包落账 (#173)
+- 2026-11-19 ff8bc258 docs(prd-535): T1 openworker-zh-localized 中文 skill 方法论包设计——方法论包四件套（workflow/skill 集/命令入口/模式库）+划界表+PR 门槛自查 (#169)
+- 2026-11-18 1b238f32 docs: refresh generated site reports
 - 2026-11-19 1797ba10 [PRD-488/T5] 技能评估验收试运行（本链收官） (#168)
 - 2026-11-19 11a25f37 [PRD-488/T4] 技能评估划界断言 (#167)
 - 2026-11-19 61b53c72 [PRD-488/T3] 中文技能评估监督回路闸门 (#166)
 - 2026-11-19 eeede55f feat(prd-488): T2 中文技能包评估最小实现——质量门+重叠检测跑通真实技能包，首份评估报告落账（5 例全绿） (#165)
 - 2026-11-18 bcc78140 docs: refresh generated site reports
 - 2026-11-18 9c50e01a [PRD-488/T1] 中文技能评估设计草稿 (#159)
-- 2026-11-17 a132862c docs: refresh generated site reports
-- 2026-11-18 4aa39c92 PRD-511/T5：验收试运行（全链两遍逐字节一致+失败演练+链复跑+文档无密钥） (#164)
-- 2026-11-18 9f8cafc1 PRD-511/T4：划界断言（下游载体零导入+借鉴仓零符号+红线钉值） (#163)
-- 2026-11-18 dd5e862d PRD-511/T3：契约闸门（LEDGER_DRIFT+一票否决） (#162)
-- 2026-11-18 0c5f8400 PRD-511/T2：翻译技能契约内核（五件套注册+调用校验+append-only 账本） (#161)
-- 2026-11-18 2999a860 docs(prd-511): T1 翻译技能契约设计——契约五件套 schema/校验流程/四码闸门/划界表+PR 门槛四项自查 (#160)

@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-19T00:13:25+09:00",
+  "generatedAt": "2026-11-19T08:10:06+09:00",
   "branch": "main",
-  "head": "1797ba10949d47f7b898fc29da27949a5efedd5f",
-  "shortHead": "1797ba10",
-  "totalFiles": 2985,
+  "head": "1f432ce2649755583d60ad032b973ddccdf47673",
+  "shortHead": "1f432ce2",
+  "totalFiles": 2994,
   "byExt": [
     {
       "name": "py",
-      "count": 751
+      "count": 757
     },
     {
       "name": "rs",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 304
+      "count": 306
     },
     {
       "name": "mjs",
@@ -51,7 +51,7 @@ export const repoReport = {
     },
     {
       "name": "jsonl",
-      "count": 36
+      "count": 37
     },
     {
       "name": "yaml",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 642
+      "count": 646
     },
     {
       "name": "surfaces",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 247
+      "count": 250
     },
     {
       "name": "deploy",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 55
+      "count": 57
     },
     {
       "name": "docs-site",
@@ -422,6 +422,36 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "1f432ce2",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T5] openworker-zh-localized 中文 skill 方法论包验收试运行（真实任务走包） (#172)"
+    },
+    {
+      "hash": "38145113",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T4] openworker-zh-localized 中文 skill 方法论包划界断言（无方法论包不成套） (#171)"
+    },
+    {
+      "hash": "807c67d5",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T3] openworker-zh-localized 中文 skill 方法论包方法论包校验闸门 (#170)"
+    },
+    {
+      "hash": "cb9156d2",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T2] 方法论包落账 (#173)"
+    },
+    {
+      "hash": "ff8bc258",
+      "date": "2026-11-19",
+      "subject": "docs(prd-535): T1 openworker-zh-localized 中文 skill 方法论包设计——方法论包四件套（workflow/skill 集/命令入口/模式库）+划界表+PR 门槛自查 (#169)"
+    },
+    {
+      "hash": "1b238f32",
+      "date": "2026-11-18",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "1797ba10",
       "date": "2026-11-19",
       "subject": "[PRD-488/T5] 技能评估验收试运行（本链收官） (#168)"
@@ -450,39 +480,39 @@ export const repoReport = {
       "hash": "9c50e01a",
       "date": "2026-11-18",
       "subject": "[PRD-488/T1] 中文技能评估设计草稿 (#159)"
-    },
-    {
-      "hash": "a132862c",
-      "date": "2026-11-17",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "4aa39c92",
-      "date": "2026-11-18",
-      "subject": "PRD-511/T5：验收试运行（全链两遍逐字节一致+失败演练+链复跑+文档无密钥） (#164)"
-    },
-    {
-      "hash": "9f8cafc1",
-      "date": "2026-11-18",
-      "subject": "PRD-511/T4：划界断言（下游载体零导入+借鉴仓零符号+红线钉值） (#163)"
-    },
-    {
-      "hash": "dd5e862d",
-      "date": "2026-11-18",
-      "subject": "PRD-511/T3：契约闸门（LEDGER_DRIFT+一票否决） (#162)"
-    },
-    {
-      "hash": "0c5f8400",
-      "date": "2026-11-18",
-      "subject": "PRD-511/T2：翻译技能契约内核（五件套注册+调用校验+append-only 账本） (#161)"
-    },
-    {
-      "hash": "2999a860",
-      "date": "2026-11-18",
-      "subject": "docs(prd-511): T1 翻译技能契约设计——契约五件套 schema/校验流程/四码闸门/划界表+PR 门槛四项自查 (#160)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "1f432ce2",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T5] openworker-zh-localized 中文 skill 方法论包验收试运行（真实任务走包） (#172)"
+    },
+    {
+      "hash": "38145113",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T4] openworker-zh-localized 中文 skill 方法论包划界断言（无方法论包不成套） (#171)"
+    },
+    {
+      "hash": "807c67d5",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T3] openworker-zh-localized 中文 skill 方法论包方法论包校验闸门 (#170)"
+    },
+    {
+      "hash": "cb9156d2",
+      "date": "2026-11-19",
+      "subject": "[PRD-535/T2] 方法论包落账 (#173)"
+    },
+    {
+      "hash": "ff8bc258",
+      "date": "2026-11-19",
+      "subject": "docs(prd-535): T1 openworker-zh-localized 中文 skill 方法论包设计——方法论包四件套（workflow/skill 集/命令入口/模式库）+划界表+PR 门槛自查 (#169)"
+    },
+    {
+      "hash": "1b238f32",
+      "date": "2026-11-18",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "1797ba10",
       "date": "2026-11-19",
@@ -1177,26 +1207,6 @@ export const repoReport = {
       "hash": "685b6d12",
       "date": "2026-11-12",
       "subject": "feat(sdk): add reviewer and compaction guidance"
-    },
-    {
-      "hash": "2e5a6443",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #881 from andrewyng/feat/sdk-user-attachments"
-    },
-    {
-      "hash": "ab86fdfb",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #880 from andrewyng/feat/sdk-session-tracing-ui"
-    },
-    {
-      "hash": "1ebf9feb",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #874 from andrewyng/feat/sdk-observability-evals"
-    },
-    {
-      "hash": "9ac4f832",
-      "date": "2026-11-11",
-      "subject": "feat(sdk): support image, PDF and text attachments"
     }
   ]
 } as const;
