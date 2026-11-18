@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-18T09:01:34+09:00",
+  "generatedAt": "2026-11-19T00:13:25+09:00",
   "branch": "main",
-  "head": "9c50e01a6dcce1506aa303578b462324faa03d7a",
-  "shortHead": "9c50e01a",
-  "totalFiles": 2975,
+  "head": "1797ba10949d47f7b898fc29da27949a5efedd5f",
+  "shortHead": "1797ba10",
+  "totalFiles": 2985,
   "byExt": [
     {
       "name": "py",
-      "count": 745
+      "count": 751
     },
     {
       "name": "rs",
@@ -15,11 +15,11 @@ export const repoReport = {
     },
     {
       "name": "json",
-      "count": 312
+      "count": 313
     },
     {
       "name": "md",
-      "count": 301
+      "count": 304
     },
     {
       "name": "mjs",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 638
+      "count": 642
     },
     {
       "name": "surfaces",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 53
+      "count": 55
     },
     {
       "name": "docs-site",
@@ -134,6 +134,10 @@ export const repoReport = {
     {
       "name": "ui-mocks",
       "count": 6
+    },
+    {
+      "name": "skill-eval",
+      "count": 4
     },
     {
       "name": "stt",
@@ -418,6 +422,31 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "1797ba10",
+      "date": "2026-11-19",
+      "subject": "[PRD-488/T5] 技能评估验收试运行（本链收官） (#168)"
+    },
+    {
+      "hash": "11a25f37",
+      "date": "2026-11-19",
+      "subject": "[PRD-488/T4] 技能评估划界断言 (#167)"
+    },
+    {
+      "hash": "61b53c72",
+      "date": "2026-11-19",
+      "subject": "[PRD-488/T3] 中文技能评估监督回路闸门 (#166)"
+    },
+    {
+      "hash": "eeede55f",
+      "date": "2026-11-19",
+      "subject": "feat(prd-488): T2 中文技能包评估最小实现——质量门+重叠检测跑通真实技能包，首份评估报告落账（5 例全绿） (#165)"
+    },
+    {
+      "hash": "bcc78140",
+      "date": "2026-11-18",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "9c50e01a",
       "date": "2026-11-18",
       "subject": "[PRD-488/T1] 中文技能评估设计草稿 (#159)"
@@ -451,34 +480,34 @@ export const repoReport = {
       "hash": "2999a860",
       "date": "2026-11-18",
       "subject": "docs(prd-511): T1 翻译技能契约设计——契约五件套 schema/校验流程/四码闸门/划界表+PR 门槛四项自查 (#160)"
-    },
-    {
-      "hash": "7890d943",
-      "date": "2026-11-16",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6b94b0e1",
-      "date": "2026-11-17",
-      "subject": "Merge pull request #158 from zhanglunet/feat/prd-452-t5-translation-supervision-acceptance"
-    },
-    {
-      "hash": "2f1ed13a",
-      "date": "2026-11-17",
-      "subject": "Merge pull request #157 from zhanglunet/feat/prd-452-t4-translation-supervision-boundary"
-    },
-    {
-      "hash": "8101f1c8",
-      "date": "2026-11-17",
-      "subject": "Merge pull request #156 from zhanglunet/feat/prd-452-t3-translation-supervision-gate"
-    },
-    {
-      "hash": "8393c0d8",
-      "date": "2026-11-17",
-      "subject": "Merge pull request #155 from zhanglunet/feat/prd-452-t2-translation-supervision-bench"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "1797ba10",
+      "date": "2026-11-19",
+      "subject": "[PRD-488/T5] 技能评估验收试运行（本链收官） (#168)"
+    },
+    {
+      "hash": "11a25f37",
+      "date": "2026-11-19",
+      "subject": "[PRD-488/T4] 技能评估划界断言 (#167)"
+    },
+    {
+      "hash": "61b53c72",
+      "date": "2026-11-19",
+      "subject": "[PRD-488/T3] 中文技能评估监督回路闸门 (#166)"
+    },
+    {
+      "hash": "eeede55f",
+      "date": "2026-11-19",
+      "subject": "feat(prd-488): T2 中文技能包评估最小实现——质量门+重叠检测跑通真实技能包，首份评估报告落账（5 例全绿） (#165)"
+    },
+    {
+      "hash": "bcc78140",
+      "date": "2026-11-18",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "9c50e01a",
       "date": "2026-11-18",
@@ -1168,241 +1197,6 @@ export const repoReport = {
       "hash": "9ac4f832",
       "date": "2026-11-11",
       "subject": "feat(sdk): support image, PDF and text attachments"
-    },
-    {
-      "hash": "ae83868d",
-      "date": "2026-11-11",
-      "subject": "Add session tracing to the management UI"
-    },
-    {
-      "hash": "6b5c2386",
-      "date": "2026-11-11",
-      "subject": "Fix generated partner SDK recording configuration"
-    },
-    {
-      "hash": "5e9dedad",
-      "date": "2026-11-11",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "c5246797",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #126 from zhanglunet/trend/baseline-fix-owzh"
-    },
-    {
-      "hash": "1e1090a8",
-      "date": "2026-11-11",
-      "subject": "fix: owzh main baseline — read PRD-341 design doc from local main copy instead of un-fetched branch"
-    },
-    {
-      "hash": "2055054f",
-      "date": "2026-11-11",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9d33f91a",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #125 from zhanglunet/trend/prd-369-t5-decision-inbox-acceptance"
-    },
-    {
-      "hash": "316ebf08",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #124 from zhanglunet/trend/prd-355-t5-zh-call-replay-acceptance"
-    },
-    {
-      "hash": "34a0ffca",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #123 from zhanglunet/trend/prd-369-t4-decision-inbox-boundary"
-    },
-    {
-      "hash": "b5cfc72a",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #122 from zhanglunet/trend/prd-355-t4-zh-call-replay-boundary"
-    },
-    {
-      "hash": "c816e1a1",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #121 from zhanglunet/trend/prd-355-t3-zh-call-replay-gate"
-    },
-    {
-      "hash": "2a91bc13",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #120 from zhanglunet/trend/prd-369-t3-decision-inbox-gate"
-    },
-    {
-      "hash": "a07c9e71",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #119 from zhanglunet/trend/prd-369-t2-decision-inbox-impl"
-    },
-    {
-      "hash": "9d0546be",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #118 from zhanglunet/trend/prd-355-t2-zh-call-replay-impl"
-    },
-    {
-      "hash": "246ef31f",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #117 from zhanglunet/trend/prd-369-t1-decision-inbox"
-    },
-    {
-      "hash": "fa5ef8fc",
-      "date": "2026-11-11",
-      "subject": "Merge pull request #116 from zhanglunet/trend/prd-355-t1-zh-call-replay"
-    },
-    {
-      "hash": "88c35351",
-      "date": "2026-11-10",
-      "subject": "Add optional SDK observability and evaluation exports"
-    },
-    {
-      "hash": "86a396a6",
-      "date": "2026-11-11",
-      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
-    },
-    {
-      "hash": "6d09d348",
-      "date": "2026-11-11",
-      "subject": "fix(prd-369-t3): export ERROR_CODES from decision_inbox_gates + import unittest in T3 test (collection ImportError/NameError)"
-    },
-    {
-      "hash": "8171fb70",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #871 from andrewyng/feat/standalone-sdk-subagents"
-    },
-    {
-      "hash": "8ceb986c",
-      "date": "2026-11-10",
-      "subject": "test: update session fixture for delegated sandbox ownership"
-    },
-    {
-      "hash": "bd32809a",
-      "date": "2026-11-10",
-      "subject": "Merge pull request #870 from andrewyng/feat/ows-single-command-deploy"
-    },
-    {
-      "hash": "979952e1",
-      "date": "2026-11-10",
-      "subject": "fix(skills): install the standalone sub-agent reference"
-    },
-    {
-      "hash": "2869e84d",
-      "date": "2026-11-09",
-      "subject": "feat: add standalone SDK sub-agents with durable coordination"
-    },
-    {
-      "hash": "873c6039",
-      "date": "2026-11-11",
-      "subject": "test(prd-369): T5 验收试运行——人工决策收件箱全链周期演练（收→批→拒→重复裁决→AUTO_EXEC→CHOICE_REQUIRED）确定性可复现+链复跑子进程实测（含 T3 双缺陷订正后全链）+文档无密钥"
-    },
-    {
-      "hash": "662e168d",
-      "date": "2026-11-10",
-      "subject": "fix(ows): gate cloud setup on local installer prerequisites"
-    },
-    {
-      "hash": "05773ef3",
-      "date": "2026-11-10",
-      "subject": "feat(ows): coordinate reviewed AWS and Azure service deployments"
-    },
-    {
-      "hash": "426ba6fa",
-      "date": "2026-11-10",
-      "subject": "fix(azure): reconcile proven DNS dependency rejections before bounded retry"
-    },
-    {
-      "hash": "6b9168b0",
-      "date": "2026-11-10",
-      "subject": "docs(azure): describe both reviewed OpenShell versions"
-    },
-    {
-      "hash": "abc1ab75",
-      "date": "2026-11-10",
-      "subject": "feat(harness): support reviewed OpenShell 0.1.7 Kubernetes gateway"
-    },
-    {
-      "hash": "162626fb",
-      "date": "2026-11-10",
-      "subject": "fix(azure): use driver-compatible verified PostgreSQL TLS configuration"
-    },
-    {
-      "hash": "7d39200e",
-      "date": "2026-11-10",
-      "subject": "fix(azure): frame empty ARM actions and sanitize response errors"
-    },
-    {
-      "hash": "98d6c02f",
-      "date": "2026-11-10",
-      "subject": "fix(azure): pin controller upgrades and recognize AKS resource identity"
-    },
-    {
-      "hash": "9e7c73af",
-      "date": "2026-11-10",
-      "subject": "fix(azure): accept normalized empty managed registry credentials"
-    },
-    {
-      "hash": "8b7ba569",
-      "date": "2026-11-10",
-      "subject": "fix(azure): wait for DNS convergence and reuse control environments"
-    },
-    {
-      "hash": "f598394b",
-      "date": "2026-11-10",
-      "subject": "fix(azure): use provider network receipts and safe DNS cleanup order"
-    },
-    {
-      "hash": "5091a0a7",
-      "date": "2026-11-10",
-      "subject": "fix(azure): validate live CLI tokens and provider receipts"
-    },
-    {
-      "hash": "ff3fb275",
-      "date": "2026-11-10",
-      "subject": "fix: omit unsupported Container Apps logging destination"
-    },
-    {
-      "hash": "66e9506d",
-      "date": "2026-11-10",
-      "subject": "feat: prepare private Azure registry and expiry-owned management access"
-    },
-    {
-      "hash": "9fbaccff",
-      "date": "2026-11-10",
-      "subject": "fix: support Azure Dasv7 nodes and verify selected compute quota"
-    },
-    {
-      "hash": "fca8fb9a",
-      "date": "2026-11-10",
-      "subject": "fix: use supported Azure bootstrap assignment scope checks"
-    },
-    {
-      "hash": "37d01ced",
-      "date": "2026-11-10",
-      "subject": "fix: handle Azure CLI cloud preflight arguments and endpoints"
-    },
-    {
-      "hash": "4e6dc328",
-      "date": "2026-11-11",
-      "subject": "test(prd-355): T5 验收试运行——中文调用重放全链回放确定性可复现+MISMATCH/INPUT_DRIFT 演练（三重指纹区分漂移来源）+链复跑子进程实测+文档无密钥"
-    },
-    {
-      "hash": "f990b292",
-      "date": "2026-11-11",
-      "subject": "fix+test(prd-369): T3 双缺陷订正（ERROR_CODES 导出+测试 unittest 导入）+ T4 人工决策收件箱划界断言"
-    },
-    {
-      "hash": "9641ffe0",
-      "date": "2026-11-11",
-      "subject": "test(prd-355): T4 中文调用重放划界断言——重放面与升级快照/解析器/机检双向模块隔离+lookup_fn 注入唯一耦合钉值+R1/R2/R3/R4 红线钉值"
-    },
-    {
-      "hash": "064f5535",
-      "date": "2026-11-11",
-      "subject": "feat: PRD-355/T3 中文 skill 调用重放闸门——zh_call_replay_gates.py ledger_gate 账本一致性复核（verdict/evidence/指纹与账本最后入账逐字节一致 VERDICT_MISMATCH 显形）+mark_baseline+append_only_gate append-only 复核（基线锚删除与首条改写 LEDGER_DRIFT 显形）+pack_gate 别包冒充 PACK_STALE 显形+gate_summary 多闸一票否决+ERROR_CODES 随模块导出（348 教训）+与 T2 串联（真实 make_pack+replay(lookup)+ReplayLedger 产物三闸全过）+重放零执行 AST 零网络+闸门只读（16 例全绿，355 链+369 链仍绿，trend #1634 的 T3 环节）"
-    },
-    {
-      "hash": "0e29857c",
-      "date": "2026-11-11",
-      "subject": "feat: PRD-369/T3 人工拍板收件箱批阅闸门——decision_inbox_gates.py mark_baseline+append_only_gate events 只增不删复核（基线锚删除与首事件改写 LEDGER_DRIFT 显形）+state_gate 条目状态与 events 双向对账（直接改写/回滚/删除三破坏 STATE_INCONSISTENT 显形——裁决必须双向一致 R1 落地）+gate_summary 多闸一票否决+ERROR_CODES 随模块导出（348 教训）+与 T2 串联（真实 add/approve(CHOICE)/reject 产物过闸全 pass）+闸门只读消费（零裁决调用 零网络）（13 例全绿，369 链+341 链仍绿，trend #1648 的 T3 环节）"
     }
   ]
 } as const;
