@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-18T08:15:37+09:00
+更新时间：2026-11-18T09:01:34+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：4aa39c92660197c99ffcf998c96c090501c0aa13
+当前提交：9c50e01a6dcce1506aa303578b462324faa03d7a
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：2974
-- 当前提交：4aa39c92
+- 跟踪文件总数：2975
+- 当前提交：9c50e01a
 - 主要文件类型：
   - py: 745
   - rs: 436
   - json: 312
-  - md: 300
+  - md: 301
   - mjs: 273
   - ts: 254
   - tsx: 196
@@ -40,7 +40,7 @@
 - tests: 638 个文件
 - surfaces: 466 个文件
 - coworker: 309 个文件
-- docs: 246 个文件
+- docs: 247 个文件
 - deploy: 160 个文件
 - scripts: 53 个文件
 - docs-site: 42 个文件
@@ -245,6 +245,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-18 9c50e01a [PRD-488/T1] 中文技能评估设计草稿 (#159)
+- 2026-11-17 a132862c docs: refresh generated site reports
 - 2026-11-18 4aa39c92 PRD-511/T5：验收试运行（全链两遍逐字节一致+失败演练+链复跑+文档无密钥） (#164)
 - 2026-11-18 9f8cafc1 PRD-511/T4：划界断言（下游载体零导入+借鉴仓零符号+红线钉值） (#163)
 - 2026-11-18 dd5e862d PRD-511/T3：契约闸门（LEDGER_DRIFT+一票否决） (#162)
@@ -255,5 +257,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-17 2f1ed13a Merge pull request #157 from zhanglunet/feat/prd-452-t4-translation-supervision-boundary
 - 2026-11-17 8101f1c8 Merge pull request #156 from zhanglunet/feat/prd-452-t3-translation-supervision-gate
 - 2026-11-17 8393c0d8 Merge pull request #155 from zhanglunet/feat/prd-452-t2-translation-supervision-bench
-- 2026-11-16 4460f0b4 test(prd-452): T5 验收试运行——真实监督回路全链两遍逐字节一致+失败演练+链复跑（9 tests green，本链 35）
-- 2026-11-16 7ff38589 test(prd-452): T4 划界断言——收件箱裁决权零触碰+下游零导入+借鉴仓零符号+R1/R3/留痕钉值（8 tests green）

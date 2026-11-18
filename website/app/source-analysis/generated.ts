@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-11-18T08:15:37+09:00",
+  "generatedAt": "2026-11-18T09:01:34+09:00",
   "branch": "main",
-  "head": "4aa39c92660197c99ffcf998c96c090501c0aa13",
-  "shortHead": "4aa39c92",
-  "totalFiles": 2974,
+  "head": "9c50e01a6dcce1506aa303578b462324faa03d7a",
+  "shortHead": "9c50e01a",
+  "totalFiles": 2975,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 300
+      "count": 301
     },
     {
       "name": "mjs",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 246
+      "count": 247
     },
     {
       "name": "deploy",
@@ -418,6 +418,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "9c50e01a",
+      "date": "2026-11-18",
+      "subject": "[PRD-488/T1] 中文技能评估设计草稿 (#159)"
+    },
+    {
+      "hash": "a132862c",
+      "date": "2026-11-17",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "4aa39c92",
       "date": "2026-11-18",
       "subject": "PRD-511/T5：验收试运行（全链两遍逐字节一致+失败演练+链复跑+文档无密钥） (#164)"
@@ -466,19 +476,19 @@ export const repoReport = {
       "hash": "8393c0d8",
       "date": "2026-11-17",
       "subject": "Merge pull request #155 from zhanglunet/feat/prd-452-t2-translation-supervision-bench"
-    },
-    {
-      "hash": "4460f0b4",
-      "date": "2026-11-16",
-      "subject": "test(prd-452): T5 验收试运行——真实监督回路全链两遍逐字节一致+失败演练+链复跑（9 tests green，本链 35）"
-    },
-    {
-      "hash": "7ff38589",
-      "date": "2026-11-16",
-      "subject": "test(prd-452): T4 划界断言——收件箱裁决权零触碰+下游零导入+借鉴仓零符号+R1/R3/留痕钉值（8 tests green）"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "9c50e01a",
+      "date": "2026-11-18",
+      "subject": "[PRD-488/T1] 中文技能评估设计草稿 (#159)"
+    },
+    {
+      "hash": "a132862c",
+      "date": "2026-11-17",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "4aa39c92",
       "date": "2026-11-18",
