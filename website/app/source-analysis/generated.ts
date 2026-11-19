@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-19T08:10:06+09:00",
+  "generatedAt": "2026-11-20T02:59:59+09:00",
   "branch": "main",
-  "head": "1f432ce2649755583d60ad032b973ddccdf47673",
-  "shortHead": "1f432ce2",
-  "totalFiles": 2994,
+  "head": "15b2fe171424c988c84f22ed5a345d43a617c85f",
+  "shortHead": "15b2fe17",
+  "totalFiles": 3001,
   "byExt": [
     {
       "name": "py",
-      "count": 757
+      "count": 763
     },
     {
       "name": "rs",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 306
+      "count": 307
     },
     {
       "name": "mjs",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 646
+      "count": 650
     },
     {
       "name": "surfaces",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 250
+      "count": 251
     },
     {
       "name": "deploy",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 57
+      "count": 59
     },
     {
       "name": "docs-site",
@@ -422,6 +422,36 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "15b2fe17",
+      "date": "2026-11-20",
+      "subject": "test(prd-558): T5 验收试运行 (#178)"
+    },
+    {
+      "hash": "1e576757",
+      "date": "2026-11-20",
+      "subject": "test(prd-558): T4 划界断言 (#177)"
+    },
+    {
+      "hash": "60cc1a59",
+      "date": "2026-11-20",
+      "subject": "feat(prd-558): T3 准入检查校验闸门 (#176)"
+    },
+    {
+      "hash": "90c41586",
+      "date": "2026-11-20",
+      "subject": "feat(prd-558): T2 准入检查最小实现 (#175)"
+    },
+    {
+      "hash": "9a39345b",
+      "date": "2026-11-20",
+      "subject": "docs(prd-558): T1 准入检查设计草稿 (#174)"
+    },
+    {
+      "hash": "06e2e5fa",
+      "date": "2026-11-18",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "1f432ce2",
       "date": "2026-11-19",
       "subject": "[PRD-535/T5] openworker-zh-localized 中文 skill 方法论包验收试运行（真实任务走包） (#172)"
@@ -450,39 +480,39 @@ export const repoReport = {
       "hash": "1b238f32",
       "date": "2026-11-18",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1797ba10",
-      "date": "2026-11-19",
-      "subject": "[PRD-488/T5] 技能评估验收试运行（本链收官） (#168)"
-    },
-    {
-      "hash": "11a25f37",
-      "date": "2026-11-19",
-      "subject": "[PRD-488/T4] 技能评估划界断言 (#167)"
-    },
-    {
-      "hash": "61b53c72",
-      "date": "2026-11-19",
-      "subject": "[PRD-488/T3] 中文技能评估监督回路闸门 (#166)"
-    },
-    {
-      "hash": "eeede55f",
-      "date": "2026-11-19",
-      "subject": "feat(prd-488): T2 中文技能包评估最小实现——质量门+重叠检测跑通真实技能包，首份评估报告落账（5 例全绿） (#165)"
-    },
-    {
-      "hash": "bcc78140",
-      "date": "2026-11-18",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "9c50e01a",
-      "date": "2026-11-18",
-      "subject": "[PRD-488/T1] 中文技能评估设计草稿 (#159)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "15b2fe17",
+      "date": "2026-11-20",
+      "subject": "test(prd-558): T5 验收试运行 (#178)"
+    },
+    {
+      "hash": "1e576757",
+      "date": "2026-11-20",
+      "subject": "test(prd-558): T4 划界断言 (#177)"
+    },
+    {
+      "hash": "60cc1a59",
+      "date": "2026-11-20",
+      "subject": "feat(prd-558): T3 准入检查校验闸门 (#176)"
+    },
+    {
+      "hash": "90c41586",
+      "date": "2026-11-20",
+      "subject": "feat(prd-558): T2 准入检查最小实现 (#175)"
+    },
+    {
+      "hash": "9a39345b",
+      "date": "2026-11-20",
+      "subject": "docs(prd-558): T1 准入检查设计草稿 (#174)"
+    },
+    {
+      "hash": "06e2e5fa",
+      "date": "2026-11-18",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "1f432ce2",
       "date": "2026-11-19",
@@ -1187,26 +1217,6 @@ export const repoReport = {
       "hash": "5acc3763",
       "date": "2026-11-12",
       "subject": "docs: PRD-383/T1 checklist 失败验证台设计——失败复跑验证过才进人工拍板（run_checklist 失败项→verify_failure→decision_inbox.collect(manual_reviews) 接入点+重跑同一机检器复算+JSONL 落账+TAMPERED 红线不变，trend #1887）"
-    },
-    {
-      "hash": "797f86eb",
-      "date": "2026-11-13",
-      "subject": "docs: align enterprise release tags and version examples"
-    },
-    {
-      "hash": "a482680e",
-      "date": "2026-11-12",
-      "subject": "Merge pull request #884 from andrewyng/feat/sdk-review-guidance"
-    },
-    {
-      "hash": "b8d7616f",
-      "date": "2026-11-12",
-      "subject": "fix(sdk): bound managed admission stack usage"
-    },
-    {
-      "hash": "685b6d12",
-      "date": "2026-11-12",
-      "subject": "feat(sdk): add reviewer and compaction guidance"
     }
   ]
 } as const;

@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-19T08:10:06+09:00
+更新时间：2026-11-20T02:59:59+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：1f432ce2649755583d60ad032b973ddccdf47673
+当前提交：15b2fe171424c988c84f22ed5a345d43a617c85f
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：2994
-- 当前提交：1f432ce2
+- 跟踪文件总数：3001
+- 当前提交：15b2fe17
 - 主要文件类型：
-  - py: 757
+  - py: 763
   - rs: 436
   - json: 313
-  - md: 306
+  - md: 307
   - mjs: 273
   - ts: 254
   - tsx: 196
@@ -37,12 +37,12 @@
 ## 3. 目录结构
 
 - harness: 920 个文件
-- tests: 646 个文件
+- tests: 650 个文件
 - surfaces: 466 个文件
 - coworker: 309 个文件
-- docs: 250 个文件
+- docs: 251 个文件
 - deploy: 160 个文件
-- scripts: 57 个文件
+- scripts: 59 个文件
 - docs-site: 42 个文件
 - website: 36 个文件
 - skills: 31 个文件
@@ -246,15 +246,15 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-20 15b2fe17 test(prd-558): T5 验收试运行 (#178)
+- 2026-11-20 1e576757 test(prd-558): T4 划界断言 (#177)
+- 2026-11-20 60cc1a59 feat(prd-558): T3 准入检查校验闸门 (#176)
+- 2026-11-20 90c41586 feat(prd-558): T2 准入检查最小实现 (#175)
+- 2026-11-20 9a39345b docs(prd-558): T1 准入检查设计草稿 (#174)
+- 2026-11-18 06e2e5fa docs: refresh generated site reports
 - 2026-11-19 1f432ce2 [PRD-535/T5] openworker-zh-localized 中文 skill 方法论包验收试运行（真实任务走包） (#172)
 - 2026-11-19 38145113 [PRD-535/T4] openworker-zh-localized 中文 skill 方法论包划界断言（无方法论包不成套） (#171)
 - 2026-11-19 807c67d5 [PRD-535/T3] openworker-zh-localized 中文 skill 方法论包方法论包校验闸门 (#170)
 - 2026-11-19 cb9156d2 [PRD-535/T2] 方法论包落账 (#173)
 - 2026-11-19 ff8bc258 docs(prd-535): T1 openworker-zh-localized 中文 skill 方法论包设计——方法论包四件套（workflow/skill 集/命令入口/模式库）+划界表+PR 门槛自查 (#169)
 - 2026-11-18 1b238f32 docs: refresh generated site reports
-- 2026-11-19 1797ba10 [PRD-488/T5] 技能评估验收试运行（本链收官） (#168)
-- 2026-11-19 11a25f37 [PRD-488/T4] 技能评估划界断言 (#167)
-- 2026-11-19 61b53c72 [PRD-488/T3] 中文技能评估监督回路闸门 (#166)
-- 2026-11-19 eeede55f feat(prd-488): T2 中文技能包评估最小实现——质量门+重叠检测跑通真实技能包，首份评估报告落账（5 例全绿） (#165)
-- 2026-11-18 bcc78140 docs: refresh generated site reports
-- 2026-11-18 9c50e01a [PRD-488/T1] 中文技能评估设计草稿 (#159)
