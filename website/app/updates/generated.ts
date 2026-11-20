@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T04:35:51+09:00",
+  "generatedAt": "2026-11-21T08:25:55+09:00",
   "branch": "main",
-  "head": "6767534366a5902ae32be8505ababcb107592b20",
-  "shortHead": "67675343",
+  "head": "37f4bc05999c9c57098284f731c4ccb2133d97ca",
+  "shortHead": "37f4bc05",
   "totalFiles": 3007,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "37f4bc05",
+      "date": "2026-11-21",
+      "subject": "fix: 链复跑放行 rc=5（unittest 空跑=pytest 原生文件） (#188)"
+    },
+    {
+      "hash": "e7253da7",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "67675343",
       "date": "2026-11-21",
       "subject": "fix: 单引号 pytest 复跑 unittest 化 (#187)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "f8c75e01",
       "date": "2026-11-20",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6171c17f",
-      "date": "2026-11-20",
-      "subject": "fix: 准入批遗留测试路径修正（MODULE_DIR/复跑/doc glob） (#180)"
-    },
-    {
-      "hash": "b9510cd6",
-      "date": "2026-11-19",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "37f4bc05",
+      "date": "2026-11-21",
+      "subject": "fix: 链复跑放行 rc=5（unittest 空跑=pytest 原生文件） (#188)"
+    },
+    {
+      "hash": "e7253da7",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "67675343",
       "date": "2026-11-21",
@@ -922,156 +932,6 @@ export const repoReport = {
       "hash": "c5a04fa4",
       "date": "2026-11-13",
       "subject": "Merge pull request #895 from andrewyng/fix/cluster-installation-release"
-    },
-    {
-      "hash": "60bd6e39",
-      "date": "2026-11-13",
-      "subject": "Bound the approval snippet compilation to its section"
-    },
-    {
-      "hash": "b3799eed",
-      "date": "2026-11-13",
-      "subject": "Fix guide example compilation and cancellation race"
-    },
-    {
-      "hash": "cf2c0790",
-      "date": "2026-11-13",
-      "subject": "Wait for the initial UI session check before sign-in"
-    },
-    {
-      "hash": "f1daf752",
-      "date": "2026-11-13",
-      "subject": "Merge verified SDK fixes into cluster qualification"
-    },
-    {
-      "hash": "ce3bb66b",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #897 from andrewyng/fix/service-attachment-admission"
-    },
-    {
-      "hash": "63b21f97",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #891 from andrewyng/fix/sdk-approval-visibility"
-    },
-    {
-      "hash": "38df9f7e",
-      "date": "2026-11-13",
-      "subject": "Add Desktop App docs"
-    },
-    {
-      "hash": "4a34f789",
-      "date": "2026-11-13",
-      "subject": "Integrate cancellation cleanup and approval fixes"
-    },
-    {
-      "hash": "087be5a9",
-      "date": "2026-11-13",
-      "subject": "Integrate embedded helper qualification fixes"
-    },
-    {
-      "hash": "6877196b",
-      "date": "2026-11-13",
-      "subject": "Merge main and preserve combined SDK release behavior"
-    },
-    {
-      "hash": "8c99b01e",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #893 from andrewyng/feat/owcluster-cli"
-    },
-    {
-      "hash": "bf754ba5",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #890 from andrewyng/fix/sdk-activity-metadata"
-    },
-    {
-      "hash": "098bcbdd",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #889 from andrewyng/fix/sdk-release-qualification"
-    },
-    {
-      "hash": "be7f6f5b",
-      "date": "2026-11-13",
-      "subject": "fix: inspect service attachments without a worker lease"
-    },
-    {
-      "hash": "c851e610",
-      "date": "2026-11-13",
-      "subject": "fix: accept DNS case variation in private cluster tunnel"
-    },
-    {
-      "hash": "a67cfad9",
-      "date": "2026-11-13",
-      "subject": "fix: reconcile completed AWS infrastructure before installation"
-    },
-    {
-      "hash": "7390f061",
-      "date": "2026-11-13",
-      "subject": "test: report runtime causes in assistant regressions"
-    },
-    {
-      "hash": "c6797d58",
-      "date": "2026-11-13",
-      "subject": "fix: preserve deployment review prices across restarts"
-    },
-    {
-      "hash": "6f8eec29",
-      "date": "2026-11-13",
-      "subject": "test: keep unrelated GCP fixtures unchanged"
-    },
-    {
-      "hash": "0c79d486",
-      "date": "2026-11-13",
-      "subject": "Ignore local example credentials and signing files"
-    },
-    {
-      "hash": "95d175a2",
-      "date": "2026-11-13",
-      "subject": "fix: preserve private installation access and recording schema setup"
-    },
-    {
-      "hash": "7a0ea3c2",
-      "date": "2026-11-11",
-      "subject": "Fix private Azure image publication across Docker image stores"
-    },
-    {
-      "hash": "d47ceb69",
-      "date": "2026-11-11",
-      "subject": "Support reviewed OpenShell 0.1.8 deployments"
-    },
-    {
-      "hash": "9cd45522",
-      "date": "2026-11-11",
-      "subject": "Simplify deployment configuration and qualify local Kubernetes"
-    },
-    {
-      "hash": "9fda56b2",
-      "date": "2026-11-11",
-      "subject": "Add Azure AWS and local cluster configuration examples"
-    },
-    {
-      "hash": "abcbeadc",
-      "date": "2026-11-11",
-      "subject": "Add CLI controls for management UI and trace storage"
-    },
-    {
-      "hash": "febd5c03",
-      "date": "2026-11-13",
-      "subject": "test: keep legacy runtime runner paths nonoptional"
-    },
-    {
-      "hash": "cdaa290c",
-      "date": "2026-11-13",
-      "subject": "fix: handle optional runners in examples and partner packages"
-    },
-    {
-      "hash": "1ccb4838",
-      "date": "2026-11-13",
-      "subject": "fix: wait for cancellation cleanup before surfacing interruptions"
-    },
-    {
-      "hash": "59a17fc9",
-      "date": "2026-11-13",
-      "subject": "feat: use owcluster with a compatible ows alias"
     }
   ]
 } as const;

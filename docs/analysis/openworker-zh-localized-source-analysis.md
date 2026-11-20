@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-21T04:35:51+09:00
+更新时间：2026-11-21T08:25:55+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：6767534366a5902ae32be8505ababcb107592b20
+当前提交：37f4bc05999c9c57098284f731c4ccb2133d97ca
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：3007
-- 当前提交：67675343
+- 当前提交：37f4bc05
 - 主要文件类型：
   - py: 769
   - rs: 436
@@ -246,6 +246,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-21 37f4bc05 fix: 链复跑放行 rc=5（unittest 空跑=pytest 原生文件） (#188)
+- 2026-11-20 e7253da7 docs: refresh generated site reports
 - 2026-11-21 67675343 fix: 单引号 pytest 复跑 unittest 化 (#187)
 - 2026-11-20 3ae25399 docs: refresh generated site reports
 - 2026-11-21 695dd27f fix: 复跑块括号修复（] 替代误写的 )） (#186)
@@ -256,5 +258,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-20 947b4c6e docs: refresh generated site reports
 - 2026-11-21 496311d4 fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)
 - 2026-11-20 f8c75e01 docs: refresh generated site reports
-- 2026-11-20 6171c17f fix: 准入批遗留测试路径修正（MODULE_DIR/复跑/doc glob） (#180)
-- 2026-11-19 b9510cd6 docs: refresh generated site reports
