@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T02:01:44+09:00",
+  "generatedAt": "2026-11-21T03:05:36+09:00",
   "branch": "main",
-  "head": "496311d43086e5f326c5395266d8e3a553c04785",
-  "shortHead": "496311d4",
+  "head": "d2155be001cfd0abe84bdff064cea10accaf6f64",
+  "shortHead": "d2155be0",
   "totalFiles": 3007,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "d2155be0",
+      "date": "2026-11-21",
+      "subject": "fix: SCRIPTS-form rerun to unittest discover (#184)"
+    },
+    {
+      "hash": "947b4c6e",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "496311d4",
       "date": "2026-11-21",
       "subject": "fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "06e2e5fa",
       "date": "2026-11-18",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "1f432ce2",
-      "date": "2026-11-19",
-      "subject": "[PRD-535/T5] openworker-zh-localized 中文 skill 方法论包验收试运行（真实任务走包） (#172)"
-    },
-    {
-      "hash": "38145113",
-      "date": "2026-11-19",
-      "subject": "[PRD-535/T4] openworker-zh-localized 中文 skill 方法论包划界断言（无方法论包不成套） (#171)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "d2155be0",
+      "date": "2026-11-21",
+      "subject": "fix: SCRIPTS-form rerun to unittest discover (#184)"
+    },
+    {
+      "hash": "947b4c6e",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "496311d4",
       "date": "2026-11-21",
@@ -1052,11 +1062,6 @@ export const repoReport = {
       "hash": "a6a8c9b8",
       "date": "2026-11-13",
       "subject": "Fix SDK errors for conflicting agent definitions"
-    },
-    {
-      "hash": "9f7a2e18",
-      "date": "2026-11-13",
-      "subject": "Keep release versions in compatibility documentation"
     }
   ]
 } as const;

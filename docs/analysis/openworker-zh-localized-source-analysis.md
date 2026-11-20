@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-21T02:01:44+09:00
+更新时间：2026-11-21T03:05:36+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：496311d43086e5f326c5395266d8e3a553c04785
+当前提交：d2155be001cfd0abe84bdff064cea10accaf6f64
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：3007
-- 当前提交：496311d4
+- 当前提交：d2155be0
 - 主要文件类型：
   - py: 769
   - rs: 436
@@ -246,6 +246,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-21 d2155be0 fix: SCRIPTS-form rerun to unittest discover (#184)
+- 2026-11-20 947b4c6e docs: refresh generated site reports
 - 2026-11-21 496311d4 fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)
 - 2026-11-20 f8c75e01 docs: refresh generated site reports
 - 2026-11-20 6171c17f fix: 准入批遗留测试路径修正（MODULE_DIR/复跑/doc glob） (#180)
@@ -256,5 +258,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-20 90c41586 feat(prd-558): T2 准入检查最小实现 (#175)
 - 2026-11-20 9a39345b docs(prd-558): T1 准入检查设计草稿 (#174)
 - 2026-11-18 06e2e5fa docs: refresh generated site reports
-- 2026-11-19 1f432ce2 [PRD-535/T5] openworker-zh-localized 中文 skill 方法论包验收试运行（真实任务走包） (#172)
-- 2026-11-19 38145113 [PRD-535/T4] openworker-zh-localized 中文 skill 方法论包划界断言（无方法论包不成套） (#171)
