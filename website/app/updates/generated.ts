@@ -1,13 +1,13 @@
 export const repoReport = {
-  "generatedAt": "2026-11-20T02:59:59+09:00",
+  "generatedAt": "2026-11-20T23:08:25+09:00",
   "branch": "main",
-  "head": "15b2fe171424c988c84f22ed5a345d43a617c85f",
-  "shortHead": "15b2fe17",
-  "totalFiles": 3001,
+  "head": "6171c17f7ff3d6f83fba06001fa636de50caf429",
+  "shortHead": "6171c17f",
+  "totalFiles": 3007,
   "byExt": [
     {
       "name": "py",
-      "count": 763
+      "count": 769
     },
     {
       "name": "rs",
@@ -85,7 +85,7 @@ export const repoReport = {
     },
     {
       "name": "tests",
-      "count": 650
+      "count": 654
     },
     {
       "name": "surfaces",
@@ -105,7 +105,7 @@ export const repoReport = {
     },
     {
       "name": "scripts",
-      "count": 59
+      "count": 61
     },
     {
       "name": "docs-site",
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "6171c17f",
+      "date": "2026-11-20",
+      "subject": "fix: 准入批遗留测试路径修正（MODULE_DIR/复跑/doc glob） (#180)"
+    },
+    {
+      "hash": "b9510cd6",
+      "date": "2026-11-19",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "15b2fe17",
       "date": "2026-11-20",
       "subject": "test(prd-558): T5 验收试运行 (#178)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "cb9156d2",
       "date": "2026-11-19",
       "subject": "[PRD-535/T2] 方法论包落账 (#173)"
-    },
-    {
-      "hash": "ff8bc258",
-      "date": "2026-11-19",
-      "subject": "docs(prd-535): T1 openworker-zh-localized 中文 skill 方法论包设计——方法论包四件套（workflow/skill 集/命令入口/模式库）+划界表+PR 门槛自查 (#169)"
-    },
-    {
-      "hash": "1b238f32",
-      "date": "2026-11-18",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "6171c17f",
+      "date": "2026-11-20",
+      "subject": "fix: 准入批遗留测试路径修正（MODULE_DIR/复跑/doc glob） (#180)"
+    },
+    {
+      "hash": "b9510cd6",
+      "date": "2026-11-19",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "15b2fe17",
       "date": "2026-11-20",
@@ -1097,126 +1107,6 @@ export const repoReport = {
       "hash": "1682dc57",
       "date": "2026-11-14",
       "subject": "docs(prd-406): T1 中文 skill 协同评审会话设计——事件 schema/状态机/三码闸门/划界表+PR 门槛四项自查"
-    },
-    {
-      "hash": "01e96a56",
-      "date": "2026-11-12",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "3256bf34",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #132 from zhanglunet/trend/prd-383-t5-checklist-failure-verify-bench-acceptance"
-    },
-    {
-      "hash": "a30f15e0",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #131 from zhanglunet/trend/prd-383-t4-checklist-failure-verify-bench-boundary"
-    },
-    {
-      "hash": "130e9988",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #130 from zhanglunet/trend/prd-383-t3-checklist-failure-verify-bench-gate"
-    },
-    {
-      "hash": "ee83f4ea",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #129 from zhanglunet/trend/prd-383-t2-checklist-failure-verify-bench-impl"
-    },
-    {
-      "hash": "30316f33",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #128 from zhanglunet/trend/prd-383-t1-checklist-failure-verify-bench"
-    },
-    {
-      "hash": "4af48474",
-      "date": "2026-11-12",
-      "subject": "Merge pull request #888 from andrewyng/docs/readme-walkthrough"
-    },
-    {
-      "hash": "5b2007b9",
-      "date": "2026-11-12",
-      "subject": "docs: lead SDK onboarding with architecture and builder skill"
-    },
-    {
-      "hash": "93877871",
-      "date": "2026-11-12",
-      "subject": "docs: improve Desktop App and SDK getting started guides"
-    },
-    {
-      "hash": "e6301931",
-      "date": "2026-11-12",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "319850e8",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #127 from zhanglunet/docs/16-align-enterprise-release-tags"
-    },
-    {
-      "hash": "a4f2328a",
-      "date": "2026-11-12",
-      "subject": "Merge pull request #887 from andrewyng/docs/readme-product-story"
-    },
-    {
-      "hash": "fedef572",
-      "date": "2026-11-13",
-      "subject": "docs: clarify wording flagged by terminology checks"
-    },
-    {
-      "hash": "8945cd1d",
-      "date": "2026-11-12",
-      "subject": "docs: connect Desktop App and Harness SDK in README"
-    },
-    {
-      "hash": "7af264be",
-      "date": "2026-11-12",
-      "subject": "Merge pull request #886 from andrewyng/docs/harness-readme-refresh"
-    },
-    {
-      "hash": "ea495cd0",
-      "date": "2026-11-12",
-      "subject": "docs: simplify Harness SDK onboarding and add architecture visual"
-    },
-    {
-      "hash": "b6008ee5",
-      "date": "2026-11-12",
-      "subject": "Merge pull request #885 from andrewyng/docs/sdk-readme-and-builder-skill"
-    },
-    {
-      "hash": "8b27b396",
-      "date": "2026-11-12",
-      "subject": "feat(skills): confirm replacement and retain installation backups"
-    },
-    {
-      "hash": "43f7e63c",
-      "date": "2026-11-12",
-      "subject": "docs: clarify SDK tools, approvals and builder skill usage"
-    },
-    {
-      "hash": "3fcc22f4",
-      "date": "2026-11-12",
-      "subject": "test(prd-383): T5 验收试运行——验证台接入点全链演练（run_checklist 失败项→verify_failures→VERIFIED 转人工拍板来源形态→JSONL 落账→闸门全 pass）两遍逐字节一致+UNVERIFIED 拦截演练（误报失败拦在人工拍板外）落账留痕+checkers 变更二次验证关闭演练（STALE 拒绝复用）+零改写复验+append-only+链复跑子进程实测+文档无密钥（trend #1887 的 T5 环节，6 例全绿）"
-    },
-    {
-      "hash": "044f9254",
-      "date": "2026-11-12",
-      "subject": "test(prd-383): T4 checklist 失败验证台划界断言——验证台面与收件箱/机检引擎/解析器/重放双向模块隔离+零外部仓内耦合钉值（gates 只 import 同链 checkers_fingerprint）+R1/R2/R3/R4 红线钉值+借鉴仓零符号（仅代码标识符）+§3 引擎/收件箱面符号不变"
-    },
-    {
-      "hash": "a7261df5",
-      "date": "2026-11-12",
-      "subject": "feat(prd-383): T3 checklist 失败验证台闸门——mark_baseline+append_only_gate 账本只增不删复核（LEDGER_DRIFT）+verdict_gate 结论与复现证据双向对账（BENCH_REPRO_MISMATCH/BENCH_INCOMPLETE）+stale_gate checkers 指纹复核（BENCH_STALE）+gate_summary 一票否决+ERROR_CODES 随模块导出（348 教训）+零改写词面 AST+闸门只读（trend #1887 的 T3 环节，15 例全绿，T2 回归 11 例仍绿）"
-    },
-    {
-      "hash": "d92cc207",
-      "date": "2026-11-12",
-      "subject": "feat(prd-383): T2 checklist 失败验证台最小实现——verify_failure 逐条失败复跑验证（recheck_fn 注入重跑同一 checker 集经 run_checklist 引擎，复现=同 check_id+状态 fail 匹配；机检器已修复→复现不出 UNVERIFIED 防误报失败进人工拍板）+verify_failures 人工拍板来源包装（UNVERIFIED 拦下）+FailureBenchLedger JSONL append-only 真实落库+reverify checkers 变更二次验证（BENCH_STALE 拒绝复用）+checkers_fingerprint（checker 名清单 canonical JSON sha16）+零改写词面 AST（trend #1887 的 T2 环节，11 例全绿，devlog 落库）"
-    },
-    {
-      "hash": "5acc3763",
-      "date": "2026-11-12",
-      "subject": "docs: PRD-383/T1 checklist 失败验证台设计——失败复跑验证过才进人工拍板（run_checklist 失败项→verify_failure→decision_inbox.collect(manual_reviews) 接入点+重跑同一机检器复算+JSONL 落账+TAMPERED 红线不变，trend #1887）"
     }
   ]
 } as const;
