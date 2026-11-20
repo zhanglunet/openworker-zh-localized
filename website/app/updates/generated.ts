@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T03:51:07+09:00",
+  "generatedAt": "2026-11-21T04:13:57+09:00",
   "branch": "main",
-  "head": "fd86ead059e103725f62ad59bdb4d4318a472176",
-  "shortHead": "fd86ead0",
+  "head": "695dd27f589dd5ce805110c9f4d73183baf10bfa",
+  "shortHead": "695dd27f",
   "totalFiles": 3007,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "695dd27f",
+      "date": "2026-11-21",
+      "subject": "fix: 复跑块括号修复（] 替代误写的 )） (#186)"
+    },
+    {
+      "hash": "2471523d",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "fd86ead0",
       "date": "2026-11-21",
       "subject": "fix: 剩余 pytest 复跑（TESTS 变量多行形态）unittest 化 (#185)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "1e576757",
       "date": "2026-11-20",
       "subject": "test(prd-558): T4 划界断言 (#177)"
-    },
-    {
-      "hash": "60cc1a59",
-      "date": "2026-11-20",
-      "subject": "feat(prd-558): T3 准入检查校验闸门 (#176)"
-    },
-    {
-      "hash": "90c41586",
-      "date": "2026-11-20",
-      "subject": "feat(prd-558): T2 准入检查最小实现 (#175)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "695dd27f",
+      "date": "2026-11-21",
+      "subject": "fix: 复跑块括号修复（] 替代误写的 )） (#186)"
+    },
+    {
+      "hash": "2471523d",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "fd86ead0",
       "date": "2026-11-21",
@@ -1062,16 +1072,6 @@ export const repoReport = {
       "hash": "164acdbb",
       "date": "2026-11-13",
       "subject": "fix: expose approval decisions and safe denial context"
-    },
-    {
-      "hash": "53359495",
-      "date": "2026-11-13",
-      "subject": "fix: expose tool activity names and arguments"
-    },
-    {
-      "hash": "a6a8c9b8",
-      "date": "2026-11-13",
-      "subject": "Fix SDK errors for conflicting agent definitions"
     }
   ]
 } as const;

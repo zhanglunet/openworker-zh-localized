@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-21T03:51:07+09:00
+更新时间：2026-11-21T04:13:57+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：fd86ead059e103725f62ad59bdb4d4318a472176
+当前提交：695dd27f589dd5ce805110c9f4d73183baf10bfa
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：3007
-- 当前提交：fd86ead0
+- 当前提交：695dd27f
 - 主要文件类型：
   - py: 769
   - rs: 436
@@ -246,6 +246,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-21 695dd27f fix: 复跑块括号修复（] 替代误写的 )） (#186)
+- 2026-11-20 2471523d docs: refresh generated site reports
 - 2026-11-21 fd86ead0 fix: 剩余 pytest 复跑（TESTS 变量多行形态）unittest 化 (#185)
 - 2026-11-20 95d0ee23 docs: refresh generated site reports
 - 2026-11-21 d2155be0 fix: SCRIPTS-form rerun to unittest discover (#184)
@@ -256,5 +258,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-19 b9510cd6 docs: refresh generated site reports
 - 2026-11-20 15b2fe17 test(prd-558): T5 验收试运行 (#178)
 - 2026-11-20 1e576757 test(prd-558): T4 划界断言 (#177)
-- 2026-11-20 60cc1a59 feat(prd-558): T3 准入检查校验闸门 (#176)
-- 2026-11-20 90c41586 feat(prd-558): T2 准入检查最小实现 (#175)
