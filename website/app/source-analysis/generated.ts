@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T04:13:57+09:00",
+  "generatedAt": "2026-11-21T04:35:51+09:00",
   "branch": "main",
-  "head": "695dd27f589dd5ce805110c9f4d73183baf10bfa",
-  "shortHead": "695dd27f",
+  "head": "6767534366a5902ae32be8505ababcb107592b20",
+  "shortHead": "67675343",
   "totalFiles": 3007,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "67675343",
+      "date": "2026-11-21",
+      "subject": "fix: 单引号 pytest 复跑 unittest 化 (#187)"
+    },
+    {
+      "hash": "3ae25399",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "695dd27f",
       "date": "2026-11-21",
       "subject": "fix: 复跑块括号修复（] 替代误写的 )） (#186)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "b9510cd6",
       "date": "2026-11-19",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "15b2fe17",
-      "date": "2026-11-20",
-      "subject": "test(prd-558): T5 验收试运行 (#178)"
-    },
-    {
-      "hash": "1e576757",
-      "date": "2026-11-20",
-      "subject": "test(prd-558): T4 划界断言 (#177)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "67675343",
+      "date": "2026-11-21",
+      "subject": "fix: 单引号 pytest 复跑 unittest 化 (#187)"
+    },
+    {
+      "hash": "3ae25399",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "695dd27f",
       "date": "2026-11-21",
@@ -1062,16 +1072,6 @@ export const repoReport = {
       "hash": "59a17fc9",
       "date": "2026-11-13",
       "subject": "feat: use owcluster with a compatible ows alias"
-    },
-    {
-      "hash": "7effd296",
-      "date": "2026-11-13",
-      "subject": "fix: start tool-free embedded agents without a runner helper"
-    },
-    {
-      "hash": "164acdbb",
-      "date": "2026-11-13",
-      "subject": "fix: expose approval decisions and safe denial context"
     }
   ]
 } as const;

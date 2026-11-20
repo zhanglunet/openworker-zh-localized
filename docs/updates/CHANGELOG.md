@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-11-21T04:13:57+09:00
+更新时间：2026-11-21T04:35:51+09:00
 
 ## 最近提交
 
+- 2026-11-21 67675343 fix: 单引号 pytest 复跑 unittest 化 (#187)
+- 2026-11-20 3ae25399 docs: refresh generated site reports
 - 2026-11-21 695dd27f fix: 复跑块括号修复（] 替代误写的 )） (#186)
 - 2026-11-20 2471523d docs: refresh generated site reports
 - 2026-11-21 fd86ead0 fix: 剩余 pytest 复跑（TESTS 变量多行形态）unittest 化 (#185)
@@ -14,5 +16,3 @@
 - 2026-11-20 f8c75e01 docs: refresh generated site reports
 - 2026-11-20 6171c17f fix: 准入批遗留测试路径修正（MODULE_DIR/复跑/doc glob） (#180)
 - 2026-11-19 b9510cd6 docs: refresh generated site reports
-- 2026-11-20 15b2fe17 test(prd-558): T5 验收试运行 (#178)
-- 2026-11-20 1e576757 test(prd-558): T4 划界断言 (#177)
