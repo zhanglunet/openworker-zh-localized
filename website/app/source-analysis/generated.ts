@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-20T23:08:25+09:00",
+  "generatedAt": "2026-11-21T02:01:44+09:00",
   "branch": "main",
-  "head": "6171c17f7ff3d6f83fba06001fa636de50caf429",
-  "shortHead": "6171c17f",
+  "head": "496311d43086e5f326c5395266d8e3a553c04785",
+  "shortHead": "496311d4",
   "totalFiles": 3007,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "496311d4",
+      "date": "2026-11-21",
+      "subject": "fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)"
+    },
+    {
+      "hash": "f8c75e01",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "6171c17f",
       "date": "2026-11-20",
       "subject": "fix: 准入批遗留测试路径修正（MODULE_DIR/复跑/doc glob） (#180)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "38145113",
       "date": "2026-11-19",
       "subject": "[PRD-535/T4] openworker-zh-localized 中文 skill 方法论包划界断言（无方法论包不成套） (#171)"
-    },
-    {
-      "hash": "807c67d5",
-      "date": "2026-11-19",
-      "subject": "[PRD-535/T3] openworker-zh-localized 中文 skill 方法论包方法论包校验闸门 (#170)"
-    },
-    {
-      "hash": "cb9156d2",
-      "date": "2026-11-19",
-      "subject": "[PRD-535/T2] 方法论包落账 (#173)"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "496311d4",
+      "date": "2026-11-21",
+      "subject": "fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)"
+    },
+    {
+      "hash": "f8c75e01",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "6171c17f",
       "date": "2026-11-20",
@@ -1047,66 +1057,6 @@ export const repoReport = {
       "hash": "9f7a2e18",
       "date": "2026-11-13",
       "subject": "Keep release versions in compatibility documentation"
-    },
-    {
-      "hash": "70c2c491",
-      "date": "2026-11-13",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6aff67a5",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #137 from zhanglunet/trend/prd406-t5-collab-session-acceptance"
-    },
-    {
-      "hash": "49d0251e",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #136 from zhanglunet/trend/prd406-t4-collab-session-boundary"
-    },
-    {
-      "hash": "be21c668",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #135 from zhanglunet/trend/prd406-t3-collab-session-gates"
-    },
-    {
-      "hash": "0599c0ac",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #134 from zhanglunet/trend/prd406-t2-collab-session-impl"
-    },
-    {
-      "hash": "0b0a48f8",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #133 from zhanglunet/trend/prd406-t1-collab-session"
-    },
-    {
-      "hash": "5dd216d8",
-      "date": "2026-11-13",
-      "subject": "Refresh SDK guides and published-package examples"
-    },
-    {
-      "hash": "89c42e3f",
-      "date": "2026-11-14",
-      "subject": "test(prd-406): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
-    },
-    {
-      "hash": "1def4bd7",
-      "date": "2026-11-14",
-      "subject": "test(prd-406): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
-    },
-    {
-      "hash": "655b9a3b",
-      "date": "2026-11-14",
-      "subject": "feat(prd-406): T3 会话闸门——append_only LEDGER_DRIFT + accept 双向对账 + outlet 拦截 + gate_summary 一票否决"
-    },
-    {
-      "hash": "83ba737b",
-      "date": "2026-11-14",
-      "subject": "feat(prd-406): T2 中文 skill 协同评审会话内核——propose/accept/reject 署名事件+单向状态机+JSONL append-only 账本+outlet 出口包装"
-    },
-    {
-      "hash": "1682dc57",
-      "date": "2026-11-14",
-      "subject": "docs(prd-406): T1 中文 skill 协同评审会话设计——事件 schema/状态机/三码闸门/划界表+PR 门槛四项自查"
     }
   ]
 } as const;
