@@ -59,7 +59,7 @@ def test_ci_checker_and_full_suite_green():
     for name in ("test_prd122_t2_crosslink.py", "test_prd122_t3_sync_check.py",
                  "test_prd122_t4_sync_en.py"):
         proc = subprocess.run(
-            [sys.executable, "-m", "pytest", "-q",
-             str(REPO / "tests" / name)],
+            [sys.executable, "-m", "unittest", "discover",
+                 "-s", str(REPO / "tests"), "-p", name],
             capture_output=True, text=True, timeout=300)
         assert proc.returncode == 0, f"{name}: {proc.stdout[-400:]}"
