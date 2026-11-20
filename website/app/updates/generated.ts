@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T03:05:36+09:00",
+  "generatedAt": "2026-11-21T03:51:07+09:00",
   "branch": "main",
-  "head": "d2155be001cfd0abe84bdff064cea10accaf6f64",
-  "shortHead": "d2155be0",
+  "head": "fd86ead059e103725f62ad59bdb4d4318a472176",
+  "shortHead": "fd86ead0",
   "totalFiles": 3007,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "fd86ead0",
+      "date": "2026-11-21",
+      "subject": "fix: 剩余 pytest 复跑（TESTS 变量多行形态）unittest 化 (#185)"
+    },
+    {
+      "hash": "95d0ee23",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "d2155be0",
       "date": "2026-11-21",
       "subject": "fix: SCRIPTS-form rerun to unittest discover (#184)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "90c41586",
       "date": "2026-11-20",
       "subject": "feat(prd-558): T2 准入检查最小实现 (#175)"
-    },
-    {
-      "hash": "9a39345b",
-      "date": "2026-11-20",
-      "subject": "docs(prd-558): T1 准入检查设计草稿 (#174)"
-    },
-    {
-      "hash": "06e2e5fa",
-      "date": "2026-11-18",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "fd86ead0",
+      "date": "2026-11-21",
+      "subject": "fix: 剩余 pytest 复跑（TESTS 变量多行形态）unittest 化 (#185)"
+    },
+    {
+      "hash": "95d0ee23",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "d2155be0",
       "date": "2026-11-21",
