@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """PRD-581/T2（trend issue #2916 的 T2 环节）：openworker-zh-localized 中文产物红队巡检巡检最小实现。
 
 按 T1 设计（docs/plans/2026-11-20-prd-581-owzh-hunting-design.md）落地红队巡检：
