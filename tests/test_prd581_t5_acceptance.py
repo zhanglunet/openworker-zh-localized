@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """PRD-581/T5 测试（trend #2919 的 T5 环节）：openworker-zh-localized 中文产物红队巡检验收试运行。
 运行：uv run --with pytest python -m pytest tests/test_prd581_t5_acceptance.py -q
 验收（PRD 任务拆分 T5 行）：真实产物按巡检走一遍，结论可复核——
@@ -76,15 +76,19 @@ class TestGates(unittest.TestCase):
         self.assertEqual(d["gate"], "block")
 
 
+REPO_ROOT = next(p for p in Path(__file__).resolve().parents
+                 if (p / ".git").exists())
+
+
 class TestChainRerun(unittest.TestCase):
     def test_t2_t3_t4_rerun_green(self):
+        tdir = str(Path(__file__).resolve().parent.relative_to(REPO_ROOT))
         for name in ("test_owzh_hunt.py", "test_owzh_hunt_gate.py", "test_prd581_t4_boundary.py"):
             proc = subprocess.run(
                 [sys.executable, "-m", "unittest", "discover",
-                 "-s", str(Path(__file__).resolve().parent),
-                 "-p", name],
-                capture_output=True, timeout=600)
-            self.assertIn(proc.returncode, (0, 5),
+                 "-s", tdir, "-p", name],
+                capture_output=True, timeout=600, cwd=str(REPO_ROOT))
+            self.assertEqual(proc.returncode, 0,
                              f"{name} 复跑失败："
                              f"{(proc.stdout or proc.stderr or '')[-400:]}")
 
