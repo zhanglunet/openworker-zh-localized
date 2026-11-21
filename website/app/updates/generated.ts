@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T09:09:41+09:00",
+  "generatedAt": "2026-11-21T09:12:28+09:00",
   "branch": "main",
-  "head": "52d977e4460f308695dd872b91dc9756992afb88",
-  "shortHead": "52d977e4",
+  "head": "7c586dd34460b20d6d1b7de106ef8455b38b441f",
+  "shortHead": "7c586dd3",
   "totalFiles": 3008,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "7c586dd3",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T3] 巡检校验闸门（trend #2917） (#191)"
+    },
+    {
+      "hash": "fa40582f",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "52d977e4",
       "date": "2026-11-21",
       "subject": "[PRD-581/T2] 巡检台最小实现（trend #2916） (#190)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "2471523d",
       "date": "2026-11-20",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "fd86ead0",
-      "date": "2026-11-21",
-      "subject": "fix: 剩余 pytest 复跑（TESTS 变量多行形态）unittest 化 (#185)"
-    },
-    {
-      "hash": "95d0ee23",
-      "date": "2026-11-20",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "7c586dd3",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T3] 巡检校验闸门（trend #2917） (#191)"
+    },
+    {
+      "hash": "fa40582f",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "52d977e4",
       "date": "2026-11-21",
