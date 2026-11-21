@@ -1,9 +1,9 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T08:25:55+09:00",
+  "generatedAt": "2026-11-21T09:06:56+09:00",
   "branch": "main",
-  "head": "37f4bc05999c9c57098284f731c4ccb2133d97ca",
-  "shortHead": "37f4bc05",
-  "totalFiles": 3007,
+  "head": "4e43343dee328de7911e76a4576f4ad83373e467",
+  "shortHead": "4e43343d",
+  "totalFiles": 3008,
   "byExt": [
     {
       "name": "py",
@@ -19,7 +19,7 @@ export const repoReport = {
     },
     {
       "name": "md",
-      "count": 307
+      "count": 308
     },
     {
       "name": "mjs",
@@ -97,7 +97,7 @@ export const repoReport = {
     },
     {
       "name": "docs",
-      "count": 251
+      "count": 252
     },
     {
       "name": "deploy",
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "4e43343d",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T1] 中文产物红队巡检设计草稿（trend #2915） (#189)"
+    },
+    {
+      "hash": "117286d7",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "37f4bc05",
       "date": "2026-11-21",
       "subject": "fix: 链复跑放行 rc=5（unittest 空跑=pytest 原生文件） (#188)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "947b4c6e",
       "date": "2026-11-20",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "496311d4",
-      "date": "2026-11-21",
-      "subject": "fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)"
-    },
-    {
-      "hash": "f8c75e01",
-      "date": "2026-11-20",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "4e43343d",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T1] 中文产物红队巡检设计草稿（trend #2915） (#189)"
+    },
+    {
+      "hash": "117286d7",
+      "date": "2026-11-20",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "37f4bc05",
       "date": "2026-11-21",
@@ -882,56 +892,6 @@ export const repoReport = {
       "hash": "d1df810e",
       "date": "2026-11-14",
       "subject": "Merge pull request #138 from zhanglunet/trend/prd-121-t2-default-zh-config"
-    },
-    {
-      "hash": "ad61ed95",
-      "date": "2026-11-13",
-      "subject": "Keep the cluster recording instructions in the guide"
-    },
-    {
-      "hash": "c0fcba07",
-      "date": "2026-11-13",
-      "subject": "test(prd-122): T5 验收——3 节抽查+检查器与全链复跑（4 tests green，本链 15）"
-    },
-    {
-      "hash": "43ad3cb0",
-      "date": "2026-11-13",
-      "subject": "ci(prd-122): T3 章节同步检查——H2 结构比对脚本+i18n-check job 新步+漂移检出钉值（trend #611，4 tests green）"
-    },
-    {
-      "hash": "957029a8",
-      "date": "2026-11-13",
-      "subject": "docs(prd-122): T4 英文版同步——补 One-line Install+Bonus 两节+重编号+双 TOC 同步（trend #612，4 tests green）"
-    },
-    {
-      "hash": "ccfd745f",
-      "date": "2026-11-13",
-      "subject": "test(prd-122): T2 互链钉值——双向顶部链接+语言正确（trend #610，3 tests green；互链 T1 已交付，本单为验收钉值）"
-    },
-    {
-      "hash": "a2f47e6a",
-      "date": "2026-11-13",
-      "subject": "test(prd-121): T5 验收——干净克隆全链走查+文档命令与脚本旗标一致+10 分钟预算表（3 tests green，本链 17）"
-    },
-    {
-      "hash": "2c6a9c11",
-      "date": "2026-11-13",
-      "subject": "docs(prd-121): T4 README 首屏一行安装+5 张演示示意图+带图安装指南（trend #607，6 tests green）"
-    },
-    {
-      "hash": "51e52c08",
-      "date": "2026-11-14",
-      "subject": "ci(prd-121): T3 干净环境 CI——ubuntu:24.04 容器内 self-test+T1/T2 套件+预演零写入（trend #606）"
-    },
-    {
-      "hash": "559f960e",
-      "date": "2026-11-13",
-      "subject": "feat(prd-121): T2 默认中文配置——install --write-config 写占位配置件(zh-CN/600/幂等)+T1 self-test 可移植性修复(BASH_ABS)（8 tests green）"
-    },
-    {
-      "hash": "c5a04fa4",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #895 from andrewyng/fix/cluster-installation-release"
     }
   ]
 } as const;

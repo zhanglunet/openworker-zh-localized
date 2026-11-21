@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-21T08:25:55+09:00
+更新时间：2026-11-21T09:06:56+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：37f4bc05999c9c57098284f731c4ccb2133d97ca
+当前提交：4e43343dee328de7911e76a4576f4ad83373e467
 
 ## 1. 总体判断
 
@@ -14,13 +14,13 @@
 
 ## 2. 代码规模快照
 
-- 跟踪文件总数：3007
-- 当前提交：37f4bc05
+- 跟踪文件总数：3008
+- 当前提交：4e43343d
 - 主要文件类型：
   - py: 769
   - rs: 436
   - json: 313
-  - md: 307
+  - md: 308
   - mjs: 273
   - ts: 254
   - tsx: 196
@@ -40,7 +40,7 @@
 - tests: 654 个文件
 - surfaces: 466 个文件
 - coworker: 309 个文件
-- docs: 251 个文件
+- docs: 252 个文件
 - deploy: 160 个文件
 - scripts: 61 个文件
 - docs-site: 42 个文件
@@ -246,6 +246,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-21 4e43343d [PRD-581/T1] 中文产物红队巡检设计草稿（trend #2915） (#189)
+- 2026-11-20 117286d7 docs: refresh generated site reports
 - 2026-11-21 37f4bc05 fix: 链复跑放行 rc=5（unittest 空跑=pytest 原生文件） (#188)
 - 2026-11-20 e7253da7 docs: refresh generated site reports
 - 2026-11-21 67675343 fix: 单引号 pytest 复跑 unittest 化 (#187)
@@ -256,5 +258,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-20 95d0ee23 docs: refresh generated site reports
 - 2026-11-21 d2155be0 fix: SCRIPTS-form rerun to unittest discover (#184)
 - 2026-11-20 947b4c6e docs: refresh generated site reports
-- 2026-11-21 496311d4 fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)
-- 2026-11-20 f8c75e01 docs: refresh generated site reports

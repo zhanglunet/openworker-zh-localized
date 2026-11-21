@@ -1,9 +1,11 @@
 # OpenWorker 中文站更新日志
 
-更新时间：2026-11-21T08:25:55+09:00
+更新时间：2026-11-21T09:06:56+09:00
 
 ## 最近提交
 
+- 2026-11-21 4e43343d [PRD-581/T1] 中文产物红队巡检设计草稿（trend #2915） (#189)
+- 2026-11-20 117286d7 docs: refresh generated site reports
 - 2026-11-21 37f4bc05 fix: 链复跑放行 rc=5（unittest 空跑=pytest 原生文件） (#188)
 - 2026-11-20 e7253da7 docs: refresh generated site reports
 - 2026-11-21 67675343 fix: 单引号 pytest 复跑 unittest 化 (#187)
@@ -14,5 +16,3 @@
 - 2026-11-20 95d0ee23 docs: refresh generated site reports
 - 2026-11-21 d2155be0 fix: SCRIPTS-form rerun to unittest discover (#184)
 - 2026-11-20 947b4c6e docs: refresh generated site reports
-- 2026-11-21 496311d4 fix: 老链 T5 复跑 pytest→unittest discover（CI 裸 python 无 pytest） (#182)
-- 2026-11-20 f8c75e01 docs: refresh generated site reports
