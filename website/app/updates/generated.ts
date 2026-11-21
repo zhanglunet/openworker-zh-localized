@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T09:06:56+09:00",
+  "generatedAt": "2026-11-21T09:09:41+09:00",
   "branch": "main",
-  "head": "4e43343dee328de7911e76a4576f4ad83373e467",
-  "shortHead": "4e43343d",
+  "head": "52d977e4460f308695dd872b91dc9756992afb88",
+  "shortHead": "52d977e4",
   "totalFiles": 3008,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "52d977e4",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T2] 巡检台最小实现（trend #2916） (#190)"
+    },
+    {
+      "hash": "ff256313",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "4e43343d",
       "date": "2026-11-21",
       "subject": "[PRD-581/T1] 中文产物红队巡检设计草稿（trend #2915） (#189)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "95d0ee23",
       "date": "2026-11-20",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "d2155be0",
-      "date": "2026-11-21",
-      "subject": "fix: SCRIPTS-form rerun to unittest discover (#184)"
-    },
-    {
-      "hash": "947b4c6e",
-      "date": "2026-11-20",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "52d977e4",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T2] 巡检台最小实现（trend #2916） (#190)"
+    },
+    {
+      "hash": "ff256313",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "4e43343d",
       "date": "2026-11-21",
@@ -847,51 +857,6 @@ export const repoReport = {
       "hash": "f68159ee",
       "date": "2026-11-13",
       "subject": "Merge pull request #896 from andrewyng/docs/sdk-launch-guides"
-    },
-    {
-      "hash": "a57aa57f",
-      "date": "2026-11-14",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "738a4804",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #145 from zhanglunet/trend/prd-122-t5-acceptance"
-    },
-    {
-      "hash": "904e0edf",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #144 from zhanglunet/trend/prd-122-t3-sync-check"
-    },
-    {
-      "hash": "85944fd4",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #143 from zhanglunet/trend/prd-122-t4-sync-en"
-    },
-    {
-      "hash": "d368a111",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #142 from zhanglunet/trend/prd-122-t2-crosslink"
-    },
-    {
-      "hash": "7abc79f0",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #141 from zhanglunet/trend/prd-121-t5-acceptance"
-    },
-    {
-      "hash": "3039932c",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #140 from zhanglunet/trend/prd-121-t4-readme-demo"
-    },
-    {
-      "hash": "1688a681",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #139 from zhanglunet/trend/prd-121-t3-clean-ci"
-    },
-    {
-      "hash": "d1df810e",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #138 from zhanglunet/trend/prd-121-t2-default-zh-config"
     }
   ]
 } as const;
