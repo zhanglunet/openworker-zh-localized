@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T09:15:11+09:00",
+  "generatedAt": "2026-11-21T09:17:56+09:00",
   "branch": "main",
-  "head": "f60fb1e3c53fec9d01a9e3e8e0d61c278ce4ed76",
-  "shortHead": "f60fb1e3",
+  "head": "ec653e9c4517aa9217c8268f1ef4eaa548bf388b",
+  "shortHead": "ec653e9c",
   "totalFiles": 3008,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "ec653e9c",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T5] 巡检验收试运行（trend #2919） (#193)"
+    },
+    {
+      "hash": "aac46fb1",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "f60fb1e3",
       "date": "2026-11-21",
       "subject": "[PRD-581/T4] 巡检划界断言（trend #2918） (#192)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "e7253da7",
       "date": "2026-11-20",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "67675343",
-      "date": "2026-11-21",
-      "subject": "fix: 单引号 pytest 复跑 unittest 化 (#187)"
-    },
-    {
-      "hash": "3ae25399",
-      "date": "2026-11-20",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "ec653e9c",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T5] 巡检验收试运行（trend #2919） (#193)"
+    },
+    {
+      "hash": "aac46fb1",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "f60fb1e3",
       "date": "2026-11-21",
