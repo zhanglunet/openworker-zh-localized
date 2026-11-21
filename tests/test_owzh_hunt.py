@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """PRD-581/T2 测试（trend #2916 的 T2 环节）：openworker-zh-localized 中文产物红队巡检巡检。
 运行：uv run --with pytest python -m pytest tests/test_owzh_hunt.py -q
 覆盖（T1 §2 + 红线 R1~R4）：疑点词表封闭/复现器二值返回/run_hunt 报告
