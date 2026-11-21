@@ -1,12 +1,12 @@
 # OpenWorker 中文本地化仓库源码分析
 
-更新时间：2026-11-21T09:12:28+09:00
+更新时间：2026-11-21T09:15:11+09:00
 
 仓库：zhanglunet/openworker-zh-localized
 
 当前分支：main
 
-当前提交：7c586dd34460b20d6d1b7de106ef8455b38b441f
+当前提交：f60fb1e3c53fec9d01a9e3e8e0d61c278ce4ed76
 
 ## 1. 总体判断
 
@@ -15,7 +15,7 @@
 ## 2. 代码规模快照
 
 - 跟踪文件总数：3008
-- 当前提交：7c586dd3
+- 当前提交：f60fb1e3
 - 主要文件类型：
   - py: 769
   - rs: 436
@@ -246,6 +246,8 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 
 ## 9. 最近更新
 
+- 2026-11-21 f60fb1e3 [PRD-581/T4] 巡检划界断言（trend #2918） (#192)
+- 2026-11-21 0810f3d8 docs: refresh generated site reports
 - 2026-11-21 7c586dd3 [PRD-581/T3] 巡检校验闸门（trend #2917） (#191)
 - 2026-11-21 fa40582f docs: refresh generated site reports
 - 2026-11-21 52d977e4 [PRD-581/T2] 巡检台最小实现（trend #2916） (#190)
@@ -256,5 +258,3 @@ L1 预置 excel-ai-analyst 技能（表格当代码逆向：探测/公式链/全
 - 2026-11-20 e7253da7 docs: refresh generated site reports
 - 2026-11-21 67675343 fix: 单引号 pytest 复跑 unittest 化 (#187)
 - 2026-11-20 3ae25399 docs: refresh generated site reports
-- 2026-11-21 695dd27f fix: 复跑块括号修复（] 替代误写的 )） (#186)
-- 2026-11-20 2471523d docs: refresh generated site reports

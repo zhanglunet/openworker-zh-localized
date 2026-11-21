@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T09:12:28+09:00",
+  "generatedAt": "2026-11-21T09:15:11+09:00",
   "branch": "main",
-  "head": "7c586dd34460b20d6d1b7de106ef8455b38b441f",
-  "shortHead": "7c586dd3",
+  "head": "f60fb1e3c53fec9d01a9e3e8e0d61c278ce4ed76",
+  "shortHead": "f60fb1e3",
   "totalFiles": 3008,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "f60fb1e3",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T4] 巡检划界断言（trend #2918） (#192)"
+    },
+    {
+      "hash": "0810f3d8",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "7c586dd3",
       "date": "2026-11-21",
       "subject": "[PRD-581/T3] 巡检校验闸门（trend #2917） (#191)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "3ae25399",
       "date": "2026-11-20",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "695dd27f",
-      "date": "2026-11-21",
-      "subject": "fix: 复跑块括号修复（] 替代误写的 )） (#186)"
-    },
-    {
-      "hash": "2471523d",
-      "date": "2026-11-20",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "f60fb1e3",
+      "date": "2026-11-21",
+      "subject": "[PRD-581/T4] 巡检划界断言（trend #2918） (#192)"
+    },
+    {
+      "hash": "0810f3d8",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "7c586dd3",
       "date": "2026-11-21",
