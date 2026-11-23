@@ -1,8 +1,8 @@
 export const repoReport = {
-  "generatedAt": "2026-11-21T09:17:56+09:00",
+  "generatedAt": "2026-11-23T01:09:54Z",
   "branch": "main",
-  "head": "ec653e9c4517aa9217c8268f1ef4eaa548bf388b",
-  "shortHead": "ec653e9c",
+  "head": "a5d988e6119d11b98c389b988ef6f980a56f4fe9",
+  "shortHead": "a5d988e6",
   "totalFiles": 3008,
   "byExt": [
     {
@@ -422,6 +422,16 @@ export const repoReport = {
   ],
   "recentCommits": [
     {
+      "hash": "a5d988e6",
+      "date": "2026-11-23",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "37e69548",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
+    {
       "hash": "ec653e9c",
       "date": "2026-11-21",
       "subject": "[PRD-581/T5] 巡检验收试运行（trend #2919） (#193)"
@@ -470,19 +480,19 @@ export const repoReport = {
       "hash": "117286d7",
       "date": "2026-11-20",
       "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "37f4bc05",
-      "date": "2026-11-21",
-      "subject": "fix: 链复跑放行 rc=5（unittest 空跑=pytest 原生文件） (#188)"
-    },
-    {
-      "hash": "e7253da7",
-      "date": "2026-11-20",
-      "subject": "docs: refresh generated site reports"
     }
   ],
   "weeklyCommits": [
+    {
+      "hash": "a5d988e6",
+      "date": "2026-11-23",
+      "subject": "chore: 更新上游哨兵水位（PRD-068）"
+    },
+    {
+      "hash": "37e69548",
+      "date": "2026-11-21",
+      "subject": "docs: refresh generated site reports"
+    },
     {
       "hash": "ec653e9c",
       "date": "2026-11-21",
@@ -787,106 +797,6 @@ export const repoReport = {
       "hash": "28eafe7f",
       "date": "2026-11-16",
       "subject": "chore: 更新上游哨兵水位（PRD-068）"
-    },
-    {
-      "hash": "29ca000d",
-      "date": "2026-11-15",
-      "subject": "[PRD-452/T1] 翻译监督台设计草稿"
-    },
-    {
-      "hash": "b72a1196",
-      "date": "2026-11-14",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "fd713c85",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #152 from zhanglunet/fix/sync-fail-loud"
-    },
-    {
-      "hash": "3aeb47bf",
-      "date": "2026-11-15",
-      "subject": "ci(sync): 拆假绿——合并失败让运行变红"
-    },
-    {
-      "hash": "940d7265",
-      "date": "2026-11-14",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "0c929a67",
-      "date": "2026-11-14",
-      "subject": "Merge upstream OpenWorker ecb44549 (#151)"
-    },
-    {
-      "hash": "8acfb16b",
-      "date": "2026-11-14",
-      "subject": "Merge remote-tracking branch 'upstream/main' into codex/sync-upstream-20261114"
-    },
-    {
-      "hash": "795dd7df",
-      "date": "2026-11-14",
-      "subject": "docs: refresh generated site reports"
-    },
-    {
-      "hash": "6efd8341",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #150 from zhanglunet/trend/prd-429-t5-review-pipeline-acceptance"
-    },
-    {
-      "hash": "b7a34504",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #149 from zhanglunet/trend/prd-429-t4-review-pipeline-boundary"
-    },
-    {
-      "hash": "57f66799",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #148 from zhanglunet/trend/prd-429-t3-review-pipeline-gates"
-    },
-    {
-      "hash": "bd7419b5",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #147 from zhanglunet/trend/prd-429-t2-review-pipeline-impl"
-    },
-    {
-      "hash": "3347e04a",
-      "date": "2026-11-14",
-      "subject": "Merge pull request #146 from zhanglunet/trend/prd-429-t1-review-pipeline"
-    },
-    {
-      "hash": "7a27cca5",
-      "date": "2026-11-14",
-      "subject": "test(prd-429): T5 验收试运行——全链两遍逐字节一致+失败演练+链复跑+文档无密钥"
-    },
-    {
-      "hash": "00bfe4c9",
-      "date": "2026-11-14",
-      "subject": "test(prd-429): T4 划界断言——下游载体零导入+借鉴仓零符号+标准库-only+R1~R4 红线钉值"
-    },
-    {
-      "hash": "22742842",
-      "date": "2026-11-14",
-      "subject": "feat(prd-429): T3 评审流水线闸门——append_only LEDGER_DRIFT + verdict 双向对账 + coverage 全判齐 + gate_summary 一票否决"
-    },
-    {
-      "hash": "d58c241f",
-      "date": "2026-11-14",
-      "subject": "feat(prd-429): T2 翻译评审流水线内核——三确定性规则+judge 注入+三件套 JSONL 落账+outlet 出口拦截"
-    },
-    {
-      "hash": "b43517ea",
-      "date": "2026-11-14",
-      "subject": "docs(prd-429): T1 翻译评审流水线设计——三件套 schema/规则先行模型后判/三码闸门/划界表+PR 门槛四项自查"
-    },
-    {
-      "hash": "ecb44549",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #898 from andrewyng/docs/desktop-getting-started"
-    },
-    {
-      "hash": "f68159ee",
-      "date": "2026-11-13",
-      "subject": "Merge pull request #896 from andrewyng/docs/sdk-launch-guides"
     }
   ]
 } as const;
